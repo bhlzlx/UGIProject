@@ -1,0 +1,31 @@
+[submodule "thirdpart/CMCore"]
+	path = thirdpart/CMCore
+	url = https://github.com/bhlzlx/CMCore
+[submodule "thirdpart/CMUtil"]
+	path = thirdpart/CMUtil
+	url = https://github.com/bhlzlx/CMUtil
+[submodule "thirdpart/CMPlatform"]
+	path = thirdpart/CMPlatform
+	url = https://github.com/bhlzlx/CMPlatform
+[submodule "thirdpart/CMSceneGraph"]
+	path = thirdpart/CMSceneGraph
+	url = https://github.com/bhlzlx/CMSceneGraph
+[submodule "thirdpart/CMCMakeModule"]
+	path = thirdpart/CMCMakeModule
+	url = https://github.com/bhlzlx/CMCMakeModule
+[submodule "thirdpart/CMAudio"]
+	path = thirdpart/CMAudio
+	url = https://github.com/bhlzlx/CMAudio
+[submodule "thirdpart/ShaderMaker"]
+	path = thirdpart/ShaderMaker
+	url = https://github.com/bhlzlx/ShaderMaker
+[submodule "thirdpart/CM2D"]
+	path = thirdpart/CM2D
+	url = https://github.com/bhlzlx/CM2D
+[submodule "thirdpart/CMAssetsManage"]
+	path = thirdpart/CMAssetsManage
+	url = https://github.com/bhlzlx/CMAssetsManage
+    
+[submodule "thirdpart/MathGeoLib"]
+	path = thirdpart/MathGeoLib
+	url = https://github.com/juj/MathGeoLib

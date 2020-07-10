@@ -1,0 +1,13 @@
+
+/build/*
+/win32/*
+/bin/Windows/*
+/bin/Windows_64_Debug/*
+/bin/Windows_64_Release/*
+/source/utility/ShaderCompiler/lib/*
+/.vs/*
+/out/*
+/vsproj/*
+/bin/.vs
+/source/thirdpart/glm
+.DS_Store
