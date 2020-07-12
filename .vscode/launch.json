@@ -67,7 +67,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/Windows_64_Debug/ShaderCompiler.exe",
-            "args": ["sphere"],
+            "args": ["GDITest"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
             "environment": [],

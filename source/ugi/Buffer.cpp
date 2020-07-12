@@ -99,8 +99,11 @@ namespace ugi {
     }
     
     void Buffer::unmap(Device* device ) {
-        auto allocator = device->vmaAllocator();
-        vmaUnmapMemory(allocator, _allocation);
+        if (_mappedPointer) {
+            auto allocator = device->vmaAllocator();
+            vmaUnmapMemory(allocator, _allocation);
+            _mappedPointer = nullptr;
+        }
     }
 
     void Buffer::release( Device* device ) {

@@ -613,7 +613,7 @@ namespace ugi {
         uint32_t                descriptorHandle;
         ArgumentDescriptorType  type;                   // 资源类型
         union {
-            Buffer*             buffer;
+            Buffer*       buffer;
             Texture*            texture;
             SamplerState        sampler;
         };

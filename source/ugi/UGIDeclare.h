@@ -21,6 +21,6 @@ namespace ugi {
     class DescriptorSetAllocator;
     class Drawable;
     class UniformAllocator;
-
+    class ResourceManager;
     class ArgumentGroupLayout;
 }

@@ -3,6 +3,11 @@
 #include <algorithm>
 #include <utility>
 
+#include <ugi/buffer.h>
+#include <ugi/Device.h>
+#include <ugi/Drawable.h>
+#include <hgl/assets/AssetsSource.h>
+
 namespace ugi {
 
     namespace gdi {
@@ -11,9 +16,32 @@ namespace ugi {
         // 先 使用GeometryBuilder 在CPU端组装顶点以及索引数据
         class GDIContext {
         private:
+            ugi::Device*                _device;
+            hgl::assets::AssetsSource*  _assetsSource;
+            ugi::PipelineDescription    _pipelineDesc;
+            ugi::Pipeline*              _pipeline;
+            ugi::Buffer*                _contextInfo; // uniform buffer with the context info
+            //
+            hgl::Vector2f               _size;        // context size( width,height )
         public:
-            GDIContext() {
+            GDIContext( ugi::Device* device, hgl::assets::AssetsSource* assetsSource )
+                : _device( device )
+                , _assetsSource( assetsSource )
+                , _pipeline(nullptr)
+                , _contextInfo(nullptr)
+            {
             }
+
+            bool initialize();
+
+            ugi::Pipeline* pipeline() const noexcept;
+            const ugi::PipelineDescription& pipelineDescription() const noexcept;
+            ugi::Buffer* contextUniform() const noexcept;
+            //
+            void setSize(const hgl::Vector2f& size);
+            //
+            ugi::Device* device() { return _device;  };
+            const hgl::Vector2f& size() { return _size; }
         };
         
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
@@ -23,174 +51,155 @@ namespace ugi {
         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
         struct GeometryVertex {
             hgl::Vector2f   position;           // 位置
-            uint16_t        color;              // 颜色索引 R(16) G(16) B(16) A(16) 每个8位
-            uint16_t        uniformElement;     // uniform 元素的索引
+            uint32_t        color;              // 颜色索引 R(16) G(16) B(16) A(16) 每个8位
+            uint32_t        uniformElement;     // uniform 元素的索引
         };
 
         /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
         *  uniform 里主要是存共用的值，比如旋转，缩放，
         *  一般画一个矩形或者多个复杂的形状缩放和角度都是相同的，这个值是可以复用的
+        *  基本上等同于一个 3x3 矩阵
+        *  变换过程，先 加一个负的 anchor 偏移，再缩放，再旋转，再加一个 anchor 偏移
         * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        struct GeometryUniformElement {
-            union {
-                float values[6];
-                struct {
-                    hgl::Vector4f  rotate;
-                    hgl::Vector2f  scale;
-                };
-            };
-            GeometryUniformElement()
-                : values { 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f } 
-            {
-            }
-            bool isIdentity() const noexcept {
-                constexpr float ID[6] = { 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f };
-                return memcmp(this, &ID, sizeof(ID)) == 0;
-            }
+        /*
+            1 0 -x  |  cos -sin 0  |  a 0 0  |  1 0 x
+            0 1 -y  |  sin cos  0  |  0 b 0  |  0 1 y
+            0 0  1  |  0   0    1  |  0 0 1  |  0 0 1
+       */
+        /*
+            cos -sin -x     a*cos b*-sin 0    a*cos b*-sin x*a*cos+y*b*-sin
+            0    cos -y  -> a*sin b*cos  0 -> a*sin b*cos  x*a*sin+y*b*cos 
+            0    0    1     0     0      1    0     0      1
+        */
+        struct GeometryTransformArgument {
+            // 基本上等同于一个 3x3 矩阵
+            // 变换过程，先 加一个负的 anchor 偏移，再绽放，再旋转，再加一个 anchor 偏移
+            // struct {
+            //     hgl::Vector4f  rotate;
+            //     hgl::Vector2f  scale;
+            //     hgl::Vector2f  anchor;
+            // };
+            hgl::Matrix3f transformMatrix;
+            GeometryTransformArgument();
+
+            GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor);
         };
 
         class GeometryBatch {
         protected:
-            std::vector<GeometryVertex>         _vertices;          // 顶点数据，上限为 4096，即大约1024个矩形
-            std::vector<uint16_t>               _indices;           // 顶点索引上限为 4096 和顶点数量上限一致
-            std::vector<GeometryUniformElement> _uniformElements;   // UBO块 1024
+            std::vector<GeometryVertex>             _vertices;          // 顶点数据，上限为 4096，即大约1024个矩形
+            std::vector<uint16_t>                   _indices;           // 顶点索引上限为 4096 和顶点数量上限一致
+            std::vector<GeometryTransformArgument>  _uniformElements;   // UBO块 1024
         public:
             GeometryBatch()
-                : _vertices{}
-                , _indices{}
-                , _uniformElements{}
+                : _vertices {}
+                , _indices {}
+                , _uniformElements {}
             {
                 _vertices.reserve(4096);
                 _indices.reserve(4096);
-                _uniformElements.reserve(1024);
                 // 第一个uniform默认就是不作任务变换
-                _uniformElements[0].rotate[0] = 1; _uniformElements[0].rotate[1] = 0;
-                _uniformElements[0].rotate[2] = 0; _uniformElements[0].rotate[3] = 1;
-                _uniformElements[0].scale.x = _uniformElements[0].scale.y = 1.0f;
+                _uniformElements.reserve(1024);
+                _uniformElements.resize(1);
             }
 
-            const GeometryVertex* vertexData() {
-                if( _vertices.size()) {
-                    return _vertices.data();
-                } else {
-                    return nullptr;
-                }
-            }
-            size_t vertexDataLength() {
-                return _vertices.size() * sizeof(GeometryVertex);
-            }
-            const uint16_t* indexData() {
-                return _indices.data();
-            }
-            size_t indexDataLength() {
-                return _indices.size() * sizeof(uint16_t);
-            }
-            const void* uniformData() {
-                return _uniformElements.data();
-            }
-            size_t uniformDataLength() {
-                return _uniformElements.size() * sizeof(GeometryUniformElement);
-            }
+            const GeometryVertex* vertexData() const noexcept;
+            size_t vertexDataLength() const noexcept;
+            const uint16_t* indexData() const noexcept;
+            size_t indexDataLength() const noexcept;
+            const void* uniformData() const noexcept;
+            size_t uniformDataLength() const noexcept;
         };
 
-        class GeometryData {
+        class GeometryGPUDrawData;
+
+        class GeometryMemoryData {
             class GeometryBatchPrivate : public GeometryBatch {
-                bool checkVertex( size_t vertexCount ) {
-                    return 4096 - _vertices.size() >= vertexCount;
-                }
-                bool checkUniform() {
-                    return 1024 > _uniformElements.size();
-                }
+
+                bool checkVertex(size_t vertexCount);
+                bool checkUniform();
             public:
-                bool appendVertices(  
-                    GeometryVertex const*           vertices, 
-                    size_t                          vertexCount, 
-                    uint16_t const*                 indices, 
-                    size_t                          indexCount, 
-                    const GeometryUniformElement*   uniform
-                    ) 
-                {
-                    if( checkVertex(vertexCount)) {
-                        uint16_t uniformIndex = uniform ? 0 : _uniformElements.size();
-                        if( uniformIndex!=0 && !checkUniform()) {
-                            return false;
-                        }                        
-                        size_t vertexLocation = _vertices.size();
-                        size_t indexLocation = (uint16_t)_indices.size();
-                        // 处理顶点
-                        _vertices.resize( _vertices.size() + vertexCount );
-                        size_t sourceVericesIndex = 0;
-                        while(sourceVericesIndex<vertexCount) {
-                            _vertices[vertexLocation+sourceVericesIndex] = vertices[sourceVericesIndex];
-                            _vertices[vertexLocation+sourceVericesIndex].uniformElement = _uniformElements.size();
-                            ++sourceVericesIndex;
-                        }
-                        _indices.resize( _indices.size() + indexCount );
-                        // 这里得更新一下索引
-                        size_t sourceIndicesIndex = 0;
-                        while(sourceIndicesIndex<indexCount) {
-                            _indices[indexLocation+sourceIndicesIndex] = vertexLocation + indices[sourceIndicesIndex];
-                            ++sourceIndicesIndex;
-                        }
-                        // uniform
-                        _uniformElements.push_back(*uniform);
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
+                bool appendVertices(
+                    GeometryVertex const* vertices,
+                    size_t                              vertexCount,
+                    uint16_t const* indices,
+                    size_t                              indexCount,
+                    const GeometryTransformArgument* uniform
+                );
             };
         private:
             std::vector<GeometryBatchPrivate>      _geometryBatches;
         public:
-            GeometryData()
+            GeometryMemoryData()
                 : _geometryBatches(1)
             {
             }
 
             void addGeometry( 
-                GeometryVertex const* vertices, 
-                size_t vertexCount, 
-                uint16_t const* indices, 
-                size_t indexCount
-            ) {
-                auto& last = _geometryBatches.back();
-                if( !last.appendVertices(vertices, vertexCount, indices, indexCount, nullptr) ) {
-                    _geometryBatches.emplace_back();
-                    bool rst = _geometryBatches.back().appendVertices(vertices, vertexCount, indices, indexCount, nullptr);
-                    assert(rst);
-                }
-            }
+                GeometryVertex const*   vertices, 
+                size_t                  vertexCount, 
+                uint16_t const*         indices, 
+                size_t                  indexCount
+            );
 
             void addGeometry( 
-                GeometryVertex const* vertices, 
-                size_t vertexCount, 
-                uint16_t const* indices, 
-                size_t indexCount, 
-                float angle, 
-                hgl::Vector2f scale 
-            ) {
-                GeometryUniformElement uniform;
-                float rad = angle / 180.0f * 3.1415926f;
-                uniform.rotate[0] = uniform.rotate[3] = cos(rad);
-                uniform.rotate[2] = sin(rad);
-                uniform.rotate[1] = -uniform.rotate[2];
-                uniform.scale = scale;
-                //
-                auto& last = _geometryBatches.back();
-                if( !last.appendVertices(vertices, vertexCount, indices, indexCount, &uniform ) ) {
-                    _geometryBatches.emplace_back();
-                    bool rst = _geometryBatches.back().appendVertices(vertices, vertexCount, indices, indexCount, nullptr);
-                    assert(rst);
-                }
-            }
+                GeometryVertex const*   vertices, 
+                size_t                  vertexCount, 
+                uint16_t const*         indices, 
+                size_t                  indexCount, 
+                float                   angle, 
+                const hgl::Vector2f&    scale,
+                const hgl::Vector2f&    anchor
+            );
+
+            GeometryGPUDrawData* createGeometryDrawData( GDIContext* context );
         };
 
         class GeometryBuilder {
         private:
+            GDIContext*                     _context;
+            std::vector<GeometryVertex>     _vertexBuffer;
+            std::vector<uint16_t>           _indicesBuffer;
         public:
-            void drawLine( GDIContext* context, GeometryData* geomData, const hgl::Vector2f& pointStart, const hgl::Vector2f& pointEnd );
-            void drawRect( GDIContext* context, GeometryData* geomData, const hgl::RectScope2<float>& rect );
+            GeometryBuilder(GDIContext* context)
+                : _context(context)
+                , _vertexBuffer{}
+                , _indicesBuffer{}
+            {
+                _vertexBuffer.reserve(2048);
+                _indicesBuffer.reserve(2048);
+            }
+            //
+            void drawLine( GeometryMemoryData* geomData, const hgl::Vector2f& pointStart, const hgl::Vector2f& pointEnd, float width, uint32_t color );
+            uint32_t drawRect( GeometryMemoryData* geomData, float x, float y, float width, float height, uint32_t color, bool dynamic = false );
+        };
+
+        class GeometryGPUDrawData {
+            friend class GeometryMemoryData;
+            struct DrawBatch {
+                size_t          indexOffset;             // index offset
+                size_t          indexCount;              // drawIndex 数量
+                ugi::Buffer*    uniformBuffer;
+                ugi::ArgumentGroup* argument;
+            };
+        private:
+            GDIContext*                          _context;
+            /// <summary>
+            ///  GPU Resource                    
+            /// </summary>
+            ugi::Buffer*                         _vertexBuffer;
+            ugi::Buffer*                         _indexBuffer;
+            ugi::Drawable*                       _drawable;
+
+            // std::vector<ugi::ArgumentGroup*>     _argumentGroup;
+            //
+            std::vector<DrawBatch>  _batches;
+        public:
+            GeometryGPUDrawData(GDIContext* context);
+
+            void draw( RenderCommandEncoder* encoder );
+
+            ~GeometryGPUDrawData();
         };
 
     }

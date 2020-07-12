@@ -1,6 +1,7 @@
 project ( GDI )
 
 include_directories(
+    ${SOLUTION_DIR}/source
     ${SOLUTION_DIR}/thirdpart/include
     ${SOLUTION_DIR}/thirdpart/CMCore/inc
     ${SOLUTION_DIR}/thirdpart/CMPlatform/inc

@@ -57,6 +57,7 @@ bool ProcessSpirVForStage( const char* shaderText, EShLanguage stage, ugi::Pipel
         compileMessage += "Debug :";
         compileMessage += pDbgLog;
         compileMessage += "\r\n";
+        printf("%s\n", compileMessage.c_str());
         return false;
     }
     glslang::TProgram Program;

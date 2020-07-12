@@ -63,6 +63,8 @@ namespace ugi {
             , _size(size)
             , _primaryAccessType( accessTypeFromBufferType(type) )
             , _currentAccessType( ResourceAccessType::None )
+            , _mappable( false)
+            , _mappedPointer( nullptr )
         {
         }
 

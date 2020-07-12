@@ -448,6 +448,13 @@ namespace ugi {
         return argGroupLayout->pipelineLayout();
     }
 
+    bool ArgumentGroup::prepairResource() {
+        if (!validateDescriptorSets()) {
+            return false;
+        }
+        return true;
+    }
+
     bool ArgumentGroup::prepairResource( ResourceCommandEncoder* commandEncoder ) {
         if( !validateDescriptorSets()) {
             return false;

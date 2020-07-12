@@ -61,6 +61,7 @@ else()
         add_definitions(-DUNICODE -D_UNICODE)
         add_subdirectory( HelloWorld )
         add_subdirectory( Sphere )
+        add_subdirectory( GDI )
         
         SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET Sphere PROPERTY FOLDER "Samples")

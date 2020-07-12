@@ -3,7 +3,7 @@
 namespace ugi {
 
     // 不是线程安全的，建议每一个队列持有一个，因为队列也不是线程安全的
-    void ResourceManager::destroy( Resource* _res ) {
+    void ResourceManager::trackResource( Resource* _res ) {
         uint32_t index = (m_flightIndex + MaxFlightCount)%(MaxFlightCount+1);
         m_destroyQueues[index].push(_res);
     }

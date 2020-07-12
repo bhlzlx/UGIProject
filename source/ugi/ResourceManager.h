@@ -20,7 +20,7 @@ namespace ugi {
         {
         }
 
-        void destroy( Resource* _res );
+        void trackResource( Resource* _res );
         void tick();
     };
 
