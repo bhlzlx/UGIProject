@@ -61,6 +61,16 @@ namespace ugi {
         if (!m_geomDrawData) {
             return;
         }
+
+        static int angle = 0;
+        ++angle;
+        float rad = (float)angle/180.0f*3.141592654;
+
+        for( uint32_t i = 0; i<16; i++) {
+            for( uint32_t j = 0; j<16; j++) {
+                m_geomDrawData->updateGeometryTranslation( i*16+j+1, hgl::Vector2f(i*24+12, j*24+12), hgl::Vector2f(1.2f, 1.2f), rad);
+            }
+        }
         
         m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
         // m_uniformAllocator->tick();
@@ -137,11 +147,11 @@ namespace ugi {
         
         m_geomDrawData = geomData.createGeometryDrawData(m_gdiContext);
 
-        // for( uint32_t i = 0; i<16; i++) {
-        //     for( uint32_t j = 0; j<16; j++) {
-        //         m_geomDrawData->updateGeometryTranslation( i+j*16 + 1, hgl::Vector2f(i*24,j*24), hgl::Vector2f( fabs(i-8.0f)/8.0f + 0.5f,fabs(j-8.0f)/8.0f + 0.5f), j*16*i);
-        //     }
-        // }
+        for( uint32_t i = 0; i<16; i++) {
+            for( uint32_t j = 0; j<16; j++) {
+                m_geomDrawData->updateGeometryTranslation( i*16+j+1, hgl::Vector2f(i*24, j*24), hgl::Vector2f(1.2f, 1.2f), 3.1415926f / 16 * j);
+            }
+        }
         
     }
 

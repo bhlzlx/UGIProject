@@ -8,42 +8,21 @@
 
 namespace ugi {
     namespace gdi {
+        
         GeometryTransformArgument::GeometryTransformArgument()
-            : transformMatrix(hgl::Matrix3f::identity)
         {
         }
 
         GeometryTransformArgument::GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor)
         {
-            hgl::Matrix3f A = {
-                1.0f, 0.0f, -anchor.x,
-                0.0f, 1.0f, -anchor.y,
-                0.0f, 0.0f, 1.0f,
-            };
-            hgl::Matrix3f B = {
-                cos(rad), -sin(rad), 0,
-                sin(rad), cos(rad), 0,
-                0.0f, 0.0f, 1.0f,
-            };
-            hgl::Matrix3f C = {
-                scale.x, 0, 0,
-                0, scale.y, 0,
-                0, 0,       1
-            };
-            hgl::Matrix3f D = {
-                1.0f, 0.0f, anchor.x,
-                0.0f, 1.0f, anchor.y,
-                0.0f, 0.0f, 1.0f,
-            };
-            transformMatrix = A * B * C * D;
-            /*
             float cosValue = cos(rad); float sinValue = sin(rad);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
-            transformMatrix = {
-                a * cosValue, -b * sinValue, x * a * cosValue - y * b * sinValue,
-                a * sinValue, -b * cosValue, x * a * sinValue + y * b * cosValue,
-                0         , 0          , 1
-            };*/
+            /*  我们要往shader里传 mat3x3 但是第三行总是 (0,0,1)所以就可以不传了，GLSL里有限制内存布局是vec3占用空间也是vec4，所以我们就传两个vec4来代替mat3x3
+                a*cos -a*sin -a*cos*x+a*sin*y+x
+                b*sin b*cos  -b*sin*x-b*cos*y+y
+            */
+            data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, 0.0f);
+            data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, 0.0f);
         }
         const GeometryVertex* GeometryBatch::vertexData() const  noexcept {
             if (_vertices.size()) {
@@ -337,38 +316,18 @@ namespace ugi {
             uint16_t batchIndex = handle>>16;
             uint16_t elementIndex = handle&0xffff;
 
-            hgl::Matrix3f A = {
-                1.0f, 0.0f, -anchor.x,
-                0.0f, 1.0f, -anchor.y,
-                0.0f, 0.0f, 1.0f
-            };
-            hgl::Matrix3f B = {
-                cos(rotation), -sin(rotation), 0,
-                sin(rotation), cos(rotation), 0,
-                0.0f, 0.0f, 1.0f
-            };
-            hgl::Matrix3f C = {
-                scale.x, 0, 0,
-                0, scale.y, 0,
-                0, 0,       1
-            };
-            hgl::Matrix3f D = {
-                1.0f, 0.0f, anchor.x,
-                0.0f, 1.0f, anchor.y,
-                0.0f, 0.0f, 1.0f,
-            };
-            hgl::Matrix3f transformMatrix = A * B * C * D;
-            /*
             float cosValue = cos(rotation); float sinValue = sin(rotation);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
-            hgl::Matrix3f transformMatrix = {
-                a * cosValue, -b * sinValue, x * a * cosValue - y * b * sinValue,
-                a * sinValue, -b * cosValue, x * a * sinValue + y * b * cosValue,
-                0         , 0          , 1
-            };
+            hgl::Vector4f data[2];
+
+            /*
+                a*cos -a*sin -a*cos*x+a*sin*y+x
+                b*sin b*cos  -b*sin*x-b*cos*y+y
             */
+            data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, 0.0f);
+            data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, 0.0f);
             uint8_t* ptr = (uint8_t*)_batches[batchIndex].uniformBuffer->pointer();
-            memcpy( ptr+sizeof(GeometryTransformArgument)*elementIndex , &transformMatrix, sizeof(transformMatrix));
+            memcpy( ptr+sizeof(data)*elementIndex , &data, sizeof(data));
         }
 
         bool GDIContext::initialize()
