@@ -12,6 +12,8 @@ namespace ugi {
 
     namespace gdi {
 
+        typedef uint32_t GeometryHandle;
+
         // 存储 GDI 设备上下文的状态
         // 先 使用GeometryBuilder 在CPU端组装顶点以及索引数据
         class GDIContext {
@@ -101,6 +103,7 @@ namespace ugi {
                 // 第一个uniform默认就是不作任务变换
                 _uniformElements.reserve(1024);
                 _uniformElements.resize(1);
+                _uniformElements[0].transformMatrix = hgl::Matrix3f::identity;
             }
 
             const GeometryVertex* vertexData() const noexcept;
@@ -109,6 +112,7 @@ namespace ugi {
             size_t indexDataLength() const noexcept;
             const void* uniformData() const noexcept;
             size_t uniformDataLength() const noexcept;
+            size_t uniformElementCount() const  noexcept;
         };
 
         class GeometryGPUDrawData;
@@ -135,14 +139,14 @@ namespace ugi {
             {
             }
 
-            void addGeometry( 
+            GeometryHandle addGeometry( 
                 GeometryVertex const*   vertices, 
                 size_t                  vertexCount, 
                 uint16_t const*         indices, 
                 size_t                  indexCount
             );
 
-            void addGeometry( 
+            GeometryHandle addGeometry( 
                 GeometryVertex const*   vertices, 
                 size_t                  vertexCount, 
                 uint16_t const*         indices, 
@@ -171,7 +175,7 @@ namespace ugi {
             }
             //
             void drawLine( GeometryMemoryData* geomData, const hgl::Vector2f& pointStart, const hgl::Vector2f& pointEnd, float width, uint32_t color );
-            uint32_t drawRect( GeometryMemoryData* geomData, float x, float y, float width, float height, uint32_t color, bool dynamic = false );
+            GeometryHandle drawRect( GeometryMemoryData* geomData, float x, float y, float width, float height, uint32_t color, bool dynamic = false );
         };
 
         class GeometryGPUDrawData {
@@ -187,14 +191,14 @@ namespace ugi {
             /// <summary>
             ///  GPU Resource                    
             /// </summary>
-            ugi::Buffer*                         _vertexBuffer;
-            ugi::Buffer*                         _indexBuffer;
-            ugi::Drawable*                       _drawable;
+            ugi::Buffer*                        _vertexBuffer;
+            ugi::Buffer*                        _indexBuffer;
+            ugi::Drawable*                      _drawable;
             //
-            std::vector<DrawBatch>  _batches;
+            std::vector<DrawBatch>              _batches;
         public:
             GeometryGPUDrawData(GDIContext* context);
-
+            void updateGeometryTranslation( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation );
             void draw( RenderCommandEncoder* encoder );
 
             ~GeometryGPUDrawData();

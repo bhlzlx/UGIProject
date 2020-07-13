@@ -23,9 +23,11 @@ layout( set = 0, binding = 1 ) uniform ContextInfo {
 };
 
 void main() {
-    float x = (position.x / screenWidth * 2.0f) - 1.0f;
-    float y = (position.y / screenHeight * 2.0f) - 1.0f;
-	gl_Position = vec4( x, y, 0.0f, 1.0f );
+    vec3 vec3p = vec3(position,1.0f) * transform[uniformIndex];
+    vec3p = vec3p / vec3p.z;
+    float x = (vec3p.x / screenWidth * 2.0f) - 1.0f;
+    float y = (vec3p.y / screenHeight * 2.0f) - 1.0f;
+	gl_Position = vec4( x,y,0, 1.0f );
 	frag_color = vec4(
         (color>>24)/255.0f, 
         (color>>16&0xff)/255.0f, 

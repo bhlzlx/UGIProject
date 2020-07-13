@@ -49,6 +49,7 @@ namespace ugi {
         bool prepairResource( ResourceCommandEncoder* encoder );
         bool prepairResource();
         void bind( CommandBuffer* commandBuffer );
+        ~ArgumentGroup();
     public:
         static uint32_t GetDescriptorHandle( const char* descriptorName, const PipelineDescription& pipelineDescription );
     };

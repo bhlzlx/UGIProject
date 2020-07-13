@@ -15,13 +15,35 @@ namespace ugi {
 
         GeometryTransformArgument::GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor)
         {
+            hgl::Matrix3f A = {
+                1.0f, 0.0f, -anchor.x,
+                0.0f, 1.0f, -anchor.y,
+                0.0f, 0.0f, 1.0f,
+            };
+            hgl::Matrix3f B = {
+                cos(rad), -sin(rad), 0,
+                sin(rad), cos(rad), 0,
+                0.0f, 0.0f, 1.0f,
+            };
+            hgl::Matrix3f C = {
+                scale.x, 0, 0,
+                0, scale.y, 0,
+                0, 0,       1
+            };
+            hgl::Matrix3f D = {
+                1.0f, 0.0f, anchor.x,
+                0.0f, 1.0f, anchor.y,
+                0.0f, 0.0f, 1.0f,
+            };
+            transformMatrix = A * B * C * D;
+            /*
             float cosValue = cos(rad); float sinValue = sin(rad);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
             transformMatrix = {
                 a * cosValue, -b * sinValue, x * a * cosValue - y * b * sinValue,
                 a * sinValue, -b * cosValue, x * a * sinValue + y * b * cosValue,
                 0         , 0          , 1
-            };
+            };*/
         }
         const GeometryVertex* GeometryBatch::vertexData() const  noexcept {
             if (_vertices.size()) {
@@ -45,6 +67,9 @@ namespace ugi {
         }
         size_t GeometryBatch::uniformDataLength() const  noexcept {
             return _uniformElements.size() * sizeof(GeometryTransformArgument);
+        }
+        size_t GeometryBatch::uniformElementCount() const  noexcept {
+            return _uniformElements.size();
         }
 
 
@@ -118,7 +143,7 @@ namespace ugi {
             geomData->addGeometry(points, 4, indices, 6);
         }
 
-        uint32_t GeometryBuilder::drawRect(
+        GeometryHandle GeometryBuilder::drawRect(
             GeometryMemoryData* geomData, 
             float x, float y, 
             float width, float height, 
@@ -158,6 +183,7 @@ namespace ugi {
         }
         
         GeometryGPUDrawData::~GeometryGPUDrawData() {
+
             if (_vertexBuffer) {
                 _vertexBuffer->release(_context->device());
             }
@@ -167,18 +193,23 @@ namespace ugi {
             if (_drawable) {
                 delete _drawable;
             }
+            for( auto& batch : _batches) {
+                delete batch.argument;
+                batch.uniformBuffer->release(_context->device());
+            }
         }
 
-        void GeometryMemoryData::addGeometry(GeometryVertex const* vertices, size_t vertexCount, uint16_t const* indices, size_t indexCount) {
+        GeometryHandle GeometryMemoryData::addGeometry(GeometryVertex const* vertices, size_t vertexCount, uint16_t const* indices, size_t indexCount) {
             auto& last = _geometryBatches.back();
             if (!last.appendVertices(vertices, vertexCount, indices, indexCount, nullptr)) {
                 _geometryBatches.emplace_back();
                 bool rst = _geometryBatches.back().appendVertices(vertices, vertexCount, indices, indexCount, nullptr);
                 assert(rst);
             }
+            return 0;
         }
         
-        void GeometryMemoryData::addGeometry(GeometryVertex const* vertices, size_t vertexCount, uint16_t const* indices, size_t indexCount, float angle, const hgl::Vector2f& scale, const hgl::Vector2f& anchor) {
+        GeometryHandle GeometryMemoryData::addGeometry(GeometryVertex const* vertices, size_t vertexCount, uint16_t const* indices, size_t indexCount, float angle, const hgl::Vector2f& scale, const hgl::Vector2f& anchor) {
             float rad = angle / 180.0f * 3.1415926f;
             GeometryTransformArgument uniform(rad, scale, anchor);
             auto& last = _geometryBatches.back();
@@ -187,6 +218,9 @@ namespace ugi {
                 bool rst = _geometryBatches.back().appendVertices(vertices, vertexCount, indices, indexCount, &uniform);
                 assert(rst);
             }
+            uint16_t batchIndex = _geometryBatches.size() - 1;
+            uint16_t elementIndex = _geometryBatches.back().uniformElementCount() - 1;
+            return (batchIndex<<16) | elementIndex;
         }
 
         GeometryGPUDrawData* GeometryMemoryData::createGeometryDrawData( GDIContext* context ) {
@@ -203,8 +237,11 @@ namespace ugi {
             for (auto& geomBatch : _geometryBatches) {
                 // 分配 UBO 每个drawcall 1024 个 变换元素
                 auto ubo = context->device()->createBuffer(ugi::BufferType::UniformBuffer, sizeof(GeometryTransformArgument) * 1024);
-                
 
+                ubo->map(context->device()); // uniform buffer 支持 perssistent mapping
+                memcpy( ubo->pointer(), geomBatch.uniformData(), geomBatch.uniformDataLength());
+                ubo->unmap(context->device());
+                ubo->map(context->device());
 
                 auto argument = pipeline->createArgumentGroup();
                 ResourceDescriptor contextInfoDescriptor; {
@@ -295,9 +332,48 @@ namespace ugi {
             return drawBatch;
         }
 
+        void GeometryGPUDrawData::updateGeometryTranslation( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
+            assert( handle>>16 < _batches.size());
+            uint16_t batchIndex = handle>>16;
+            uint16_t elementIndex = handle&0xffff;
+
+            hgl::Matrix3f A = {
+                1.0f, 0.0f, -anchor.x,
+                0.0f, 1.0f, -anchor.y,
+                0.0f, 0.0f, 1.0f
+            };
+            hgl::Matrix3f B = {
+                cos(rotation), -sin(rotation), 0,
+                sin(rotation), cos(rotation), 0,
+                0.0f, 0.0f, 1.0f
+            };
+            hgl::Matrix3f C = {
+                scale.x, 0, 0,
+                0, scale.y, 0,
+                0, 0,       1
+            };
+            hgl::Matrix3f D = {
+                1.0f, 0.0f, anchor.x,
+                0.0f, 1.0f, anchor.y,
+                0.0f, 0.0f, 1.0f,
+            };
+            hgl::Matrix3f transformMatrix = A * B * C * D;
+            /*
+            float cosValue = cos(rotation); float sinValue = sin(rotation);
+            float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
+            hgl::Matrix3f transformMatrix = {
+                a * cosValue, -b * sinValue, x * a * cosValue - y * b * sinValue,
+                a * sinValue, -b * cosValue, x * a * sinValue + y * b * cosValue,
+                0         , 0          , 1
+            };
+            */
+            uint8_t* ptr = (uint8_t*)_batches[batchIndex].uniformBuffer->pointer();
+            memcpy( ptr+sizeof(GeometryTransformArgument)*elementIndex , &transformMatrix, sizeof(transformMatrix));
+        }
+
         bool GDIContext::initialize()
         {
-            hgl::io::InputStream* pipelineFile = _assetsSource->Open(hgl::UTF8String("/shaders/GDITest/pipeline.bin"));
+            hgl::io::InputStream* pipelineFile = _assetsSource->Open( hgl::UTF8String("/shaders/GDITest/pipeline.bin") );
             if (!pipelineFile) {
                 return false;
             }

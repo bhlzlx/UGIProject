@@ -471,6 +471,17 @@ namespace ugi {
         return true;
     }
 
+    ArgumentGroup::~ArgumentGroup() {
+        // 只需要回收 descriptor set 对象
+        for( auto descSet : _descriptorSets ) {
+            if(descSet) {
+                DescriptorSetAllocator::Instance()->free(descSet);
+            } else {
+                break;
+            }
+        }
+    }
+
 }
 
 

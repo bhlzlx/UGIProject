@@ -17,24 +17,34 @@ add_executable( ShaderCompiler
 
 if(MSVC)
 target_link_libraries( ShaderCompiler 
-    CMUtil
-    CMCore
-    CMPlatform
-    CMAssetsManage
-    spirv-cross-cored
-    glslangd
-    OSDependentd
-    OGLCompilerd
-    MachineIndependentd
-    GenericCodeGend
-    SPIRVd
+    #
+    general CMUtil
+    general CMCore
+    general CMPlatform
+    general CMAssetsManage
+    #
+    optimized spirv-cross-core
+    optimized glslang
+    optimized OSDependent
+    optimized OGLCompiler
+    optimized MachineIndependent
+    optimized GenericCodeGen
+    optimized SPIRV
+    #
+    debug spirv-cross-cored
+    debug glslangd
+    debug OSDependentd
+    debug OGLCompilerd
+    debug MachineIndependentd
+    debug GenericCodeGend
+    debug SPIRVd
 )
 else()
 target_link_libraries( ShaderCompiler 
     CMUtil
+    CMAssetsManage
     CMCore
     CMPlatform
-    CMAssetsManage
     glslang
     OSDependent
     OGLCompiler

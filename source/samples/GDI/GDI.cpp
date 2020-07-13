@@ -85,10 +85,9 @@ namespace ugi {
                 renderCommandEncoder->setViewport(0, 0, m_width, m_height, 0, 1.0f );
                 renderCommandEncoder->setScissor( 0, 0, m_width, m_height );
                 renderCommandEncoder->bindPipeline(m_gdiContext->pipeline());
-                //renderCommandEncoder->bindArgumentGroup(m_argumentGroup);
-                // renderCommandEncoder->drawIndexed( m_drawable, 0, 3 );
+
                 m_geomDrawData->draw(renderCommandEncoder);
-                //renderCommandEncoder->draw( m_drawable, 3, 0 );
+
             }
             renderCommandEncoder->endEncode();
         }
@@ -127,15 +126,23 @@ namespace ugi {
         m_gdiContext->setSize( hgl::Vector2f(_width, _height) );
         ugi::gdi::GeometryMemoryData geomData;
         ugi::gdi::GeometryBuilder builder(m_gdiContext);
-        builder.drawLine(&geomData, hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 2, 0xffff0088);
+        builder.drawLine(&geomData, hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
         srand(time(0));
         for( uint32_t i = 0; i<16; i++) {
             for( uint32_t j = 0; j<16; j++) {
                 uint32_t color = 0x88 | (rand()%0xff)<<8 |(rand()%0xff)<<16 | (rand()%0xff)<<24;
-                builder.drawRect(&geomData, i*24, j*24, 22, 22, color, true);                
+                builder.drawRect(&geomData, i*24, j*24, 22, 22, color, true);
             }
         }
+        
         m_geomDrawData = geomData.createGeometryDrawData(m_gdiContext);
+
+        // for( uint32_t i = 0; i<16; i++) {
+        //     for( uint32_t j = 0; j<16; j++) {
+        //         m_geomDrawData->updateGeometryTranslation( i+j*16 + 1, hgl::Vector2f(i*24,j*24), hgl::Vector2f( fabs(i-8.0f)/8.0f + 0.5f,fabs(j-8.0f)/8.0f + 0.5f), j*16*i);
+        //     }
+        // }
+        
     }
 
     void GDISample::release() {
