@@ -177,9 +177,9 @@ namespace ugi {
         class GeometryGPUDrawData {
             friend class GeometryMemoryData;
             struct DrawBatch {
-                size_t          indexOffset;             // index offset
-                size_t          indexCount;              // drawIndex 数量
-                ugi::Buffer*    uniformBuffer;
+                size_t              indexOffset;             // index offset
+                size_t              indexCount;              // drawIndex 数量
+                ugi::Buffer*        uniformBuffer;
                 ugi::ArgumentGroup* argument;
             };
         private:
@@ -190,8 +190,6 @@ namespace ugi {
             ugi::Buffer*                         _vertexBuffer;
             ugi::Buffer*                         _indexBuffer;
             ugi::Drawable*                       _drawable;
-
-            // std::vector<ugi::ArgumentGroup*>     _argumentGroup;
             //
             std::vector<DrawBatch>  _batches;
         public:

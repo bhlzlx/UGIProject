@@ -23,10 +23,10 @@ add_executable( GDITest WIN32
 
 target_link_libraries(
     GDITest
-    CMCore
-    CMAssetsManage
-    CMPlatform
     GDI
     UGI
+    CMAssetsManage
+    CMCore
+    CMPlatform
     MathGeoLib
 )

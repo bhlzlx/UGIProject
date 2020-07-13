@@ -15,6 +15,7 @@
 #include <hgl/assets/AssetsSource.h>
 
 #include <cmath>
+#include <time.h>
 
 namespace ugi {
 
@@ -127,7 +128,13 @@ namespace ugi {
         ugi::gdi::GeometryMemoryData geomData;
         ugi::gdi::GeometryBuilder builder(m_gdiContext);
         builder.drawLine(&geomData, hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 2, 0xffff0088);
-        builder.drawRect(&geomData, 10, 10, 200, 300, 0xff000088, true);
+        srand(time(0));
+        for( uint32_t i = 0; i<16; i++) {
+            for( uint32_t j = 0; j<16; j++) {
+                uint32_t color = 0x88 | (rand()%0xff)<<8 |(rand()%0xff)<<16 | (rand()%0xff)<<24;
+                builder.drawRect(&geomData, i*24, j*24, 22, 22, color, true);                
+            }
+        }
         m_geomDrawData = geomData.createGeometryDrawData(m_gdiContext);
     }
 
