@@ -10,6 +10,6 @@ include(use_cm_module)
 include(outputPath)
 
 add_subdirectory( ugi )
-add_subdirectory( UI )
+add_subdirectory( gdi )
 add_subdirectory( samples )
 # add_subdirectory( utility )

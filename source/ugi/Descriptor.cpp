@@ -48,11 +48,9 @@ namespace ugi {
         VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
         // 从缓存里查找
         auto iter = _freeTable.find(setLayout);
-        if( iter != _freeTable.end()) {
-            if(iter->second.size()) {
-                descriptorSet = iter->second.back();
-                iter->second.pop_back();
-            }
+        if( iter != _freeTable.end() && iter->second.size() ) {
+            descriptorSet = iter->second.back();
+            iter->second.pop_back();
         } else {
             // 从pool里分配
             auto pool = _vecDescriptorPool.back();

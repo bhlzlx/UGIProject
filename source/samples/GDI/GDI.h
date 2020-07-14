@@ -5,7 +5,9 @@
 #include <ugi/UGITypes.h>
 #include <ugi/Argument.h>
 #include <ugi/ResourceManager.h>
-#include <UI/UI2D.h>
+#include <gdi/gdi.h>
+#include <gdi/geometry/geometryBuilder.h>
+#include <gdi/geometry/geometryDrawData.h>
 
 namespace ugi {
 
@@ -27,6 +29,7 @@ namespace ugi {
         ugi::ArgumentGroup*     m_argumentGroup;                                    //
         
         ugi::gdi::GDIContext*   m_gdiContext;
+        ugi::gdi::IGeometryBuilder* m_geomBuilder;
         ugi::gdi::GeometryGPUDrawData* m_geomDrawData;                              //
         ugi::UniformAllocator*  m_uniformAllocator;
         //
