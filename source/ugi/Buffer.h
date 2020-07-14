@@ -69,7 +69,7 @@ namespace ugi {
         }
 
         bool mappable() const {
-            return _mappable;
+            return !!_mappable;
         }
         bool persisstentMappable() const {
             if( _bufferType == BufferType::VertexBufferStream ) {

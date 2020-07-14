@@ -13,6 +13,7 @@
 #include <ugi/Drawable.h>
 #include <ugi/UniformBuffer.h>
 #include <hgl/assets/AssetsSource.h>
+#include <gdi/geometry/geometryBuilder.h>
 
 #include <cmath>
 #include <time.h>
@@ -66,11 +67,17 @@ namespace ugi {
         ++angle;
         float rad = (float)angle/180.0f*3.141592654;
 
-        for( uint32_t i = 0; i<16; i++) {
-            for( uint32_t j = 0; j<16; j++) {
-                m_geomDrawData->updateGeometryTranslation( i*16+j+1, hgl::Vector2f(i*24+12, j*24+12), hgl::Vector2f(1.2f, 1.2f), rad);
-            }
-        }
+        // for( uint32_t i = 0; i<16; i++) {
+        //     for( uint32_t j = 0; j<16; j++) {
+        //         m_geomDrawData->updateGeometryTranslation( i*16+j+1, hgl::Vector2f(i*24+12, j*24+12), hgl::Vector2f(1.5f, 1.5f), rad);
+        //     }
+        // }
+
+        // for( uint32_t i = 0; i<2;++i ) {
+        //     for( uint32_t j = 1; j<64; ++j ) {
+        //         m_geomDrawData->updateGeometryTranslation(j,hgl::Vector2f(0, 0), hgl::Vector2f(1.5f, 1.5f), 0 );
+        //     }
+        // }
         
         m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
         // m_uniformAllocator->tick();
@@ -86,7 +93,7 @@ namespace ugi {
             RenderPassClearValues clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
-            clearValues.depth = 0xffffffff;
+            clearValues.stencil = 0xffffffff;
 
             mainRenderPass->setClearValues(clearValues);
 
@@ -134,24 +141,25 @@ namespace ugi {
             delete m_geomDrawData;
         }
         m_gdiContext->setSize( hgl::Vector2f(_width, _height) );
-        ugi::gdi::GeometryMemoryData geomData;
-        ugi::gdi::GeometryBuilder builder(m_gdiContext);
-        builder.drawLine(&geomData, hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
+        if(!m_geomBuilder) {
+            m_geomBuilder = ugi::gdi::CreateGeometryBuilder(m_gdiContext);
+        }
+        m_geomBuilder->prepareBuildGeometry(512);
+        m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
         srand(time(0));
         for( uint32_t i = 0; i<16; i++) {
             for( uint32_t j = 0; j<16; j++) {
                 uint32_t color = 0x88 | (rand()%0xff)<<8 |(rand()%0xff)<<16 | (rand()%0xff)<<24;
-                builder.drawRect(&geomData, i*24, j*24, 22, 22, color, true);
+                m_geomBuilder->drawRect(i*24, j*24, 22, 22, color, true);
             }
         }
-        
-        m_geomDrawData = geomData.createGeometryDrawData(m_gdiContext);
+        m_geomDrawData = m_geomBuilder->endBuildGeometry();
 
-        for( uint32_t i = 0; i<16; i++) {
-            for( uint32_t j = 0; j<16; j++) {
-                m_geomDrawData->updateGeometryTranslation( i*16+j+1, hgl::Vector2f(i*24, j*24), hgl::Vector2f(1.2f, 1.2f), 3.1415926f / 16 * j);
-            }
-        }
+        // for( uint32_t i = 0; i<16; i++) {
+        //     for( uint32_t j = 0; j<16; j++) {
+        //         m_geomDrawData->updateGeometryTranslation( i*16+j+1, hgl::Vector2f(i*24, j*24), hgl::Vector2f(1.2f, 1.2f), 3.1415926f / 16 * j);
+        //     }
+        // }
         
     }
 

@@ -1,5 +1,7 @@
 project ( GDI )
 
+add_definitions( -DWIN32_LEAN_AND_MEAN )
+
 include_directories(
     ${SOLUTION_DIR}/source
     ${SOLUTION_DIR}/thirdpart/include
@@ -11,7 +13,10 @@ include_directories(
 )
 
 set( GDI_SOURCE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/UI2D.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gdi.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geometry/geometryDefine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geometry/geometryBuilder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geometry/geometryDrawData.cpp
 )
 
 add_library( GDI STATIC
