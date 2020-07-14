@@ -98,9 +98,11 @@ namespace ugi {
             );
 
             void reset() {
-                for( auto& batch : _geometryBatches ) {
-                    batch.reset();
-                }
+                _geometryBatches.resize(1);
+                _geometryBatches[0].reset();
+                // for( auto& batch : _geometryBatches ) {
+                //     batch.reset();
+                // }
             }
 
             GeometryGPUDrawData* createGeometryDrawData( GDIContext* context );

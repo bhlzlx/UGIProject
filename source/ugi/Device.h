@@ -158,7 +158,7 @@ namespace ugi {
     private:
         DeviceDescriptorVulkan m_deviceDescriptorVk;
         //
-        void createVulkanInstance();
+        void createVulkanInstance( bool validation = false );
         void selectVulkanPhysicalDevice();
         void createVulkanSurface();
         Device* createVulkanDevice();

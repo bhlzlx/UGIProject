@@ -135,7 +135,7 @@ namespace ugi {
 //              #include "VulkanFunctionRegistList.h"
 //          };
 // #endif
-        createVulkanInstance();
+        createVulkanInstance( _descriptor.debugLayer );
         m_deviceDescriptorVk.assetSource = assetSource;
         // setup debug
         debugReporter.setupDebugReport( m_deviceDescriptorVk.instance );
@@ -146,7 +146,7 @@ namespace ugi {
         return createVulkanDevice();
     }
 
-    void RenderSystem::createVulkanInstance() {
+    void RenderSystem::createVulkanInstance(bool validation) {
         const char APPLICATION_NAME[] = "UGI - VULKAN";
         const char ENGINE_NAME[] = "UGI - VULKAN ENGINE";
         VkApplicationInfo applicationInfo; {
@@ -180,16 +180,19 @@ namespace ugi {
             vecLayerProps.resize(count);
             vkEnumerateInstanceLayerProperties(&count, &vecLayerProps[0]);
         }
-        for (auto& layer : vecLayerProps)
-        {
-            for (auto& enableLayer : LayerList)
+
+        if (validation) {
+            for (auto& layer : vecLayerProps)
             {
-                if (strcmp(layer.layerName, enableLayer) == 0)
+                for (auto& enableLayer : LayerList)
                 {
-                    vecLayers.push_back( enableLayer );
+                    if (strcmp(layer.layerName, enableLayer) == 0)
+                    {
+                        vecLayers.push_back(enableLayer);
+                    }
                 }
             }
-        }
+        }        
         // ============= Get Extention List =============
         count = 0;
         std::vector< VkExtensionProperties > vecExtProps;
