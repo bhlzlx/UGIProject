@@ -17,8 +17,8 @@ namespace ugi {
 
         class IGeometryBuilder {
         public:
-            virtual void prepareBuildGeometry( uint32_t maxBatchVertex = 4096 ) = 0;
-            virtual GeometryGPUDrawData* endBuildGeometry() = 0;
+            virtual void beginBuild() = 0;
+            virtual GeometryGPUDrawData* endBuild() = 0;
             virtual void drawLine( const hgl::Vector2f& pointStart, const hgl::Vector2f& pointEnd, float width, uint32_t color ) = 0;
             virtual GeometryHandle drawRect( float x, float y, float width, float height, uint32_t color, bool dynamic = false )  = 0;
             ~IGeometryBuilder() {}

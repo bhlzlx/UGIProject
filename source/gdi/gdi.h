@@ -23,9 +23,11 @@ namespace ugi {
             hgl::assets::AssetsSource*  _assetsSource;
             ugi::PipelineDescription    _pipelineDesc;
             ugi::Pipeline*              _pipeline;
-            ugi::Buffer*                _contextInfo; // uniform buffer with the context info
+            ugi::Buffer*                _contextInfo;   // uniform buffer with the context info
+            //  
+            hgl::Vector2f               _size;          // context size( width,height )
             //
-            hgl::Vector2f               _size;        // context size( width,height )
+            uint32_t                    _uniformMaxSize;
         public:
             GDIContext( ugi::Device* device, hgl::assets::AssetsSource* assetsSource )
                 : _device( device )

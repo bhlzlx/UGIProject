@@ -4,8 +4,9 @@ namespace ugi {
 
     namespace gdi {
 
-        GeometryTransformArgument::GeometryTransformArgument()
-        {
+        GeometryTransformArgument::GeometryTransformArgument() {
+            data[0] = hgl::Vector4f( 1.0f, 0.0f, 0.0f, 0.0f);
+            data[1] = hgl::Vector4f( 0.0f, 1.0f, 0.0f, 0.0f);
         }
 
         GeometryTransformArgument::GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor)

@@ -7,6 +7,7 @@
 #include <ugi/CommandBuffer.h>
 #include <ugi/CommandQueue.h>
 #include <ugi/Argument.h>
+#include <ugi/UniformBuffer.h>
 
 #include <hgl/assets/AssetsSource.h>
 
@@ -24,10 +25,10 @@ namespace ugi {
 
         void GeometryGPUDrawData::draw(RenderCommandEncoder* encoder) {
             // uint32_t vertexOffset;
-            for (const auto& batch : _batches) {
-                encoder->bindArgumentGroup(batch.argument);
-                encoder->drawIndexed(_drawable, (uint32_t)batch.indexOffset, (uint32_t)batch.indexCount, batch.vertexOffset);
-            }
+            // for (const auto& batch : _batches) {
+            //     encoder->bindArgumentGroup(batch.argument);
+            //     encoder->drawIndexed(_drawable, (uint32_t)batch.indexOffset, (uint32_t)batch.indexCount, batch.vertexOffset);
+            // }
         }
         
         GeometryGPUDrawData::~GeometryGPUDrawData() {
@@ -41,10 +42,10 @@ namespace ugi {
             if (_drawable) {
                 delete _drawable;
             }
-            for( auto& batch : _batches) {
-                delete batch.argument;
-                batch.uniformBuffer->release(_context->device());
-            }
+            // for( auto& batch : _batches) {
+            //     delete batch.argument;
+            //     batch.uniformBuffer->release(_context->device());
+            // }
         }
 
         void GeometryGPUDrawData::updateGeometryTranslation( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
@@ -63,10 +64,23 @@ namespace ugi {
             */
             data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, 0.0f);
             data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, 0.0f);
-            uint8_t* ptr = (uint8_t*)_batches[batchIndex].uniformBuffer->pointer();
-            memcpy( ptr+sizeof(data)*elementIndex , &data, sizeof(data));
+            // uint8_t* ptr = (uint8_t*)_batches[batchIndex].uniformBuffer->pointer();
+            // memcpy( ptr+sizeof(data)*elementIndex , &data, sizeof(data));
         }
 
+        void GeometryGPUDrawData::prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator ) {
+            for( size_t i = 0; i<_batches.size(); ++i) {
+                uint32_t uboSize = _batches[i]._transArgCount* sizeof(GeometryTransformArgument);
+                auto ubo = allocator->allocate(uboSize);
+                ubo.writeData(0, _batches[i]._transArgBuffer, uboSize);
+                _transformDescriptor.buffer = ubo.buffer();
+                _transformDescriptor.bufferOffset = ubo.offset();
+                //
+                _argGroups[i]->updateDescriptor(_transformDescriptor);
+                _argGroups[i]->prepairResource(encoder);
+            }
+        }
+        
     }
 
 }

@@ -18,36 +18,6 @@ namespace ugi {
                 uint32_t        uniformElement;     // uniform 元素的索引
             };
 
-            /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
-            *  uniform 里主要是存共用的值，比如旋转，缩放，
-            *  一般画一个矩形或者多个复杂的形状缩放和角度都是相同的，这个值是可以复用的
-            *  基本上等同于一个 3x3 矩阵
-            *  变换过程，先 加一个负的 anchor 偏移，再缩放，再旋转，再加一个 anchor 偏移
-            * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-            /*
-                1 0 -x  |  cos -sin 0  |  a 0 0  |  1 0 x
-                0 1 -y  |  sin cos  0  |  0 b 0  |  0 1 y
-                0 0  1  |  0   0    1  |  0 0 1  |  0 0 1
-                从左到右变换，从右往左乘
-        */
-            /*
-                a*cos | -a*sin  | -a*cos*x+a*sin*y+x
-                b*sin | b*cos   | -b*sin*x-b*cos*y+y
-                0     | 0       | 1
-            */
-            struct GeometryTransformArgument {
-                // 基本上等同于一个 3x3 矩阵
-                // 变换过程，先 加一个负的 anchor 偏移，再绽放，再旋转，再加一个 anchor 偏移
-                /*  我们要往shader里传 mat3x3 但是第三行总是 (0,0,1)所以就可以不传了，GLSL里有限制内存布局是vec3占用空间也是vec4，所以我们就传两个vec4来代替mat3x3
-                    a*cos -a*sin -a*cos*x+a*sin*y+x
-                    b*sin b*cos  -b*sin*x-b*cos*y+y
-                */
-                hgl::Vector4f data[2];
-                GeometryTransformArgument();
-
-                GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor);
-            };
-
     }
 
 }

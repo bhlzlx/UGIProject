@@ -73,11 +73,11 @@ namespace ugi {
         //     }
         // }
 
-        // for( uint32_t i = 0; i<2;++i ) {
-        //     for( uint32_t j = 1; j<64; ++j ) {
-        //         m_geomDrawData->updateGeometryTranslation(j,hgl::Vector2f(0, 0), hgl::Vector2f(1.5f, 1.5f), 0 );
-        //     }
-        // }
+        for( uint32_t i = 0; i<2;++i ) {
+            for( uint32_t j = 1; j<64; ++j ) {
+                m_geomDrawData->updateGeometryTranslation(j,hgl::Vector2f(0, 0), hgl::Vector2f(1.5f, 1.5f), 0 );
+            }
+        }
         
         m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
         // m_uniformAllocator->tick();
