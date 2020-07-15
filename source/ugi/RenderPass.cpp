@@ -291,4 +291,17 @@ namespace ugi {
         }
     }
 
+    void RenderPass::release( Device* device ) {
+        // 它持有的资源，仅有 Framebuffer/RenderPass对象，纹理资源不让它来管理，由上层来管理
+        if( m_framebuffer) {
+            vkDestroyFramebuffer( device->device(), m_framebuffer, nullptr );
+            m_framebuffer = VK_NULL_HANDLE;
+        }
+        if(m_renderPass) {
+            vkDestroyRenderPass( device->device(), m_renderPass, nullptr );
+            m_renderPass = VK_NULL_HANDLE;        
+        }
+        delete this;
+    }
+
 }

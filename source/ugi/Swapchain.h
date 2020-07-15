@@ -22,7 +22,7 @@ namespace ugi {
         uint32_t                            m_embedTextureCount;
         VkImage                             m_images[4];
         Texture*                            m_embedTextures[4];
-        Texture*                            m_depthStencilTextures[4];
+        Texture*                            m_depthStencilTexture;
         IRenderPass*                        m_renderPasses[4];
         // state description
         uint32_t                            m_imageIndex;
@@ -37,7 +37,10 @@ namespace ugi {
             : m_swapchain(VK_NULL_HANDLE)
             , m_createInfo {}
             , m_imageAvailSemaphores {}
-            // , m_renderCompleteSemaphores{}
+            , m_embedTextureCount(4)
+            , m_images { VK_NULL_HANDLE }
+            , m_embedTextures{ nullptr }
+            , m_depthStencilTexture(nullptr)
             , m_renderPasses {}
             , m_imageIndex(0)
             , m_flightIndex(0)

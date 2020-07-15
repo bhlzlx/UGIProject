@@ -121,6 +121,10 @@ namespace ugi {
         Drawable* createDrawable( const PipelineDescription& pipelineDescription );
         UniformAllocator* createUniformAllocator();
 
+        void destroyRenderPass( IRenderPass* renderPass );
+        void destroyTexture( Texture* texture );
+        void destroyBuffer( Buffer* texture );
+
         ///---
         void registArgumentGroupLayout( const PipelineDescription& pipelineDescription, const ArgumentGroupLayout* argumentGroupLayout );
         const ArgumentGroupLayout* getArgumentGroupLayout( const PipelineDescription& pipelineDescription, uint64_t* hashPtr );

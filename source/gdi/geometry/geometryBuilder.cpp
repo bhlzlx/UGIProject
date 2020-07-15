@@ -253,6 +253,7 @@ namespace ugi {
             uploadQueue->waitIdle();
             // 销毁 staging buffer
             stagingBuffer->release(device);
+            delete cmd;
             //
             auto drawable = new Drawable(1);
             drawable->setVertexBuffer(vertexBuffer, 0, 0);

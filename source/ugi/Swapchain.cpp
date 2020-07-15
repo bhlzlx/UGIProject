@@ -271,9 +271,11 @@ namespace ugi {
             colorTexDesc.arrayLayers = 1;
             colorTexDesc.type = TextureType::Texture2D;
             m_embedTextures[embedImageIndex] = Texture::CreateTexture( _device, m_images[embedImageIndex], VK_NULL_HANDLE, colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
-            TextureDescription depthStencilTexDesc = colorTexDesc;
-            depthStencilTexDesc.format = UGIFormat::Depth32F;
-            m_depthStencilTextures[embedImageIndex] = Texture::CreateTexture( _device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
+            if(!m_depthStencilTexture) {
+                TextureDescription depthStencilTexDesc = colorTexDesc;
+                depthStencilTexDesc.format = UGIFormat::Depth32F;
+                m_depthStencilTexture = Texture::CreateTexture( _device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
+            }
             //
             // auto renderPassObjManager = _device->renderPassObjectManager();
             RenderPassDescription renderPassDesc;
@@ -290,13 +292,30 @@ namespace ugi {
             renderPassDesc.depthStencil.finalAccessType = ResourceAccessType::DepthStencilReadWrite;
             renderPassDesc.inputAttachmentCount = 0;
             //
-            m_renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( _device, renderPassDesc, &m_embedTextures[embedImageIndex], m_depthStencilTextures[embedImageIndex] );
+            m_renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( _device, renderPassDesc, &m_embedTextures[embedImageIndex], m_depthStencilTexture );
         }
         return true;
     }
 
-    void Swapchain::cleanup( Device* _device ) {
-        // vkDestroyRenderPass( )
+    void Swapchain::cleanup( Device* device ) {
+        for( auto& rp : m_renderPasses) {
+            if( rp) {
+                device->destroyRenderPass(rp);
+                rp = nullptr;
+            }
+        }
+        for( auto& colorTex : m_embedTextures ) {
+            if(colorTex) {
+                device->destroyTexture(colorTex);
+                colorTex = nullptr;
+            }else {
+                break;
+            }
+        }
+        if( m_depthStencilTexture) {
+            device->destroyTexture(m_depthStencilTexture);
+            m_depthStencilTexture = nullptr;
+        }        
     }
 
     IRenderPass* Swapchain::renderPass( uint32_t _index ) {

@@ -89,4 +89,10 @@ namespace ugi {
         return cb;
     }
 
+    void CommandQueue::destroyCommandBuffer( Device* device, CommandBuffer* commandBuffer ) {
+        VkCommandBuffer cmd = *commandBuffer;
+        vkFreeCommandBuffers( device->device(), m_commandPool, 1, &cmd);
+        delete commandBuffer;
+    }
+
 }

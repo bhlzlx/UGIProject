@@ -604,5 +604,17 @@ namespace ugi {
         auto allocator = UniformAllocator::createUniformAllocator(this);
         return allocator;
     }
+
+    void Device::destroyRenderPass( IRenderPass* renderPass ) {
+        renderPass->release(this);
+    }
+
+    void Device::destroyTexture( Texture* texture ) {
+        texture->release(this);
+    }
+
+    void Device::destroyBuffer( Buffer* buffer ) {
+        buffer->release(this);
+    }
 }
 

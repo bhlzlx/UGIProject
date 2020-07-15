@@ -50,6 +50,7 @@ namespace ugi {
         }
         //
         CommandBuffer* createCommandBuffer( Device* _device );
+        void destroyCommandBuffer( Device* device, CommandBuffer* commandBuffer );
         //
         operator VkQueue() const {
             return m_queue;

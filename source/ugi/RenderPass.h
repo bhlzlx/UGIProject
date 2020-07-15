@@ -50,6 +50,7 @@ namespace ugi {
         virtual VkRenderPass renderPass() const = 0;
         virtual void begin( RenderCommandEncoder* encoder ) const = 0;
         virtual void end( RenderCommandEncoder* encoder ) const = 0;
+        virtual void release( Device* device ) = 0;
     };
 
     class RenderPass : IRenderPass {
@@ -91,6 +92,7 @@ namespace ugi {
         }
         virtual void begin( RenderCommandEncoder* encoder ) const override;
         virtual void end( RenderCommandEncoder* encoder ) const override;
+        virtual void release( Device* device ) override;
         //
         static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _renderPass, Texture** _colors, Texture* _depthStencil );
     };
