@@ -38,18 +38,23 @@ namespace ugi {
             submitInfo[submitInfoIndex].pNext = nullptr; // 
             submitInfo[submitInfoIndex].sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             submitInfo[submitInfoIndex].signalSemaphoreCount = _batch.submitInfos[submitInfoIndex].semaphoresToSignalCount;
-            submitInfo[submitInfoIndex].pSignalSemaphores = semaphoresToSignal[submitInfoIndex];
+			if (submitInfo[submitInfoIndex].signalSemaphoreCount) {
+				submitInfo[submitInfoIndex].pSignalSemaphores = semaphoresToSignal[submitInfoIndex];
+			}
             submitInfo[submitInfoIndex].waitSemaphoreCount = _batch.submitInfos[submitInfoIndex].semaphoresToWaitCount;
-            submitInfo[submitInfoIndex].pWaitSemaphores = semaphoresToWait[submitInfoIndex];
+			if (submitInfo[submitInfoIndex].waitSemaphoreCount) {
+				submitInfo[submitInfoIndex].pWaitSemaphores = semaphoresToWait[submitInfoIndex];
+			}
             submitInfo[submitInfoIndex].pCommandBuffers = commandBuffers[submitInfoIndex];
             submitInfo[submitInfoIndex].commandBufferCount = _batch.submitInfos[submitInfoIndex].commandCount;
             submitInfo[submitInfoIndex].pWaitDstStageMask = semaphoreToWaitStageFlags[submitInfoIndex]; // 这个以后得改，因为以后不止做渲染队列使用
         }
-        VkFence fence = _batch.fenceToSignal? _batch.fenceToSignal->operator VkFence() : VK_NULL_HANDLE;
+		VkFence fence = VK_NULL_HANDLE;
+		if (_batch.fenceToSignal) {
+			fence = (VkFence)(*_batch.fenceToSignal);
+			_batch.fenceToSignal->waitToBeSignal();
+		}
         VkResult rst = vkQueueSubmit( m_queue, _batch.submitInfoCount, submitInfo, fence );
-        if( fence ) {
-            _batch.fenceToSignal->waitToBeSignal();
-        }
         if( rst == VK_SUCCESS ) {
             return true;
         }

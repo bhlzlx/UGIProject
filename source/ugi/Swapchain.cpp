@@ -188,7 +188,6 @@ namespace ugi {
         //
         for( uint32_t i = 0; i<MaxFlightCount; ++i){
             m_imageAvailSemaphores[i] = _deviceVulkan->createSemaphore();
-            // m_renderCompleteSemaphores[i] = _deviceVulkan->createSemaphore();
         }
         //
         return true;

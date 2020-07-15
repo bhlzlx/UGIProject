@@ -242,13 +242,9 @@ namespace ugi {
                 cmd->endEncode();
             }
             // 提交指令去执行
-            QueueSubmitBatchInfo submitBatchInfo;
-            QueueSubmitInfo submitInfo;
-            submitBatchInfo.fenceToSignal = nullptr;
-            submitBatchInfo.submitInfoCount = 1;
-            submitBatchInfo.submitInfos = &submitInfo;
-            submitInfo.commandBuffers = &cmd;
-            submitInfo.commandCount = 1;
+            
+			QueueSubmitInfo submitInfo(&cmd, 1, nullptr, 0, nullptr, 0);
+			QueueSubmitBatchInfo submitBatchInfo(&submitInfo, 1, nullptr);
             uploadQueue->submitCommandBuffers(submitBatchInfo);
             uploadQueue->waitIdle();
             // 销毁 staging buffer

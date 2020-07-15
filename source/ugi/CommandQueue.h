@@ -7,8 +7,8 @@
 #include <cstdint>
 
 namespace ugi {
+
     struct QueueSubmitInfo {
-        //
         CommandBuffer** commandBuffers = nullptr;
         uint32_t        commandCount = 0;
         //
@@ -16,14 +16,27 @@ namespace ugi {
         uint32_t        semaphoresToWaitCount = 0;
         Semaphore**     semaphoresToSignal = nullptr;
         uint32_t        semaphoresToSignalCount = 0;
+		QueueSubmitInfo(CommandBuffer** pCmdBuffs, uint32_t cmdCount, Semaphore** pWaitSems, uint32_t semWaitCount, Semaphore** pSigSems, uint32_t semSigCount)
+			: commandBuffers(pCmdBuffs)
+			, commandCount(cmdCount)
+			, semaphoresToWait(pWaitSems)
+			, semaphoresToWaitCount(semWaitCount)
+			, semaphoresToSignal(pSigSems)
+			, semaphoresToSignalCount(semSigCount) {
+		}
     };
 
     struct QueueSubmitBatchInfo {
         QueueSubmitInfo*    submitInfos = nullptr;
         uint32_t            submitInfoCount = 0;
-        //
         Fence*              fenceToSignal = nullptr;
-    };
+		QueueSubmitBatchInfo(QueueSubmitInfo* pSubmitInfos, uint32_t infoCount, Fence* fenceSig)
+			: submitInfos(pSubmitInfos)
+			, submitInfoCount(infoCount)
+			, fenceToSignal(fenceSig)
+		{
+		}
+	};
 
 
     class CommandQueue {

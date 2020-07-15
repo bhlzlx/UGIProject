@@ -29,7 +29,7 @@ namespace ugi {
         ugi::DeviceDescriptor descriptor; {
             descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
             descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
-            descriptor.debugLayer = 0;
+            descriptor.debugLayer = 1;
             descriptor.graphicsQueueCount = 1;
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
@@ -110,23 +110,21 @@ namespace ugi {
         }
         cmdbuf->endEncode();
 
-        QueueSubmitInfo submitInfo = {}; {
-            Semaphore* imageAvailSemaphore = m_swapchain->imageAvailSemaphore();
-            submitInfo.commandBuffers = &cmdbuf;
-            submitInfo.commandCount = 1;
-            submitInfo.semaphoresToSignal = &m_renderCompleteSemaphores[m_flightIndex];
-            submitInfo.semaphoresToSignalCount = 1;
-            submitInfo.semaphoresToWait = &imageAvailSemaphore;
-            submitInfo.semaphoresToWaitCount = 1;
-        }
-
-        QueueSubmitBatchInfo submitBatch;{
-            submitBatch.fenceToSignal = m_frameCompleteFences[m_flightIndex];
-            submitBatch.submitInfos = &submitInfo;
-            submitBatch.submitInfoCount = 1;
-        }
+		Semaphore* imageAvailSemaphore = m_swapchain->imageAvailSemaphore();
+		QueueSubmitInfo submitInfo {
+			&cmdbuf,
+			1,
+			&imageAvailSemaphore,// submitInfo.semaphoresToWait
+			1,
+			&m_renderCompleteSemaphores[m_flightIndex], // submitInfo.semaphoresToSignal
+			1
+		};
+		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, m_frameCompleteFences[m_flightIndex]);
         bool submitRst = m_graphicsQueue->submitCommandBuffers(submitBatch);
-        assert(submitRst);
+        // assert(submitRst);
+		if (!submitRst) {
+			printf("submit command failed!");
+		}
         m_swapchain->present( m_device, m_graphicsQueue, m_renderCompleteSemaphores[m_flightIndex] );
 
     }
@@ -137,23 +135,23 @@ namespace ugi {
         m_width = _width;
         m_height = _height;
         //
-        if (m_geomDrawData) {
-            delete m_geomDrawData;
-        }
         m_gdiContext->setSize( hgl::Vector2f(_width, _height) );
-        if(!m_geomBuilder) {
-            m_geomBuilder = ugi::gdi::CreateGeometryBuilder(m_gdiContext);
-        }
-        m_geomBuilder->prepareBuildGeometry(512);
-        m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
-        srand(time(0));
-        for( uint32_t i = 0; i<16; i++) {
-            for( uint32_t j = 0; j<16; j++) {
-                uint32_t color = 0x88 | (rand()%0xff)<<8 |(rand()%0xff)<<16 | (rand()%0xff)<<24;
-                m_geomBuilder->drawRect(i*24, j*24, 22, 22, color, true);
-            }
-        }
-        m_geomDrawData = m_geomBuilder->endBuildGeometry();
+		if (!m_geomDrawData) {
+			if (!m_geomBuilder) {
+				m_geomBuilder = ugi::gdi::CreateGeometryBuilder(m_gdiContext);
+				m_geomBuilder->prepareBuildGeometry(512);
+				m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
+				srand(time(0));
+				for (uint32_t i = 0; i<16; i++) {
+					for (uint32_t j = 0; j<16; j++) {
+						uint32_t color = 0x88 | (rand() % 0xff) << 8 | (rand() % 0xff) << 16 | (rand() % 0xff) << 24;
+						m_geomBuilder->drawRect(i * 24, j * 24, 22, 22, color, true);
+					}
+				}
+				m_geomDrawData = m_geomBuilder->endBuildGeometry();
+			}
+		}
+               
 
         // for( uint32_t i = 0; i<16; i++) {
         //     for( uint32_t j = 0; j<16; j++) {
