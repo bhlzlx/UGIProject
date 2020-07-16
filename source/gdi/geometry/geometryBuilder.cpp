@@ -41,6 +41,7 @@ namespace ugi {
                 , _indexBuffer{ new uint16_t[4096] }
                 , _indexCapacity(4096)
                 , _indexCount(0)
+                , _maxArgPerDraw(1024)
                 , _batches {}
             {
             }
@@ -66,11 +67,10 @@ namespace ugi {
         ) {
             // 处理 uniform buffer batch
             assert( _batches.size() );
+            GeometryBatch* batch = &_batches.back();
             uint32_t argIndex = 0;
             if( transform ) {
-                GeometryBatch* batch = &_batches.back();
                 if(batch->_transArgCount >= _maxArgPerDraw) {
-                    batch->_primitiveCount = _indexCount;
                     // 创建新batch
                     GeometryBatch newBatch(
                         _vertexCount, 
@@ -79,7 +79,7 @@ namespace ugi {
                         new GeometryTransformArgument[DEFAULT_GEOM_TRANSFORM_COUNT], 
                         DEFAULT_GEOM_TRANSFORM_COUNT
                     );
-                    _batches.push_back(newBatch);
+                    _batches.push_back( std::move(newBatch) );
                     batch = &_batches.back();
                 }
                 if(batch->_transArgCount >= batch->_transArgCapacity) {
@@ -93,15 +93,23 @@ namespace ugi {
             // 处理顶点数据
             auto vertexLeft = _vertexCapacity - _vertexCount;
             auto indexLeft = _indexCapacity - _indexCount;
+            // 注意这个 indexDisplacement
+            // 比如说现在已经有一四个顶点，对应6个索引，画的三角形List,索引内容是  0 1 3 1 2 3, 这次我们又添加了同样的几何内容
+            // 这次添加的索引依然是 0 1 3 1 2 3 原封不动复制过来显然是不行的，我们要给索引加偏移，让它变成 4 5 7 5 6 7
+            // 所以这个添加的值实际上是现有的顶点数量，即如下代码所示
+            uint32_t indexDisplacement = _vertexCount;{
             if(vertexLeft<vertexCount) {
                 _vertexBuffer = (GeometryVertex*)realloc(_vertexBuffer, (_vertexCapacity*1.5) * sizeof(GeometryVertex));
-                assert(!vertxBuffer);
+                assert(!_vertexBuffer);
                 _vertexCapacity *=1.5;
             }
-            memcpy( _vertexBuffer+_vertexCount, vertices, vertexCount );
+            memcpy( _vertexBuffer+_vertexCount, vertices, vertexCount*sizeof(GeometryVertex) );
             // 处理顶点的uniform索引
-            for( auto vertex = _vertexBuffer+_vertexCount; vertex<_vertexBuffer+_vertexCount+vertexCount; ++vertex ) {
-                vertex->uniformElement = argIndex;
+            {
+                auto iter = _vertexBuffer + _vertexCount;
+                for( uint32_t i = 0; i<vertexCount; ++i ) {
+                    iter[i].uniformElement = argIndex;
+                }
             }
             _vertexCount+=vertexCount;
             // 处理索引数据
@@ -110,8 +118,15 @@ namespace ugi {
                 assert(_indexBuffer);
                 _indexCapacity *=1.5;
             }
-            memcpy( _indexBuffer+indexCount, indices, indexCount );
-            _vertexCount+=vertexCount;
+            memcpy( _indexBuffer+_indexCount, indices, indexCount*sizeof(uint16_t) );
+                auto iter = _indexBuffer + _indexCount;
+                for( uint32_t i = 0; i<indexCount; ++i ) {
+                    iter[i] += indexDisplacement;
+                }
+            }
+            _indexCount+=indexCount;
+
+            batch->_primitiveCount += indexCount;
 
             uint32_t handle = ((_batches.size()-1)<<16) | argIndex;
             return handle;
@@ -159,7 +174,14 @@ namespace ugi {
         }
 
         void GeometryBuilder::beginBuild() {
-
+            // uint32_t firstVertex, uint32_t firstIndex, uint32_t primitiveCount, GeometryTransformArgument* argBuff, uint32_t argCapacity
+            GeometryTransformArgument* argBuff = (GeometryTransformArgument*)malloc(sizeof(GeometryTransformArgument)* 512);
+            _batches.emplace_back(
+                0, 0, 0,
+                argBuff,
+                512
+            );
+            _indexCount = _vertexCount = 0;
         }
 
         GeometryGPUDrawData* GeometryBuilder::endBuild() {
@@ -170,7 +192,8 @@ namespace ugi {
             auto pipeline = _context->pipeline();
             const auto& pipelineDesc = _context->pipelineDescription();
 
-            for (auto& geomBatch : _batches) {
+            // GDI 的 Argument实际上目前只有uniform
+            for( size_t i = 0; i<_batches.size(); ++i) {
                 // UBO 实际上用 ringbuffer 更好
                 auto argument = pipeline->createArgumentGroup();
                 ResourceDescriptor contextInfoDescriptor; {
@@ -183,6 +206,7 @@ namespace ugi {
                 argument->updateDescriptor(contextInfoDescriptor);
                 drawData->_argGroups.push_back(argument);
             }
+
             drawData->_batches = std::move(_batches);
             // 创建 vertexBuffer
             auto vertexBuffer = device->createBuffer(ugi::BufferType::VertexBuffer, _vertexCount*sizeof(GeometryVertex));

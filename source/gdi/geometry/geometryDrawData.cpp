@@ -10,10 +10,44 @@
 #include <ugi/UniformBuffer.h>
 
 #include <hgl/assets/AssetsSource.h>
+#include "geometryDefine.h"
 
 namespace ugi {
 
     namespace gdi {
+    
+        GeometryBatch::GeometryBatch( GeometryBatch&& batch )
+            :_firstVertex(batch._firstVertex)     
+            ,_firstIndex(batch._firstIndex) 
+            ,_primitiveCount(batch._primitiveCount)
+            ,_transArgBuffer(nullptr)
+            ,_transArgCount(batch._transArgCount)
+            ,_transArgCapacity(batch._transArgCapacity)
+        {
+            free(_transArgBuffer );
+            _transArgBuffer = batch._transArgBuffer;
+            batch.reset();
+        }
+
+        GeometryBatch::GeometryBatch( uint32_t firstVertex, uint32_t firstIndex, uint32_t primitiveCount, GeometryTransformArgument* argBuff, uint32_t argCapacity )
+                :_firstVertex(firstVertex)
+                ,_firstIndex(firstIndex) 
+                ,_primitiveCount(primitiveCount)
+                ,_transArgBuffer(argBuff)  
+                ,_transArgCount(1) // 第一个默认单位矩阵
+                ,_transArgCapacity(argCapacity)
+        {
+            argBuff[0] = GeometryTransformArgument();
+        }
+
+        void GeometryBatch::reset() {
+            _firstVertex = 0;
+            _firstIndex = 0;
+            _primitiveCount = 0;
+            _transArgBuffer = nullptr;
+            _transArgCount = 0;
+            _transArgCapacity = 0;
+        }
 
         GeometryGPUDrawData::GeometryGPUDrawData( GDIContext* context )
             : _context(context)
@@ -24,11 +58,13 @@ namespace ugi {
         }
 
         void GeometryGPUDrawData::draw(RenderCommandEncoder* encoder) {
-            // uint32_t vertexOffset;
-            // for (const auto& batch : _batches) {
-            //     encoder->bindArgumentGroup(batch.argument);
-            //     encoder->drawIndexed(_drawable, (uint32_t)batch.indexOffset, (uint32_t)batch.indexCount, batch.vertexOffset);
-            // }
+
+            for (size_t i = 0; i < _batches.size(); i++)
+            {
+                encoder->bindArgumentGroup(_argGroups[i]);
+                encoder->drawIndexed( _drawable, _batches[i]._firstIndex, _batches[i]._primitiveCount, _batches[i]._firstVertex);
+            }
+
         }
         
         GeometryGPUDrawData::~GeometryGPUDrawData() {
@@ -42,15 +78,18 @@ namespace ugi {
             if (_drawable) {
                 delete _drawable;
             }
-            // for( auto& batch : _batches) {
-            //     delete batch.argument;
-            //     batch.uniformBuffer->release(_context->device());
-            // }
+            for( auto& batch : _batches) {
+                free(batch._transArgBuffer);
+            }
+            for( auto& argGroup : _argGroups) {
+                delete argGroup;
+            }
+            
         }
 
         void GeometryGPUDrawData::updateGeometryTranslation( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
-            assert( (handle>>16) < _batches.size());
-            assert( (handle&0xffff) < _maxUniformElement );
+            // assert( (handle>>16) < _batches.size());
+            // assert( (handle&0xffff) < _maxUniformElement );
             uint16_t batchIndex = handle>>16;
             uint16_t elementIndex = handle&0xffff;
 

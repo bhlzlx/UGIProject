@@ -35,7 +35,7 @@ namespace ugi {
             descriptor.wnd = _wnd;
         }
         m_device = m_renderSystem->createDevice(descriptor, assetsSource);
-        // m_uniformAllocator = m_device->createUniformAllocator();
+        m_uniformAllocator = m_device->createUniformAllocator();
         m_swapchain = m_device->createSwapchain( _wnd );
         // command queues
         m_graphicsQueue = m_device->graphicsQueues()[0];
@@ -80,9 +80,9 @@ namespace ugi {
         }
         
         m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
-        // m_uniformAllocator->tick();
+        m_uniformAllocator->tick();
         uint32_t imageIndex = m_swapchain->acquireNextImage( m_device, m_flightIndex );
-        // m_frameCompleteFences[m_flightIndex]->
+
         IRenderPass* mainRenderPass = m_swapchain->renderPass(imageIndex);
         
         auto cmdbuf = m_commandBuffers[m_flightIndex];
@@ -90,23 +90,31 @@ namespace ugi {
         cmdbuf->beginEncode(); {
             hgl::Vector2f screenSize(m_width, m_height);
             //
-            RenderPassClearValues clearValues;
-            clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
-            clearValues.depth = 1.0f;
-            clearValues.stencil = 0xffffffff;
-
-            mainRenderPass->setClearValues(clearValues);
-
-            auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
-                renderCommandEncoder->setLineWidth(1.0f);
-                renderCommandEncoder->setViewport(0, 0, m_width, m_height, 0, 1.0f );
-                renderCommandEncoder->setScissor( 0, 0, m_width, m_height );
-                renderCommandEncoder->bindPipeline(m_gdiContext->pipeline());
-
-                m_geomDrawData->draw(renderCommandEncoder);
-
+            {   ///> resource command encoder
+                auto resEncoder = cmdbuf->resourceCommandEncoder();
+                m_geomDrawData->prepareResource(resEncoder, m_uniformAllocator);
+                resEncoder->endEncode();
             }
-            renderCommandEncoder->endEncode();
+            {   ///> render pass command encoder
+                RenderPassClearValues clearValues;
+                clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
+                clearValues.depth = 1.0f;
+                clearValues.stencil = 0xffffffff;
+
+                mainRenderPass->setClearValues(clearValues);
+
+                auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
+                    renderCommandEncoder->setLineWidth(1.0f);
+                    renderCommandEncoder->setViewport(0, 0, m_width, m_height, 0, 1.0f );
+                    renderCommandEncoder->setScissor( 0, 0, m_width, m_height );
+                    renderCommandEncoder->bindPipeline(m_gdiContext->pipeline());
+
+                    m_geomDrawData->draw(renderCommandEncoder);
+
+                }
+                renderCommandEncoder->endEncode();
+            }
+            
         }
         cmdbuf->endEncode();
 
@@ -135,29 +143,26 @@ namespace ugi {
         m_width = _width;
         m_height = _height;
         //
+        if(m_geomDrawData) {
+            delete m_geomDrawData;
+        }
         m_gdiContext->setSize( hgl::Vector2f(_width, _height) );
-		if (!m_geomDrawData) {
-			if (!m_geomBuilder) {
-				m_geomBuilder = ugi::gdi::CreateGeometryBuilder(m_gdiContext);
-				m_geomBuilder->prepareBuildGeometry(512);
-				m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
-				srand(time(0));
-				for (uint32_t i = 0; i<16; i++) {
-					for (uint32_t j = 0; j<16; j++) {
-						uint32_t color = 0x88 | (rand() % 0xff) << 8 | (rand() % 0xff) << 16 | (rand() % 0xff) << 24;
-						m_geomBuilder->drawRect(i * 24, j * 24, 22, 22, color, true);
-					}
-				}
-				m_geomDrawData = m_geomBuilder->endBuildGeometry();
-			}
-		}
-               
 
-        // for( uint32_t i = 0; i<16; i++) {
-        //     for( uint32_t j = 0; j<16; j++) {
-        //         m_geomDrawData->updateGeometryTranslation( i*16+j+1, hgl::Vector2f(i*24, j*24), hgl::Vector2f(1.2f, 1.2f), 3.1415926f / 16 * j);
-        //     }
-        // }
+		
+        if (!m_geomBuilder) {
+            m_geomBuilder = ugi::gdi::CreateGeometryBuilder(m_gdiContext);
+		}
+        
+        m_geomBuilder->beginBuild();
+        m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
+        srand(time(0));
+        for (uint32_t i = 0; i<16; i++) {
+            for (uint32_t j = 0; j<16; j++) {
+                uint32_t color = 0x88 | (rand() % 0xff) << 8 | (rand() % 0xff) << 16 | (rand() % 0xff) << 24;
+                m_geomBuilder->drawRect(i * 24, j * 24, 22, 22, color, true);
+            }
+        }
+        m_geomDrawData = m_geomBuilder->endBuild();
         
     }
 
