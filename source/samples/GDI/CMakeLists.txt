@@ -1,6 +1,7 @@
 project( GDITest )
 
 include_directories( ${CMAKE_SOURCE_DIR}/source )
+include_directories( ${CMAKE_SOURCE_DIR}/thirdpart/tweeny/include )
 
 if(MINGW)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -municode")
@@ -29,4 +30,5 @@ target_link_libraries(
     CMCore
     CMPlatform
     MathGeoLib
+    tweeny
 )

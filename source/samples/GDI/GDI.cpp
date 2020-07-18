@@ -18,6 +18,8 @@
 #include <cmath>
 #include <time.h>
 
+#include <tweeny.h>
+
 namespace ugi {
 
     bool GDISample::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
@@ -67,18 +69,20 @@ namespace ugi {
         ++angle;
         float rad = (float)angle/180.0f*3.141592654;
 
-        // for( uint32_t i = 0; i<16; i++) {
-        //     for( uint32_t j = 0; j<16; j++) {
-        //         m_geomDrawData->updateGeometryTranslation( i*16+j+1, hgl::Vector2f(i*24+12, j*24+12), hgl::Vector2f(1.5f, 1.5f), rad);
-        //     }
-        // }
+        static auto tween = tweeny::from(0.5f, 0.0f).to(1.5f, 360.0f).during(100);
 
-        for( uint32_t i = 0; i<2;++i ) {
-            for( uint32_t j = 1; j<64; ++j ) {
-                m_geomDrawData->updateGeometryTranslation(j,hgl::Vector2f(0, 0), hgl::Vector2f(1.5f, 1.5f), 0 );
-            }
+        auto v = tween.step(1);
+        auto progress = tween.progress();
+        if( progress == 1.0f ) {
+            tween = tween.backward();
+        } else if( progress == 0.0f ) {
+            tween = tween.forward();
         }
-        
+
+        hgl::Vector2f elementAnchor( 16*24-2-11, 16*24-2-11 );
+        m_geomDrawData->updateElementTransform( 256,elementAnchor, hgl::Vector2f(0.8f, 0.8f), (v[1]/180.0f)*3.1415926f );
+        m_geomDrawData->updateTransfrom( elementAnchor, hgl::Vector2f(v[0], v[0]), (v[1]/180.0f)*3.1415926f);
+                
         m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
         m_uniformAllocator->tick();
         uint32_t imageIndex = m_swapchain->acquireNextImage( m_device, m_flightIndex );

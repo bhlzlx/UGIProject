@@ -18,7 +18,7 @@ namespace ugi {
 
         constexpr uint32_t DEFAULT_GEOM_TRANSFORM_COUNT = 1024;
 
-        class GeometryGPUDrawData;
+        class GeometryDrawData;
 
         class GeometryBuilder : public IGeometryBuilder {
         private:
@@ -47,7 +47,7 @@ namespace ugi {
             }
             //
             virtual void beginBuild() override;
-            virtual GeometryGPUDrawData* endBuild() override;
+            virtual GeometryDrawData* endBuild() override;
             virtual void drawLine( const hgl::Vector2f& pointStart, const hgl::Vector2f& pointEnd, float width, uint32_t color ) override;
             virtual GeometryHandle drawRect( float x, float y, float width, float height, uint32_t color, bool dynamic = false ) override;
             ///>
@@ -184,8 +184,8 @@ namespace ugi {
             _indexCount = _vertexCount = 0;
         }
 
-        GeometryGPUDrawData* GeometryBuilder::endBuild() {
-            GeometryGPUDrawData* drawData = new GeometryGPUDrawData(_context);
+        GeometryDrawData* GeometryBuilder::endBuild() {
+            GeometryDrawData* drawData = new GeometryDrawData(_context);
             auto device = _context->device();
             // std::vector<ugi::ArgumentGroup*> argumentGroups;
 
@@ -196,14 +196,6 @@ namespace ugi {
             for( size_t i = 0; i<_batches.size(); ++i) {
                 // UBO 实际上用 ringbuffer 更好
                 auto argument = pipeline->createArgumentGroup();
-                ResourceDescriptor contextInfoDescriptor; {
-                    contextInfoDescriptor.type = ArgumentDescriptorType::UniformBuffer;
-                    contextInfoDescriptor.bufferOffset = 0;
-                    contextInfoDescriptor.bufferRange = 8; // 两个float
-                    contextInfoDescriptor.descriptorHandle = argument->GetDescriptorHandle("ContextInfo", pipelineDesc);
-                    contextInfoDescriptor.buffer = _context->contextUniform();
-                }
-                argument->updateDescriptor(contextInfoDescriptor);
                 drawData->_argGroups.push_back(argument);
             }
 
@@ -255,10 +247,18 @@ namespace ugi {
                 transformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
                 transformDescriptor.bufferOffset = 0;
                 transformDescriptor.bufferRange = sizeof(GeometryTransformArgument) * _maxArgPerDraw;
-                transformDescriptor.descriptorHandle = drawData->_argGroups[0]->GetDescriptorHandle("Transform", pipelineDesc);
+                transformDescriptor.descriptorHandle = drawData->_argGroups[0]->GetDescriptorHandle("ElementInformation", pipelineDesc);
                 transformDescriptor.buffer = nullptr;
             }
-            drawData->_transformDescriptor = transformDescriptor;
+            ResourceDescriptor globalInfoDescriptor; {
+                globalInfoDescriptor.type = ArgumentDescriptorType::UniformBuffer;
+                globalInfoDescriptor.bufferOffset = 0;
+                globalInfoDescriptor.bufferRange = 8+8+16+16; // 两个float
+                globalInfoDescriptor.descriptorHandle = drawData->_argGroups[0]->GetDescriptorHandle("GlobalInformation", pipelineDesc);
+                globalInfoDescriptor.buffer = _context->contextUniform();
+            }
+            drawData->_elementInformationDescriptor = transformDescriptor;
+            drawData->_globalInformationDescriptor = globalInfoDescriptor;
             return drawData;
         }
 

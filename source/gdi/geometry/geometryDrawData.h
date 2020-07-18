@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <hgl/math/Vector.h>
+#include "geometryDefine.h"
 
 namespace ugi {
 
@@ -16,7 +17,7 @@ namespace ugi {
 
         class GeometryBatch {
             friend class GeometryBuilder;
-            friend class GeometryGPUDrawData;
+            friend class GeometryDrawData;
         private:
             uint32_t                    _firstVertex;            // 当前Batch的起始顶点位置
             uint32_t                    _firstIndex;             // 当前Batch的起始索引位置
@@ -42,7 +43,7 @@ namespace ugi {
             void reset();
         };
 
-        class GeometryGPUDrawData {
+        class GeometryDrawData {
             friend class GeometryBuilder;
         private:
             GDIContext*                          _context;
@@ -53,20 +54,29 @@ namespace ugi {
             ugi::Buffer*                        _indexBuffer;
             ugi::Drawable*                      _drawable;
             uint32_t                            _maxVertex;
+            GeometryTransformArgument           _globalTransform;
             //
             std::vector<GeometryBatch>          _batches;
             std::vector<ugi::ArgumentGroup*>    _argGroups;
             //
-            ugi::ResourceDescriptor             _transformDescriptor; 
+            ugi::ResourceDescriptor             _elementInformationDescriptor;
+            ugi::ResourceDescriptor             _globalInformationDescriptor;
+            //
+            struct GlobalInformationPrototype {
+                hgl::Vector4f screenSize;
+                GeometryTransformArgument globalTransform;
+            };
         public:
-            GeometryGPUDrawData(GDIContext* context);
+            GeometryDrawData(GDIContext* context);
             ///> 准备资源
-            void updateGeometryTranslation( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation );
+            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation );
             void prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator );
             ///> 绘制
             void draw( RenderCommandEncoder* encoder );
+            ///> 更新当前数据全局变换
+            void updateTransfrom( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian );
 
-            ~GeometryGPUDrawData();
+            ~GeometryDrawData();
         };
 
     }

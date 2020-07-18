@@ -28,5 +28,6 @@ use_cm_module(AssetsManage)
 use_cm_module(SceneGraph)
 
 add_subdirectory( MathGeoLib )
+add_subdirectory( tweeny )
 
 #SET_PROPERTY(TARGET kwheel_base PROPERTY FOLDER "Thirdpart")

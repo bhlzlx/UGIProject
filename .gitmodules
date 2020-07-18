@@ -29,3 +29,6 @@
 [submodule "thirdpart/MathGeoLib"]
 	path = thirdpart/MathGeoLib
 	url = https://github.com/juj/MathGeoLib
+[submodule "thirdpart/tweeny"]
+	path = thirdpart/tweeny
+	url = https://github.com/mobius3/tweeny.git

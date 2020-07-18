@@ -49,7 +49,7 @@ namespace ugi {
             _transArgCapacity = 0;
         }
 
-        GeometryGPUDrawData::GeometryGPUDrawData( GDIContext* context )
+        GeometryDrawData::GeometryDrawData( GDIContext* context )
             : _context(context)
             , _vertexBuffer(nullptr)
             , _indexBuffer(nullptr)
@@ -57,7 +57,7 @@ namespace ugi {
         {
         }
 
-        void GeometryGPUDrawData::draw(RenderCommandEncoder* encoder) {
+        void GeometryDrawData::draw(RenderCommandEncoder* encoder) {
 
             for (size_t i = 0; i < _batches.size(); i++)
             {
@@ -67,7 +67,7 @@ namespace ugi {
 
         }
         
-        GeometryGPUDrawData::~GeometryGPUDrawData() {
+        GeometryDrawData::~GeometryDrawData() {
 
             if (_vertexBuffer) {
                 _vertexBuffer->release(_context->device());
@@ -87,7 +87,7 @@ namespace ugi {
             
         }
 
-        void GeometryGPUDrawData::updateGeometryTranslation( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
+        void GeometryDrawData::updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
             // assert( (handle>>16) < _batches.size());
             // assert( (handle&0xffff) < _maxUniformElement );
             uint16_t batchIndex = handle>>16;
@@ -103,23 +103,42 @@ namespace ugi {
             */
             data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, 0.0f);
             data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, 0.0f);
+            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
             // uint8_t* ptr = (uint8_t*)_batches[batchIndex].uniformBuffer->pointer();
             // memcpy( ptr+sizeof(data)*elementIndex , &data, sizeof(data));
         }
 
-        void GeometryGPUDrawData::prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator ) {
+        void GeometryDrawData::prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator ) {
             for( size_t i = 0; i<_batches.size(); ++i) {
                 uint32_t uboSize = _batches[i]._transArgCount* sizeof(GeometryTransformArgument);
                 auto ubo = allocator->allocate(uboSize);
                 ubo.writeData(0, _batches[i]._transArgBuffer, uboSize);
-                _transformDescriptor.buffer = ubo.buffer();
-                _transformDescriptor.bufferOffset = ubo.offset();
+                _elementInformationDescriptor.buffer = ubo.buffer();
+                _elementInformationDescriptor.bufferOffset = ubo.offset();
                 //
-                _argGroups[i]->updateDescriptor(_transformDescriptor);
+                ubo = allocator->allocate(sizeof(GlobalInformationPrototype));
+                GlobalInformationPrototype data;
+                data.screenSize.x = _context->size().x;
+                data.screenSize.y = _context->size().y;
+                data.globalTransform = _globalTransform;
+                ubo.writeData(0, &data, sizeof(data));
+                _globalInformationDescriptor.bufferOffset = ubo.offset();
+                _globalInformationDescriptor.buffer = ubo.buffer();
+                //
+                _argGroups[i]->updateDescriptor(_elementInformationDescriptor);
+                _argGroups[i]->updateDescriptor(_globalInformationDescriptor);
                 _argGroups[i]->prepairResource(encoder);
             }
         }
         
+        void GeometryDrawData::updateTransfrom( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian ) {
+            float cosValue = cos(radian); float sinValue = sin(radian);
+            float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
+            _globalTransform.data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, 0.0f);
+            _globalTransform.data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, 0.0f);
+
+        }
     }
 
 }

@@ -30,7 +30,7 @@ namespace ugi {
         
         ugi::gdi::GDIContext*   m_gdiContext;
         ugi::gdi::IGeometryBuilder* m_geomBuilder;
-        ugi::gdi::GeometryGPUDrawData* m_geomDrawData;                              //
+        ugi::gdi::GeometryDrawData* m_geomDrawData;                              //
         ugi::UniformAllocator*  m_uniformAllocator;
         //
         uint32_t                m_flightIndex;                                      // flight index

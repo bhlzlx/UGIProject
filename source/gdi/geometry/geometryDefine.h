@@ -30,6 +30,9 @@ namespace ugi {
             0 0  1  |  0   0    1  |  0 0 1  |  0 0 1
             从左到右变换，从右往左乘
         */
+       /*
+            
+       */
         /*
             a*cos | -a*sin  | -a*cos*x+a*sin*y+x
             b*sin | b*cos   | -b*sin*x-b*cos*y+y
