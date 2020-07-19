@@ -13,7 +13,7 @@ namespace ugi {
         typedef uint32_t GeometryHandle;
 
         class GDIContext;
-        class GeometryTransformArgument;
+        struct GeometryTransformArgument;
 
         class GeometryBatch {
             friend class GeometryBuilder;
@@ -69,11 +69,11 @@ namespace ugi {
         public:
             GeometryDrawData(GDIContext* context);
             ///> 准备资源
-            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& offset );
-            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale );
-            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, float rotation );
-            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation );
-            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation, const hgl::Vector2f& offset );
+            void setElementTransform( GeometryHandle handle, const hgl::Vector2f& offset );
+            void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale );
+            void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, float rotation );
+            void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation );
+            void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation, const hgl::Vector2f& offset );
             //
             void prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator );
             ///> 绘制

@@ -80,7 +80,7 @@ namespace ugi {
         }
 
         hgl::Vector2f elementAnchor( 16*24-2-11, 16*24-2-11 );
-        // m_geomDrawData->updateElementTransform( 256,elementAnchor, hgl::Vector2f(0.8f, 0.8f), (v[1]/180.0f)*3.1415926f );
+        // m_geomDrawData->setElementTransform( 256,elementAnchor, hgl::Vector2f(0.8f, 0.8f), (v[1]/180.0f)*3.1415926f );
         m_geomDrawData->setTransform( elementAnchor, hgl::Vector2f(v[0], v[0]), 0);// (v[1]/180.0f)*3.1415926f);        
         m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
         m_uniformAllocator->tick();
