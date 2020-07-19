@@ -31,7 +31,7 @@ namespace ugi {
             从左到右变换，从右往左乘
         */
        /*
-            
+
        */
         /*
             a*cos | -a*sin  | -a*cos*x+a*sin*y+x
@@ -48,6 +48,17 @@ namespace ugi {
             hgl::Vector4f data[2];
             GeometryTransformArgument();
             GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor);
+        };
+
+        struct ContextInformation {
+            hgl::Vector2f contextSize;
+            hgl::Vector2f padding;
+            hgl::Vector4f contextSicssor;
+            hgl::Vector4f contextTransform[2];
+
+//vec2    contextSize;            // 屏幕大小
+//vec4    contextScissor;         // 
+//vec4    globalTrasform[2];      // 全局变换
         };
 
     }

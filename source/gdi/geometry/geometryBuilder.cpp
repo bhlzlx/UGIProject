@@ -253,7 +253,7 @@ namespace ugi {
             ResourceDescriptor globalInfoDescriptor; {
                 globalInfoDescriptor.type = ArgumentDescriptorType::UniformBuffer;
                 globalInfoDescriptor.bufferOffset = 0;
-                globalInfoDescriptor.bufferRange = 8+8+16+16; // 两个float
+                globalInfoDescriptor.bufferRange = sizeof(ContextInformation);
                 globalInfoDescriptor.descriptorHandle = drawData->_argGroups[0]->GetDescriptorHandle("GlobalInformation", pipelineDesc);
                 globalInfoDescriptor.buffer = _context->contextUniform();
             }

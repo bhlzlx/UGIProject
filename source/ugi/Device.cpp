@@ -1,4 +1,4 @@
-#include "Device.h"
+﻿#include "Device.h"
 
 #include "VulkanFunctionDeclare.h"
 #include "VulkanDebugConfigurator.h"

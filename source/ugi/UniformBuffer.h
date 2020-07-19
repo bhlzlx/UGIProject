@@ -1,4 +1,4 @@
-#include "UGITypes.h"
+﻿#include "UGITypes.h"
 #include "UGIDeclare.h"
 
 #include <vector>

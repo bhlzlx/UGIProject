@@ -54,28 +54,37 @@ namespace ugi {
             ugi::Buffer*                        _indexBuffer;
             ugi::Drawable*                      _drawable;
             uint32_t                            _maxVertex;
-            GeometryTransformArgument           _globalTransform;
             //
             std::vector<GeometryBatch>          _batches;
             std::vector<ugi::ArgumentGroup*>    _argGroups;
             //
             ugi::ResourceDescriptor             _elementInformationDescriptor;
             ugi::ResourceDescriptor             _globalInformationDescriptor;
-            //
-            struct GlobalInformationPrototype {
-                hgl::Vector4f screenSize;
-                GeometryTransformArgument globalTransform;
-            };
+
+            ContextInformation                  _contextInformation;
+            hgl::Vector4f                       _transform[2];
+            hgl::Vector2f                       _translation;
+            float                               _alpha;
+            float                               _gray;
         public:
             GeometryDrawData(GDIContext* context);
             ///> 准备资源
+            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& offset );
+            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale );
+            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, float rotation );
             void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation );
+            void updateElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation, const hgl::Vector2f& offset );
+            //
             void prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator );
             ///> 绘制
             void draw( RenderCommandEncoder* encoder );
             ///> 更新当前数据全局变换
-            void updateTransfrom( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian );
-
+            void setTransform( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian );
+            void setTranslation( const hgl::Vector2f& translate );
+            void setAlpha( float alpha );
+            void setGray( float gray );
+            void setScissor( float left, float right, float top, float bottom );
+            ///> 析构
             ~GeometryDrawData();
         };
 

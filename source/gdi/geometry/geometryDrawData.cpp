@@ -54,6 +54,11 @@ namespace ugi {
             , _vertexBuffer(nullptr)
             , _indexBuffer(nullptr)
             , _batches {}
+            , _contextInformation()
+            , _transform { hgl::Vector4f(1.0, 0.0f, 0.0f, 1.0f), hgl::Vector4f(0.0, 1.0f, 0.0f, 0.0f) }
+            , _translation{0.0f, 0.0f}
+            , _alpha(1.0f)
+            , _gray(0.0f)
         {
         }
 
@@ -92,11 +97,10 @@ namespace ugi {
             // assert( (handle&0xffff) < _maxUniformElement );
             uint16_t batchIndex = handle>>16;
             uint16_t elementIndex = handle&0xffff;
-
+            //
             float cosValue = cos(rotation); float sinValue = sin(rotation);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
             hgl::Vector4f data[2];
-
             /*
                 a*cos -a*sin -a*cos*x+a*sin*y+x
                 b*sin b*cos  -b*sin*x-b*cos*y+y
@@ -117,12 +121,10 @@ namespace ugi {
                 _elementInformationDescriptor.buffer = ubo.buffer();
                 _elementInformationDescriptor.bufferOffset = ubo.offset();
                 //
-                ubo = allocator->allocate(sizeof(GlobalInformationPrototype));
-                GlobalInformationPrototype data;
-                data.screenSize.x = _context->size().x;
-                data.screenSize.y = _context->size().y;
-                data.globalTransform = _globalTransform;
-                ubo.writeData(0, &data, sizeof(data));
+                _contextInformation.contextSize = _context->size();
+                ubo = allocator->allocate(sizeof(_contextInformation));
+                _contextInformation.contextSize = _context->size();
+                ubo.writeData(0, &_contextInformation, sizeof(_contextInformation));
                 _globalInformationDescriptor.bufferOffset = ubo.offset();
                 _globalInformationDescriptor.buffer = ubo.buffer();
                 //
@@ -132,13 +134,43 @@ namespace ugi {
             }
         }
         
-        void GeometryDrawData::updateTransfrom( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian ) {
+        void GeometryDrawData::setTransform( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian ) {
             float cosValue = cos(radian); float sinValue = sin(radian);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
-            _globalTransform.data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, 0.0f);
-            _globalTransform.data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, 0.0f);
-
+            _transform[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, _alpha);
+            _transform[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, _gray);
+            //
+            _contextInformation.contextTransform[0] = _transform[0];
+            _contextInformation.contextTransform[1] = _transform[1];
+            //
+            _contextInformation.contextTransform[0].z += _translation.x;
+            _contextInformation.contextTransform[1].z += _translation.y;
         }
+
+        void GeometryDrawData::setTranslation( const hgl::Vector2f& translate ) {
+            _translation = translate;
+            //
+            _contextInformation.contextTransform[0] = _transform[0];
+            _contextInformation.contextTransform[1] = _transform[1];
+            //
+            _contextInformation.contextTransform[0].z += _translation.x;
+            _contextInformation.contextTransform[1].z += _translation.y;
+        }
+
+        void GeometryDrawData::setAlpha( float alpha ) {
+            _alpha = alpha;
+            _contextInformation.contextTransform[0].w = alpha;
+        }
+
+        void GeometryDrawData::setGray( float gray ) {
+            _gray = gray;
+            _contextInformation.contextTransform[1].w = gray;
+        }
+
+        void GeometryDrawData::setScissor( float left, float right, float top, float bottom ) {
+            _contextInformation.contextSicssor = hgl::Vector4f( left, right, top, bottom );
+        }
+
     }
 
 }
