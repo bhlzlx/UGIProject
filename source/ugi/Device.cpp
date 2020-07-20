@@ -138,7 +138,9 @@ namespace ugi {
         createVulkanInstance( _descriptor.debugLayer );
         m_deviceDescriptorVk.assetSource = assetSource;
         // setup debug
-        debugReporter.setupDebugReport( m_deviceDescriptorVk.instance );
+        if (_descriptor.debugLayer) {
+            debugReporter.setupDebugReport( m_deviceDescriptorVk.instance );
+        }
         // 
         selectVulkanPhysicalDevice();
         createVulkanSurface();

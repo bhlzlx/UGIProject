@@ -31,7 +31,7 @@ namespace ugi {
         ugi::DeviceDescriptor descriptor; {
             descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
             descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
-            descriptor.debugLayer = 1;
+            descriptor.debugLayer = 0;
             descriptor.graphicsQueueCount = 1;
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
@@ -146,27 +146,29 @@ namespace ugi {
         m_width = _width;
         m_height = _height;
         //
-        if(m_geomDrawData) {
-            delete m_geomDrawData;
-        }
+        // if(m_geomDrawData) {
+        //     delete m_geomDrawData;
+        // }
         m_gdiContext->setSize( hgl::Vector2f(_width, _height) );
 
 		
         if (!m_geomBuilder) {
             m_geomBuilder = ugi::gdi::CreateGeometryBuilder(m_gdiContext);
+
+            m_geomBuilder->beginBuild();
+            m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
+            srand(time(0));
+            for (uint32_t i = 0; i < 16; i++) {
+                for (uint32_t j = 0; j < 16; j++) {
+                    uint32_t color = 0x88 | (rand() % 0xff) << 8 | (rand() % 0xff) << 16 | (rand() % 0xff) << 24;
+                    m_geomBuilder->drawRect(i * 24, j * 24, 22, 22, color, true);
+                }
+            }
+            m_geomDrawData = m_geomBuilder->endBuild();
+            m_geomDrawData->setScissor(11, 256, 11, 256);
 		}
         
-        m_geomBuilder->beginBuild();
-        m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
-        srand(time(0));
-        for (uint32_t i = 0; i<16; i++) {
-            for (uint32_t j = 0; j<16; j++) {
-                uint32_t color = 0x88 | (rand() % 0xff) << 8 | (rand() % 0xff) << 16 | (rand() % 0xff) << 24;
-                m_geomBuilder->drawRect(i * 24, j * 24, 22, 22, color, true);
-            }
-        }
-        m_geomDrawData = m_geomBuilder->endBuild();
-        m_geomDrawData->setScissor( 11, 256, 11, 256 );
+        
     }
 
     void GDISample::release() {

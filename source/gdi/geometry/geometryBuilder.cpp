@@ -50,6 +50,9 @@ namespace ugi {
             virtual GeometryDrawData* endBuild() override;
             virtual void drawLine( const hgl::Vector2f& pointStart, const hgl::Vector2f& pointEnd, float width, uint32_t color ) override;
             virtual GeometryHandle drawRect( float x, float y, float width, float height, uint32_t color, bool dynamic = false ) override;
+            virtual GeometryHandle drawVertices(const GeometryVertex* vertices, uint32_t vertexCount, const uint16_t* indices, uint32_t indexCount) override {
+                return 0;
+            }
             ///>
         private:
             uint32_t appendGeometryVertices( GeometryVertex const* vertices, uint32_t vertexCount, uint16_t const* indices, uint32_t indexCount, bool transform = false );
