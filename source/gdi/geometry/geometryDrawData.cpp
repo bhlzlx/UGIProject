@@ -159,6 +159,15 @@ namespace ugi {
             _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
         }
 
+        void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector3f(& matrix)[2] ) {
+            uint16_t batchIndex = handle>>16;
+            uint16_t elementIndex = handle&0xffff;
+            float* ptr = &_batches[batchIndex]._transArgBuffer[elementIndex].data[0].x;
+            memcpy( ptr, &matrix[0].x, sizeof(float)*3 );
+            ptr = &_batches[batchIndex]._transArgBuffer[elementIndex].data[1].x;
+            memcpy( ptr, &matrix[1].x, sizeof(float)*3 );
+        }
+
         void GeometryDrawData::prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator ) {
             for( size_t i = 0; i<_batches.size(); ++i) {
                 uint32_t uboSize = _batches[i]._transArgCount* sizeof(GeometryTransformArgument);

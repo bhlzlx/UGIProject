@@ -74,6 +74,7 @@ namespace ugi {
             void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, float rotation );
             void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation );
             void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation, const hgl::Vector2f& offset );
+            void setElementTransform( GeometryHandle handle, const hgl::Vector3f(&)[2] );
             //
             void prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator );
             ///> 绘制

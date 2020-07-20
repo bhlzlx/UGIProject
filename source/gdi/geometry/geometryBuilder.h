@@ -19,7 +19,8 @@ namespace ugi {
             virtual void beginBuild() = 0;
             virtual GeometryDrawData* endBuild() = 0;
             virtual void drawLine( const hgl::Vector2f& pointStart, const hgl::Vector2f& pointEnd, float width, uint32_t color ) = 0;
-            virtual GeometryHandle drawRect( float x, float y, float width, float height, uint32_t color, bool dynamic = false )  = 0;
+            virtual GeometryHandle drawRect( float x, float y, float width, float height, uint32_t color, bool dynamic = false ) = 0;
+            virtual GeometryHandle drawVertices( const GeometryVertex* vertices, uint32_t vertexCount, const uint16_t* indices, uint32_t indexCount );
             ~IGeometryBuilder() {}
         };
 
