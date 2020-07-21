@@ -66,6 +66,7 @@ namespace ugi {
     };
 
     class CommandBuffer {
+		friend class CommandQueue;
     private:
         VkCommandBuffer                                 _cmdbuff;
         VkDevice                                        _device;
@@ -75,6 +76,7 @@ namespace ugi {
             RenderCommandEncoder                        _renderPassEncoder;
         };
     private:
+		~CommandBuffer() = default;
     public:
         CommandBuffer( VkDevice device, VkCommandBuffer cb ) 
             : _cmdbuff( cb )

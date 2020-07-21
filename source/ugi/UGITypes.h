@@ -389,15 +389,17 @@ namespace ugi {
         }
     };
 
+	// 一个属性对应一个buffer,所以其stride不可能过大，这里255已经很大了
     struct VertexAttribueDescription {
-        alignas(4) char        name[MaxNameLength];
-        alignas(4) uint32_t    bufferIndex;
-        alignas(4) uint32_t    offset;
-        alignas(4) VertexType  type;
-        VertexAttribueDescription() :
-            bufferIndex(0),
-            offset(0),
-            type( VertexType::Float) {
+        alignas(4) char			name[MaxNameLength];
+        alignas(1) VertexType	type;
+		alignas(1) uint8_t		stride;
+		alignas(1) uint8_t		instanceMode;
+        VertexAttribueDescription()
+			: name {}
+			, type(VertexType::Float)
+			, instanceMode(0)
+		{
         }
     };
 
