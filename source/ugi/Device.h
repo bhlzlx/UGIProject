@@ -64,7 +64,7 @@ namespace ugi {
         RenderPassObjectManager*            m_renderPassObjectManager;
         DescriptorSetAllocator*             m_descriptorSetAllocator;
 
-        std::unordered_map<uint64_t, const ArgumentGroupLayout*>  m_argumentGroupLayoutCache;
+        // std::unordered_map<uint64_t, const ArgumentGroupLayout*>  m_argumentGroupLayoutCache;
         //
         Device() {
         }

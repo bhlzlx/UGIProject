@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <cassert>
+#include <functional>
 
 namespace ugi {
 

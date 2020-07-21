@@ -390,12 +390,12 @@ namespace ugi {
     };
 
 	// 一个属性对应一个buffer,所以其stride不可能过大，这里255已经很大了
-    struct VertexAttribueDescription {
+    struct VertexBufferDescription {
         alignas(4) char			name[MaxNameLength];
         alignas(1) VertexType	type;
 		alignas(1) uint8_t		stride;
 		alignas(1) uint8_t		instanceMode;
-        VertexAttribueDescription()
+        VertexBufferDescription()
 			: name {}
 			, type(VertexType::Float)
 			, instanceMode(0)
@@ -403,22 +403,13 @@ namespace ugi {
         }
     };
 
-    struct VertexBufferDescription {
-        alignas(4) uint32_t stride;
-        alignas(4) uint32_t instanceMode;
-        VertexBufferDescription() :
-            stride(0),
-            instanceMode(0)
-        {
-        }
-    };
-
     struct VertexLayout {
-        alignas(4) uint32_t         attributeCount;
-        VertexAttribueDescription   attributes[MaxVertexAttribute];
-        uint32_t                    bufferCount;
-        VertexBufferDescription     buffers[MaxVertexBufferBinding];
-        VertexLayout() : attributeCount(0), bufferCount(0) {
+        alignas(4) uint32_t                 bufferCount;
+        alignas(4) VertexBufferDescription  buffers[MaxVertexAttribute];
+        VertexLayout() 
+            : bufferCount(0) 
+            , buffers {}
+        {
         }
     };
 
@@ -598,10 +589,10 @@ namespace ugi {
     struct PipelineDescription {
         // == 生成好的信息
         alignas(8) ShaderDescription                shaders[(uint8_t)ShaderModuleType::ShaderTypeCount];
-        alignas(4) PipelineConstants                pipelineConstants[(uint8_t)ShaderModuleType::ShaderTypeCount];
         alignas(4) uint32_t                         argumentCount = 0;
         alignas(4) ArgumentInfo                     argumentLayouts[MaxArgumentCount];
         alignas(4) VertexLayout                     vertexLayout;
+        alignas(4) PipelineConstants                pipelineConstants[(uint8_t)ShaderModuleType::ShaderTypeCount];
         // ==
         alignas(4) PipelineState                    renderState;
         alignas(4) uint32_t                         tessPatchCount = 0;
