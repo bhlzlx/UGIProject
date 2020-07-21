@@ -39,7 +39,7 @@ namespace ugi {
             if (!_pipeline) {
                 return false;
             }
-            _contextInfo = _device->createBuffer(BufferType::UniformBuffer, 8);
+            //
             return true;
         }
 
@@ -52,16 +52,9 @@ namespace ugi {
             return _pipelineDesc;
         }
 
-        ugi::Buffer* GDIContext::contextUniform() const noexcept {
-            return _contextInfo;
-        }
-
         void GDIContext::setSize(const hgl::Vector2f& size)
         {
             _size = size;
-            _contextInfo->map(_device);
-            memcpy(_contextInfo->pointer(), &size, sizeof(size));
-            _contextInfo->unmap(_device);
         }
     }
 }

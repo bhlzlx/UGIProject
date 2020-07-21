@@ -23,7 +23,6 @@ namespace ugi {
             hgl::assets::AssetsSource*  _assetsSource;
             ugi::PipelineDescription    _pipelineDesc;
             ugi::Pipeline*              _pipeline;
-            ugi::Buffer*                _contextInfo;   // uniform buffer with the context info
             //  
             hgl::Vector2f               _size;          // context size( width,height )
             //
@@ -33,7 +32,6 @@ namespace ugi {
                 : _device( device )
                 , _assetsSource( assetsSource )
                 , _pipeline(nullptr)
-                , _contextInfo(nullptr)
             {
             }
 
@@ -41,7 +39,6 @@ namespace ugi {
 
             ugi::Pipeline* pipeline() const noexcept;
             const ugi::PipelineDescription& pipelineDescription() const noexcept;
-            ugi::Buffer* contextUniform() const noexcept;
             //
             void setSize(const hgl::Vector2f& size);
             //

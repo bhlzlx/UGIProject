@@ -258,7 +258,7 @@ namespace ugi {
                 globalInfoDescriptor.bufferOffset = 0;
                 globalInfoDescriptor.bufferRange = sizeof(ContextInformation);
                 globalInfoDescriptor.descriptorHandle = drawData->_argGroups[0]->GetDescriptorHandle("GlobalInformation", pipelineDesc);
-                globalInfoDescriptor.buffer = _context->contextUniform();
+                globalInfoDescriptor.buffer = nullptr;
             }
             drawData->_elementInformationDescriptor = transformDescriptor;
             drawData->_globalInformationDescriptor = globalInfoDescriptor;

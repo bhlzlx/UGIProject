@@ -75,10 +75,10 @@ namespace ugi {
         GeometryDrawData::~GeometryDrawData() {
 
             if (_vertexBuffer) {
-                _vertexBuffer->release(_context->device());
+                _context->device()->destroyBuffer(_vertexBuffer);
             }
             if (_indexBuffer) {
-                _indexBuffer->release(_context->device());
+                _context->device()->destroyBuffer(_indexBuffer);
             }
             if (_drawable) {
                 delete _drawable;
