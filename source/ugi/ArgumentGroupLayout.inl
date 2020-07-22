@@ -1,4 +1,4 @@
-#include "UGITypes.h"
+﻿#include "UGITypes.h"
 
 namespace ugi {
 

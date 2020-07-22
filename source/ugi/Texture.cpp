@@ -5,8 +5,65 @@
 #include <unordered_map>
 #include "UGIUtility.h"
 #include <vector>
+#include "resourcePool/HashObjectPool.h"
 
 namespace ugi {
+
+    class SamplerStateHashMethod {
+    private:
+    public:
+        uint64_t operator() ( const SamplerState& state ) {
+            UGIHash<APHash> hasher;
+            hasher.hashPOD(state);
+            return hasher;
+        }
+    };
+
+    class SamplerCreateMethod {
+    private:
+    public:
+        VkSampler operator()( Device* device, const SamplerState& samplerState ) {
+            VkSamplerCreateInfo info; {
+                info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+                info.flags = 0;
+                info.pNext = nullptr;
+                info.addressModeU = samplerAddressModeToVk(samplerState.u);
+                info.addressModeV = samplerAddressModeToVk(samplerState.v);
+                info.addressModeW = samplerAddressModeToVk(samplerState.w);
+                info.compareOp = compareOpToVk(samplerState.compareFunction);
+                info.compareEnable = samplerState.compareMode != TextureCompareMode::RefNone;
+                info.magFilter = filterToVk(samplerState.mag);
+                info.minFilter = filterToVk(samplerState.min);
+                info.mipmapMode = mipmapFilterToVk(samplerState.mip);
+                info.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
+                info.anisotropyEnable = VK_FALSE;
+                info.mipLodBias = 0;
+                info.maxAnisotropy = 0;
+                info.minLod = 0;
+                info.maxLod = 0;
+                info.unnormalizedCoordinates = 0;
+            }
+            VkSampler sampler;
+            vkCreateSampler( device->device(), &info, nullptr, &sampler);
+            return sampler;
+        }
+    };
+
+    class SamplerDestroyMethod {
+    private:
+    public:
+        void operator()( Device* device, VkSampler sampler) {
+            vkDestroySampler(device->device(), sampler, nullptr);
+        }
+    };
+
+    using SamplerPool = HashObjectPool< SamplerState, VkSampler, Device*, SamplerStateHashMethod, SamplerCreateMethod, SamplerDestroyMethod>;
+
+    VkSampler CreateSampler( Device* device, const SamplerState& samplerState ) {
+        uint64_t hashVal = 0;
+        VkSampler sampler = SamplerPool::GetInstance()->getObject( samplerState, device, hashVal );
+        return sampler;
+    }
 
     Texture* Texture::CreateTexture( Device* _device, VkImage _image, VkImageView _imageView, const TextureDescription& _desc, ResourceAccessType _accessType  ) {
 
@@ -185,39 +242,4 @@ namespace ugi {
 
     std::unordered_map<uint64_t, VkSampler> SamplerCache;
 
-    VkSampler CreateSampler( VkDevice device, const SamplerState& samplerState )
-	{
-        UGIHash<APHash> hasher;
-        hasher.hashPOD(samplerState);
-        uint64_t hash = hasher;
-        auto iter = SamplerCache.find(hash);
-        if(iter != SamplerCache.end()) {
-            return iter->second;
-        }
-        //
-        VkSamplerCreateInfo info; {
-			info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-			info.flags = 0;
-			info.pNext = nullptr;
-			info.addressModeU = samplerAddressModeToVk(samplerState.u);
-			info.addressModeV = samplerAddressModeToVk(samplerState.v);
-			info.addressModeW = samplerAddressModeToVk(samplerState.w);
-			info.compareOp = compareOpToVk(samplerState.compareFunction);
-			info.compareEnable = samplerState.compareMode != TextureCompareMode::RefNone;
-			info.magFilter = filterToVk(samplerState.mag);
-			info.minFilter = filterToVk(samplerState.min);
-			info.mipmapMode = mipmapFilterToVk(samplerState.mip);
-			info.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
-			info.anisotropyEnable = VK_FALSE;
-			info.mipLodBias = 0;
-			info.maxAnisotropy = 0;
-			info.minLod = 0;
-			info.maxLod = 0;
-			info.unnormalizedCoordinates = 0;
-		}
-		VkSampler sampler;
-		vkCreateSampler( device, &info, nullptr, &sampler);
-        SamplerCache[hash] = sampler;
-		return sampler;
-	}
 }

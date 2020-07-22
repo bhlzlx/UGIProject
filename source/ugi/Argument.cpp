@@ -9,7 +9,7 @@
 
 namespace ugi {
 
-    VkSampler CreateSampler( VkDevice device, const SamplerState& samplerState );
+    VkSampler CreateSampler( Device* device, const SamplerState& samplerState );
     // 
     struct DescriptorHandleImp {
         union {
@@ -111,7 +111,7 @@ namespace ugi {
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
             pImageInfo->imageView = VK_NULL_HANDLE;
             pImageInfo->imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            auto sampler = CreateSampler( _groupLayout->device()->device(), resource.sampler );
+            auto sampler = CreateSampler( _groupLayout->device(), resource.sampler );
             if( pImageInfo->sampler != sampler ) {
                 _reallocDescriptorSetBits |= 1 << h.setID;
                 pImageInfo->sampler = sampler; // 再也不和 texture 混合绑定了
@@ -204,7 +204,7 @@ namespace ugi {
         }
         if( descriptorSetCount ) {
             if( _dynamicOffsets.size() ) {
-                vkCmdBindDescriptorSets( cmdbuf, _bindPoint, pipelineLayout, 0, descriptorSetCount, desciprotSets, _dynamicOffsets.size(), _dynamicOffsets.data() );
+                vkCmdBindDescriptorSets( cmdbuf, _bindPoint, pipelineLayout, 0, descriptorSetCount, desciprotSets, (uint32_t)_dynamicOffsets.size(), _dynamicOffsets.data() );
             } else {
                 vkCmdBindDescriptorSets( cmdbuf, _bindPoint, pipelineLayout, 0, descriptorSetCount, desciprotSets, 0, nullptr );
             }

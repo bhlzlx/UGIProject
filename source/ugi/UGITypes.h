@@ -393,6 +393,7 @@ namespace ugi {
     struct VertexBufferDescription {
         alignas(4) char			name[MaxNameLength];
         alignas(1) VertexType	type;
+        alignas(1) uint8_t      offset;
 		alignas(1) uint8_t		stride;
 		alignas(1) uint8_t		instanceMode;
         VertexBufferDescription()

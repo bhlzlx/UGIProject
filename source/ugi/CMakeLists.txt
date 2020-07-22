@@ -39,7 +39,7 @@ UGI_STATIC_LIBRARY( UGI
     ./commandBuffer/RenderCommandEncoder.cpp
     ./commandBuffer/ResourceCommandEncoder.cpp
     ArgumentGroupLayout.cpp
-    ArgumentGroupLayoutPool.cpp
+    ./resourcePool/ArgumentGroupLayoutPool.cpp
     Texture.cpp
     Buffer.cpp
     RenderPass.cpp

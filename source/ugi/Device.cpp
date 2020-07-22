@@ -170,7 +170,7 @@ namespace ugi {
             // "VK_LAYER_LUNARG_swapchain",
             // "VK_LAYER_GOOGLE_threading",
             // "VK_LAYER_GOOGLE_unique_objects",
-            // "VK_LAYER_LUNARG_standard_validation",
+            "VK_LAYER_LUNARG_standard_validation",
             "VK_LAYER_KHRONOS_validation"
         };
         std::vector< const char* > vecLayers;

@@ -31,7 +31,7 @@ namespace ugi {
         ugi::DeviceDescriptor descriptor; {
             descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
             descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
-            descriptor.debugLayer = 0;
+            descriptor.debugLayer = 1;
             descriptor.graphicsQueueCount = 1;
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;

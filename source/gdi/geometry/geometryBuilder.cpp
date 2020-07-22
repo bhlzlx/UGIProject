@@ -24,7 +24,7 @@ namespace ugi {
         private:
             GDIContext*                     _context;
             GeometryVertex*                 _vertexBuffer;          // vertex 缓存，一般不会销毁，重置后也可以复用
-            uint32_t                        _vertexCapacity;        
+            uint32_t                        _vertexCapacity;
             uint32_t                        _vertexCount;
             uint16_t*                       _indexBuffer;
             uint32_t                        _indexCapacity;
@@ -62,6 +62,7 @@ namespace ugi {
     namespace gdi {
 
         uint32_t GeometryBuilder::appendGeometryVertices( 
+
             GeometryVertex const* vertices, 
             uint32_t vertexCount, 
             uint16_t const* indices, 
@@ -239,8 +240,12 @@ namespace ugi {
             stagingBuffer->release(device);
 			uploadQueue->destroyCommandBuffer(device, cmd);
             //
-            auto drawable = new Drawable(1);
-            drawable->setVertexBuffer(vertexBuffer, 0, 0);
+            auto drawable = _context->device()->createDrawable( _context->pipelineDescription() );
+            // UI 顶点属性有
+            // 位置，颜色，变换索引
+            drawable->setVertexBuffer(vertexBuffer, 0, 0);  // position
+            drawable->setVertexBuffer(vertexBuffer, 1, sizeof(hgl::Vector2f));  // color
+            drawable->setVertexBuffer(vertexBuffer, 2, sizeof(hgl::Vector2f) + sizeof(uint32_t));  // uniform index
             drawable->setIndexBuffer(indexBuffer, 0);
 
             drawData->_drawable = drawable;

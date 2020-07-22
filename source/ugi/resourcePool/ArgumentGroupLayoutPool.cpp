@@ -1,9 +1,9 @@
-#include "UGIUtility.h"
-#include "Descriptor.h"
-#include "ArgumentGroupLayout.inl"
-#include "Device.h"
-#include "UGITypeMapping.h"
-#include "hashObjectPool/HashObjectPool.h"
+﻿#include "../UGIUtility.h"
+#include "../Descriptor.h"
+#include "../ArgumentGroupLayout.inl"
+#include "../Device.h"
+#include "../UGITypeMapping.h"
+#include "HashObjectPool.h"
 
 namespace ugi {
 
@@ -101,7 +101,7 @@ namespace ugi {
                 pipelineLayoutInfo.flags = 0;
                 pipelineLayoutInfo.setLayoutCount = pipelineDescription.argumentCount;
                 pipelineLayoutInfo.pSetLayouts = groupLayout._descriptorSetLayouts;
-                pipelineLayoutInfo.pushConstantRangeCount = ranges.size();
+                pipelineLayoutInfo.pushConstantRangeCount = (uint32_t)ranges.size();
                 pipelineLayoutInfo.pPushConstantRanges = pipelineLayoutInfo.pushConstantRangeCount ? ranges.data() : nullptr;
             }
             auto rst = vkCreatePipelineLayout( device->device(), &pipelineLayoutInfo, nullptr, &groupLayout._pipelineLayout );
@@ -110,7 +110,22 @@ namespace ugi {
         }
     };
 
-    using ArgumentGroupLayoutPool = HashObjectPool< PipelineDescription, ArgumentGroupLayout*, Device*, ArgumentGroupHashMethod, ArgumentGroupCreateMethod>;
+    class ArgumentGroupDestroyMethod {
+    private:
+    public:
+        void operator()( Device* device, ArgumentGroupLayout* layout ) {
+            for( auto& setLayout : layout->_descriptorSetLayouts ) {
+                if( setLayout ) {
+                    vkDestroyDescriptorSetLayout( device->device(), setLayout, nullptr );
+                    setLayout = nullptr;
+                }
+            }
+            vkDestroyPipelineLayout( device->device(), layout->_pipelineLayout, nullptr );
+            delete layout;
+        }
+    };
+
+    using ArgumentGroupLayoutPool = HashObjectPool< PipelineDescription, ArgumentGroupLayout*, Device*, ArgumentGroupHashMethod, ArgumentGroupCreateMethod, ArgumentGroupDestroyMethod>;
 
     const ArgumentGroupLayout* Device::getArgumentGroupLayout( const PipelineDescription& pipelineDescription, uint64_t& hashVal ) {
         auto argumentGroupLayout = ArgumentGroupLayoutPool::GetInstance()->getObject(pipelineDescription, this, hashVal);
