@@ -562,32 +562,6 @@ namespace ugi {
         }
     }
 
-    void Device::registArgumentGroupLayout( const PipelineDescription& pipelineDescription, const ArgumentGroupLayout* argumentGroupLayout ) {
-        UGIHash<APHash> hasher;
-        // 先 hash descriptor sets
-        for( uint32_t i = 0; i < pipelineDescription.argumentCount; ++i ) {
-            hasher.hashPOD(pipelineDescription.argumentLayouts[i].index);
-            for( uint32_t j = 0; j<pipelineDescription.argumentLayouts[i].descriptorCount; ++j) {
-                hasher.hashPOD( pipelineDescription.argumentLayouts[i].descriptors[j].binding);
-                hasher.hashPOD( pipelineDescription.argumentLayouts[i].descriptors[j].dataSize);
-                hasher.hashPOD( pipelineDescription.argumentLayouts[i].descriptors[j].shaderStage);
-                hasher.hashPOD( pipelineDescription.argumentLayouts[i].descriptors[j].type);
-            }
-        }
-        // hash push constants
-        hasher.hashPOD(pipelineDescription.pipelineConstants);
-        //
-        m_argumentGroupLayoutCache[(uint64_t)hasher] = argumentGroupLayout;
-    }
-
-    const ArgumentGroupLayout* Device::getArgumentGroupLayout( uint64_t hash ) const {
-        auto iter = m_argumentGroupLayoutCache.find(hash);
-        if( iter != m_argumentGroupLayoutCache.end() ) {
-            return iter->second;
-        }
-        return nullptr;
-    }
-
     Pipeline* Device::createPipeline( const PipelineDescription& pipelineDescription ) {
         return Pipeline::CreatePipeline( this, pipelineDescription);
     }

@@ -63,8 +63,6 @@ namespace ugi {
         
         RenderPassObjectManager*            m_renderPassObjectManager;
         DescriptorSetAllocator*             m_descriptorSetAllocator;
-
-        // std::unordered_map<uint64_t, const ArgumentGroupLayout*>  m_argumentGroupLayoutCache;
         //
         Device() {
         }
@@ -125,10 +123,8 @@ namespace ugi {
         void destroyTexture( Texture* texture );
         void destroyBuffer( Buffer* texture );
 
-        ///---
-        void registArgumentGroupLayout( const PipelineDescription& pipelineDescription, const ArgumentGroupLayout* argumentGroupLayout );
-        const ArgumentGroupLayout* getArgumentGroupLayout( const PipelineDescription& pipelineDescription, uint64_t* hashPtr );
-        const ArgumentGroupLayout* getArgumentGroupLayout( uint64_t hash ) const;
+        const ArgumentGroupLayout* getArgumentGroupLayout( const PipelineDescription& pipelineDescription, uint64_t& hashval );
+        const ArgumentGroupLayout* getArgumentGroupLayout( uint64_t hashval );
         ///> --------------- Hash Function For Graphics Objects ------------------
         template< class T >
         uint64_t hashObject();

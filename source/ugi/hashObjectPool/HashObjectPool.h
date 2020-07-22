@@ -8,7 +8,7 @@ namespace ugi {
         std::unordered_map< uint64_t, TargetType__> _valueTable;
         std::unordered_map< uint64_t, Prototype__>  _prototypeTable;
     public:
-        TargetType__ getObject( const Prototype__& prototype, HostType host, uint64_t& hashValue ) {
+        TargetType__ getObject( const Prototype__& prototype, HostType__ host, uint64_t& hashValue ) {
             HashMethod__ hashMethod;
             uint64_t hashVal = hashMethod(prototype);
             auto iter = _valueTable.find(hashVal);
@@ -26,9 +26,8 @@ namespace ugi {
         }
 
         TargetType__ getObject( uint64_t hashValue ) {
-            auto iter = _valueTable.find(hashVal);
+            auto iter = _valueTable.find(hashValue);
             if(  iter!= _valueTable.end()) {
-                hashValue = hashVal;
                 return iter->second;
             }
             return TargetType__();
@@ -43,8 +42,8 @@ namespace ugi {
             return Prototype__();
         }
 
-        HashObjectPool* GetInstance() {
-            static HashObjectPool<Prototype__, TargetType__, HashMethod__, CreateMethod__> Pool;
+        static HashObjectPool* GetInstance() {
+            static HashObjectPool<Prototype__, TargetType__, HostType__, HashMethod__, CreateMethod__> Pool;
             return &Pool;
         }
     };

@@ -149,12 +149,12 @@ namespace ugi {
 			pipeline._vertexInputBindings[i].inputRate = pipelineDescription.vertexLayout.buffers[i].instanceMode ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
 		}
 
-		for (uint32_t i = 0; i < pipelineDescription.vertexLayout.attributeCount; ++i)
+		for (uint32_t i = 0; i < pipelineDescription.vertexLayout.bufferCount; ++i)
 		{
-			pipeline._vertexInputAttributs[i].binding = pipelineDescription.vertexLayout.attributes[i].bufferIndex;
+			pipeline._vertexInputAttributs[i].binding = i;
 			pipeline._vertexInputAttributs[i].location = i;
-			pipeline._vertexInputAttributs[i].format = vertexFormatToVk(pipelineDescription.vertexLayout.attributes[i].type);
-			pipeline._vertexInputAttributs[i].offset = pipelineDescription.vertexLayout.attributes[i].offset;
+			pipeline._vertexInputAttributs[i].format = vertexFormatToVk(pipelineDescription.vertexLayout.buffers[i].type);
+			pipeline._vertexInputAttributs[i].offset = 0;
 		}
 		// Vertex input state used for pipeline creation
 		VkPipelineVertexInputStateCreateInfo& vertexInputState = pipeline._vertexInputStateCreateInfo;
@@ -163,7 +163,7 @@ namespace ugi {
         vertexInputState.flags = 0;
 		vertexInputState.vertexBindingDescriptionCount = pipelineDescription.vertexLayout.bufferCount;
 		vertexInputState.pVertexBindingDescriptions = &pipeline._vertexInputBindings[0];
-		vertexInputState.vertexAttributeDescriptionCount = pipelineDescription.vertexLayout.attributeCount;
+		vertexInputState.vertexAttributeDescriptionCount = pipelineDescription.vertexLayout.bufferCount;
 		vertexInputState.pVertexAttributeDescriptions = pipeline._vertexInputAttributs.data();
 
         VkPipelineTessellationStateCreateInfo& tessellationState = pipeline._tessellationStateCreateInfo; {
@@ -186,7 +186,7 @@ namespace ugi {
 		pipeline._pipelineCreateInfo.pDepthStencilState = &depthStencilState;
 		pipeline._pipelineCreateInfo.pTessellationState = pipelineDescription.tessPatchCount ? &tessellationState : nullptr;
 		pipeline._pipelineCreateInfo.pDynamicState = &dynamicState;
-        const ArgumentGroupLayout* argumentGroupLayout = device->getArgumentGroupLayout( pipelineDescription, &pipeline._pipelineLayoutHash );
+        const ArgumentGroupLayout* argumentGroupLayout = device->getArgumentGroupLayout( pipelineDescription, pipeline._pipelineLayoutHash);
         pipeline._pipelineCreateInfo.layout = ugi::GetPipelineLayout(argumentGroupLayout);
         // 动态的，先置空
         pipeline._pipelineCreateInfo.pRasterizationState = &pipeline._RSStateCreateInfo;
