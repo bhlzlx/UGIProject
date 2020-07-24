@@ -1,4 +1,4 @@
-#include "widget.h"
+#include "component.h"
 
 namespace ugi {
     namespace gdi {

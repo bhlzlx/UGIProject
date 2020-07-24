@@ -55,6 +55,8 @@ namespace ugi {
         void GDIContext::setSize(const hgl::Vector2f& size)
         {
             _size = size;
+            _scale = { _size.x / _standardSize.x, _size.y/_standardSize.y };
+            _commonScale = _scale.x > _scale.y ? _scale.y : _scale.x;
         }
     }
 }

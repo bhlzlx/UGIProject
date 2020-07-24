@@ -23,8 +23,11 @@ namespace ugi {
             hgl::assets::AssetsSource*  _assetsSource;
             ugi::PipelineDescription    _pipelineDesc;
             ugi::Pipeline*              _pipeline;
-            //  
+            //
+            hgl::Vector2f               _standardSize;
             hgl::Vector2f               _size;          // context size( width,height )
+            hgl::Vector2f               _scale;         // 
+            float                       _commonScale;
             //
             uint32_t                    _uniformMaxSize;
         public:
@@ -32,6 +35,7 @@ namespace ugi {
                 : _device( device )
                 , _assetsSource( assetsSource )
                 , _pipeline(nullptr)
+                , _standardSize(  600, 480 )
             {
             }
 
