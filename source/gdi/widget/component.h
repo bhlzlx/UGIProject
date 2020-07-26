@@ -1,5 +1,7 @@
 #pragma once
 #include "widget.h"
+#include "../geometry/geometryDrawData.h"
+#include <map>
 
 namespace ugi {
     namespace gdi {
@@ -20,11 +22,6 @@ namespace ugi {
             void addWidget( Widget* widget );
             void addGroup( Group* group );
 
-        };
-
-        class ComponentDrawDataManager {
-        private:
-            std::map< Component*,  >
         };
 
 

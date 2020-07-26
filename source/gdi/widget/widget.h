@@ -16,6 +16,7 @@ namespace ugi {
         
         enum class WidgetType {
             widget = 0,
+            rectange = 0,
             group = 1,
             component = 2,
         };
@@ -37,15 +38,39 @@ namespace ugi {
             Group*              _group;
             hgl::RectScope2f    _rect;
             uint32_t            _depth;
+            WidgetType          _type;
         public:
-            Widget()
-                : _rect(0, 0, 16, 16)
+            Widget( WidgetType type = WidgetType::widget )
+                : _component( nullptr )
+                , _group( nullptr )
+                , _rect(0, 0, 16, 16)
                 , _depth(0)
+                , _type( type )
+
             {
             }
 
             uint32_t depth() {
                 return _depth;
+            }
+
+            WidgetType type() {
+                return _type;
+            }
+
+            void setRect( const hgl::RectScope2f& rect ) {
+                _rect = rect;
+            }
+        };
+
+        class ColoredRectangle : public Widget {
+        private:
+            uint32_t _color;
+        public:
+            ColoredRectangle( uint32_t color )
+                : Widget( WidgetType::rectange )
+                , _color( color )
+            {
             }
         };
 
@@ -63,6 +88,5 @@ namespace ugi {
         public:
         };
 
-       
     }
 }

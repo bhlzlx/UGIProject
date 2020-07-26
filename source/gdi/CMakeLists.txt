@@ -17,7 +17,8 @@ set( GDI_SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/geometry/geometryDefine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geometry/geometryBuilder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geometry/geometryDrawData.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/widget.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/widget/widget.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/widget/component.cpp
 )
 
 add_library( GDI STATIC
