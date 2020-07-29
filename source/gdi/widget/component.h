@@ -1,6 +1,7 @@
 #pragma once
 #include "widget.h"
 #include "../geometry/geometryDrawData.h"
+#include "../gdi.h"
 #include <map>
 
 namespace ugi {
@@ -38,7 +39,12 @@ namespace ugi {
             //
             void _depthSort();
         public:
-            Component(){
+            Component()
+                : _widgets()
+                , _groups()
+                , _widgetsRecord()
+                , _drawItems()
+            {
             }
 
             void addWidget( Widget* widget );
@@ -50,4 +56,4 @@ namespace ugi {
 
 
     }
-}
+}0

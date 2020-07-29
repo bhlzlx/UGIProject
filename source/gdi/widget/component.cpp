@@ -42,14 +42,19 @@ namespace ugi {
 
         // 很遗憾，现在仅支持普通的GDI
         void Component::collectDrawItems() {
-            for( const auto& widget : _widgets) {
+            ComponentDrawItem drawItem;
+            for( auto& widget : _widgets) {
                 auto type = widget->type();
                 switch( type ) {
                     case WidgetType::component: {
-                        ;
+                        drawItem.type = ComponentDrawItemType::component;
+                        drawItem.component = (Component*)widget;
+                        this->_drawItems.emplace_back(drawItem);
+                        break;
                     }
                     case WidgetType::rectange: {
-                        ;
+                        
+                        break;
                     }
                     case WidgetType::group:
                     case WidgetType::widget:

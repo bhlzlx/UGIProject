@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "../geometry/geometryBuilder.h"
 
 namespace ugi {
     namespace gdi {
@@ -18,10 +19,17 @@ namespace ugi {
 
         IComponentDrawingManager* createComponentDrawingManager();
 
-        class UIRoot {
+        class GdiSystem {
         private:
+            Component*                  _rootComponent;
             std::vector<Component*>     _components;
             IComponentDrawingManager*   _drawingManager;
+            //
+            GDIContext*                 _gdiContext;
+            hgl::assets::AssetsSource*  _assetsSource;
+            IGeometryBuilder*           _geomBuilder;
+            uint8_t                     _initialized;
+            //
 		private:
 			void onAddComponent( Component* component ) {
                 _drawingManager->onAddToDisplayList(component);
@@ -30,14 +38,21 @@ namespace ugi {
                 _drawingManager->onNeedUpdate(component);
             }
         public:
-            UIRoot() {
+            GdiSystem()
+                : _rootComponent( nullptr )
+                , _components {}
+                , _drawingManager( nullptr )
+                , _gdiContext( nullptr )
+                , _geomBuilder( nullptr )
+                , _initialized( 0 )
+            {
             }
+
+            bool initialize( GDIContext* context, hgl::assets::AssetsSource* assetsSource );
 
             void addComponent( Component* component, uint32_t depth = 0 );
             //
             void onTick();
-            //
-
         };
 
     }

@@ -1,6 +1,7 @@
 #pragma once
-#include "uisystem.h"
+#include "GdiSystem.h"
 #include "component.h"
+#include "../geometry/geometryBuilder.h"
 
 namespace ugi {
     namespace gdi {
@@ -12,13 +13,13 @@ namespace ugi {
         private:
 
 		public:
-            ComponentDrawingManager() {
+            ComponentDrawingManager( ) {
                 
             }
-
             /*  一个 component 更新，那么它的父 component 不需要更新，只是更新它自己就行了
             */
             virtual void onNeedUpdate( Component* component ) override {
+
             }
 
             /* 如果一个 component 添加到了父 component 里，那么父 component 则需要重新收集，兄弟component不需要重新收集
@@ -36,7 +37,20 @@ namespace ugi {
             }
 		};
 
-        void UIRoot::addComponent( Component* component, uint32_t depth ) {
+        bool GdiSystem::initialize( GDIContext* context, hgl::assets::AssetsSource* assetsSource ) {
+            if( this->_initialized) {
+                return true;
+            }
+            _rootComponent = new Component();
+            _drawingManager = new ComponentDrawingManager();
+            _gdiContext = context;
+            _assetsSource = assetsSource;
+            _geomBuilder = CreateGeometryBuilder(_gdiContext);
+            _initialized = true;
+            return true;
+        }
+
+        void GdiSystem::addComponent( Component* component, uint32_t depth ) {
             component->setDepth(depth);
             std::sort( _components.begin(), _components.end(), []( Component* a, Component* b)->bool {
                 return a->depth() > b->depth();
