@@ -41,8 +41,8 @@ namespace ugi {
 
             bool initialize();
 
-            ugi::Pipeline* pipeline() const noexcept;
-            const ugi::PipelineDescription& pipelineDescription() const noexcept;
+            ugi::Pipeline* pipeline() const ;
+            const ugi::PipelineDescription& pipelineDescription() const ;
             //
             void setSize(const hgl::Vector2f& size);
             //

@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 namespace ugi {
     namespace gdi {
@@ -19,27 +20,25 @@ namespace ugi {
 
         class UIRoot {
         private:
+            std::vector<Component*>     _components;
+            IComponentDrawingManager*   _drawingManager;
+		private:
+			void onAddComponent( Component* component ) {
+                _drawingManager->onAddToDisplayList(component);
+            }
+			void onUpdateComponent( Component* component ) {
+                _drawingManager->onNeedUpdate(component);
+            }
         public:
             UIRoot() {
             }
 
-            void addComponent( Component* comp );
+            void addComponent( Component* component, uint32_t depth = 0 );
             //
             void onTick();
-        };
+            //
 
-        //class ComponentDrawDataManager {
-        //private:
-        //    // std::map< Component*, GeometryDrawData* >           _drawDatas;
-        //    std::set<Component*>                                _updateCollection; ///> 需要更新的列表
-        //    std::vector<GeometryDrawData*>                      _drawDatas;
-        //public:
-        //    ComponentDrawDataManager()
-        //        : _drawDatas{}
-        //    {}
-//
-        //    void update();
-        //};
+        };
 
     }
 }

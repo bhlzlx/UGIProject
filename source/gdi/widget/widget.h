@@ -16,9 +16,9 @@ namespace ugi {
         
         enum class WidgetType {
             widget = 0,
-            rectange = 0,
-            group = 1,
-            component = 2,
+            rectange = 1,
+            group = 2,
+            component = 3,
         };
 
         class Widget;
@@ -40,7 +40,7 @@ namespace ugi {
             uint32_t            _depth;
             WidgetType          _type;
         public:
-            Widget( WidgetType type = WidgetType::widget )
+            Widget( WidgetType type = WidgetType::widget ) 
                 : _component( nullptr )
                 , _group( nullptr )
                 , _rect(0, 0, 16, 16)
@@ -50,15 +50,19 @@ namespace ugi {
             {
             }
 
-            uint32_t depth() {
+            uint32_t depth() const  {
                 return _depth;
             }
 
-            WidgetType type() {
+            void setDepth( uint32_t depth )  {
+                _depth = depth;
+            }
+
+            WidgetType type() const  {
                 return _type;
             }
 
-            void setRect( const hgl::RectScope2f& rect ) {
+            void setRect( const hgl::RectScope2f& rect )  {
                 _rect = rect;
             }
         };

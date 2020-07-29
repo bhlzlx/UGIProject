@@ -43,12 +43,12 @@ namespace ugi {
             return true;
         }
 
-        ugi::Pipeline* GDIContext::pipeline() const noexcept
+        ugi::Pipeline* GDIContext::pipeline() const
         {
             return _pipeline;
         }
 
-        const ugi::PipelineDescription& GDIContext::pipelineDescription() const noexcept {
+        const ugi::PipelineDescription& GDIContext::pipelineDescription() const {
             return _pipelineDesc;
         }
 
