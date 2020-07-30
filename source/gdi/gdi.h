@@ -48,11 +48,8 @@ namespace ugi {
             //
             ugi::Device* device() { return _device;  };
             const hgl::Vector2f& size() { return _size; }
+            
         };
-
-        bool InitializeGDI( ugi::Device* device, hgl::assets::AssetsSource* assetsSource );
-        GDIContext* GetGDIContext();
-        bool DeinitializeGDI();
 
     }
 }

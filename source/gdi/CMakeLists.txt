@@ -10,6 +10,7 @@ include_directories(
     ${SOLUTION_DIR}/thirdpart/CMUtil/inc
     ${SOLUTION_DIR}/thirdpart/CMAssetsManage/inc    
     ${SOLUTION_DIR}/thirdpart/MathGeoLib/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 set( GDI_SOURCE 

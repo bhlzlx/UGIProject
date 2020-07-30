@@ -1,7 +1,7 @@
-#pragma once
 #include "GdiSystem.h"
 #include "component.h"
 #include "../geometry/geometryBuilder.h"
+#include "../gdi.h"
 
 namespace ugi {
     namespace gdi {
@@ -37,7 +37,29 @@ namespace ugi {
             }
 		};
 
-        bool GdiSystem::initialize( GDIContext* context, hgl::assets::AssetsSource* assetsSource ) {
+
+        UI2DSystem* __GdiSystem = nullptr;
+
+        bool InitializeGdiSystem( GDIContext* context, hgl::assets::AssetsSource* assetsSource ) {
+            if(!__GdiSystem) {
+                if(!context || !assetsSource) {
+                    return false;
+                }
+                __GdiSystem = new UI2DSystem();
+                __GdiSystem->initialize( context, assetsSource );
+            }
+            return true;
+        }
+
+        void DeinitializeGdiSystem() {
+
+        }
+
+        UI2DSystem* GetGdiSystem() {
+            return __GdiSystem;
+        }
+
+        bool UI2DSystem::initialize( GDIContext* context, hgl::assets::AssetsSource* assetsSource ) {
             if( this->_initialized) {
                 return true;
             }
@@ -50,7 +72,7 @@ namespace ugi {
             return true;
         }
 
-        void GdiSystem::addComponent( Component* component, uint32_t depth ) {
+        void UI2DSystem::addComponent( Component* component, uint32_t depth ) {
             component->setDepth(depth);
             std::sort( _components.begin(), _components.end(), []( Component* a, Component* b)->bool {
                 return a->depth() > b->depth();

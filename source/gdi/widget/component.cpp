@@ -1,6 +1,10 @@
 #include "component.h"
+#include <geometry/geometryBuilder.h>
+#include <widget/widget.h>
+#include <widget/GdiSystem.h>
 
 namespace ugi {
+
     namespace gdi {
 
         void Component::_depthSort() {
@@ -40,12 +44,14 @@ namespace ugi {
             _widgetsRecord.insert(widget);
         }
 
-        // 很遗憾，现在仅支持普通的GDI
-        void Component::collectDrawItems() {
+        void Component::collectDrawItems( UI2DSystem* uisys ) {
             ComponentDrawItem drawItem;
-            for( auto& widget : _widgets) {
+
+            for( auto& widget : _widgets) 
+            {
                 auto type = widget->type();
-                switch( type ) {
+                switch( type ) 
+                {
                     case WidgetType::component: {
                         drawItem.type = ComponentDrawItemType::component;
                         drawItem.component = (Component*)widget;
@@ -53,7 +59,12 @@ namespace ugi {
                         break;
                     }
                     case WidgetType::rectange: {
-                        
+                        IGeometryBuilder* geomBuilder = uisys->geometryBuilder();
+                        if( geomBuilder->state() == IGeometryBuilder::GeometryBuildState::idle ) {
+                            const auto& rect = widget->rect();
+                            // rect.GetLeft();
+                        }
+                        // geomBuilder->drawRect();
                         break;
                     }
                     case WidgetType::group:
@@ -63,5 +74,7 @@ namespace ugi {
                 }
             }
         }
+
+        
     }
 }

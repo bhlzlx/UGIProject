@@ -69,9 +69,7 @@
         "forward_list": "cpp",
         "unordered_set": "cpp",
         "valarray": "cpp",
-        "functional": "cpp",
-        "numeric": "cpp",
-        "sstream": "cpp"
+        "functional": "cpp"
     },
     "editor.tabCompletion": "on",
     "workbench.editor.highlightModifiedTabs": true

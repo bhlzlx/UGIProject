@@ -1,12 +1,13 @@
 #pragma once
 #include "widget.h"
-#include "../geometry/geometryDrawData.h"
-#include "../gdi.h"
 #include <map>
 
 namespace ugi {
     namespace gdi {
 
+        class UI2DSystem;
+        class GeometryDrawData;
+        //
         struct ComponentFlags {
             uint32_t dirty : 1;
         };
@@ -51,9 +52,9 @@ namespace ugi {
             void addGroup( Group* group );
             void setDepth( uint32_t depth );
             // == 收集绘制内容
-            void collectDrawItems();
+            void collectDrawItems( UI2DSystem* system );
         };
 
 
     }
-}0
+}

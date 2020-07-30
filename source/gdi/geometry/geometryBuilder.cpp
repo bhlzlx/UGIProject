@@ -32,6 +32,7 @@ namespace ugi {
             //
             uint32_t                        _maxArgPerDraw;
             std::vector<GeometryBatch>      _batches;
+            GeometryBuildState              _state;
         public:
             GeometryBuilder(GDIContext* context)
                 : _context(context)
@@ -43,6 +44,7 @@ namespace ugi {
                 , _indexCount(0)
                 , _maxArgPerDraw(1024)
                 , _batches {}
+                , _state( GeometryBuildState::idle )
             {
             }
             //
@@ -52,6 +54,9 @@ namespace ugi {
             virtual GeometryHandle drawRect( float x, float y, float width, float height, uint32_t color, bool dynamic = false ) override;
             virtual GeometryHandle drawVertices(const GeometryVertex* vertices, uint32_t vertexCount, const uint16_t* indices, uint32_t indexCount) override {
                 return 0;
+            }
+            virtual GeometryBuildState state() override {
+                return _state;
             }
             ///>
         private:
@@ -186,6 +191,8 @@ namespace ugi {
                 512
             );
             _indexCount = _vertexCount = 0;
+            //
+            _state = GeometryBuildState::building;
         }
 
         GeometryDrawData* GeometryBuilder::endBuild() {
@@ -267,6 +274,8 @@ namespace ugi {
             }
             drawData->_elementInformationDescriptor = transformDescriptor;
             drawData->_globalInformationDescriptor = globalInfoDescriptor;
+            //
+            _state = GeometryBuildState::idle;
             return drawData;
         }
 

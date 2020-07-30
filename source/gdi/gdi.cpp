@@ -10,27 +10,6 @@
 
 namespace ugi {
     namespace gdi {
-
-        GDIContext* globalGDIContext = nullptr;
-
-        bool InitializeGDI( ugi::Device* device, hgl::assets::AssetsSource* assetsSource ) {
-            if(globalGDIContext) {
-                return true; 
-            }
-            globalGDIContext = new GDIContext( device, assetsSource);
-            return true;
-        }
-
-        GDIContext* GetGDIContext() {
-            return globalGDIContext;
-        }
-
-        bool DeinitializeGDI() {
-            if(globalGDIContext) {
-                delete globalGDIContext;
-                globalGDIContext = nullptr;
-            }
-        }
         
         bool GDIContext::initialize()
         {

@@ -1,11 +1,19 @@
 #pragma once
 #include <vector>
-#include "../geometry/geometryBuilder.h"
+#include <cstdint>
+
+namespace hgl {
+    namespace assets {
+        class AssetsSource;
+    }
+}
 
 namespace ugi {
     namespace gdi {
 
         class Component;
+        class IGeometryBuilder;
+        class GDIContext;
 
         class IComponentDrawingManager {
         protected:
@@ -19,7 +27,7 @@ namespace ugi {
 
         IComponentDrawingManager* createComponentDrawingManager();
 
-        class GdiSystem {
+        class UI2DSystem {
         private:
             Component*                  _rootComponent;
             std::vector<Component*>     _components;
@@ -38,7 +46,7 @@ namespace ugi {
                 _drawingManager->onNeedUpdate(component);
             }
         public:
-            GdiSystem()
+            UI2DSystem()
                 : _rootComponent( nullptr )
                 , _components {}
                 , _drawingManager( nullptr )
@@ -51,9 +59,19 @@ namespace ugi {
             bool initialize( GDIContext* context, hgl::assets::AssetsSource* assetsSource );
 
             void addComponent( Component* component, uint32_t depth = 0 );
+
+            Component* createComponent();
+
+            IGeometryBuilder* geometryBuilder() const {
+                return _geomBuilder;
+            }
             //
             void onTick();
         };
+        
+        extern bool InitializeGdiSystem( GDIContext* context, hgl::assets::AssetsSource* assetsSource );
+        extern UI2DSystem* GetGdiSystem();
+        extern void DeinitializeGdiSystem();
 
     }
 }

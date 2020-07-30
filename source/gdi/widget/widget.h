@@ -65,6 +65,10 @@ namespace ugi {
             void setRect( const hgl::RectScope2f& rect )  {
                 _rect = rect;
             }
+
+            const hgl::RectScope2f& rect() {
+                return _rect;
+            }
         };
 
         class ColoredRectangle : public Widget {
@@ -86,11 +90,6 @@ namespace ugi {
         public:
             void addChild( Widget* widget );
         };
-
-        class RelativeLayoutManager {
-        private:
-        public:
-        };
-
+        
     }
 }
