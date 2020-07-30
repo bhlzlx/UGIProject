@@ -46,27 +46,36 @@ namespace ugi {
 
         void Component::collectDrawItems( UI2DSystem* uisys ) {
             ComponentDrawItem drawItem;
-
+            IGeometryBuilder* geomBuilder = uisys->geometryBuilder();
+            // =========================================================
             for( auto& widget : _widgets) 
             {
                 auto type = widget->type();
                 switch( type ) 
                 {
                     case WidgetType::component: {
+                        if(geomBuilder->state() == IGeometryBuilder::GeometryBuildState::building) {
+                            // 如果之前有收集 draw data，那么需要结束收集
+                            auto drawData = geomBuilder->endBuild();
+                            drawItem.type = ComponentDrawItemType::drawData;
+                            drawItem.drawData = drawData;
+                            this->_drawItems.emplace_back(drawItem);
+                        }
                         drawItem.type = ComponentDrawItemType::component;
                         drawItem.component = (Component*)widget;
                         this->_drawItems.emplace_back(drawItem);
                         break;
                     }
-                    case WidgetType::rectange: {
-                        IGeometryBuilder* geomBuilder = uisys->geometryBuilder();
+                    case WidgetType::rectangle: {
                         if( geomBuilder->state() == IGeometryBuilder::GeometryBuildState::idle ) {
-                            const auto& rect = widget->rect();
-                            // rect.GetLeft();
+                            geomBuilder->beginBuild();
                         }
-                        // geomBuilder->drawRect();
+                        const auto& rect = widget->rect();
+                        ColoredRectangle* coloredRect = (ColoredRectangle*)widget;
+                        geomBuilder->drawRect( rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom(), coloredRect->color());
                         break;
                     }
+                    // == 以下两种暂时不做处理
                     case WidgetType::group:
                     case WidgetType::widget:
                     default:

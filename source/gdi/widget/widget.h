@@ -15,10 +15,10 @@ namespace ugi {
         };
         
         enum class WidgetType {
-            widget = 0,
-            rectange = 1,
-            group = 2,
-            component = 3,
+            widget      = 0,
+            rectangle   = 1,
+            group       = 2,
+            component   = 3,
         };
 
         class Widget;
@@ -76,9 +76,12 @@ namespace ugi {
             uint32_t _color;
         public:
             ColoredRectangle( uint32_t color )
-                : Widget( WidgetType::rectange )
+                : Widget( WidgetType::rectangle )
                 , _color( color )
             {
+            }
+            uint32_t color() const {
+                return _color;
             }
         };
 
