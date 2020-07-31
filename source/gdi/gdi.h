@@ -41,6 +41,10 @@ namespace ugi {
 
             bool initialize();
 
+            hgl::assets::AssetsSource* assetsSource() const {
+                return _assetsSource;
+            }
+
             ugi::Pipeline* pipeline() const ;
             const ugi::PipelineDescription& pipelineDescription() const ;
             //

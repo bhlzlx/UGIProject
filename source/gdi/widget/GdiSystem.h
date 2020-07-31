@@ -25,7 +25,7 @@ namespace ugi {
             //
         };
 
-        IComponentDrawingManager* createComponentDrawingManager();
+        IComponentDrawingManager* CreateComponentDrawingManager( GDIContext* context );
 
         class UI2DSystem {
         private:
@@ -56,7 +56,7 @@ namespace ugi {
             {
             }
 
-            bool initialize( GDIContext* context, hgl::assets::AssetsSource* assetsSource );
+            bool initialize( GDIContext* context );
 
             void addComponent( Component* component, uint32_t depth = 0 );
 

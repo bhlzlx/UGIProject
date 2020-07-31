@@ -8,13 +8,15 @@ namespace ugi {
 
 		class ComponentDrawingManager : public IComponentDrawingManager {
 		private:
+            GDIContext*                                         _context;
             std::set<Component*>                                _updateCollection; ///> 需要更新的列表
             std::vector<GeometryDrawData*>                      _drawDatas;
         private:
 
 		public:
-            ComponentDrawingManager( ) {
-                
+            ComponentDrawingManager( GDIContext* context )
+                : _context( context )
+            {
             }
             /*  一个 component 更新，那么它的父 component 不需要更新，只是更新它自己就行了
             */
@@ -37,16 +39,21 @@ namespace ugi {
             }
 		};
 
+        IComponentDrawingManager* CreateComponentDrawingManager( GDIContext* context ) {
+            auto drawingManager = new ComponentDrawingManager( context );
+            return drawingManager;
+        }
+
 
         UI2DSystem* __GdiSystem = nullptr;
 
-        bool InitializeGdiSystem( GDIContext* context, hgl::assets::AssetsSource* assetsSource ) {
+        bool InitializeGdiSystem( GDIContext* context) {
             if(!__GdiSystem) {
-                if(!context || !assetsSource) {
+                if(!context) {
                     return false;
                 }
                 __GdiSystem = new UI2DSystem();
-                __GdiSystem->initialize( context, assetsSource );
+                __GdiSystem->initialize( context );
             }
             return true;
         }
@@ -59,14 +66,14 @@ namespace ugi {
             return __GdiSystem;
         }
 
-        bool UI2DSystem::initialize( GDIContext* context, hgl::assets::AssetsSource* assetsSource ) {
+        bool UI2DSystem::initialize( GDIContext* context ) {
             if( this->_initialized) {
                 return true;
             }
             _rootComponent = new Component();
-            _drawingManager = new ComponentDrawingManager();
+            _drawingManager = new ComponentDrawingManager(context);
             _gdiContext = context;
-            _assetsSource = assetsSource;
+            _assetsSource = context->assetsSource();
             _geomBuilder = CreateGeometryBuilder(_gdiContext);
             _initialized = true;
             return true;
