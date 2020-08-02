@@ -52,7 +52,7 @@ namespace ugi {
             void addGroup( Group* group );
             void setDepth( uint32_t depth );
             // == 收集绘制内容
-            void collectDrawItems( UI2DSystem* system );
+            GeometryDrawData* collectDrawItems( UI2DSystem* system );
         };
 
 

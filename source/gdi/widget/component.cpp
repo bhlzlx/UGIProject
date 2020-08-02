@@ -35,7 +35,6 @@ namespace ugi {
                 });
             }
         }
-
         
         void Component::addWidget( Widget* widget ) {
             if( _widgetsRecord.find(widget) != _widgetsRecord.end()) {
@@ -44,9 +43,10 @@ namespace ugi {
             _widgetsRecord.insert(widget);
         }
 
-        void Component::collectDrawItems( UI2DSystem* uisys ) {
+        GeometryDrawData* Component::collectDrawItems( UI2DSystem* uisys ) {
             ComponentDrawItem drawItem;
             IGeometryBuilder* geomBuilder = uisys->geometryBuilder();
+            GeometryDrawData* drawData = nullptr;
             // =========================================================
             for( auto& widget : _widgets) 
             {
@@ -82,6 +82,7 @@ namespace ugi {
                     break;
                 }
             }
+            drawData = geomBuilder->endBuild();
         }
 
         
