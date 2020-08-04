@@ -62,6 +62,7 @@ else()
         add_subdirectory( HelloWorld )
         add_subdirectory( Sphere )
         add_subdirectory( GDI )
+        add_subdirectory( WidgetTest )
         
         SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET Sphere PROPERTY FOLDER "Samples")

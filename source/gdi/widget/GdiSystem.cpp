@@ -51,10 +51,6 @@ namespace ugi {
                     superComponent->collectDrawItems(_2dsystem);
                 }
             }
-
-            virtual void onTick() override {
-
-            }
 		};
 
         IComponentDrawingManager* CreateComponentDrawingManager( UI2DSystem* sys ) {
@@ -65,24 +61,24 @@ namespace ugi {
 
         UI2DSystem* __GdiSystem = nullptr;
 
-        bool InitializeGdiSystem( GDIContext* context) {
-            if(!__GdiSystem) {
-                if(!context) {
-                    return false;
-                }
-                __GdiSystem = new UI2DSystem();
-                __GdiSystem->initialize( context );
-            }
-            return true;
-        }
+        //bool InitializeGdiSystem( GDIContext* context) {
+        //    if(!__GdiSystem) {
+        //        if(!context) {
+        //            return false;
+        //        }
+        //        __GdiSystem = new UI2DSystem();
+        //        __GdiSystem->initialize( context );
+        //    }
+        //    return true;
+        //}
 
-        void DeinitializeGdiSystem() {
+//        //void DeinitializeGdiSystem() {
 
-        }
+//        //}
 
-        UI2DSystem* GetGdiSystem() {
-            return __GdiSystem;
-        }
+//        //UI2DSystem* GetGdiSystem() {
+        //    return __GdiSystem;
+        //}
 
         bool UI2DSystem::initialize( GDIContext* context ) {
             if( this->_initialized) {
@@ -106,6 +102,10 @@ namespace ugi {
 
         void UI2DSystem::trackDrawData( GeometryDrawData* drawData ) {
             _geomDataDeletor.post(drawData);
+        }
+
+        void UI2DSystem::onTick() {
+            _geomDataDeletor.tick(); // 绘制资源Tick
         }
 
     }

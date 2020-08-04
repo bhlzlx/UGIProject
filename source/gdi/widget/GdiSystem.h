@@ -55,7 +55,7 @@ namespace ugi {
             virtual void onNeedUpdate( Component* component ) = 0;
             virtual void onAddToDisplayList( Component* component ) = 0;
             virtual void onRemoveFromDisplayList( Component* Component ) = 0;
-            virtual void onTick() = 0;
+            // virtual void onTick() = 0;
             //
         };
 
@@ -114,10 +114,6 @@ namespace ugi {
             //
             void trackDrawData( GeometryDrawData* drawData );
         };
-
-        extern bool InitializeGdiSystem( GDIContext* context, hgl::assets::AssetsSource* assetsSource );
-        extern UI2DSystem* GetGdiSystem();
-        extern void DeinitializeGdiSystem();
 
     }
 }

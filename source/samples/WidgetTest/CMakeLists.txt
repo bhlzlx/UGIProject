@@ -10,11 +10,11 @@ endif()
 
 set( PROJECT_SOURCE
     ${PLATFORM_SOURCE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/GDI.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/widgetTest.cpp
 )
 
 set ( PROJECT_HEADER 
-    ${CMAKE_CURRENT_SOURCE_DIR}/GDI.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/widgetTest.h
 )
 
 add_executable( WidgetTest WIN32
