@@ -22,7 +22,7 @@ namespace ugi {
                 if( (*iter)->_group != (*groupBegin)->_group ) {
                     if((*groupBegin)->_group) {
                         std::sort(groupBegin, iter, []( Widget* a, Widget* b) {
-                        return a->_depth < b->_depth;
+                            return a->_depth < b->_depth;
                         });
                     }
                     groupBegin = iter;
@@ -44,6 +44,13 @@ namespace ugi {
         }
 
         GeometryDrawData* Component::collectDrawItems( UI2DSystem* uisys ) {
+            for( auto & drawItem: _drawItems) {
+                if( drawItem.type == ComponentDrawItemType::drawData ) {
+                    uisys->trackDrawData( drawItem.drawData);
+                }
+            }
+            _drawItems.clear();
+            // ==
             ComponentDrawItem drawItem;
             IGeometryBuilder* geomBuilder = uisys->geometryBuilder();
             GeometryDrawData* drawData = nullptr;

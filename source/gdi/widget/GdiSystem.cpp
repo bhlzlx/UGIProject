@@ -8,19 +8,16 @@ namespace ugi {
 
 		class ComponentDrawingManager : public IComponentDrawingManager {
 		private:
+            struct DrawData {
+                Component*          component;
+                GeometryDrawData*   geomDrawData;
+            };
             UI2DSystem*                                         _2dsystem;
             Component*                                          _rootComponent;
             std::set<Component*>                                _updateCollection; ///> 需要更新的列表
             /* @brief : 渲染的时候用它来遍历draw data */
             std::vector<GeometryDrawData*>                      _drawDatas;
-            /*component 和 draw data的映射关系，主要是更新component的时候用它来更新*/
-            std::map<Component*, GeometryDrawData*>             _drawDataMapping;
-            /*扔到销毁队列的draw data( 如果有必要，可以隔帧销毁 )*/
-            std::vector<GeometryDrawData*>                      _trackedDrawData;
         private:
-            void _trackDirtyDrawData( GeometryDrawData* drawData ) {
-                _trackedDrawData.push_back(drawData);
-            }
 		public:
             ComponentDrawingManager( UI2DSystem* dsys )
                 : _2dsystem( dsys )
@@ -36,33 +33,23 @@ namespace ugi {
                 因为子component会打断父component收集，还没处理，有时间处理下
             */
             virtual void onNeedUpdate( Component* component ) override {
-                auto iter = _drawDataMapping.find(component);
-                if( iter == _drawDataMapping.end()) {
-                    return;
-                }
-                size_t i = 0;
-                GeometryDrawData* dirtyDrawData = nullptr;
-                while( _drawDatas[i] != iter->second ) {
-                    ++i;
-                }
-                if( i >= _drawDatas.size()) {
-                    return;
-                }
-                dirtyDrawData = _drawDatas[i];
-                _trackDirtyDrawData(dirtyDrawData); // 私有函数调用
-                // 收集绘制信息并更新
-                auto drawData = component->collectDrawItems(_2dsystem);;
-                _drawDataMapping[component] = _drawDatas[i] = drawData;
+                // Component* superComponent = component->superComponent(); // 其实应该用不到父节奏
+                component->collectDrawItems(_2dsystem);
             }
             /* 如果一个 component 添加到了父 component 里，那么父 component 则需要重新收集，兄弟component不需要重新收集
             */
             virtual void onAddToDisplayList( Component* component ) override {
-                
+                Component* superComponent = component->superComponent();
+                superComponent->collectDrawItems(_2dsystem);
+                component->collectDrawItems(_2dsystem);
             }
             /*如果一个component被移除了，父控件重新不重新收集都无所谓的
             */
-            virtual void onRemoveFromDisplayList( Component* Component ) override {
-
+            virtual void onRemoveFromDisplayList( Component* component ) override {
+                Component* superComponent = component->superComponent();
+                if( superComponent) {
+                    superComponent->collectDrawItems(_2dsystem);
+                }
             }
 
             virtual void onTick() override {
@@ -70,8 +57,8 @@ namespace ugi {
             }
 		};
 
-        IComponentDrawingManager* CreateComponentDrawingManager( GDIContext* context ) {
-            auto drawingManager = new ComponentDrawingManager( context );
+        IComponentDrawingManager* CreateComponentDrawingManager( UI2DSystem* sys ) {
+            auto drawingManager = new ComponentDrawingManager(sys);
             return drawingManager;
         }
 
@@ -115,6 +102,10 @@ namespace ugi {
             std::sort( _components.begin(), _components.end(), []( Component* a, Component* b)->bool {
                 return a->depth() > b->depth();
             });
+        }
+
+        void UI2DSystem::trackDrawData( GeometryDrawData* drawData ) {
+            _geomDataDeletor.post(drawData);
         }
 
     }

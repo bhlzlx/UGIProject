@@ -36,6 +36,7 @@ namespace ugi {
             std::set<Widget*>                   _widgetsRecord; //
             //
             std::vector<ComponentDrawItem>      _drawItems;
+            Component*                          _superComponent;
         protected:            
             //
             void _depthSort();
@@ -51,8 +52,12 @@ namespace ugi {
             void addWidget( Widget* widget );
             void addGroup( Group* group );
             void setDepth( uint32_t depth );
-            // == 收集绘制内容
+            Component* superComponent() const {
+                return _superComponent;
+            }
+            /* collect draw items */
             GeometryDrawData* collectDrawItems( UI2DSystem* system );
+            /* track all old draw item, post to destroy queue*/
         };
 
 
