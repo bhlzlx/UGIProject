@@ -1,7 +1,9 @@
 #include "GdiSystem.h"
 #include "component.h"
-#include "../geometry/geometryBuilder.h"
-#include "../gdi.h"
+#include <gdi.h>
+#include <geometry/geometryBuilder.h>
+#include <geometry/geometryDrawData.h>
+#include <ugi/CommandBuffer.h>
 
 namespace ugi {
     namespace gdi {
@@ -59,26 +61,7 @@ namespace ugi {
         }
 
 
-        UI2DSystem* __GdiSystem = nullptr;
-
-        //bool InitializeGdiSystem( GDIContext* context) {
-        //    if(!__GdiSystem) {
-        //        if(!context) {
-        //            return false;
-        //        }
-        //        __GdiSystem = new UI2DSystem();
-        //        __GdiSystem->initialize( context );
-        //    }
-        //    return true;
-        //}
-
-//        //void DeinitializeGdiSystem() {
-
-//        //}
-
-//        //UI2DSystem* GetGdiSystem() {
-        //    return __GdiSystem;
-        //}
+        // UI2DSystem* __GdiSystem = nullptr;
 
         bool UI2DSystem::initialize( GDIContext* context ) {
             if( this->_initialized) {
@@ -98,6 +81,38 @@ namespace ugi {
             std::sort( _components.begin(), _components.end(), []( Component* a, Component* b)->bool {
                 return a->depth() > b->depth();
             });
+        }
+
+        void UI2DSystem::prepareResource( ugi::ResourceCommandEncoder* encoder, UniformAllocator* allocator ) {
+            _preparedDrawData.clear();
+            _preparedDrawItems.clear();
+            // 初始化数据
+            for( auto component : this->_components) {
+                ComponentDrawItem drawItem;
+                drawItem.type = ComponentDrawItemType::component;
+                drawItem.component = component;
+                _preparedDrawItems.push_back(drawItem);
+            }
+            // 循环访问渲染数据
+            while(!_preparedDrawItems.empty()) {
+                auto drawItem = _preparedDrawItems.back();
+                _preparedDrawItems.pop_back();
+                if(drawItem.type == ComponentDrawItemType::drawData) {
+                    drawItem.drawData->prepareResource( encoder, allocator);
+                    _preparedDrawData.push_back(drawItem.drawData);
+                } else if( drawItem.type == ComponentDrawItemType::component ) {
+                    Component* component = drawItem.component;
+                    for(auto& subDrawItem : component->drawItems()) {
+                        _preparedDrawItems.push_back(subDrawItem);
+                    }
+                }
+            }
+        }
+
+        void UI2DSystem::draw( ugi::RenderCommandEncoder* encoder ) {
+            for( auto& drawItem : _preparedDrawData ) {
+                drawItem->draw(encoder);
+            }
         }
 
         void UI2DSystem::trackDrawData( GeometryDrawData* drawData ) {

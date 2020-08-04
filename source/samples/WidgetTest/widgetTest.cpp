@@ -54,39 +54,19 @@ namespace ugi {
         }
 
         m_GdiContext = new ugi::gdi::GDIContext(m_device, assetsSource);
-        m_UiSys = 
-
-        if (!m_gdiContext->initialize()) {
+        if (!m_GdiContext->initialize()) {
             return false;
         }
-
+        m_UiSys = new ugi::gdi::UI2DSystem();
+        if(!m_UiSys->initialize(m_GdiContext)) {
+            return false;
+        }
         m_flightIndex = 0;
         return true;
     }
 
     void WidgetTest::tick() {
 
-        if (!m_geomDrawData) {
-            return;
-        }
-
-        static int angle = 0;
-        ++angle;
-        float rad = (float)angle/180.0f*3.141592654;
-
-        static auto tween = tweeny::from(0.5f, 0.0f).to(1.5f, 360.0f).during(100);
-
-        auto v = tween.step(1);
-        auto progress = tween.progress();
-        if( progress == 1.0f ) {
-            tween = tween.backward();
-        } else if( progress == 0.0f ) {
-            tween = tween.forward();
-        }
-
-        hgl::Vector2f elementAnchor( 16*24-2-11, 16*24-2-11 );
-        m_geomDrawData->setElementTransform( 256,elementAnchor, hgl::Vector2f(0.8f, 0.8f), (v[1]/180.0f)*3.1415926f );
-        m_geomDrawData->setTransform( elementAnchor, hgl::Vector2f(v[0], v[0]), 0);// (v[1]/180.0f)*3.1415926f);        
         m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
         m_uniformAllocator->tick();
         uint32_t imageIndex = m_swapchain->acquireNextImage( m_device, m_flightIndex );
@@ -97,10 +77,8 @@ namespace ugi {
 
         cmdbuf->beginEncode(); {
             hgl::Vector2f screenSize(m_width, m_height);
-            //
             {   ///> resource command encoder
                 auto resEncoder = cmdbuf->resourceCommandEncoder();
-                m_geomDrawData->prepareResource(resEncoder, m_uniformAllocator);
                 resEncoder->endEncode();
             }
             {   ///> render pass command encoder
@@ -112,12 +90,6 @@ namespace ugi {
                 mainRenderPass->setClearValues(clearValues);
 
                 auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
-                    renderCommandEncoder->setLineWidth(1.0f);
-                    renderCommandEncoder->setViewport(0, 0, m_width, m_height, 0, 1.0f );
-                    renderCommandEncoder->setScissor( 0, 0, m_width, m_height );
-                    renderCommandEncoder->bindPipeline(m_gdiContext->pipeline());
-
-                    m_geomDrawData->draw(renderCommandEncoder);
 
                 }
                 renderCommandEncoder->endEncode();
@@ -150,45 +122,24 @@ namespace ugi {
         //
         m_width = _width;
         m_height = _height;
+        m_GdiContext->setSize( hgl::Vector2f(_width, _height) );
         //
-        if(m_geomDrawData) {
-            delete m_geomDrawData;
-        }
-        m_gdiContext->setSize( hgl::Vector2f(_width, _height) );
 
-		
-        if (!m_geomBuilder) {
-            m_geomBuilder = ugi::gdi::CreateGeometryBuilder(m_gdiContext);
-		}
-
-		m_geomBuilder->beginBuild();
-		m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
-		srand(time(0));
-		for (uint32_t i = 0; i < 16; i++) {
-			for (uint32_t j = 0; j < 16; j++) {
-				uint32_t color = 0x88 | (rand() % 0xff) << 8 | (rand() % 0xff) << 16 | (rand() % 0xff) << 24;
-				m_geomBuilder->drawRect(i * 24, j * 24, 22, 22, color, true);
-			}
-		}
-		m_geomDrawData = m_geomBuilder->endBuild();
-		m_geomDrawData->setScissor(11, 256, 11, 256);        
     }
 
     void WidgetTest::release() {
     }
 
     const char * WidgetTest::title() {
-        return "GDI";
+        return "WidgetTest";
     }
         
     uint32_t WidgetTest::rendererType() {
         return 0;
     }
-
 }
 
-ugi::GDISample theapp;
-
 UGIApplication* GetApplication() {
-    return &theapp;
+    static ugi::WidgetTest app;
+    return &app;
 }

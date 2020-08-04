@@ -57,7 +57,10 @@ namespace ugi {
             }
             /* collect draw items */
             GeometryDrawData* collectDrawItems( UI2DSystem* system );
-            /* track all old draw item, post to destroy queue*/
+            //
+            const std::vector<ComponentDrawItem>& drawItems() const {
+                return _drawItems;
+            }
         };
 
 

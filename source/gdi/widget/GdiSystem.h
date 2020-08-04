@@ -1,8 +1,9 @@
 #pragma once
-#include <queue>
 #include <vector>
 #include <array>
 #include <cstdint>
+#include <UniformBuffer.h>
+#include <widget/component.h>
 
 namespace hgl {
     namespace assets {
@@ -11,12 +12,16 @@ namespace hgl {
 }
 
 namespace ugi {
+
+    class RenderCommandEncoder;
+    class ResourceCommandEncoder;
+    //
     namespace gdi {
 
         template< class T, class D, uint32_t FrameCount>
         class FrameDeferredDeleter {
         private:
-            std::array< std::queue<T>,FrameCount >      _queueArray;
+            std::array< std::vector<T>,FrameCount >      _queueArray;
             uint32_t                                    _frameIndex;
         public:
             FrameDeferredDeleter()
@@ -40,7 +45,7 @@ namespace ugi {
             void post( N&& res ) {
                 uint32_t queueIndex = _frameIndex + FrameCount - 1;
                 queueIndex = queueIndex % FrameCount;
-                _queueArray[queueIndex].push(std::forward<N>(res));
+                _queueArray[queueIndex].push_back(std::forward<N>(res));
             }
         };
 
@@ -82,6 +87,9 @@ namespace ugi {
             /*扔到销毁队列的draw data( 如果有必要，可以隔帧销毁 )*/
             std::vector<GeometryDrawData*>          _trackedDrawData;
             GeomDrawDataDeferredDeletor             _geomDataDeletor;
+
+            std::vector<ComponentDrawItem>          _preparedDrawItems;
+            std::vector<GeometryDrawData*>          _preparedDrawData;
         private:
 			void onAddComponent( Component* component ) {
                 _drawingManager->onAddToDisplayList(component);
@@ -109,6 +117,9 @@ namespace ugi {
             IGeometryBuilder* geometryBuilder() const {
                 return _geomBuilder;
             }
+
+            void prepareResource( ugi::ResourceCommandEncoder* encoder, UniformAllocator* allocator );
+            void draw( ugi::RenderCommandEncoder* encoder );
             //
             void onTick();
             //

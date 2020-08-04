@@ -46,7 +46,7 @@ namespace ugi {
         GeometryDrawData* Component::collectDrawItems( UI2DSystem* uisys ) {
             for( auto & drawItem: _drawItems) {
                 if( drawItem.type == ComponentDrawItemType::drawData ) {
-                    uisys->trackDrawData( drawItem.drawData);
+                    uisys->trackDrawData(drawItem.drawData);
                 }
             }
             _drawItems.clear();
