@@ -39,7 +39,7 @@ namespace ugi {
             }
 
             GeometryBatch( uint32_t firstVertex, uint32_t firstIndex, uint32_t primitiveCount, GeometryTransformArgument* argBuff, uint32_t argCapacity );
-            GeometryBatch( GeometryBatch&& batch );
+            GeometryBatch( GeometryBatch&& batch ) noexcept;
             void reset();
         };
 
@@ -53,7 +53,6 @@ namespace ugi {
             ugi::Buffer*                        _vertexBuffer;
             ugi::Buffer*                        _indexBuffer;
             ugi::Drawable*                      _drawable;
-            uint32_t                            _maxVertex;
             //
             std::vector<GeometryBatch>          _batches;
             std::vector<ugi::ArgumentGroup*>    _argGroups;

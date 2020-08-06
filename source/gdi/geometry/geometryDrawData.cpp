@@ -53,6 +53,7 @@ namespace ugi {
             : _context(context)
             , _vertexBuffer(nullptr)
             , _indexBuffer(nullptr)
+            , _drawable(nullptr)
             , _batches {}
             , _contextInformation()
             , _transform { hgl::Vector4f(1.0, 0.0f, 0.0f, 1.0f), hgl::Vector4f(0.0, 1.0f, 0.0f, 0.0f) }
