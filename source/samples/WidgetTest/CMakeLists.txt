@@ -1,6 +1,7 @@
 project( WidgetTest )
 
 include_directories( ${CMAKE_SOURCE_DIR}/source )
+include_directories( ${CMAKE_SOURCE_DIR}/source/gdi )
 include_directories( ${CMAKE_SOURCE_DIR}/thirdpart/tweeny/include )
 
 if(MINGW)

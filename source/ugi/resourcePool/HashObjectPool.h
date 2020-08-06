@@ -41,9 +41,8 @@ namespace ugi {
         }
 
         const Prototype__& getPrototype( uint64_t hashValue ) {
-            auto iter = _prototypeTable.find(hashVal);
+            auto iter = _prototypeTable.find(hashValue);
             if(  iter!= _prototypeTable.end()) {
-                hashValue = hashVal;
                 return iter->second;
             }
             return Prototype__();

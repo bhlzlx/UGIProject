@@ -2,7 +2,6 @@
 #include <vector>
 #include <array>
 #include <cstdint>
-#include <UniformBuffer.h>
 #include <widget/component.h>
 
 namespace hgl {
@@ -15,25 +14,26 @@ namespace ugi {
 
     class RenderCommandEncoder;
     class ResourceCommandEncoder;
+    class UniformAllocator;
     //
     namespace gdi {
 
         template< class T, class D, uint32_t FrameCount>
-        class FrameDeferredDeleter {
+        class FrameDeferredHandler {
         private:
-            std::array< std::vector<T>,FrameCount >      _queueArray;
+            std::array< std::vector<T>,FrameCount >     _queueArray;
             uint32_t                                    _frameIndex;
         public:
-            FrameDeferredDeleter()
+            FrameDeferredHandler()
                 : _queueArray()
                 , _frameIndex(0) 
             {
             }
 
             void tick() {
-                D deletor;
+                D handler;
                 for( T& res : _queueArray[_frameIndex]) {
-                    deletor(res);
+                    handler(res);
                 }
                 _queueArray[_frameIndex].clear();
                 //
@@ -41,7 +41,7 @@ namespace ugi {
                 _frameIndex = _frameIndex % FrameCount;
             }
 
-            template< class N >
+            template< class N = T >
             void post( N&& res ) {
                 uint32_t queueIndex = _frameIndex + FrameCount - 1;
                 queueIndex = queueIndex % FrameCount;
@@ -54,30 +54,73 @@ namespace ugi {
         class GDIContext;
         class GeometryDrawData;
 
-        class IComponentDrawingManager {
-        protected:
-        public:
-            virtual void onNeedUpdate( Component* component ) = 0;
-            virtual void onAddToDisplayList( Component* component ) = 0;
-            virtual void onRemoveFromDisplayList( Component* Component ) = 0;
-            // virtual void onTick() = 0;
-            //
-        };
-
-        IComponentDrawingManager* CreateComponentDrawingManager( GDIContext* context );
-
         struct GeometryDestroyer {
             void operator ()( GeometryDrawData* data ) {
                 delete data;
             }
         };
 
+        class ComponentDrawDataCollectorHandler {
+        public:
+            struct Action {
+                enum class Type {
+                    add,
+                    update,
+                    remove
+                };
+                Type        type;
+                Component*  component;
+            };
+        private:
+            void _collectComponentForUpdate( Component* component );
+            void _collectComponentForAdd( Component* component );
+            void _collectComponentForRemove( Component* component );
+        public:
+            void operator()( const Action& action ) {
+                switch(action.type) {
+                    case Action::Type::add: {
+                        _collectComponentForAdd(action.component);
+                        break;
+                    }
+                    case Action::Type::update: {
+                        _collectComponentForUpdate(action.component);
+                        break;
+                    }
+                    case Action::Type::remove: {
+                        _collectComponentForRemove(action.component);
+                        break;
+                    }
+                }
+            }
+        };
+
+        class ComponentLayoutHandler {
+        public:
+            struct Action {
+                enum class Type {
+                    Sort = 0
+                };
+                Type type;
+                Component* component;
+            };
+        public:
+            void operator()( const Action& action ) {
+                switch( action.type) {
+                    case Action::Type::Sort: {
+                        action.component->sortDepth();
+                        break;
+                    }
+                }
+            }
+        };
+
         class UI2DSystem {
-            typedef FrameDeferredDeleter<GeometryDrawData*,GeometryDestroyer,2> GeomDrawDataDeferredDeletor;
+            typedef FrameDeferredHandler<GeometryDrawData*,GeometryDestroyer,2> GeomDrawDataDeferredDeletor;
+            typedef FrameDeferredHandler<ComponentDrawDataCollectorHandler::Action,ComponentDrawDataCollectorHandler,2> ComponentDrawDataCollector;
+            typedef FrameDeferredHandler<ComponentLayoutHandler::Action,ComponentLayoutHandler,2> ComponentLayoutMonitor;
         private:
             Component*                              _rootComponent;
             std::vector<Component*>                 _components;
-            IComponentDrawingManager*               _drawingManager;
             //          
             GDIContext*                             _gdiContext;
             hgl::assets::AssetsSource*              _assetsSource;
@@ -87,21 +130,16 @@ namespace ugi {
             /*扔到销毁队列的draw data( 如果有必要，可以隔帧销毁 )*/
             std::vector<GeometryDrawData*>          _trackedDrawData;
             GeomDrawDataDeferredDeletor             _geomDataDeletor;
+            ComponentDrawDataCollector              _drawDataCollector;
+            ComponentLayoutMonitor                  _layoutMonitor;
 
             std::vector<ComponentDrawItem>          _preparedDrawItems;
             std::vector<GeometryDrawData*>          _preparedDrawData;
         private:
-			void onAddComponent( Component* component ) {
-                _drawingManager->onAddToDisplayList(component);
-            }
-			void onUpdateComponent( Component* component ) {
-                _drawingManager->onNeedUpdate(component);
-            }
         public:
             UI2DSystem()
                 : _rootComponent( nullptr )
                 , _components {}
-                , _drawingManager( nullptr )
                 , _gdiContext( nullptr )
                 , _geomBuilder( nullptr )
                 , _initialized( 0 )
@@ -109,21 +147,24 @@ namespace ugi {
             }
 
             bool initialize( GDIContext* context );
-
+            // == Add Component
             void addComponent( Component* component, uint32_t depth = 0 );
-
+            // == Create Functions
             Component* createComponent();
-
+            ColoredRectangle* createColoredRectangle();
+            // == Render
+            void prepareResource( ugi::ResourceCommandEncoder* encoder, UniformAllocator* allocator );
+            void draw( ugi::RenderCommandEncoder* encoder );
+            // == Tick
+            void onTick();
+            // == Track Resource
+            void trackDrawData( GeometryDrawData* drawData );
+            void trackCollectionAction( const ComponentDrawDataCollectorHandler::Action& action );
+            void trackLayoutAction( const ComponentLayoutHandler::Action& action );
+            // == Getters
             IGeometryBuilder* geometryBuilder() const {
                 return _geomBuilder;
             }
-
-            void prepareResource( ugi::ResourceCommandEncoder* encoder, UniformAllocator* allocator );
-            void draw( ugi::RenderCommandEncoder* encoder );
-            //
-            void onTick();
-            //
-            void trackDrawData( GeometryDrawData* drawData );
         };
 
     }

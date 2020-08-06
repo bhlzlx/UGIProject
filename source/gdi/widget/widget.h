@@ -13,7 +13,7 @@ namespace ugi {
             hbox = 1,
             grid = 2,
         };
-        
+
         enum class WidgetType {
             widget      = 0,
             rectangle   = 1,
@@ -31,53 +31,46 @@ namespace ugi {
         public:
         };
 
-        class Widget {
-            friend class Component;
-        protected:
-            Component*          _component;
-            Group*              _group;
-            hgl::RectScope2f    _rect;
-            uint32_t            _depth;
-            WidgetType          _type;
-        public:
-            Widget( WidgetType type = WidgetType::widget ) 
-                : _component( nullptr )
-                , _group( nullptr )
-                , _rect(0, 0, 16, 16)
-                , _depth(0)
-                , _type( type )
+		class Widget {
+			friend class Component;
+		protected:
+			Component*          _component;
+			Group*              _group;
+			hgl::RectScope2f    _rect;
+			uint32_t            _depth;
+			WidgetType          _type;
+			std::string			_name;
+		public:
+			Widget(WidgetType type = WidgetType::widget)
+				: _component(nullptr)
+				, _group(nullptr)
+				, _rect(0, 0, 16, 16)
+				, _depth(0)
+				, _type(type)
 
-            {
-            }
+			{
+			}
 
-            uint32_t depth() const  {
-                return _depth;
-            }
-
-            void setDepth( uint32_t depth )  {
-                _depth = depth;
-            }
-
-            WidgetType type() const  {
-                return _type;
-            }
-
-            void setRect( const hgl::RectScope2f& rect )  {
-                _rect = rect;
-            }
-
-            const hgl::RectScope2f& rect() {
-                return _rect;
-            }
+			uint32_t depth() const;
+			void setName(const std::string& name) {
+				_name = name;
+			}
+			void setName(std::string&& name) {
+				_name = std::move(name);
+			}
+            void setDepth(uint32_t depth);
+            WidgetType type() const;
+            void setRect(const hgl::RectScope2f& rect);
+            const hgl::RectScope2f& rect();
         };
 
         class ColoredRectangle : public Widget {
         private:
             uint32_t _color;
         public:
-            ColoredRectangle( uint32_t color )
-                : Widget( WidgetType::rectangle )
-                , _color( color )
+            ColoredRectangle(uint32_t color)
+                : Widget(WidgetType::rectangle)
+                , _color(color)
             {
             }
             uint32_t color() const {

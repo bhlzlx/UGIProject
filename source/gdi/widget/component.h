@@ -28,6 +28,11 @@ namespace ugi {
             };
         };
 
+        enum class ComponentDirtyFlagBits {
+            Drawing     = (1<<0),
+            Sort        = (1<<1),
+        };
+
         class Component : public Widget {
         protected:
             std::vector<Widget*>                _widgets;       // ordered by depth
@@ -36,27 +41,48 @@ namespace ugi {
             std::set<Widget*>                   _widgetsRecord; //
             //
             std::vector<ComponentDrawItem>      _drawItems;
-            Component*                          _superComponent;
+            UI2DSystem*                         _system;
+            //
+            uint32_t                            _dirtyFlags;
         protected:            
             //
             void _depthSort();
+            // == 更新
+            void _postUpdateAction();
+            void _postAddAction();
+            void _postRemoveAction();
+            // == 
+            void _postSortAction();
         public:
-            Component()
-                : _widgets()
+            Component( UI2DSystem* system )
+                : Widget(WidgetType::component )
+                , _widgets()
                 , _groups()
                 , _widgetsRecord()
                 , _drawItems()
+                , _system(system)
+                , _dirtyFlags(0)
             {
             }
 
             void addWidget( Widget* widget );
+            void removeWidget( Widget* widget );
             void addGroup( Group* group );
             void setDepth( uint32_t depth );
+
+            void setDirtyFlag( ComponentDirtyFlagBits flagBit, uint32_t val );
+            bool dirtyFlag( ComponentDirtyFlagBits flagBit );
+
+            UI2DSystem* system() {
+                return _system;
+            }
+
             Component* superComponent() const {
-                return _superComponent;
+                return _component;
             }
             /* collect draw items */
-            GeometryDrawData* collectDrawItems( UI2DSystem* system );
+            void collectDrawItems();
+            void sortDepth();
             //
             const std::vector<ComponentDrawItem>& drawItems() const {
                 return _drawItems;

@@ -61,6 +61,14 @@ namespace ugi {
         if(!m_UiSys->initialize(m_GdiContext)) {
             return false;
         }
+        //
+        auto component = m_UiSys->createComponent();
+		component->setName("main");
+        auto rcwgt = m_UiSys->createColoredRectangle();
+        component->addWidget(rcwgt);
+        //
+        m_UiSys->addComponent(component);
+
         m_flightIndex = 0;
         return true;
     }
@@ -68,7 +76,10 @@ namespace ugi {
     void WidgetTest::tick() {
 
         m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
+        //
         m_uniformAllocator->tick();
+        m_UiSys->onTick();
+        //
         uint32_t imageIndex = m_swapchain->acquireNextImage( m_device, m_flightIndex );
 
         IRenderPass* mainRenderPass = m_swapchain->renderPass(imageIndex);
@@ -78,7 +89,9 @@ namespace ugi {
         cmdbuf->beginEncode(); {
             hgl::Vector2f screenSize(m_width, m_height);
             {   ///> resource command encoder
-                auto resEncoder = cmdbuf->resourceCommandEncoder();
+                auto resEncoder = cmdbuf->resourceCommandEncoder(); {
+                    m_UiSys->prepareResource(resEncoder, m_uniformAllocator);
+                }
                 resEncoder->endEncode();
             }
             {   ///> render pass command encoder
@@ -90,7 +103,9 @@ namespace ugi {
                 mainRenderPass->setClearValues(clearValues);
 
                 auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
-
+					renderCommandEncoder->setViewport(0, 0, m_width, m_height, 0, 1.0f);
+					renderCommandEncoder->setScissor(0, 0, m_width, m_height);
+                    m_UiSys->draw(renderCommandEncoder);
                 }
                 renderCommandEncoder->endEncode();
             }
