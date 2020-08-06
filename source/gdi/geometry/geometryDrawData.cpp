@@ -16,7 +16,7 @@ namespace ugi {
 
     namespace gdi {
     
-        GeometryBatch::GeometryBatch( GeometryBatch&& batch )
+        GeometryBatch::GeometryBatch( GeometryBatch&& batch ) noexcept
             :_firstVertex(batch._firstVertex)     
             ,_firstIndex(batch._firstIndex) 
             ,_primitiveCount(batch._primitiveCount)
@@ -177,8 +177,9 @@ namespace ugi {
                 _elementInformationDescriptor.bufferOffset = ubo.offset();
                 //
                 _contextInformation.contextSize = _context->size();
+                _contextInformation.contextTransform[0] = _transform[0];
+                _contextInformation.contextTransform[1] = _transform[1];
                 ubo = allocator->allocate(sizeof(_contextInformation));
-                _contextInformation.contextSize = _context->size();
                 ubo.writeData(0, &_contextInformation, sizeof(_contextInformation));
                 _globalInformationDescriptor.bufferOffset = ubo.offset();
                 _globalInformationDescriptor.buffer = ubo.buffer();

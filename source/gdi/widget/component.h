@@ -37,6 +37,7 @@ namespace ugi {
         protected:
             std::vector<Widget*>                _widgets;       // ordered by depth
             std::vector<Group*>                 _groups;
+            hgl::RectScope2f                    _scissor;
             //
             std::set<Widget*>                   _widgetsRecord; //
             //
@@ -69,6 +70,7 @@ namespace ugi {
             void removeWidget( Widget* widget );
             void addGroup( Group* group );
             void setDepth( uint32_t depth );
+            void setScissor( float left, float top, float width, float height );
 
             void setDirtyFlag( ComponentDirtyFlagBits flagBit, uint32_t val );
             bool dirtyFlag( ComponentDirtyFlagBits flagBit );

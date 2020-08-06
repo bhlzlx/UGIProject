@@ -166,7 +166,7 @@ namespace ugi {
 			}
 		}
 		m_geomDrawData = m_geomBuilder->endBuild();
-		m_geomDrawData->setScissor(11, 256, 11, 256);        
+        m_geomDrawData->setScissor(11, 256, 11, 256);
     }
 
     void GDISample::release() {

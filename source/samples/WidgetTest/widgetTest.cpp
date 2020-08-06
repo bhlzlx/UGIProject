@@ -66,6 +66,7 @@ namespace ugi {
 		component->setName("main");
         auto rcwgt = m_UiSys->createColoredRectangle();
         component->addWidget(rcwgt);
+        component->setScissor(0, 0, 512, 512);
         //
         m_UiSys->addComponent(component);
 

@@ -1,5 +1,6 @@
 #include "component.h"
 #include <geometry/geometryBuilder.h>
+#include <geometry/geometryDrawData.h>
 #include <widget/widget.h>
 #include <widget/GdiSystem.h>
 
@@ -124,6 +125,17 @@ namespace ugi {
                 drawItem.drawData = drawData;
                 this->_drawItems.emplace_back(drawItem);
             }
+            for (auto& drawItem : _drawItems) {
+                if (drawItem.type == ComponentDrawItemType::drawData) {
+                    drawItem.drawData->setScissor(
+                        _scissor.GetLeft(),
+                        _scissor.GetRight(),
+                        _scissor.GetTop(),
+                        _scissor.GetBottom()
+                    );
+                    // drawData->setTransform()
+                }
+            }
             setDirtyFlag(ComponentDirtyFlagBits::Drawing, 0);
         }
 
@@ -161,6 +173,15 @@ namespace ugi {
         void Component::setDepth( uint32_t depth ) {
             _depth = depth;
             setDirtyFlag(ComponentDirtyFlagBits::Sort, 1);
+        }
+
+        void Component::setScissor(float left, float top, float width, float height) {
+            _scissor.Set(left, top, width, height);
+            for (auto& drawItem : _drawItems) {
+                if (drawItem.type == ComponentDrawItemType::drawData) {
+                    drawItem.drawData->setScissor(left, left + width, top, top + height);
+                }
+            }
         }
 
         void Component::sortDepth() {

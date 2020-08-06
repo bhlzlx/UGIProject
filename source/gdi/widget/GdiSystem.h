@@ -121,6 +121,7 @@ namespace ugi {
         private:
             Component*                              _rootComponent;
             std::vector<Component*>                 _components;
+            hgl::Vector2f                           _windowSize;
             //          
             GDIContext*                             _gdiContext;
             hgl::assets::AssetsSource*              _assetsSource;
@@ -141,6 +142,7 @@ namespace ugi {
                 : _rootComponent( nullptr )
                 , _components {}
                 , _gdiContext( nullptr )
+                , _assetsSource( nullptr )
                 , _geomBuilder( nullptr )
                 , _initialized( 0 )
             {
@@ -157,7 +159,8 @@ namespace ugi {
             void draw( ugi::RenderCommandEncoder* encoder );
             // == Tick
             void onTick();
-            // == Track Resource
+            void onResize( uint32_t width, uint32_t height );
+            // == Track Resource & Drawing & Updating
             void trackDrawData( GeometryDrawData* drawData );
             void trackCollectionAction( const ComponentDrawDataCollectorHandler::Action& action );
             void trackLayoutAction( const ComponentLayoutHandler::Action& action );

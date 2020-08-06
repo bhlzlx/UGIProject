@@ -94,6 +94,14 @@ namespace ugi {
             _drawDataCollector.tick(); // 收集器Tick
         }
 
+        void UI2DSystem::onResize(uint32_t width, uint32_t height) {
+            _windowSize.Set((float)width, (float)height);
+            hgl::RectScope2f rc;
+            rc.Set(0, 0, _windowSize.x, _windowSize.y);
+            _rootComponent->setRect(rc);
+            _rootComponent->setScissor(0, 0, _windowSize.x, _windowSize.y);
+        }
+
         void ComponentDrawDataCollectorHandler::_collectComponentForUpdate( Component* component ) {
             component->collectDrawItems();
         }
