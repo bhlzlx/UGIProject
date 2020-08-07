@@ -65,8 +65,17 @@ namespace ugi {
         auto component = m_UiSys->createComponent();
 		component->setName("main"); {
             auto rcwgt = m_UiSys->createColoredRectangle( 0xffffffff );
-            rcwgt->setRect(hgl::RectScope2f(32, 32, 32, 32));
             component->addWidget(rcwgt);
+            rcwgt->setRect(hgl::RectScope2f(0, 0, 32, 32));
+            rcwgt = m_UiSys->createColoredRectangle( 0xffff00ff );
+            component->addWidget(rcwgt);
+            rcwgt->setRect(hgl::RectScope2f(0, 32, 32, 32));
+            rcwgt = m_UiSys->createColoredRectangle( 0xff00ffff );
+            component->addWidget(rcwgt);
+            rcwgt->setRect(hgl::RectScope2f(32, 0, 32, 32));
+            rcwgt = m_UiSys->createColoredRectangle( 0x0000ffff );
+            component->addWidget(rcwgt);
+            rcwgt->setRect(hgl::RectScope2f(32, 32, 32, 32));
         }
         component->setScissor(0, 0, 512, 512);
         //
