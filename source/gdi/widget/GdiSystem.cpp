@@ -12,8 +12,8 @@ namespace ugi {
             if( this->_initialized) {
                 return true;
             }
-            _rootComponent = new Component(this);
-			_rootComponent->setName("root");
+            _component = new Component(this);
+			_component->setName("root");
             _gdiContext = context;
             _assetsSource = context->assetsSource();
             _geomBuilder = CreateGeometryBuilder(_gdiContext);
@@ -23,10 +23,6 @@ namespace ugi {
 
         void UI2DSystem::addComponent( Component* component, uint32_t depth ) {
             component->setDepth(depth);
-            _rootComponent->addWidget(component);
-            std::sort( _components.begin(), _components.end(), []( Component* a, Component* b)->bool {
-                return a->depth() > b->depth();
-            });
             // == 更新 drawdata
             ComponentDrawDataCollectorHandler::Action action;
             action.type = ComponentDrawDataCollectorHandler::Action::Type::add;
@@ -50,7 +46,7 @@ namespace ugi {
             // 初始化数据
             ComponentDrawItem drawItem;
             drawItem.type = ComponentDrawItemType::component;
-            drawItem.component = _rootComponent;
+            drawItem.component = _component;
             _preparedDrawItems.push_back(drawItem);
             // 循环访问渲染数据
             while(!_preparedDrawItems.empty()) {
@@ -98,8 +94,8 @@ namespace ugi {
             _windowSize.Set((float)width, (float)height);
             hgl::RectScope2f rc;
             rc.Set(0, 0, _windowSize.x, _windowSize.y);
-            _rootComponent->setRect(rc);
-            _rootComponent->setScissor(0, 0, _windowSize.x, _windowSize.y);
+            _component->setRect(rc);
+            _component->setScissor(0, 0, _windowSize.x, _windowSize.y);
         }
 
         void ComponentDrawDataCollectorHandler::_collectComponentForUpdate( Component* component ) {

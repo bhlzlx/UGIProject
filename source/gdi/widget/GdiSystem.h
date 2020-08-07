@@ -119,8 +119,7 @@ namespace ugi {
             typedef FrameDeferredHandler<ComponentDrawDataCollectorHandler::Action,ComponentDrawDataCollectorHandler,2> ComponentDrawDataCollector;
             typedef FrameDeferredHandler<ComponentLayoutHandler::Action,ComponentLayoutHandler,2> ComponentLayoutMonitor;
         private:
-            Component*                              _rootComponent;
-            std::vector<Component*>                 _components;
+            Component*                              _component;     ///> root compoennt
             hgl::Vector2f                           _windowSize;
             //          
             GDIContext*                             _gdiContext;
@@ -139,8 +138,7 @@ namespace ugi {
         private:
         public:
             UI2DSystem()
-                : _rootComponent( nullptr )
-                , _components {}
+                : _component( nullptr )
                 , _gdiContext( nullptr )
                 , _assetsSource( nullptr )
                 , _geomBuilder( nullptr )
