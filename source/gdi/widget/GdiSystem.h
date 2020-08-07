@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <vector>
 #include <array>
 #include <cstdint>
@@ -55,9 +55,7 @@ namespace ugi {
         class GeometryDrawData;
 
         struct GeometryDestroyer {
-            void operator ()( GeometryDrawData* data ) {
-                delete data;
-            }
+            void operator ()( GeometryDrawData* data );
         };
 
         class ComponentDrawDataCollectorHandler {
@@ -151,7 +149,7 @@ namespace ugi {
             void addComponent( Component* component, uint32_t depth = 0 );
             // == Create Functions
             Component* createComponent();
-            ColoredRectangle* createColoredRectangle();
+            ColoredRectangle* createColoredRectangle( uint32_t color);
             // == Render
             void prepareResource( ugi::ResourceCommandEncoder* encoder, UniformAllocator* allocator );
             void draw( ugi::RenderCommandEncoder* encoder );

@@ -177,7 +177,7 @@ namespace ugi {
             };
             uint16_t indices[6] = { 0, 1, 3, 1, 2, 3 };
             auto handle = this->appendGeometryVertices(
-                points, 4, indices, 6, true
+                points, 4, indices, 6, dynamic
             );
             return handle;
         }

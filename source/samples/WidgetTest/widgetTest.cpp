@@ -63,9 +63,11 @@ namespace ugi {
         }
         //
         auto component = m_UiSys->createComponent();
-		component->setName("main");
-        auto rcwgt = m_UiSys->createColoredRectangle();
-        component->addWidget(rcwgt);
+		component->setName("main"); {
+            auto rcwgt = m_UiSys->createColoredRectangle( 0xffffffff );
+            rcwgt->setRect(hgl::RectScope2f(32, 32, 32, 32));
+            component->addWidget(rcwgt);
+        }
         component->setScissor(0, 0, 512, 512);
         //
         m_UiSys->addComponent(component);
@@ -139,8 +141,6 @@ namespace ugi {
         m_width = _width;
         m_height = _height;
         m_GdiContext->setSize( hgl::Vector2f(_width, _height) );
-        //
-
     }
 
     void WidgetTest::release() {

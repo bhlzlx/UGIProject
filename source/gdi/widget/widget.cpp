@@ -9,6 +9,13 @@ namespace ugi {
             return _depth;
         }
 
+        bool Widget::_registComponentKey( const std::string& key ) {
+            if(_component) {
+                return _component->registWidget(key, this);
+            }
+            return false;
+        }
+
         void Widget::setDepth(uint32_t depth) {
             _depth = depth;
             // == 

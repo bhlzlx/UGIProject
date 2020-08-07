@@ -69,7 +69,16 @@
         "forward_list": "cpp",
         "unordered_set": "cpp",
         "valarray": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "clocale": "cpp",
+        "cstdarg": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "iostream": "cpp",
+        "numeric": "cpp",
+        "sstream": "cpp",
+        "xfunctional": "cpp",
+        "xmemory0": "cpp"
     },
     "editor.tabCompletion": "on",
     "workbench.editor.highlightModifiedTabs": true

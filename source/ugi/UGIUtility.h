@@ -24,7 +24,7 @@ namespace ugi {
         }
     };
 
-    template< typename HashType = ugi::APHash >
+    template< class HashType = ugi::APHash >
     class UGIHash {
     private:
         uint64_t        _value;

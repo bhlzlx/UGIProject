@@ -1,4 +1,4 @@
-#include "GdiSystem.h"
+﻿#include "GdiSystem.h"
 #include "component.h"
 #include <gdi.h>
 #include <geometry/geometryBuilder.h>
@@ -7,6 +7,10 @@
 
 namespace ugi {
     namespace gdi {
+
+        void GeometryDestroyer::operator ()( GeometryDrawData* data ) {
+            delete data;
+        }
 
         bool UI2DSystem::initialize( GDIContext* context ) {
             if( this->_initialized) {
@@ -36,8 +40,8 @@ namespace ugi {
             return component;
         }
 
-        ColoredRectangle* UI2DSystem::createColoredRectangle() {
-            auto rc = new ColoredRectangle( 0xffffffff );
+        ColoredRectangle* UI2DSystem::createColoredRectangle( uint32_t color ) {
+            auto rc = new ColoredRectangle( color );
             return rc;
         }
 

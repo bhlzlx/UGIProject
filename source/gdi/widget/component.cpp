@@ -1,8 +1,9 @@
-#include "component.h"
+﻿#include "component.h"
 #include <geometry/geometryBuilder.h>
 #include <geometry/geometryDrawData.h>
 #include <widget/widget.h>
 #include <widget/GdiSystem.h>
+#include <ugi/UGIUtility.h>
 
 namespace ugi {
 
@@ -47,6 +48,9 @@ namespace ugi {
             if( widget->type() == WidgetType::component ) {
                 Component* subComponent = (Component*)widget;
                 subComponent->_postAddAction();
+            }
+            if(!registWidget(widget)) {
+                // 重复了，刷LOG!
             }
             _postUpdateAction(); // 更新
             _postSortAction();
@@ -108,7 +112,10 @@ namespace ugi {
                         }
                         const auto& rect = widget->rect();
                         ColoredRectangle* coloredRect = (ColoredRectangle*)widget;
-                        geomBuilder->drawRect( rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom(), coloredRect->color());
+                        auto geomTransHandle = geomBuilder->drawRect( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), coloredRect->color());
+                        auto drawDataIndex = _drawItems.size();
+                        coloredRect->_transformHandle.index = (uint32_t)drawDataIndex;
+                        coloredRect->_transformHandle.handle = geomTransHandle;
                         break;
                     }
                     // == 以下两种暂时不做处理
@@ -201,6 +208,69 @@ namespace ugi {
 
         bool Component::dirtyFlag( ComponentDirtyFlagBits flagBit ) {
             return (bool)(_dirtyFlags & (uint32_t)flagBit);
+        }
+
+        bool Component::registWidget( const std::string& key, Widget* widget ) {
+            if(!key.length()) {
+                return false; // 这键值是空的！
+            }
+            UGIHash<APHash> keyHasher;
+            keyHasher.hashBuffer(key.c_str(), key.length());
+            uint64_t hash = keyHasher;
+            auto it = _registTable.find(hash);
+            if(it !=_registTable.end()) {
+                return false; // 这个新KEY已经有人占用了，目前不可用
+            }
+            _registTable[hash] = widget;
+            if( widget->key().length()) {
+                UGIHash<APHash> oldKeyHasher;
+                oldKeyHasher.hashBuffer(widget->key().c_str(), widget->key().length());
+                uint64_t oldHash = oldKeyHasher;
+                auto oldIt = _registTable.find(oldHash);
+                if( oldIt != _registTable.end()) {
+                    _registTable.erase(oldIt);
+                }
+            }
+            widget->setKey(key);
+            return true;
+        }
+
+        bool Component::registWidget( Widget* widget ) {
+            if( widget->key().length()) {
+                UGIHash<APHash> keyHader;
+                keyHader.hashBuffer(widget->key().c_str(), widget->key().length());
+                uint64_t hash = keyHader;
+                auto id = _registTable.find(hash);
+                if( id != _registTable.end()) {
+                    widget->setKey("#");
+                    return false;
+                } else {
+                    _registTable[hash] = widget;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void Component::unregistWidget( Widget* widget ) {
+            UGIHash<APHash> oldKeyHasher;
+            oldKeyHasher.hashBuffer(widget->key().c_str(), widget->key().length());
+            uint64_t oldHash = oldKeyHasher;
+            auto oldIt = _registTable.find(oldHash);
+            if( oldIt != _registTable.end()) {
+                _registTable.erase(oldIt);
+            }
+        }
+
+        Widget* Component::find( const std::string& key ) {
+            UGIHash<APHash> keyHasher;
+            keyHasher.hashBuffer(key.c_str(), key.length());
+            uint64_t hash = keyHasher;
+            auto it = _registTable.find(hash);
+            if(it !=_registTable.end()) {
+                return it->second;
+            }
+            return nullptr;
         }
     }
 }

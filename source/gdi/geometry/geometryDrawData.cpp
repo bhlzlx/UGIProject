@@ -30,12 +30,12 @@ namespace ugi {
         }
 
         GeometryBatch::GeometryBatch( uint32_t firstVertex, uint32_t firstIndex, uint32_t primitiveCount, GeometryTransformArgument* argBuff, uint32_t argCapacity )
-                :_firstVertex(firstVertex)
-                ,_firstIndex(firstIndex) 
-                ,_primitiveCount(primitiveCount)
-                ,_transArgBuffer(argBuff)  
-                ,_transArgCount(1) // 第一个默认单位矩阵
-                ,_transArgCapacity(argCapacity)
+            :_firstVertex(firstVertex)
+            ,_firstIndex(firstIndex) 
+            ,_primitiveCount(primitiveCount)
+            ,_transArgBuffer(argBuff)  
+            ,_transArgCount(1) // 第一个默认单位矩阵
+            ,_transArgCapacity(argCapacity)
         {
             argBuff[0] = GeometryTransformArgument();
         }
@@ -93,6 +93,44 @@ namespace ugi {
             
         }
 
+        void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& offset ) {
+            uint16_t batchIndex = handle>>16;
+            uint16_t elementIndex = handle&0xffff;
+            hgl::Vector4f data[2] = {
+                hgl::Vector4f( 1.0f, 0.0f, offset.x, _alpha ),
+                hgl::Vector4f( 0.0f, 1.0f, offset.y, _gray ),
+            };
+            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
+        }
+
+        void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale ) {
+            uint16_t batchIndex = handle>>16;
+            uint16_t elementIndex = handle&0xffff;
+            //
+            float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
+            hgl::Vector4f data[2];
+            data[0] = hgl::Vector4f(a, 0, -a*x + x, _alpha);
+            data[1] = hgl::Vector4f(0, b, -b*y + y, _gray);
+            //
+            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
+        }
+
+        void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, float radian ){
+            uint16_t batchIndex = handle>>16;
+            uint16_t elementIndex = handle&0xffff;
+            //
+            float cosValue = cos(radian); float sinValue = sin(radian);
+            float x = anchor.x; float y = anchor.y;
+            hgl::Vector4f data[2];
+            data[0] = hgl::Vector4f(cosValue, -sinValue, -cosValue*x + sinValue*y + x, 0.0f);
+            data[1] = hgl::Vector4f(sinValue, cosValue,  -sinValue*x - cosValue*y + y, 0.0f);
+            //
+            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
+        }
+        
         void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
             //
             uint16_t batchIndex = handle>>16;
@@ -112,32 +150,6 @@ namespace ugi {
             _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
         }
 
-        
-        void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale ) {
-            uint16_t batchIndex = handle>>16;
-            uint16_t elementIndex = handle&0xffff;
-            //
-            float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
-            hgl::Vector4f data[2];
-            data[0] = hgl::Vector4f(a, 0, -a*x + x, _alpha);
-            data[1] = hgl::Vector4f(0, b, -b*y + y, _gray);
-            //
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
-        }
-        void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, float radian ){
-            uint16_t batchIndex = handle>>16;
-            uint16_t elementIndex = handle&0xffff;
-            //
-            float cosValue = cos(radian); float sinValue = sin(radian);
-            float x = anchor.x; float y = anchor.y;
-            hgl::Vector4f data[2];
-            data[0] = hgl::Vector4f(cosValue, -sinValue, -cosValue*x + sinValue*y + x, 0.0f);
-            data[1] = hgl::Vector4f(sinValue, cosValue,  -sinValue*x - cosValue*y + y, 0.0f);
-            //
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
-        }
 
         void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian, const hgl::Vector2f& offset ) {
             uint16_t batchIndex = handle>>16;
@@ -150,8 +162,8 @@ namespace ugi {
                 a*cos -a*sin -a*cos*x+a*sin*y+x
                 b*sin b*cos  -b*sin*x-b*cos*y+y
             */
-            data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, 0.0f);
-            data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, 0.0f);
+            data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, _alpha);
+            data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, _gray );
             //
             data[0].z += offset.x;
             data[1].z += offset.y;

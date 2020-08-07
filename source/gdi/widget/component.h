@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "widget.h"
 #include <map>
 
@@ -33,18 +33,28 @@ namespace ugi {
             Sort        = (1<<1),
         };
 
+        struct WidgetTransform {
+            hgl::Vector2f anchor;
+            hgl::Vector2f scale;
+            hgl::Vector2f offset;
+        };
+
+        // component 还需要一个子控件管理器，比如说 ID,动画,变换
+
         class Component : public Widget {
         protected:
-            std::vector<Widget*>                _widgets;       // ordered by depth
-            std::vector<Group*>                 _groups;
-            hgl::RectScope2f                    _scissor;
-            //
-            std::set<Widget*>                   _widgetsRecord; //
-            //
-            std::vector<ComponentDrawItem>      _drawItems;
-            UI2DSystem*                         _system;
-            //
-            uint32_t                            _dirtyFlags;
+            std::vector<Widget*>                    _widgets;       // ordered by depth
+            std::vector<Group*>                     _groups;
+            hgl::RectScope2f                        _scissor;
+            //  
+            std::set<Widget*>                       _widgetsRecord; //
+            //  
+            std::vector<ComponentDrawItem>          _drawItems;
+            UI2DSystem*                             _system;
+            //  
+            uint32_t                                _dirtyFlags;
+            //  名字哈希和控件的映射
+            std::unordered_map<uint64_t,Widget*>    _registTable;
         protected:            
             //
             void _depthSort();
@@ -86,6 +96,13 @@ namespace ugi {
             void collectDrawItems();
             void sortDepth();
             //
+            Widget* find( const std::string& key );
+            //
+            // == regist key - widget
+            bool registWidget( const std::string& key, Widget* widget );
+            bool registWidget( Widget* widget );
+            void unregistWidget( Widget* widget );
+            // ==
             const std::vector<ComponentDrawItem>& drawItems() const {
                 return _drawItems;
             }
