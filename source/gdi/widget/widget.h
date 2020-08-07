@@ -32,6 +32,10 @@ namespace ugi {
         };
 
 		class Widget {
+            struct alignas(4) Transform {
+                alignas(2) uint16_t index;
+                alignas(2) uint16_t handle;
+            };
 			friend class Component;
 		protected:
 			Component*          _component;
@@ -40,6 +44,7 @@ namespace ugi {
 			uint32_t            _depth;
 			WidgetType          _type;
 			std::string			_name;
+            //
 		public:
 			Widget(WidgetType type = WidgetType::widget)
 				: _component(nullptr)

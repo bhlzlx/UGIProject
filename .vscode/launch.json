@@ -102,11 +102,11 @@
             ]
         },
         {
-            "name": "(msvc) ShaderCompiler",
+            "name": "(msvc) WidgetTest",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/ShaderCompiler.exe",
-            "args": ["GDITest"],
+            "program": "${workspaceFolder}/bin/Windows_64_Debug/WidgetTest.exe",
+            "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
             "environment": [],

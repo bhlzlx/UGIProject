@@ -23,6 +23,7 @@ namespace ugi {
 
         void UI2DSystem::addComponent( Component* component, uint32_t depth ) {
             component->setDepth(depth);
+            _component->addWidget(component);
             // == 更新 drawdata
             ComponentDrawDataCollectorHandler::Action action;
             action.type = ComponentDrawDataCollectorHandler::Action::Type::add;
