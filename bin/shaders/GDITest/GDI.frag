@@ -5,9 +5,8 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 layout (location = 0) in vec4  fragColor;
-layout (location = 1) in float fragAlpha;
-layout (location = 2) in float fragGray;
-layout (location = 3) in vec4  fragScreenScissor;
+layout (location = 1) in float fragGray;
+layout (location = 2) in vec4  fragScreenScissor;
 
 layout ( location = 0 ) out vec4 outFragColor;
 
@@ -21,6 +20,5 @@ void main() {
     float sdfValue = sdBox( fragScreenScissor.xy, fragScreenScissor.zw ) / 8.f;
     float sdfAlpha = (1.0f - sdfValue);
     outFragColor = fragColor;
-    //float alpha = fragAlpha*sdfAlpha;
-    outFragColor.a = sdfAlpha;
+    outFragColor.a = outFragColor.a * sdfAlpha;
 }

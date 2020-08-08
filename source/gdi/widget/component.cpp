@@ -9,6 +9,17 @@ namespace ugi {
 
     namespace gdi {
 
+        Component::Component( Component* owner )
+            : Widget( owner, WidgetType::component )
+            , _widgets()
+            , _groups()
+            , _widgetsRecord()
+            , _drawItems()
+            , _system(nullptr)
+            , _dirtyFlags(0)
+        {
+        }
+
         void Component::_depthSort() {
             // 按Group排序
             std::sort( _widgets.begin(), _widgets.end(), []( Widget* a, Widget* b) {
@@ -42,7 +53,7 @@ namespace ugi {
             if( _widgetsRecord.find(widget) != _widgetsRecord.end()) {
                 return;
             }
-            widget->_component = this;
+            widget->_collector = this;
             _widgetsRecord.insert(widget);
             _widgets.push_back(widget);
             if( widget->type() == WidgetType::component ) {
@@ -68,6 +79,7 @@ namespace ugi {
                 return; // 这个子控件不存在！
             }
             _widgetsRecord.erase(widget);
+            widget->_collector = nullptr;
             if( widget->type() != WidgetType::component ) {
                 _postRemoveAction();
             }
@@ -112,7 +124,7 @@ namespace ugi {
                         }
                         const auto& rect = widget->rect();
                         ColoredRectangle* coloredRect = (ColoredRectangle*)widget;
-                        auto geomTransHandle = geomBuilder->drawRect( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), coloredRect->color());
+                        auto geomTransHandle = geomBuilder->drawRect( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), coloredRect->color(), true);
                         auto drawDataIndex = _drawItems.size();
                         coloredRect->_transformHandle.index = (uint32_t)drawDataIndex;
                         coloredRect->_transformHandle.handle = geomTransHandle;
@@ -272,5 +284,63 @@ namespace ugi {
             }
             return nullptr;
         }
+
+        ColoredRectangle* Component::createColoredRectangle( uint32_t color ) {
+            ColoredRectangle* wgt = new ColoredRectangle( this, color );
+            return wgt;
+        }
+
+        Component* Component::createComponent() {
+            Component* component = new Component(this);
+            component->_system = _system;
+            return component;
+        }
+
+        void Component::registTransform( Widget* widget, const Transform& transform ) {
+            _transformTable[widget] = transform;
+        }
+        
+        Transform* Component::getTransform( Widget* widget ) {
+            auto it = _transformTable.find(widget);
+            if( it == _transformTable.end()) {
+                return nullptr;
+            }
+            return &it->second;
+        }
+
+        void Component::syncTransform( Widget* widget, const Transform& transform ) {
+            auto it = _widgetsRecord.find(widget);
+            if(it != _widgetsRecord.end()) {
+                auto handle = widget->_transformHandle;
+                auto drawData = _drawItems[handle.index].drawData;
+                drawData->setElementTransform( 
+                    handle.handle, 
+                    transform.anchor, 
+                    transform.scale, 
+                    transform.radian, 
+                    transform.offset
+                );
+            }
+        }
+
+        void Component::syncExtraFlags( Widget* widget, uint32_t colorMask, uint32_t extraFlags ) {
+            auto it = _widgetsRecord.find(widget);
+            if(it != _widgetsRecord.end()) {
+                auto handle = widget->_transformHandle;
+                auto drawData = _drawItems[handle.index].drawData;
+                drawData->setElementColorMask( 
+                    handle.handle,
+                    colorMask
+                );
+                drawData->setElementExtraFlags(
+                    handle.handle,
+                    extraFlags
+                );
+            }
+        }
+
+        const std::vector<ComponentDrawItem>& Component::drawItems() const {
+                return _drawItems;
+            }
     }
 }

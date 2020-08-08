@@ -23,6 +23,13 @@ namespace ugi {
             component   = 3,
         };
 
+        struct Transform {
+            hgl::Vector2f   anchor;
+            hgl::Vector2f   scale;
+            float           radian;
+            hgl::Vector2f   offset;
+        };
+
         class Widget;
         class Component;
         class Group;
@@ -42,7 +49,8 @@ namespace ugi {
             };
 			friend class Component;
 		protected:
-			Component*          _component;
+			Component*          _owner;
+            Component*          _collector;
 			Group*              _group;
 			hgl::RectScope2f    _rect;
 			uint32_t            _depth;
@@ -50,11 +58,13 @@ namespace ugi {
 			std::string			_name;          ///> 这样的可以用Name来代替，省内存
             std::string         _key;           ///> 这样的可以用Name来代替，省内存
             TransformHandle     _transformHandle;
+            uint32_t            _colorMask;
+            uint32_t            _extraFlags;
         protected:
             bool _registComponentKey( const std::string& key );
 		public:
-			Widget(WidgetType type = WidgetType::widget)
-				: _component(nullptr)
+			Widget( Component* owner, WidgetType type = WidgetType::widget)
+				: _owner( owner )
 				, _group(nullptr)
 				, _rect(0, 0, 16, 16)
 				, _depth(0)
@@ -82,6 +92,15 @@ namespace ugi {
                 }
             }
 
+            bool isStatic() {
+                // 低16位是uniform索引，如果是0代表永远不改变，是单位矩阵，不可改
+                return ( 0 == (_transformHandle.handle & 0xff));
+            }
+
+            void setTransform( const Transform& transform );
+            void setColorMask( uint32_t colorMask );
+            void setGray( float gray );
+
             const std::string& key() {
                 return _key;                
             }
@@ -95,13 +114,16 @@ namespace ugi {
         private:
             uint32_t _color;
         public:
-            ColoredRectangle(uint32_t color)
-                : Widget(WidgetType::rectangle)
+            ColoredRectangle( Component* component, uint32_t color)
+                : Widget( component, WidgetType::rectangle )
                 , _color(color)
             {
             }
             uint32_t color() const {
                 return _color;
+            }
+            void setColor( uint32_t colorMask ) {
+                _color = colorMask;
             }
         };
 

@@ -21,6 +21,7 @@
 
 #include <cmath>
 #include <time.h>
+#include <random>
 
 #include <tweeny.h>
 
@@ -62,24 +63,18 @@ namespace ugi {
             return false;
         }
         //
-        auto component = m_UiSys->createComponent();
-		component->setName("main"); {
-            auto rcwgt = m_UiSys->createColoredRectangle( 0xffffffff );
-            component->addWidget(rcwgt);
-            rcwgt->setRect(hgl::RectScope2f(0, 0, 32, 32));
-            rcwgt = m_UiSys->createColoredRectangle( 0xffff00ff );
-            component->addWidget(rcwgt);
-            rcwgt->setRect(hgl::RectScope2f(0, 32, 32, 32));
-            rcwgt = m_UiSys->createColoredRectangle( 0xff00ffff );
-            component->addWidget(rcwgt);
-            rcwgt->setRect(hgl::RectScope2f(32, 0, 32, 32));
-            rcwgt = m_UiSys->createColoredRectangle( 0x0000ffff );
-            component->addWidget(rcwgt);
-            rcwgt->setRect(hgl::RectScope2f(32, 32, 32, 32));
+        auto root = m_UiSys->root();
+        srand(time(0));
+        auto mainComp = root->createComponent();
+        root->addWidget(mainComp);
+		mainComp->setName("main"); {
+            for( uint32_t i = 0; i<1; ++i) {                
+                auto rcwgt = mainComp->createColoredRectangle( 0xffffffff );
+                rcwgt->setRect( hgl::RectScope2f( 16, 16, 32, 32) );
+                mainComp->addWidget(rcwgt);
+            }
         }
-        component->setScissor(0, 0, 512, 512);
-        //
-        m_UiSys->addComponent(component);
+        mainComp->setScissor(0, 0, 512, 512);
 
         m_flightIndex = 0;
         return true;

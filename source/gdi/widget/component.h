@@ -42,6 +42,7 @@ namespace ugi {
         // component 还需要一个子控件管理器，比如说 ID,动画,变换
 
         class Component : public Widget {
+            friend class UI2DSystem;
         protected:
             std::vector<Widget*>                    _widgets;       // ordered by depth
             std::vector<Group*>                     _groups;
@@ -55,6 +56,10 @@ namespace ugi {
             uint32_t                                _dirtyFlags;
             //  名字哈希和控件的映射
             std::unordered_map<uint64_t,Widget*>    _registTable;
+            // 这个数据成员仅在 component 收集子控件绘制信息的时候用
+            // 所以我们在调用 设置变换方法的时候，是需要改变它的
+            // 如果当前设置的控件正在渲染，那么还需要修改渲染数据
+            std::unordered_map<Widget*,Transform>   _transformTable;
         protected:            
             //
             void _depthSort();
@@ -65,16 +70,7 @@ namespace ugi {
             // == 
             void _postSortAction();
         public:
-            Component( UI2DSystem* system )
-                : Widget(WidgetType::component )
-                , _widgets()
-                , _groups()
-                , _widgetsRecord()
-                , _drawItems()
-                , _system(system)
-                , _dirtyFlags(0)
-            {
-            }
+            Component( Component* owner );
 
             void addWidget( Widget* widget );
             void removeWidget( Widget* widget );
@@ -90,22 +86,32 @@ namespace ugi {
             }
 
             Component* superComponent() const {
-                return _component;
+                return _owner;
             }
+
+            Component* createComponent();
+            ColoredRectangle* createColoredRectangle( uint32_t color);
+
             /* collect draw items */
             void collectDrawItems();
             void sortDepth();
             //
+            const std::vector<Widget*>& widgets() const {
+                return _widgets;
+            }
             Widget* find( const std::string& key );
             //
+            void registTransform( Widget* widget, const Transform& transform );
+            Transform* getTransform( Widget* widget );
             // == regist key - widget
             bool registWidget( const std::string& key, Widget* widget );
             bool registWidget( Widget* widget );
             void unregistWidget( Widget* widget );
             // ==
-            const std::vector<ComponentDrawItem>& drawItems() const {
-                return _drawItems;
-            }
+            void syncTransform( Widget* widget, const Transform& transform );
+            void syncExtraFlags( Widget* widget, uint32_t colorMask, uint32_t extraFlags );
+            // == Get draw items
+            const std::vector<ComponentDrawItem>& drawItems() const;
         };
 
 

@@ -147,9 +147,6 @@ namespace ugi {
             bool initialize( GDIContext* context );
             // == Add Component
             void addComponent( Component* component, uint32_t depth = 0 );
-            // == Create Functions
-            Component* createComponent();
-            ColoredRectangle* createColoredRectangle( uint32_t color);
             // == Render
             void prepareResource( ugi::ResourceCommandEncoder* encoder, UniformAllocator* allocator );
             void draw( ugi::RenderCommandEncoder* encoder );
@@ -163,6 +160,9 @@ namespace ugi {
             // == Getters
             IGeometryBuilder* geometryBuilder() const {
                 return _geomBuilder;
+            }
+            Component* root() const {
+                return _component;
             }
         };
 

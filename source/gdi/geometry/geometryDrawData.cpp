@@ -56,10 +56,10 @@ namespace ugi {
             , _drawable(nullptr)
             , _batches {}
             , _contextInformation()
-            , _transform { hgl::Vector4f(1.0, 0.0f, 0.0f, 1.0f), hgl::Vector4f(0.0, 1.0f, 0.0f, 0.0f) }
+            , _transform ()
             , _translation{0.0f, 0.0f}
-            , _alpha(1.0f)
-            , _gray(0.0f)
+            , _colorMask(0xffffffff)
+            , _extraFlags(0x00ffffff)
         {
         }
 
@@ -96,12 +96,12 @@ namespace ugi {
         void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& offset ) {
             uint16_t batchIndex = handle>>16;
             uint16_t elementIndex = handle&0xffff;
-            hgl::Vector4f data[2] = {
-                hgl::Vector4f( 1.0f, 0.0f, offset.x, _alpha ),
-                hgl::Vector4f( 0.0f, 1.0f, offset.y, _gray ),
+            hgl::Vector3f col[2] = {
+                hgl::Vector3f( 1.0f, 0.0f, offset.x),
+                hgl::Vector3f( 0.0f, 1.0f, offset.y),
             };
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col1 = col[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col2 = col[1];
         }
 
         void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale ) {
@@ -109,12 +109,12 @@ namespace ugi {
             uint16_t elementIndex = handle&0xffff;
             //
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
-            hgl::Vector4f data[2];
-            data[0] = hgl::Vector4f(a, 0, -a*x + x, _alpha);
-            data[1] = hgl::Vector4f(0, b, -b*y + y, _gray);
+            hgl::Vector3f data[2];
+            data[0] = hgl::Vector3f(a, 0, -a*x + x);
+            data[1] = hgl::Vector3f(0, b, -b*y + y);
             //
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col1 = data[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col2 = data[1];
         }
 
         void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, float radian ){
@@ -123,12 +123,12 @@ namespace ugi {
             //
             float cosValue = cos(radian); float sinValue = sin(radian);
             float x = anchor.x; float y = anchor.y;
-            hgl::Vector4f data[2];
-            data[0] = hgl::Vector4f(cosValue, -sinValue, -cosValue*x + sinValue*y + x, 0.0f);
-            data[1] = hgl::Vector4f(sinValue, cosValue,  -sinValue*x - cosValue*y + y, 0.0f);
+            hgl::Vector3f data[2];
+            data[0] = hgl::Vector3f(cosValue, -sinValue, -cosValue*x + sinValue*y + x);
+            data[1] = hgl::Vector3f(sinValue, cosValue,  -sinValue*x - cosValue*y + y);
             //
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col1 = data[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col2 = data[1];
         }
         
         void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
@@ -138,16 +138,16 @@ namespace ugi {
             //
             float cosValue = cos(rotation); float sinValue = sin(rotation);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
-            hgl::Vector4f data[2];
+            hgl::Vector3f data[2];
             /*
                 a*cos -a*sin -a*cos*x+a*sin*y+x
                 b*sin b*cos  -b*sin*x-b*cos*y+y
             */
-            data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, 0.0f);
-            data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, 0.0f);
+            data[0] = hgl::Vector3f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x);
+            data[1] = hgl::Vector3f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y);
             //
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col1 = data[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col2 = data[1];
         }
 
 
@@ -157,19 +157,19 @@ namespace ugi {
             //
             float cosValue = cos(radian); float sinValue = sin(radian);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
-            hgl::Vector4f data[2];
+            hgl::Vector3f data[2];
             /*
                 a*cos -a*sin -a*cos*x+a*sin*y+x
                 b*sin b*cos  -b*sin*x-b*cos*y+y
             */
-            data[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, _alpha);
-            data[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, _gray );
+            data[0] = hgl::Vector3f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x);
+            data[1] = hgl::Vector3f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y);
             //
             data[0].z += offset.x;
             data[1].z += offset.y;
             //
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[0] = data[0];
-            _batches[batchIndex]._transArgBuffer[elementIndex].data[1] = data[1];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col1 = data[0];
+            _batches[batchIndex]._transArgBuffer[elementIndex].col2 = data[1];
         }
 
         void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector3f(& matrix)[2] ) {
@@ -181,6 +181,18 @@ namespace ugi {
             memcpy( ptr, &matrix[1].x, sizeof(float)*3 );
         }
 
+        void GeometryDrawData::setElementColorMask( GeometryHandle handle, uint32_t colorMask ) {
+            uint16_t batchIndex = handle>>16;
+            uint16_t elementIndex = handle&0xffff;
+            _batches[batchIndex]._transArgBuffer[elementIndex].colorMask = colorMask;
+        }
+
+        void GeometryDrawData::setElementExtraFlags( GeometryHandle handle, uint32_t flags ) {
+            uint16_t batchIndex = handle>>16;
+            uint16_t elementIndex = handle&0xffff;
+            _batches[batchIndex]._transArgBuffer[elementIndex].extra = flags;
+        }
+
         void GeometryDrawData::prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator ) {
             for( size_t i = 0; i<_batches.size(); ++i) {
                 uint32_t uboSize = _batches[i]._transArgCount* sizeof(GeometryTransformArgument);
@@ -190,8 +202,7 @@ namespace ugi {
                 _elementInformationDescriptor.bufferOffset = ubo.offset();
                 //
                 _contextInformation.contextSize = _context->size();
-                _contextInformation.contextTransform[0] = _transform[0];
-                _contextInformation.contextTransform[1] = _transform[1];
+                _contextInformation.transform = _transform;
                 ubo = allocator->allocate(sizeof(_contextInformation));
                 ubo.writeData(0, &_contextInformation, sizeof(_contextInformation));
                 _globalInformationDescriptor.bufferOffset = ubo.offset();
@@ -206,34 +217,29 @@ namespace ugi {
         void GeometryDrawData::setTransform( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian ) {
             float cosValue = cos(radian); float sinValue = sin(radian);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
-            _transform[0] = hgl::Vector4f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x, _alpha);
-            _transform[1] = hgl::Vector4f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y, _gray);
+            _transform.col1 = hgl::Vector3f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x);
+            _transform.col2 = hgl::Vector3f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y);
             //
-            _contextInformation.contextTransform[0] = _transform[0];
-            _contextInformation.contextTransform[1] = _transform[1];
+            _contextInformation.transform = _transform;
             //
-            _contextInformation.contextTransform[0].z += _translation.x;
-            _contextInformation.contextTransform[1].z += _translation.y;
+            _contextInformation.transform.col1.z += _translation.x;
+            _contextInformation.transform.col2.z += _translation.y;
         }
 
         void GeometryDrawData::setTranslation( const hgl::Vector2f& translate ) {
+            hgl::Vector2f offset = translate - _translation;
             _translation = translate;
             //
-            _contextInformation.contextTransform[0] = _transform[0];
-            _contextInformation.contextTransform[1] = _transform[1];
-            //
-            _contextInformation.contextTransform[0].z += _translation.x;
-            _contextInformation.contextTransform[1].z += _translation.y;
+            _contextInformation.transform.col1.z += offset.x;
+            _contextInformation.transform.col2.z += offset.y;
         }
 
-        void GeometryDrawData::setAlpha( float alpha ) {
-            _alpha = alpha;
-            _contextInformation.contextTransform[0].w = alpha;
+        void GeometryDrawData::setColorMask( uint32_t colorMask ) {
+            _contextInformation.transform.colorMask = colorMask;
         }
-
-        void GeometryDrawData::setGray( float gray ) {
-            _gray = gray;
-            _contextInformation.contextTransform[1].w = gray;
+        
+        void GeometryDrawData::setExtraFlags( uint32_t flags) {
+            _contextInformation.transform.extra = flags;
         }
 
         void GeometryDrawData::setScissor( float left, float right, float top, float bottom ) {

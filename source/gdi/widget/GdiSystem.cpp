@@ -16,7 +16,9 @@ namespace ugi {
             if( this->_initialized) {
                 return true;
             }
-            _component = new Component(this);
+            Component* superNode = nullptr;
+            _component = new Component(superNode);
+            _component->_system = this;
 			_component->setName("root");
             _gdiContext = context;
             _assetsSource = context->assetsSource();
@@ -33,16 +35,6 @@ namespace ugi {
             action.type = ComponentDrawDataCollectorHandler::Action::Type::add;
             action.component = component;
             trackCollectionAction(action);
-        }
-
-        Component* UI2DSystem::createComponent() {
-            auto component = new Component(this);
-            return component;
-        }
-
-        ColoredRectangle* UI2DSystem::createColoredRectangle( uint32_t color ) {
-            auto rc = new ColoredRectangle( color );
-            return rc;
         }
 
         void UI2DSystem::prepareResource( ugi::ResourceCommandEncoder* encoder, UniformAllocator* allocator ) {

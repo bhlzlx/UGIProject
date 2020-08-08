@@ -4,14 +4,15 @@ namespace ugi {
 
     namespace gdi {
 
-        GeometryTransformArgument::GeometryTransformArgument() {
-            data[0] = hgl::Vector4f( 1.0f, 0.0f, 0.0f, 1.0f);
-            data[1] = hgl::Vector4f( 0.0f, 1.0f, 0.0f, 0.0f);
-            // data[2] = hgl::Vector4f( 11.0f, 256.0f, 11.0f, 256.0f);
+        GeometryTransformArgument::GeometryTransformArgument()
+            : col1( hgl::Vector3f(1.0f, 0.0f, 0.0f))
+            , colorMask(0xffffffff)
+            , col2( hgl::Vector3f(0.0f, 1.0f, 0.0f))
+            , extra(0x00ffffff)
+        {
         }
 
-        GeometryTransformArgument::GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor)
-        {
+        GeometryTransformArgument::GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor) {
             float c = cos(rad); float s = sin(rad);
             float a = scale.x; float b = scale.y;
             float dx = anchor.x; float dy = anchor.y;
@@ -19,8 +20,10 @@ namespace ugi {
                 a*cos -a*sin -a*cos*x+a*sin*y+x
                 b*sin b*cos  -b*sin*x-b*cos*y+y
             */
-            data[0] = hgl::Vector4f(a*c, -a*s, (1-a*c)*dx + a*s*dy, 0.0f);
-            data[1] = hgl::Vector4f(b*s, b*c,  (1-b*c)*dy - b*s*dx, 0.0f);
+            col1 = hgl::Vector3f(a*c, -a*s, (1-a*c)*dx + a*s*dy);
+            col2 = hgl::Vector3f(b*s, b*c,  (1-b*c)*dy - b*s*dx);
+            colorMask = 0xffffffff;
+            extra = 0x00ffffff;
         }
 
     }

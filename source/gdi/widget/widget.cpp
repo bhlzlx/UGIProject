@@ -10,8 +10,8 @@ namespace ugi {
         }
 
         bool Widget::_registComponentKey( const std::string& key ) {
-            if(_component) {
-                return _component->registWidget(key, this);
+            if(_collector) {
+                return _owner->registWidget(key, this);
             }
             return false;
         }
@@ -21,8 +21,8 @@ namespace ugi {
             // == 
             ComponentLayoutHandler::Action action;
             action.type = ComponentLayoutHandler::Action::Type::Sort;
-            action.component = _component;
-            _component->system()->trackLayoutAction(action);
+            action.component = _owner;
+            _owner->system()->trackLayoutAction(action);
         }
 
         WidgetType Widget::type() const {
@@ -35,6 +35,22 @@ namespace ugi {
 
         const hgl::RectScope2f& Widget::rect() {
             return _rect;
+        }
+
+        void Widget::setTransform( const Transform& transform ) {
+            _owner->registTransform( this, transform);          // regist
+            _owner->syncTransform(this,transform);              // transform
+        }
+
+        void Widget::setColorMask( uint32_t colorMask ) {
+            _colorMask = colorMask;
+            _owner->syncExtraFlags(this, _colorMask, _extraFlags);
+        }
+
+        void Widget::setGray( float gray ) {
+            _extraFlags &= 0x00ffffff;
+            _extraFlags |= ((uint32_t)(gray*255))<<24;
+            _owner->syncExtraFlags(this, _colorMask, _extraFlags);
         }
     }
 }

@@ -61,10 +61,10 @@ namespace ugi {
             ugi::ResourceDescriptor             _globalInformationDescriptor;
 
             ContextInformation                  _contextInformation;
-            hgl::Vector4f                       _transform[2];
+            GeometryTransformArgument           _transform;
             hgl::Vector2f                       _translation;
-            float                               _alpha;
-            float                               _gray;
+            uint32_t                            _colorMask;
+            uint32_t                            _extraFlags;
         public:
             GeometryDrawData(GDIContext* context);
             ///> 准备资源
@@ -74,6 +74,8 @@ namespace ugi {
             void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation );
             void setElementTransform( GeometryHandle handle, const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation, const hgl::Vector2f& offset );
             void setElementTransform( GeometryHandle handle, const hgl::Vector3f(&)[2] );
+            void setElementColorMask( GeometryHandle handle, uint32_t colorMask );
+            void setElementExtraFlags( GeometryHandle handle, uint32_t flags );
             //
             void prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator );
             ///> 绘制
@@ -81,8 +83,8 @@ namespace ugi {
             ///> 更新当前数据全局变换
             void setTransform( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian );
             void setTranslation( const hgl::Vector2f& translate );
-            void setAlpha( float alpha );
-            void setGray( float gray );
+            void setColorMask( uint32_t colorMask );
+            void setExtraFlags( uint32_t flags);
             void setScissor( float left, float right, float top, float bottom );
             ///> 析构
             ~GeometryDrawData();
