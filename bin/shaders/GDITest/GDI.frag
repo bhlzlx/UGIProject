@@ -20,5 +20,5 @@ void main() {
     float sdfValue = sdBox( fragScreenScissor.xy, fragScreenScissor.zw ) / 8.f;
     float sdfAlpha = (1.0f - sdfValue);
     outFragColor = fragColor;
-    outFragColor.a = outFragColor.a * sdfAlpha;
+    outFragColor.a = outFragColor.a * clamp(0.0, 1.0,sdfAlpha);
 }

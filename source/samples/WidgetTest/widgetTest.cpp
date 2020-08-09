@@ -25,14 +25,33 @@
 
 #include <tweeny.h>
 
-// scale/angle/alpha
-auto tweenTest = tweeny::from(1.0f, 0.0f, 0.8f).to(0.2f, 360.0f,0.0f).during(120);
-
 namespace ugi {
+
+    std::default_random_engine randEngine;
+    // scale/angle/alpha/x/y
+    tweeny::tween<float, float, float, float, float> CreateMouseEffectTween( const hgl::Vector2f& point ) {
+        float x = point.x; float y = point.y;
+        float angle = randEngine()%360;
+        float radian = angle / 180 * 3.1415926f;
+        float dx = cos(radian); float dy = sin(radian);
+        float destX = x + dx * 96;
+        float destY = y + dy * 96;
+        auto rst = tweeny::from(.2f, 0.0f, 0.8f, x, y).to(1.0f, 360.0f,0.0f, destX, destY).during(60);
+        return rst;
+    }
+
+    struct TweenItem {
+        tweeny::tween<float, float, float, float, float>    tween;
+        uint32_t                                            color;
+        gdi::Widget*                                        widget;
+    };
+
+    std::vector<TweenItem> tweenList;
 
     bool WidgetTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
 
         printf("initialize\n");
+        this->m_hwnd = _wnd;
 
         m_renderSystem = new ugi::RenderSystem();
 
@@ -67,14 +86,17 @@ namespace ugi {
         }
         //
         auto root = m_UiSys->root();
-        srand(time(0));
         auto mainComp = root->createComponent();
         root->addWidget(mainComp);
 		mainComp->setName("main"); {
-            for( uint32_t i = 0; i<1; ++i) {                
+            for( uint32_t i = 0; i<60; ++i) {                
                 auto rcwgt = mainComp->createColoredRectangle( 0xffffffff );
                 rcwgt->setRect( hgl::RectScope2f( 16, 16, 32, 32) );
                 mainComp->addWidget(rcwgt);
+                auto tween = CreateMouseEffectTween(hgl::Vector2f(64,64));
+                auto step = randEngine()%120;
+                tween.step(step);
+                tweenList.push_back( { std::move(tween), 0xffffffff, (gdi::Widget*)rcwgt} );
             }
         }
         mainComp->setScissor(0, 0, 512, 512);
@@ -96,27 +118,32 @@ namespace ugi {
         
         auto cmdbuf = m_commandBuffers[m_flightIndex];
 
-        auto valueArray = tweenTest.step(1);
-        if( tweenTest.progress() == 1.0f ) {
-            tweenTest = tweenTest.backward();
-        } else if(tweenTest.progress() == 0.0f){
-            tweenTest = tweenTest.forward();
-        }
+        POINT point;
+        GetCursorPos(&point);			// 获取鼠标指针位置（屏幕坐标）
+		ScreenToClient((HWND)m_hwnd, &point);	// 将鼠标指针位置转换为窗口坐标
 
-        auto comp = (gdi::Component*)(m_UiSys->root()->widgets()[0]);
-        gdi::ColoredRectangle* rc = (gdi::ColoredRectangle*)comp->widgets()[0];
-        gdi::Transform transform;
-        transform.anchor = hgl::Vector2f( 32,32 );
-        transform.offset = hgl::Vector2f(0,0);
-        transform.radian = valueArray[1] / 180.f * 3.1415926f;
-        transform.scale = hgl::Vector2f(valueArray[0], valueArray[0]);
-        rc->setTransform(transform);
-        srand(time(0));
-        uint8_t red = rand() % 256;
-        uint8_t green = rand() % 256;
-        uint8_t blue = rand() % 256;
-        uint32_t colorMask = (red<<24) | (green<<16) | (blue <<8) | (uint32_t)(valueArray[2]*256.0f);
-        rc->setColorMask(colorMask);
+        for( auto& tweenItem: tweenList) {
+            auto values = tweenItem.tween.step(1);
+            gdi::Transform transform;
+            transform.anchor = hgl::Vector2f( 32,32 );
+            transform.offset = hgl::Vector2f(0,0);
+            transform.radian = values[1] / 180.f * 3.1415926f;
+            transform.scale = hgl::Vector2f(values[0], values[0]);
+            transform.offset.Set(values[3], values[4]);
+            tweenItem.widget->setTransform(transform);
+            uint32_t color = tweenItem.color;
+            color &= 0xffffff00;
+            color |= (uint32_t)(values[2]*256.0f);
+            tweenItem.widget->setColorMask(color);
+            if(tweenItem.tween.progress()==1.0f) {
+                tweenItem.tween = CreateMouseEffectTween(hgl::Vector2f(point.x,point.y));
+                uint8_t red = randEngine() % 256;
+                uint8_t green = randEngine() % 256;
+                uint8_t blue = randEngine() % 256;
+                uint32_t colorMask = (red<<24) | (green<<16) | (blue <<8) | 0xff;
+                tweenItem.color = colorMask;
+            }
+        }
 
         cmdbuf->beginEncode(); {
             hgl::Vector2f screenSize(m_width, m_height);
