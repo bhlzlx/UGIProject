@@ -25,6 +25,9 @@
 
 #include <tweeny.h>
 
+// scale/angle/alpha
+auto tweenTest = tweeny::from(1.0f, 0.0f, 0.8f).to(0.2f, 360.0f,0.0f).during(120);
+
 namespace ugi {
 
     bool WidgetTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
@@ -92,6 +95,28 @@ namespace ugi {
         IRenderPass* mainRenderPass = m_swapchain->renderPass(imageIndex);
         
         auto cmdbuf = m_commandBuffers[m_flightIndex];
+
+        auto valueArray = tweenTest.step(1);
+        if( tweenTest.progress() == 1.0f ) {
+            tweenTest = tweenTest.backward();
+        } else if(tweenTest.progress() == 0.0f){
+            tweenTest = tweenTest.forward();
+        }
+
+        auto comp = (gdi::Component*)(m_UiSys->root()->widgets()[0]);
+        gdi::ColoredRectangle* rc = (gdi::ColoredRectangle*)comp->widgets()[0];
+        gdi::Transform transform;
+        transform.anchor = hgl::Vector2f( 32,32 );
+        transform.offset = hgl::Vector2f(0,0);
+        transform.radian = valueArray[1] / 180.f * 3.1415926f;
+        transform.scale = hgl::Vector2f(valueArray[0], valueArray[0]);
+        rc->setTransform(transform);
+        srand(time(0));
+        uint8_t red = rand() % 256;
+        uint8_t green = rand() % 256;
+        uint8_t blue = rand() % 256;
+        uint32_t colorMask = (red<<24) | (green<<16) | (blue <<8) | (uint32_t)(valueArray[2]*256.0f);
+        rc->setColorMask(colorMask);
 
         cmdbuf->beginEncode(); {
             hgl::Vector2f screenSize(m_width, m_height);

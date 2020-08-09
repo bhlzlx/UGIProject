@@ -125,6 +125,7 @@ namespace ugi {
                         const auto& rect = widget->rect();
                         ColoredRectangle* coloredRect = (ColoredRectangle*)widget;
                         auto geomTransHandle = geomBuilder->drawRect( rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight(), coloredRect->color(), true);
+
                         auto drawDataIndex = _drawItems.size();
                         coloredRect->_transformHandle.index = (uint32_t)drawDataIndex;
                         coloredRect->_transformHandle.handle = geomTransHandle;
@@ -309,6 +310,9 @@ namespace ugi {
         }
 
         void Component::syncTransform( Widget* widget, const Transform& transform ) {
+            if(_dirtyFlags & (uint32_t)ComponentDirtyFlagBits::Drawing) {
+                return;
+            }
             auto it = _widgetsRecord.find(widget);
             if(it != _widgetsRecord.end()) {
                 auto handle = widget->_transformHandle;
@@ -324,6 +328,9 @@ namespace ugi {
         }
 
         void Component::syncExtraFlags( Widget* widget, uint32_t colorMask, uint32_t extraFlags ) {
+            if(_dirtyFlags & (uint32_t)ComponentDirtyFlagBits::Drawing) {
+                return;
+            }
             auto it = _widgetsRecord.find(widget);
             if(it != _widgetsRecord.end()) {
                 auto handle = widget->_transformHandle;

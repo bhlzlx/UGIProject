@@ -39,18 +39,18 @@ namespace ugi {
 
         void Widget::setTransform( const Transform& transform ) {
             _owner->registTransform( this, transform);          // regist
-            _owner->syncTransform(this,transform);              // transform
+            _collector->syncTransform(this,transform);              // transform
         }
 
         void Widget::setColorMask( uint32_t colorMask ) {
             _colorMask = colorMask;
-            _owner->syncExtraFlags(this, _colorMask, _extraFlags);
+            _collector->syncExtraFlags(this, _colorMask, _extraFlags);
         }
 
         void Widget::setGray( float gray ) {
             _extraFlags &= 0x00ffffff;
             _extraFlags |= ((uint32_t)(gray*255))<<24;
-            _owner->syncExtraFlags(this, _colorMask, _extraFlags);
+            _collector->syncExtraFlags(this, _colorMask, _extraFlags);
         }
     }
 }
