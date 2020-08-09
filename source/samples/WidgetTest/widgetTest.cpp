@@ -36,7 +36,7 @@ namespace ugi {
         float dx = cos(radian); float dy = sin(radian);
         float destX = x + dx * 96;
         float destY = y + dy * 96;
-        auto rst = tweeny::from(.2f, 0.0f, 0.8f, x, y).to(1.0f, 360.0f,0.0f, destX, destY).during(60);
+        auto rst = tweeny::from(.2f, 0.0f, 1.0f, x, y).to(1.0f, 360.0f,0.0f, destX, destY).during(60);
         return rst;
     }
 
@@ -91,10 +91,10 @@ namespace ugi {
 		mainComp->setName("main"); {
             for( uint32_t i = 0; i<60; ++i) {                
                 auto rcwgt = mainComp->createColoredRectangle( 0xffffffff );
-                rcwgt->setRect( hgl::RectScope2f( 16, 16, 32, 32) );
+                rcwgt->setRect( hgl::RectScope2f( -16, -16, 32, 32) );
                 mainComp->addWidget(rcwgt);
                 auto tween = CreateMouseEffectTween(hgl::Vector2f(64,64));
-                auto step = randEngine()%120;
+                auto step = randEngine()%60;
                 tween.step(step);
                 tweenList.push_back( { std::move(tween), 0xffffffff, (gdi::Widget*)rcwgt} );
             }
@@ -125,8 +125,7 @@ namespace ugi {
         for( auto& tweenItem: tweenList) {
             auto values = tweenItem.tween.step(1);
             gdi::Transform transform;
-            transform.anchor = hgl::Vector2f( 32,32 );
-            transform.offset = hgl::Vector2f(0,0);
+            transform.anchor = hgl::Vector2f( 0,0 );
             transform.radian = values[1] / 180.f * 3.1415926f;
             transform.scale = hgl::Vector2f(values[0], values[0]);
             transform.offset.Set(values[3], values[4]);
