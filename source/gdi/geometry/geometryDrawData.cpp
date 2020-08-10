@@ -175,9 +175,9 @@ namespace ugi {
         void GeometryDrawData::setElementTransform( GeometryHandle handle, const hgl::Vector3f(& matrix)[2] ) {
             uint16_t batchIndex = handle>>16;
             uint16_t elementIndex = handle&0xffff;
-            float* ptr = &_batches[batchIndex]._transArgBuffer[elementIndex].data[0].x;
+            float* ptr = &_batches[batchIndex]._transArgBuffer[elementIndex].col1.x;
             memcpy( ptr, &matrix[0].x, sizeof(float)*3 );
-            ptr = &_batches[batchIndex]._transArgBuffer[elementIndex].data[1].x;
+            ptr = &_batches[batchIndex]._transArgBuffer[elementIndex].col2.x;
             memcpy( ptr, &matrix[1].x, sizeof(float)*3 );
         }
 

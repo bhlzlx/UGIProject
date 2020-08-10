@@ -5,8 +5,46 @@
 namespace ugi {
     namespace gdi {
 
+        Widget::Widget( Component* owner, WidgetType type )
+            : _owner( owner )
+            , _group(nullptr)
+            , _rect(0, 0, 16, 16)
+            , _depth(0)
+            , _type(type)
+            , _transformHandle{ 0, 0 }
+        {
+        }
+
         uint32_t Widget::depth() const {
             return _depth;
+        }
+
+        void Widget::setName(const std::string& name) {
+            _name = name;
+        }
+
+        void Widget::setName(std::string&& name) {
+            _name = std::move(name);
+        }
+
+        void Widget::setKey( const std::string& key ) {
+            if(_registComponentKey(key)) {
+                _key = key;
+            }
+        }
+        void Widget::setKey( std::string&& key ) {
+            if(_registComponentKey(key)) {
+                _key = std::move(key);
+            }
+        }
+
+        const std::string& Widget::key() {
+            return _key;
+        }
+
+        bool Widget::isStatic() {
+            // 低16位是uniform索引，如果是0代表永远不改变，是单位矩阵，不可改
+            return ( 0 == (_transformHandle.handle & 0xff));
         }
 
         bool Widget::_registComponentKey( const std::string& key ) {

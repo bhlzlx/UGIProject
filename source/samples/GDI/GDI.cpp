@@ -157,7 +157,7 @@ namespace ugi {
 		}
 
 		m_geomBuilder->beginBuild();
-		m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
+		// m_geomBuilder->drawLine(hgl::Vector2f(4, 4), hgl::Vector2f(200, 200), 1, 0xffff0088);
 		srand(time(0));
 		for (uint32_t i = 0; i < 16; i++) {
 			for (uint32_t j = 0; j < 16; j++) {

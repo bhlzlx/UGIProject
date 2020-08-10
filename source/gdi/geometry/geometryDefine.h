@@ -44,17 +44,13 @@ namespace ugi {
                 a*cos -a*sin -a*cos*x+a*sin*y+x
                 b*sin b*cos  -b*sin*x-b*cos*y+y
             */
-            union {
-                struct {
-                    alignas(4) hgl::Vector3f col1; alignas(4) uint32_t colorMask;
-                    alignas(4) hgl::Vector3f col2; alignas(4) uint32_t extra;
-                };
-                hgl::Vector4f data[2];
-            };
+            alignas(4) hgl::Vector3f col1; alignas(4) uint32_t colorMask;
+            alignas(4) hgl::Vector3f col2; alignas(4) uint32_t extra;
+            //
             GeometryTransformArgument();
             GeometryTransformArgument(float rad, const hgl::Vector2f& scale, const hgl::Vector2f& anchor);
             GeometryTransformArgument& operator = ( const GeometryTransformArgument& arg) {
-                data[0] = arg.data[0]; data[1] = arg.data[1];
+                memcpy(this, &arg, sizeof(arg));
                 return *this;
             }
         };

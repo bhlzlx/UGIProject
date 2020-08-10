@@ -89,7 +89,7 @@ namespace ugi {
         auto mainComp = root->createComponent();
         root->addWidget(mainComp);
 		mainComp->setName("main"); {
-            for( uint32_t i = 0; i<60; ++i) {                
+            for( uint32_t i = 0; i<96; ++i) {                
                 auto rcwgt = mainComp->createColoredRectangle( 0xffffffff );
                 rcwgt->setRect( hgl::RectScope2f( -16, -16, 32, 32) );
                 mainComp->addWidget(rcwgt);
@@ -99,7 +99,7 @@ namespace ugi {
                 tweenList.push_back( { std::move(tween), 0xffffffff, (gdi::Widget*)rcwgt} );
             }
         }
-        mainComp->setScissor(0, 0, 512, 512);
+        mainComp->setScissor(32, 32, 512, 512);
 
         m_flightIndex = 0;
         return true;
