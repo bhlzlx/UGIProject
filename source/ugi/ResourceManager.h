@@ -9,14 +9,14 @@ namespace ugi {
 
     class ResourceManager {
     private:
-        Device* m_device;
-        std::array< std::queue<Resource*>, MaxFlightCount+1 >       m_destroyQueues;
-        uint32_t                                                    m_flightIndex;
+        Device* _device;
+        std::array< std::queue<Resource*>, MaxFlightCount+1 >       _destroyQueues;
+        uint32_t                                                    _flightIndex;
     public:
         ResourceManager( Device* _device )
-            : m_device( _device )
-            , m_destroyQueues {}
-            , m_flightIndex( 0 )
+            : _device( _device )
+            , _destroyQueues {}
+            , _flightIndex( 0 )
         {
         }
 

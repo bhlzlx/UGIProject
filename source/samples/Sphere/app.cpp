@@ -85,7 +85,7 @@ namespace ugi {
 
         printf("initialize\n");
 
-        m_renderSystem = new ugi::RenderSystem();
+        _renderSystem = new ugi::RenderSystem();
 
         ugi::DeviceDescriptor descriptor; {
             descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
@@ -95,42 +95,42 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         }
-        m_device = m_renderSystem->createDevice(descriptor, assetsSource);
-        m_uniformAllocator = m_device->createUniformAllocator();
-        m_swapchain = m_device->createSwapchain( _wnd );
+        _device = _renderSystem->createDevice(descriptor, assetsSource);
+        _uniformAllocator = _device->createUniformAllocator();
+        _swapchain = _device->createSwapchain( _wnd );
         // command queues
-        m_graphicsQueue = m_device->graphicsQueues()[0];
-        m_uploadQueue = m_device->transferQueues()[0];
+        _graphicsQueue = _device->graphicsQueues()[0];
+        _uploadQueue = _device->transferQueues()[0];
         //
         for( size_t i = 0; i<MaxFlightCount; ++i) {
-            m_frameCompleteFences[i] = m_device->createFence();
-            m_renderCompleteSemaphores[i] = m_device->createSemaphore();
-            m_commandBuffers[i] = m_graphicsQueue->createCommandBuffer( m_device );
+            _frameCompleteFences[i] = _device->createFence();
+            _renderCompleteSemaphores[i] = _device->createSemaphore();
+            _commandBuffers[i] = _graphicsQueue->createCommandBuffer( _device );
         }
         pipelineDesc.renderState.cullMode = CullMode::None;
         pipelineDesc.renderState.blendState.enable = false;
-        m_pipeline = m_device->createPipeline(pipelineDesc);
+        _pipeline = _device->createPipeline(pipelineDesc);
         //
-        m_argumentGroup = m_pipeline->createArgumentGroup();
+        _argumentGroup = _pipeline->createArgumentGroup();
 
         std::vector<CVertex>        vertices;
         std::vector<uint16_t>       indices;
         CreateSphere(16, 16, vertices, indices);
 
-        m_vertexBuffer = m_device->createBuffer( BufferType::VertexBuffer, sizeof(CVertex) * vertices.size() );
-        m_indexBuffer = m_device->createBuffer( BufferType::IndexBuffer, sizeof(uint16_t) * indices.size() );
-        Buffer* vertexStagingBuffer = m_device->createBuffer( BufferType::StagingBuffer, m_vertexBuffer->size() );
-        Buffer* indexStagingBuffer = m_device->createBuffer( BufferType::StagingBuffer, m_indexBuffer->size() );
+        m_vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(CVertex) * vertices.size() );
+        m_indexBuffer = _device->createBuffer( BufferType::IndexBuffer, sizeof(uint16_t) * indices.size() );
+        Buffer* vertexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, m_vertexBuffer->size() );
+        Buffer* indexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, m_indexBuffer->size() );
 
-        void* ptr = vertexStagingBuffer->map( m_device );
+        void* ptr = vertexStagingBuffer->map( _device );
         memcpy(ptr, vertices.data(), m_vertexBuffer->size());
-        vertexStagingBuffer->unmap(m_device);
+        vertexStagingBuffer->unmap(_device);
 
-        ptr = indexStagingBuffer->map( m_device );
+        ptr = indexStagingBuffer->map( _device );
         memcpy(ptr, indices.data(), m_indexBuffer->size());
-        indexStagingBuffer->unmap(m_device);
+        indexStagingBuffer->unmap(_device);
 
-        auto updateCmd = m_uploadQueue->createCommandBuffer( m_device );
+        auto updateCmd = _uploadQueue->createCommandBuffer( _device );
 
         updateCmd->beginEncode();
 
@@ -142,7 +142,7 @@ namespace ugi {
         subRes.size = m_indexBuffer->size();
         resourceEncoder->updateBuffer( m_indexBuffer, indexStagingBuffer, &subRes, &subRes );
 
-        m_drawable = m_device->createDrawable(pipelineDesc);
+        m_drawable = _device->createDrawable(pipelineDesc);
         m_drawable->setVertexBuffer( m_vertexBuffer, 0, 0 );
         m_drawable->setIndexBuffer( m_indexBuffer, 0 );
         //
@@ -154,7 +154,7 @@ namespace ugi {
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
-        m_texture = m_device->createTexture(texDesc, ResourceAccessType::ShaderRead );
+        m_texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
 
         uint32_t texData[] = {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
@@ -166,10 +166,10 @@ namespace ugi {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
             0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
         };
-        auto texStagingBuffer =  m_device->createBuffer( BufferType::StagingBuffer, sizeof(texData) );
-        ptr = texStagingBuffer->map(m_device);
+        auto texStagingBuffer =  _device->createBuffer( BufferType::StagingBuffer, sizeof(texData) );
+        ptr = texStagingBuffer->map(_device);
         memcpy(ptr, texData, sizeof(texData));
-        texStagingBuffer->unmap(m_device);
+        texStagingBuffer->unmap(_device);
 
         TextureSubResource texSubRes;
         texSubRes.baseLayer = 0;
@@ -201,9 +201,9 @@ namespace ugi {
         submitInfo.commandBuffers = &updateCmd;
         submitInfo.commandCount = 1;
 
-        m_uploadQueue->submitCommandBuffers(submitBatchInfo);
+        _uploadQueue->submitCommandBuffers(submitBatchInfo);
 
-        m_uploadQueue->waitIdle();
+        _uploadQueue->waitIdle();
         //
         ResourceDescriptor res;
         m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
@@ -213,27 +213,27 @@ namespace ugi {
         res.type = ArgumentDescriptorType::Sampler;
         res.sampler = m_samplerState;
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
-        m_argumentGroup->updateDescriptor(res);
+        _argumentGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
         res.texture = m_texture;
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
         //
-        m_argumentGroup->updateDescriptor(res);
+        _argumentGroup->updateDescriptor(res);
         //
-        m_flightIndex = 0;
+        _flightIndex = 0;
         return true;
     }
 
     void App::tick() {
         
-        m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
-        m_uniformAllocator->tick();
-        uint32_t imageIndex = m_swapchain->acquireNextImage( m_device, m_flightIndex );
-        // m_frameCompleteFences[m_flightIndex]->
-        IRenderPass* mainRenderPass = m_swapchain->renderPass(imageIndex);
+        _device->waitForFence( _frameCompleteFences[_flightIndex] );
+        _uniformAllocator->tick();
+        uint32_t imageIndex = _swapchain->acquireNextImage( _device, _flightIndex );
+        // _frameCompleteFences[_flightIndex]->
+        IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
         
-        auto cmdbuf = m_commandBuffers[m_flightIndex];
+        auto cmdbuf = _commandBuffers[_flightIndex];
 
         cmdbuf->beginEncode(); {
             static uint64_t angle = 0;
@@ -246,12 +246,12 @@ namespace ugi {
                 hgl::Vector3f(2, 2, 2),         ///> eye
                 hgl::Vector3f(0, 0, 0)         ///> target
             );
-            mvp[2] = Perspective( 3.1415926f/2, (float)m_width/(float)m_height, 0.1f, 50.0f); //hgl::Matrix4f::OpenGLOrthoProjRH(0.1f, 50, m_width, m_height);
-            m_uniformAllocator->allocateForDescriptor( m_uniformDescriptor, mvp );
-            m_argumentGroup->updateDescriptor(m_uniformDescriptor);
+            mvp[2] = Perspective( 3.1415926f/2, (float)_width/(float)_height, 0.1f, 50.0f); //hgl::Matrix4f::OpenGLOrthoProjRH(0.1f, 50, _width, _height);
+            _uniformAllocator->allocateForDescriptor( m_uniformDescriptor, mvp );
+            _argumentGroup->updateDescriptor(m_uniformDescriptor);
 
             auto resourceEncoder = cmdbuf->resourceCommandEncoder();
-            resourceEncoder->prepareArgumentGroup(m_argumentGroup);
+            resourceEncoder->prepareArgumentGroup(_argumentGroup);
             resourceEncoder->endEncode();
             //
             RenderPassClearValues clearValues;
@@ -263,10 +263,10 @@ namespace ugi {
 
             auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
                 renderCommandEncoder->setLineWidth(1.0f);
-                renderCommandEncoder->setViewport(0, 0, m_width, m_height, 0, 1.0f );
-                renderCommandEncoder->setScissor( 0, 0, m_width, m_height );
-                renderCommandEncoder->bindPipeline(m_pipeline);
-                renderCommandEncoder->bindArgumentGroup(m_argumentGroup);
+                renderCommandEncoder->setViewport(0, 0, _width, _height, 0, 1.0f );
+                renderCommandEncoder->setScissor( 0, 0, _width, _height );
+                renderCommandEncoder->bindPipeline(_pipeline);
+                renderCommandEncoder->bindArgumentGroup(_argumentGroup);
                 renderCommandEncoder->drawIndexed( m_drawable, 0, m_indexBuffer->size() / sizeof(uint16_t));
                 // renderCommandEncoder->draw( m_drawable, 3, 0 );
             }
@@ -275,31 +275,31 @@ namespace ugi {
         cmdbuf->endEncode();
 
         QueueSubmitInfo submitInfo = {}; {
-            Semaphore* imageAvailSemaphore = m_swapchain->imageAvailSemaphore();
+            Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
             submitInfo.commandBuffers = &cmdbuf;
             submitInfo.commandCount = 1;
-            submitInfo.semaphoresToSignal = &m_renderCompleteSemaphores[m_flightIndex];
+            submitInfo.semaphoresToSignal = &_renderCompleteSemaphores[_flightIndex];
             submitInfo.semaphoresToSignalCount = 1;
             submitInfo.semaphoresToWait = &imageAvailSemaphore;
             submitInfo.semaphoresToWaitCount = 1;
         }
 
         QueueSubmitBatchInfo submitBatch;{
-            submitBatch.fenceToSignal = m_frameCompleteFences[m_flightIndex];
+            submitBatch.fenceToSignal = _frameCompleteFences[_flightIndex];
             submitBatch.submitInfos = &submitInfo;
             submitBatch.submitInfoCount = 1;
         }
-        bool submitRst = m_graphicsQueue->submitCommandBuffers(submitBatch);
+        bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
         assert(submitRst);
-        m_swapchain->present( m_device, m_graphicsQueue, m_renderCompleteSemaphores[m_flightIndex] );
+        _swapchain->present( _device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
 
     }
         
     void App::resize(uint32_t _width, uint32_t _height) {
-        m_swapchain->resize( m_device, _width, _height );
+        _swapchain->resize( _device, _width, _height );
         //
-        m_width = _width;
-        m_height = _height;
+        _width = _width;
+        _height = _height;
     }
 
     void App::release() {

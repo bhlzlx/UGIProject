@@ -10,10 +10,10 @@ namespace ugi {
     class DebugReporterVk
     {
     private:
-        VkDebugReportCallbackEXT m_debugReportCallback;
+        VkDebugReportCallbackEXT _debugReportCallback;
     public:
         DebugReporterVk()
-        : m_debugReportCallback((VkDebugReportCallbackEXT)nullptr){
+        : _debugReportCallback((VkDebugReportCallbackEXT)nullptr){
         }
         bool setupDebugReport( VkInstance _inst );
         bool uninstallDebugReport(VkInstance _inst);

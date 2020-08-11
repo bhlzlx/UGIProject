@@ -16,21 +16,21 @@ namespace ugi {
     class Semaphore {
         friend class Device;
     private:
-        VkSemaphore m_semaphore;
+        VkSemaphore _semaphore;
         //
         Semaphore( VkSemaphore _sem = 0 ) 
-            : m_semaphore( _sem )
+            : _semaphore( _sem )
         {
         }
         Semaphore( const Semaphore& _sem ) {
-            m_semaphore = _sem.m_semaphore;
+            _semaphore = _sem._semaphore;
         }
     public:
         operator VkSemaphore () {
-            return m_semaphore;
+            return _semaphore;
         }
         operator VkSemaphore*() {
-            return &m_semaphore;
+            return &_semaphore;
         }
     };
 

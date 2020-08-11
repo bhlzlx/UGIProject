@@ -157,13 +157,13 @@ namespace ugi {
 
     void RenderPassObjectManager::registRenderPass( const RenderPassDescription& _subpassDesc, VkRenderPass _renderPass, uint64_t& hash, uint32_t _subpassIndex  ) {
         hash = CompatibleHashFunc(_subpassDesc, _subpassIndex);
-        m_compatibleTable[hash] = _renderPass;
+        _compatibleTable[hash] = _renderPass;
     }
 
     VkRenderPass RenderPassObjectManager::queryCompatibleRenderPass( const RenderPassDescription& _subpassDesc, uint32_t _subpassIndex ) {
         uint64_t hash = CompatibleHashFunc(_subpassDesc, _subpassIndex);
-        auto iter = m_compatibleTable.find(hash);
-        if(iter!=m_compatibleTable.end()){
+        auto iter = _compatibleTable.find(hash);
+        if(iter!=_compatibleTable.end()){
             return iter->second;
         }
         return VK_NULL_HANDLE;
@@ -180,9 +180,9 @@ namespace ugi {
             return nullptr;
         }
         RenderPass* rst = new RenderPass();
-        rst->m_subpassHash = hash;
-        rst->m_decription = _desc;
-        rst->m_renderPass = renderPass;
+        rst->_subpassHash = hash;
+        rst->_decription = _desc;
+        rst->_renderPass = renderPass;
         uint32_t width = 0, height = 0;
         if( _colors[0]) {
             width = _colors[0]->desc().width; height = _colors[0]->desc().height;
@@ -191,43 +191,43 @@ namespace ugi {
             width = _depthStencil->desc().width; height = _depthStencil->desc().height;
         }
         //
-        rst->m_size.width = width;
-        rst->m_size.height = height;
+        rst->_size.width = width;
+        rst->_size.height = height;
         //
         uint32_t clearCount = 0;
         // 生成所需纹理
         // 计算清屏数量
-        rst->m_colorTextureCount = 0;
+        rst->_colorTextureCount = 0;
         for (uint32_t i = 0; i < _desc.colorAttachmentCount; ++i) {
-            rst->m_colorTextures[i] = _colors[i];
-            ++rst->m_colorTextureCount;
+            rst->_colorTextures[i] = _colors[i];
+            ++rst->_colorTextureCount;
             if (_desc.colorAttachments[i].loadAction == AttachmentLoadAction::Clear) {
                 ++clearCount;
             }
         }
         if (_desc.depthStencil.format != UGIFormat::InvalidFormat) {
-            rst->m_depthStencilTexture = _depthStencil;
-            assert( rst->m_depthStencilTexture );
+            rst->_depthStencilTexture = _depthStencil;
+            assert( rst->_depthStencilTexture );
             if (_desc.depthStencil.loadAction == AttachmentLoadAction::Clear) {
                 ++clearCount;
             }
         }
         // 创建 framebuffer
-        rst->m_clearCount = clearCount;
+        rst->_clearCount = clearCount;
         for (uint32_t i = 0; i < _desc.colorAttachmentCount; ++i) {
-            rst->m_colorImageLayouts[i] = imageLayoutFromAccessType(_desc.colorAttachments[i].finalAccessType);
+            rst->_colorImageLayouts[i] = imageLayoutFromAccessType(_desc.colorAttachments[i].finalAccessType);
         }
-        rst->m_depthStencilImageLayout = imageLayoutFromAccessType(_desc.depthStencil.finalAccessType);
-        rst->m_framebuffer = VK_NULL_HANDLE;
+        rst->_depthStencilImageLayout = imageLayoutFromAccessType(_desc.depthStencil.finalAccessType);
+        rst->_framebuffer = VK_NULL_HANDLE;
         {
             uint32_t attachmentCount = 0;
             VkImageView imageViews[MaxRenderTarget + 1];
             for (uint32_t i = 0; i<_desc.colorAttachmentCount; ++i) {
-                imageViews[attachmentCount] = rst->m_colorTextures[i]->imageView();
+                imageViews[attachmentCount] = rst->_colorTextures[i]->imageView();
                 ++attachmentCount;
             }
             if (_desc.depthStencil.format != UGIFormat::InvalidFormat) {
-                imageViews[attachmentCount] = rst->m_depthStencilTexture->imageView();
+                imageViews[attachmentCount] = rst->_depthStencilTexture->imageView();
                 ++attachmentCount;
             }
             VkFramebufferCreateInfo fbinfo = {}; {
@@ -239,67 +239,67 @@ namespace ugi {
                 fbinfo.width = width;
                 fbinfo.height = height;
                 fbinfo.layers = 1;
-                fbinfo.renderPass = rst->m_renderPass;
+                fbinfo.renderPass = rst->_renderPass;
             }
-            if (VK_SUCCESS != vkCreateFramebuffer( _device->device(), &fbinfo, nullptr, &rst->m_framebuffer)) {
+            if (VK_SUCCESS != vkCreateFramebuffer( _device->device(), &fbinfo, nullptr, &rst->_framebuffer)) {
                 return nullptr;
             }
         }
-        rst->m_renderPassBeginInfo.pNext = nullptr;
-        rst->m_renderPassBeginInfo.renderPass = rst->m_renderPass;
-        rst->m_renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        rst->m_renderPassBeginInfo.framebuffer = rst->m_framebuffer;
-        rst->m_renderPassBeginInfo.pClearValues = rst->m_clearValues;
-        rst->m_renderPassBeginInfo.clearValueCount = rst->m_depthStencilTexture? rst->m_colorTextureCount + 1: rst->m_colorTextureCount;
-        rst->m_renderPassBeginInfo.renderArea.offset = { 0, 0 };
-        rst->m_renderPassBeginInfo.renderArea.extent = { rst->m_size.width, rst->m_size.height };
+        rst->_renderPassBeginInfo.pNext = nullptr;
+        rst->_renderPassBeginInfo.renderPass = rst->_renderPass;
+        rst->_renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        rst->_renderPassBeginInfo.framebuffer = rst->_framebuffer;
+        rst->_renderPassBeginInfo.pClearValues = rst->_clearValues;
+        rst->_renderPassBeginInfo.clearValueCount = rst->_depthStencilTexture? rst->_colorTextureCount + 1: rst->_colorTextureCount;
+        rst->_renderPassBeginInfo.renderArea.offset = { 0, 0 };
+        rst->_renderPassBeginInfo.renderArea.extent = { rst->_size.width, rst->_size.height };
         //
         return rst;
     }
 
     void RenderPass::setClearValues( const RenderPassClearValues& clearValues ) {
-        for( uint32_t i = 0; i< m_colorTextureCount; ++i ) {
-            m_clearValues[i].color.float32[0] = clearValues.colors[i].r;
-            m_clearValues[i].color.float32[1] = clearValues.colors[i].g;
-            m_clearValues[i].color.float32[2] = clearValues.colors[i].b;
-            m_clearValues[i].color.float32[3] = clearValues.colors[i].a;
+        for( uint32_t i = 0; i< _colorTextureCount; ++i ) {
+            _clearValues[i].color.float32[0] = clearValues.colors[i].r;
+            _clearValues[i].color.float32[1] = clearValues.colors[i].g;
+            _clearValues[i].color.float32[2] = clearValues.colors[i].b;
+            _clearValues[i].color.float32[3] = clearValues.colors[i].a;
         }
-        if( m_depthStencilTexture) {
-            m_clearValues[m_colorTextureCount].depthStencil.depth = clearValues.depth;
-            m_clearValues[m_colorTextureCount].depthStencil.stencil = clearValues.stencil;
+        if( _depthStencilTexture) {
+            _clearValues[_colorTextureCount].depthStencil.depth = clearValues.depth;
+            _clearValues[_colorTextureCount].depthStencil.stencil = clearValues.stencil;
         }
     }
 
     void RenderPass::begin( RenderCommandEncoder* encoder ) const {
-        for( uint32_t i = 0; i<m_decription.colorAttachmentCount; ++i ) {
-            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier( m_colorTextures[i], m_decription.colorAttachments[i].initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::ColorAttachmentOutput, StageAccess::Write );
+        for( uint32_t i = 0; i<_decription.colorAttachmentCount; ++i ) {
+            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier( _colorTextures[i], _decription.colorAttachments[i].initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::ColorAttachmentOutput, StageAccess::Write );
         }
-        if(m_depthStencilTexture) {
-            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier( m_depthStencilTexture, m_decription.depthStencil.initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::EaryFragmentTestShading, StageAccess::Write);
+        if(_depthStencilTexture) {
+            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier( _depthStencilTexture, _decription.depthStencil.initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::EaryFragmentTestShading, StageAccess::Write);
         }
         //
-        vkCmdBeginRenderPass( *encoder->commandBuffer(), &m_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass( *encoder->commandBuffer(), &_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
     
     void RenderPass::end( RenderCommandEncoder* encoder ) const {
         vkCmdEndRenderPass(*encoder->commandBuffer());
-        for( uint32_t i = 0; i<m_decription.colorAttachmentCount; ++i ) {
-            m_colorTextures[i]->updateAccessType( m_decription.colorAttachments[i].finalAccessType );
+        for( uint32_t i = 0; i<_decription.colorAttachmentCount; ++i ) {
+            _colorTextures[i]->updateAccessType( _decription.colorAttachments[i].finalAccessType );
         }
-        if(m_depthStencilTexture) {
-            m_depthStencilTexture->updateAccessType(m_decription.depthStencil.finalAccessType);
+        if(_depthStencilTexture) {
+            _depthStencilTexture->updateAccessType(_decription.depthStencil.finalAccessType);
         }
     }
 
     void RenderPass::release( Device* device ) {
         // 它持有的资源，仅有 Framebuffer/RenderPass对象，纹理资源不让它来管理，由上层来管理
-        if( m_framebuffer) {
-            vkDestroyFramebuffer( device->device(), m_framebuffer, nullptr );
-            m_framebuffer = VK_NULL_HANDLE;
+        if( _framebuffer) {
+            vkDestroyFramebuffer( device->device(), _framebuffer, nullptr );
+            _framebuffer = VK_NULL_HANDLE;
         }
-        if(m_renderPass) {
-            vkDestroyRenderPass( device->device(), m_renderPass, nullptr );
-            m_renderPass = VK_NULL_HANDLE;        
+        if(_renderPass) {
+            vkDestroyRenderPass( device->device(), _renderPass, nullptr );
+            _renderPass = VK_NULL_HANDLE;        
         }
         delete this;
     }

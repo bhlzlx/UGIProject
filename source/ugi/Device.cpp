@@ -425,15 +425,15 @@ namespace ugi {
             }
             auto device = new Device( m_deviceDescriptorVk, deviceVK, vmaAllocator );
             
-            // device->m_graphicsQueues = graphicsQueue;
+            // device->_graphicsQueues = graphicsQueue;
             // device->m_transferQueues = transferQueue;
             
-            device->m_graphicsCommandQueues = std::move(graphicsCommandQueues);
-            device->m_transferCommandQueues = std::move(transferCommandQueues);
+            device->_graphicsCommandQueues = std::move(graphicsCommandQueues);
+            device->_transferCommandQueues = std::move(transferCommandQueues);
             //
-            device->m_renderPassObjectManager = new RenderPassObjectManager();
-            device->m_descriptorSetAllocator = DescriptorSetAllocator::Instance();
-            device->m_descriptorSetAllocator->initialize(device->device());
+            device->_renderPassObjectManager = new RenderPassObjectManager();
+            device->_descriptorSetAllocator = DescriptorSetAllocator::Instance();
+            device->_descriptorSetAllocator->initialize(device->device());
             return device;
         }
         throw DeviceCreationException( DeviceCreationException::EXCEPTION_CREATE_DEVICE_FAILED);
@@ -480,7 +480,7 @@ namespace ugi {
     bool Device::acquireNextSwapchainImage( VkSwapchainKHR _swapchain, VkSemaphore _semaphore, uint32_t* _imageIndex ) {
         // we will not use fence
         VkResult rst = vkAcquireNextImageKHR( 
-            m_device,             // device
+            _device,             // device
             _swapchain,         // swapchain
             ~0,                 // timeout
             _semaphore,         // semaphore to be signaled
@@ -509,7 +509,7 @@ namespace ugi {
             createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         }
         VkSemaphore sem;
-        VkResult rst = vkCreateSemaphore( m_device, &createInfo, nullptr, &sem);
+        VkResult rst = vkCreateSemaphore( _device, &createInfo, nullptr, &sem);
         if( rst == VK_SUCCESS){
             Semaphore* semaphore = new Semaphore(sem);
             return semaphore;

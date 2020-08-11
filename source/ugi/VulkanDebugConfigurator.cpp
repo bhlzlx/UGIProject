@@ -32,13 +32,13 @@ namespace ugi {
             DebugReportCallback,
             nullptr
         };
-        auto rst = vkCreateDebugReportCallbackEXT(_inst, &DebugReportInfo, nullptr, &m_debugReportCallback);
+        auto rst = vkCreateDebugReportCallbackEXT(_inst, &DebugReportInfo, nullptr, &_debugReportCallback);
         return  rst == VK_SUCCESS;
     }
 
     bool DebugReporterVk::uninstallDebugReport(VkInstance _inst)
     {
-        vkDestroyDebugReportCallbackEXT(_inst, m_debugReportCallback, nullptr);
+        vkDestroyDebugReportCallbackEXT(_inst, _debugReportCallback, nullptr);
         return true;
     }
 

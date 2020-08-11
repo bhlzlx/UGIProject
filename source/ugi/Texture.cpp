@@ -211,31 +211,31 @@ namespace ugi {
         }
         //
         Texture* texture = new Texture();{
-            texture->m_description = _desc;
-            texture->m_image = _image;
-            texture->m_imageView = _imageView;
-            texture->m_allocation = allocation;
-            texture->m_aspectFlags = aspectMask;
-            texture->m_ownsImage = ownImage;
-            texture->m_ownsImageView = ownImageView;
+            texture->_description = _desc;
+            texture->_image = _image;
+            texture->_imageView = _imageView;
+            texture->_allocation = allocation;
+            texture->_aspectFlags = aspectMask;
+            texture->_ownsImage = ownImage;
+            texture->_ownsImageView = ownImageView;
             // texture->m_accessFlags = 0;
-            texture->m_pipelineStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            texture->m_currentAccessType = ResourceAccessType::None;
-            texture->m_primaryAccessType = _accessType;
+            texture->_pipelineStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            texture->_currentAccessType = ResourceAccessType::None;
+            texture->_primaryAccessType = _accessType;
         }
         return texture;
     }
 
     void Texture::release( Device* _device ) {
-        if( m_ownsImage && m_image ) {
-            vmaDestroyImage( _device->vmaAllocator(), m_image, m_allocation );
-            m_image = VK_NULL_HANDLE;
-            m_ownsImage = false;
-            m_allocation = nullptr;
+        if( _ownsImage && _image ) {
+            vmaDestroyImage( _device->vmaAllocator(), _image, _allocation );
+            _image = VK_NULL_HANDLE;
+            _ownsImage = false;
+            _allocation = nullptr;
         }
-        if( m_ownsImageView && m_imageView ) {
-            vkDestroyImageView( _device->device(), m_imageView, nullptr);
-            m_imageView = VK_NULL_HANDLE;
+        if( _ownsImageView && _imageView ) {
+            vkDestroyImageView( _device->device(), _imageView, nullptr);
+            _imageView = VK_NULL_HANDLE;
         }
         delete this;
     }

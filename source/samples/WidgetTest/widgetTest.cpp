@@ -51,9 +51,9 @@ namespace ugi {
     bool WidgetTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
 
         printf("initialize\n");
-        this->m_hwnd = _wnd;
+        this->_hwnd = _wnd;
 
-        m_renderSystem = new ugi::RenderSystem();
+        _renderSystem = new ugi::RenderSystem();
 
         ugi::DeviceDescriptor descriptor; {
             descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
@@ -63,20 +63,20 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         }
-        m_device = m_renderSystem->createDevice(descriptor, assetsSource);
-        m_uniformAllocator = m_device->createUniformAllocator();
-        m_swapchain = m_device->createSwapchain( _wnd );
+        _device = _renderSystem->createDevice(descriptor, assetsSource);
+        _uniformAllocator = _device->createUniformAllocator();
+        _swapchain = _device->createSwapchain( _wnd );
         // command queues
-        m_graphicsQueue = m_device->graphicsQueues()[0];
-        m_uploadQueue = m_device->transferQueues()[0];
+        _graphicsQueue = _device->graphicsQueues()[0];
+        _uploadQueue = _device->transferQueues()[0];
         //
         for( size_t i = 0; i<MaxFlightCount; ++i) {
-            m_frameCompleteFences[i] = m_device->createFence();
-            m_renderCompleteSemaphores[i] = m_device->createSemaphore();
-            m_commandBuffers[i] = m_graphicsQueue->createCommandBuffer( m_device );
+            _frameCompleteFences[i] = _device->createFence();
+            _renderCompleteSemaphores[i] = _device->createSemaphore();
+            _commandBuffers[i] = _graphicsQueue->createCommandBuffer( _device );
         }
 
-        m_GdiContext = new ugi::gdi::GDIContext(m_device, assetsSource);
+        m_GdiContext = new ugi::gdi::GDIContext(_device, assetsSource);
         if (!m_GdiContext->initialize()) {
             return false;
         }
@@ -100,26 +100,26 @@ namespace ugi {
             }
         }
         mainComp->setScissor(32, 32, 512, 512);
-        m_flightIndex = 0;
+        _flightIndex = 0;
         return true;
     }
 
     void WidgetTest::tick() {
 
-        m_device->waitForFence( m_frameCompleteFences[m_flightIndex] );
+        _device->waitForFence( _frameCompleteFences[_flightIndex] );
         //
-        m_uniformAllocator->tick();
+        _uniformAllocator->tick();
         m_UiSys->onTick();
         //
-        uint32_t imageIndex = m_swapchain->acquireNextImage( m_device, m_flightIndex );
+        uint32_t imageIndex = _swapchain->acquireNextImage( _device, _flightIndex );
 
-        IRenderPass* mainRenderPass = m_swapchain->renderPass(imageIndex);
+        IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
         
-        auto cmdbuf = m_commandBuffers[m_flightIndex];
+        auto cmdbuf = _commandBuffers[_flightIndex];
 
         POINT point;
         GetCursorPos(&point);			// 获取鼠标指针位置（屏幕坐标）
-		ScreenToClient((HWND)m_hwnd, &point);	// 将鼠标指针位置转换为窗口坐标
+		ScreenToClient((HWND)_hwnd, &point);	// 将鼠标指针位置转换为窗口坐标
 
         for( auto& tweenItem: tweenList) {
             auto values = tweenItem.tween.step(1);
@@ -144,10 +144,10 @@ namespace ugi {
         }
 
         cmdbuf->beginEncode(); {
-            hgl::Vector2f screenSize(m_width, m_height);
+            hgl::Vector2f screenSize(_width, _height);
             {   ///> resource command encoder
                 auto resEncoder = cmdbuf->resourceCommandEncoder(); {
-                    m_UiSys->prepareResource(resEncoder, m_uniformAllocator);
+                    m_UiSys->prepareResource(resEncoder, _uniformAllocator);
                 }
                 resEncoder->endEncode();
             }
@@ -160,8 +160,8 @@ namespace ugi {
                 mainRenderPass->setClearValues(clearValues);
 
                 auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
-					renderCommandEncoder->setViewport(0, 0, m_width, m_height, 0, 1.0f);
-					renderCommandEncoder->setScissor(0, 0, m_width, m_height);
+					renderCommandEncoder->setViewport(0, 0, _width, _height, 0, 1.0f);
+					renderCommandEncoder->setScissor(0, 0, _width, _height);
                     m_UiSys->draw(renderCommandEncoder);
                 }
                 renderCommandEncoder->endEncode();
@@ -170,31 +170,31 @@ namespace ugi {
         }
         cmdbuf->endEncode();
 
-		Semaphore* imageAvailSemaphore = m_swapchain->imageAvailSemaphore();
+		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
 		QueueSubmitInfo submitInfo {
 			&cmdbuf,
 			1,
 			&imageAvailSemaphore,// submitInfo.semaphoresToWait
 			1,
-			&m_renderCompleteSemaphores[m_flightIndex], // submitInfo.semaphoresToSignal
+			&_renderCompleteSemaphores[_flightIndex], // submitInfo.semaphoresToSignal
 			1
 		};
-		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, m_frameCompleteFences[m_flightIndex]);
-        bool submitRst = m_graphicsQueue->submitCommandBuffers(submitBatch);
+		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
+        bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
         // assert(submitRst);
 		if (!submitRst) {
 			printf("submit command failed!");
 		}
-        m_swapchain->present( m_device, m_graphicsQueue, m_renderCompleteSemaphores[m_flightIndex] );
+        _swapchain->present( _device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
 
     }
         
-    void WidgetTest::resize(uint32_t _width, uint32_t _height) {
-        m_swapchain->resize( m_device, _width, _height );
+    void WidgetTest::resize(uint32_t width, uint32_t height) {
+        _swapchain->resize( _device, width, height );
         //
-        m_width = _width;
-        m_height = _height;
-        m_GdiContext->setSize( hgl::Vector2f(_width, _height) );
+        _width = width;
+        _height = height;
+        m_GdiContext->setSize( hgl::Vector2f(width, height) );
     }
 
     void WidgetTest::release() {

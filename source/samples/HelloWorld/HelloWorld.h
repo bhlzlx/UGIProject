@@ -9,19 +9,19 @@ namespace ugi {
 
     class HelloWorld : public UGIApplication {
     private:
-        void*                   m_hwnd;                                             //
-        ugi::RenderSystem*      m_renderSystem;                                     //
-        ugi::Device*            m_device;                                           //
+        void*                   _hwnd;                                             //
+        ugi::RenderSystem*      _renderSystem;                                     //
+        ugi::Device*            _device;                                           //
         ugi::Swapchain*         m_swapchain;                                        //
         //
-        ugi::Fence*             m_frameCompleteFences[MaxFlightCount];              // command buffer 被GPU消化完会给 fence 一个 signal, 用于双缓冲或者多缓冲逻辑隔帧等待
-        ugi::Semaphore*         m_renderCompleteSemaphores[MaxFlightCount];         // 用于GPU内部等待
-        ugi::CommandBuffer*     m_commandBuffers[MaxFlightCount];                   // command buffer for each frame
-        ugi::CommandQueue*      m_graphicsQueue;                                    // graphics queue
-        ugi::CommandQueue*      m_uploadQueue;                                      // upload queue
-        ugi::Pipeline*          m_pipeline;
+        ugi::Fence*             _frameCompleteFences[MaxFlightCount];              // command buffer 被GPU消化完会给 fence 一个 signal, 用于双缓冲或者多缓冲逻辑隔帧等待
+        ugi::Semaphore*         _renderCompleteSemaphores[MaxFlightCount];         // 用于GPU内部等待
+        ugi::CommandBuffer*     _commandBuffers[MaxFlightCount];                   // command buffer for each frame
+        ugi::CommandQueue*      _graphicsQueue;                                    // graphics queue
+        ugi::CommandQueue*      _uploadQueue;                                      // upload queue
+        ugi::Pipeline*          _pipeline;
         ///> ===========================================================================
-        ugi::ArgumentGroup*     m_argumentGroup;                                    // 
+        ugi::ArgumentGroup*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           m_texture;
         ugi::SamplerState       m_samplerState;                                     //
@@ -29,13 +29,13 @@ namespace ugi {
         ugi::Buffer*            m_indexBuffer;
         ugi::Drawable*          m_drawable;
 
-        ugi::UniformAllocator*  m_uniformAllocator;
+        ugi::UniformAllocator*  _uniformAllocator;
         ResourceDescriptor      m_uniformDescriptor;
         //
-        uint32_t                m_flightIndex;                                      // flight index
+        uint32_t                _flightIndex;                                      // flight index
         //
-        float                   m_width;
-        float                   m_height;
+        float                   _width;
+        float                   _height;
     public:
         virtual bool initialize( void* _wnd,  hgl::assets::AssetsSource* assetsSource );
         virtual void resize( uint32_t _width, uint32_t _height );

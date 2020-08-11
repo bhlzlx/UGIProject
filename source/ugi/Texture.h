@@ -11,44 +11,44 @@ namespace ugi {
     
     class Texture : public Resource {
     private:
-        TextureDescription          m_description;        // descriptor
-        VkImage                     m_image;            // image
-        VkImageView                 m_imageView;        // default image view
-        VmaAllocation               m_allocation;        // memory allocation
+        TextureDescription          _description;        // descriptor
+        VkImage                     _image;            // image
+        VkImageView                 _imageView;        // default image view
+        VmaAllocation               _allocation;        // memory allocation
         // == resource state flags ==
-        VkPipelineStageFlags        m_pipelineStageFlags; // pipeline stage flags
-        ResourceAccessType          m_primaryAccessType;  //
-        ResourceAccessType          m_currentAccessType;  //
-        VkImageAspectFlags          m_aspectFlags;        // color / depth /stencil / 
-        bool                        m_ownsImage;
-        bool                        m_ownsImageView;      // 
+        VkPipelineStageFlags        _pipelineStageFlags; // pipeline stage flags
+        ResourceAccessType          _primaryAccessType;  //
+        ResourceAccessType          _currentAccessType;  //
+        VkImageAspectFlags          _aspectFlags;        // color / depth /stencil / 
+        bool                        _ownsImage;
+        bool                        _ownsImageView;      // 
     private:
     public:
         VkImage image() const {
-            return m_image;
+            return _image;
         }
         VkImageView imageView() const {
-            return m_imageView;
+            return _imageView;
         }
 
         ResourceAccessType accessType() const {
-            return m_currentAccessType;
+            return _currentAccessType;
         }
 
         ResourceAccessType primaryAccessType() {
-            return m_primaryAccessType;
+            return _primaryAccessType;
         }
 
         void updateAccessType( ResourceAccessType _accessType ) {
-            m_currentAccessType = _accessType;
+            _currentAccessType = _accessType;
         }
 
         const TextureDescription& desc() const {
-            return m_description;
+            return _description;
         }
 
         VkImageAspectFlags aspectFlags() const {
-            return m_aspectFlags;
+            return _aspectFlags;
         }
 
         virtual void release( Device* _device ) override;

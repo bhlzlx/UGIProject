@@ -51,18 +51,18 @@ namespace ugi {
     class Device {
         friend class RenderSystem;
     private:
-        DeviceDescriptorVulkan              m_descriptor;
-        VkDevice                            m_device;
-        // std::vector<VkQueue>    m_graphicsQueues;
+        DeviceDescriptorVulkan              _descriptor;
+        VkDevice                            _device;
+        // std::vector<VkQueue>    _graphicsQueues;
         // std::vector<VkQueue>    m_transferQueues;
         //      
-        std::vector<CommandQueue*>          m_graphicsCommandQueues;
-        std::vector<CommandQueue*>          m_transferCommandQueues;
+        std::vector<CommandQueue*>          _graphicsCommandQueues;
+        std::vector<CommandQueue*>          _transferCommandQueues;
         //      
-        VmaAllocator                        m_vmaAllocator;
+        VmaAllocator                        _vmaAllocator;
         
-        RenderPassObjectManager*            m_renderPassObjectManager;
-        DescriptorSetAllocator*             m_descriptorSetAllocator;
+        RenderPassObjectManager*            _renderPassObjectManager;
+        DescriptorSetAllocator*             _descriptorSetAllocator;
         //
         Device() {
         }
@@ -73,39 +73,39 @@ namespace ugi {
         //
     public:
         Device( const DeviceDescriptorVulkan& _descriptor, VkDevice _device, VmaAllocator _vmaAllocator = nullptr )
-            : m_descriptor(_descriptor)
-            , m_device( _device )
-            , m_vmaAllocator( _vmaAllocator ) 
-            , m_renderPassObjectManager( nullptr ) 
+            : _descriptor(_descriptor)
+            , _device( _device )
+            , _vmaAllocator( _vmaAllocator ) 
+            , _renderPassObjectManager( nullptr ) 
         {
         }
 
         VkPhysicalDevice physicalDevice() {
-            return m_descriptor.physicalDevice;
+            return _descriptor.physicalDevice;
         }
         VkDevice device() {
-            return m_device;
+            return _device;
         }
         VkInstance instance() {
-            return m_descriptor.instance;
+            return _descriptor.instance;
         }
         VmaAllocator vmaAllocator() {
-            return m_vmaAllocator;
+            return _vmaAllocator;
         }
         const DeviceDescriptorVulkan& descriptor() {
-            return m_descriptor;
+            return _descriptor;
         }
 
         RenderPassObjectManager* renderPassObjectManager() {
-            return m_renderPassObjectManager;
+            return _renderPassObjectManager;
         }
 
         const std::vector<CommandQueue*>& graphicsQueues() {
-            return m_graphicsCommandQueues;
+            return _graphicsCommandQueues;
         }
 
         const std::vector<CommandQueue*>& transferQueues() {
-            return m_transferCommandQueues;
+            return _transferCommandQueues;
         }
 
         Semaphore* createSemaphore( uint32_t _semaphoreFlags = 0);

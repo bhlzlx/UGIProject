@@ -41,32 +41,32 @@ namespace ugi {
 
     class CommandQueue {
     private:
-        VkQueue         m_queue;
-        uint32_t        m_queueFamilyIndex;
-        uint32_t        m_queueIndex;
+        VkQueue         _queue;
+        uint32_t        _queueFamilyIndex;
+        uint32_t        _queueIndex;
         //
-        VkCommandPool   m_commandPool;
+        VkCommandPool   _commandPool;
         //
     public:
         /* ============================================
             method : submitCommandBuffers
         / ============================================*/
-        bool submitCommandBuffers( const QueueSubmitBatchInfo& _batch ) const;
+        bool submitCommandBuffers( const QueueSubmitBatchInfo& batch ) const;
         void waitIdle() const;
         //
         CommandQueue( VkQueue _queue, uint32_t _queueFamilyIndex, uint32_t _queueIndex ) 
-            : m_queue( _queue )
-            , m_queueFamilyIndex( _queueFamilyIndex )
-            , m_queueIndex( _queueIndex )
-            , m_commandPool(VK_NULL_HANDLE)
+            : _queue( _queue )
+            , _queueFamilyIndex( _queueFamilyIndex )
+            , _queueIndex( _queueIndex )
+            , _commandPool(VK_NULL_HANDLE)
         {
         }
         //
-        CommandBuffer* createCommandBuffer( Device* _device );
+        CommandBuffer* createCommandBuffer( Device* device );
         void destroyCommandBuffer( Device* device, CommandBuffer* commandBuffer );
         //
         operator VkQueue() const {
-            return m_queue;
+            return _queue;
         }
     };
 

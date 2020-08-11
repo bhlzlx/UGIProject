@@ -25,7 +25,7 @@ extern PFN_vkCreateXlibSurfaceKHR vkCreateXlibSurfaceKHR;
 
 namespace ugi {
 
-    VkSurfaceKHR Swapchain::createSurface( Device* _device, void* _window ) {
+    VkSurfaceKHR Swapchain::createSurface( Device* device, void* window ) {
         VkSurfaceKHR surface;
         VkResult rst = VK_ERROR_INVALID_EXTERNAL_HANDLE;
 #ifdef _WIN32
@@ -36,9 +36,9 @@ namespace ugi {
             nullptr,                                          // const void                      *pNext
             0,                                                // VkWin32SurfaceCreateFlagsKHR     flags
             hInst,
-            (HWND)_window
+            (HWND)window
         };
-        rst = vkCreateWin32SurfaceKHR( _device->instance(), &surface_create_info, nullptr, &surface);
+        rst = vkCreateWin32SurfaceKHR( device->instance(), &surface_create_info, nullptr, &surface);
 #elif defined __ANDROID__
         VkAndroidSurfaceCreateInfoKHR surface_create_info = {
             VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,  // sType
@@ -60,20 +60,20 @@ namespace ugi {
             return VK_NULL_HANDLE;
         }
         VkBool32 supported = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR( _device->physicalDevice(), _device->descriptor().queueFamilyIndices[0], surface, &supported );
+        vkGetPhysicalDeviceSurfaceSupportKHR( device->physicalDevice(), device->descriptor().queueFamilyIndices[0], surface, &supported );
         assert(supported);
         return surface;
 
     }
 
-    bool Swapchain::initialize( Device* _deviceVulkan, void* _window ) {
-        m_hwnd = _window;
-        VkPhysicalDevice _physicalDevice = _deviceVulkan->physicalDevice();
-        VkDevice _device = _deviceVulkan->device();
+    bool Swapchain::initialize( Device* deviceVulkan, void* window ) {
+        _hwnd = window;
+        VkPhysicalDevice _physicalDevice = deviceVulkan->physicalDevice();
+        VkDevice _device = deviceVulkan->device();
         // VkInstance _instance = _deviceVulkan->instance();
         //
-        m_surface = createSurface( _deviceVulkan, _window );
-        if( !m_surface ) {
+        _surface = createSurface( deviceVulkan, window );
+        if( !_surface ) {
             return false;
         }
         //
@@ -82,28 +82,28 @@ namespace ugi {
         VkSwapchainCreateInfoKHR createInfo;
         VkSurfaceCapabilitiesKHR surfaceCapabilities;
         //
-        if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_physicalDevice, m_surface, &surfaceCapabilities) != VK_SUCCESS) {
+        if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_physicalDevice, _surface, &surfaceCapabilities) != VK_SUCCESS) {
             return false;
         }
         uint32_t formatCount;
-        if (vkGetPhysicalDeviceSurfaceFormatsKHR( _physicalDevice, m_surface, &formatCount, nullptr) != VK_SUCCESS) {
+        if (vkGetPhysicalDeviceSurfaceFormatsKHR( _physicalDevice, _surface, &formatCount, nullptr) != VK_SUCCESS) {
             return false;
         }
         if (formatCount == 0) {
             return false;
         }
         std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
-        if (vkGetPhysicalDeviceSurfaceFormatsKHR( _physicalDevice, m_surface, &formatCount, &surfaceFormats[0]) != VK_SUCCESS) {
+        if (vkGetPhysicalDeviceSurfaceFormatsKHR( _physicalDevice, _surface, &formatCount, &surfaceFormats[0]) != VK_SUCCESS) {
             return false;
         }
 
         uint32_t nPresentMode;
-        if ((vkGetPhysicalDeviceSurfacePresentModesKHR(_physicalDevice, m_surface, &nPresentMode, nullptr) != VK_SUCCESS) ||
+        if ((vkGetPhysicalDeviceSurfacePresentModesKHR(_physicalDevice, _surface, &nPresentMode, nullptr) != VK_SUCCESS) ||
             (nPresentMode == 0)) {
             return false;
         }
         std::vector<VkPresentModeKHR> presentModes(nPresentMode);
-        if (vkGetPhysicalDeviceSurfacePresentModesKHR(_physicalDevice, m_surface, &nPresentMode, presentModes.data()) != VK_SUCCESS) {
+        if (vkGetPhysicalDeviceSurfacePresentModesKHR(_physicalDevice, _surface, &nPresentMode, presentModes.data()) != VK_SUCCESS) {
             return false;
         }
         //
@@ -165,7 +165,7 @@ namespace ugi {
         createInfo.imageUsage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         createInfo.imageArrayLayers = 1;
         createInfo.clipped = VK_TRUE;
-        createInfo.surface = m_surface;
+        createInfo.surface = _surface;
         createInfo.flags = 0;
         createInfo.pNext = nullptr;
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -175,7 +175,7 @@ namespace ugi {
         createInfo.preTransform = desiredTransform;
 
         VkSurfaceCapabilitiesKHR capabilities;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_physicalDevice, m_surface, &capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_physicalDevice, _surface, &capabilities);
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         for (uint32_t flag = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; flag <= VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR; flag <<= 1) {   
             // VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR
@@ -184,96 +184,96 @@ namespace ugi {
                 break;
             }
         }
-        m_createInfo = createInfo;
+        _createInfo = createInfo;
         //
         for( uint32_t i = 0; i<MaxFlightCount; ++i){
-            m_imageAvailSemaphores[i] = _deviceVulkan->createSemaphore();
+            _imageAvailSemaphores[i] = deviceVulkan->createSemaphore();
         }
         //
         return true;
     }
 
-    bool Swapchain::resize( Device* _device, uint32_t _width, uint32_t _height ) {
-        m_size = { _width, _height };
-        return updateSwapchain(_device);
+    bool Swapchain::resize( Device* device, uint32_t width, uint32_t height ) {
+        _size = { width, height };
+        return updateSwapchain(device);
     }
 
 
-    bool Swapchain::updateSwapchain( Device* _device ) {
-        VkDevice device = _device->device();
-        const CommandQueue* queue = _device->graphicsQueues()[0];
+    bool Swapchain::updateSwapchain( Device* device ) {
+        VkDevice dvcVk = device->device();
+        const CommandQueue* queue = device->graphicsQueues()[0];
         queue->waitIdle();
         //
         VkSurfaceCapabilitiesKHR surfaceCapabilities;
-        if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR( _device->physicalDevice(), m_surface, &surfaceCapabilities) != VK_SUCCESS) {
+        if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR( device->physicalDevice(), _surface, &surfaceCapabilities) != VK_SUCCESS) {
             return false;
         }
         //
-        m_size.width = (m_size.width + 1)&~(1);
-        m_size.height = (m_size.height + 1)&~(1);
+        _size.width = (_size.width + 1)&~(1);
+        _size.height = (_size.height + 1)&~(1);
         //
-        if (m_size.width >= surfaceCapabilities.minImageExtent.width
-            && m_size.width <= surfaceCapabilities.maxImageExtent.width
-            && m_size.height >= surfaceCapabilities.minImageExtent.height
-            && m_size.height <= surfaceCapabilities.maxImageExtent.height
+        if (_size.width >= surfaceCapabilities.minImageExtent.width
+            && _size.width <= surfaceCapabilities.maxImageExtent.width
+            && _size.height >= surfaceCapabilities.minImageExtent.height
+            && _size.height <= surfaceCapabilities.maxImageExtent.height
             ) {
-            m_createInfo.imageExtent = {
-                (uint32_t)m_size.width, (uint32_t)m_size.height
+            _createInfo.imageExtent = {
+                (uint32_t)_size.width, (uint32_t)_size.height
             };
         }
         else {
-            m_createInfo.imageExtent = surfaceCapabilities.minImageExtent;
-            m_size.width = m_createInfo.imageExtent.width;
-            m_size.height = m_createInfo.imageExtent.height;
+            _createInfo.imageExtent = surfaceCapabilities.minImageExtent;
+            _size.width = _createInfo.imageExtent.width;
+            _size.height = _createInfo.imageExtent.height;
         }
         //
-        m_createInfo.surface = m_surface;
+        _createInfo.surface = _surface;
         // 1. create swapchain object
-        m_createInfo.oldSwapchain = m_swapchain;
-        if ( m_createInfo.imageExtent.width < 4 || m_createInfo.imageExtent.height < 4 ) {
+        _createInfo.oldSwapchain = _swapchain;
+        if ( _createInfo.imageExtent.width < 4 || _createInfo.imageExtent.height < 4 ) {
             return false;
         }
-        VkResult rst = vkCreateSwapchainKHR( device, &m_createInfo, nullptr, &m_swapchain);
+        VkResult rst = vkCreateSwapchainKHR( dvcVk, &_createInfo, nullptr, &_swapchain);
         if ( rst != VK_SUCCESS)
         {
             if( VK_ERROR_NATIVE_WINDOW_IN_USE_KHR == rst ){
-                if (m_createInfo.oldSwapchain != VK_NULL_HANDLE){
-                    vkDestroySwapchainKHR(device, m_createInfo.oldSwapchain, nullptr);
-                    m_createInfo.oldSwapchain = VK_NULL_HANDLE;
+                if (_createInfo.oldSwapchain != VK_NULL_HANDLE){
+                    vkDestroySwapchainKHR(dvcVk, _createInfo.oldSwapchain, nullptr);
+                    _createInfo.oldSwapchain = VK_NULL_HANDLE;
                 }
-                rst = vkCreateSwapchainKHR( device, &m_createInfo, nullptr, &m_swapchain);
+                rst = vkCreateSwapchainKHR( dvcVk, &_createInfo, nullptr, &_swapchain);
             }else {
                 return false;
             }
         }
-        cleanup( _device );
+        cleanup( device );
         //
-        if (m_createInfo.oldSwapchain != VK_NULL_HANDLE)
+        if (_createInfo.oldSwapchain != VK_NULL_HANDLE)
         {
-            vkDestroySwapchainKHR(device, m_createInfo.oldSwapchain, nullptr);
+            vkDestroySwapchainKHR(dvcVk, _createInfo.oldSwapchain, nullptr);
         }
         // 2. retrieve the image attached on the swapchain
-        m_embedTextureCount = 0;
-        rst = vkGetSwapchainImagesKHR(device, m_swapchain, &m_embedTextureCount, nullptr);
-        if (!m_embedTextureCount) {
+        _embedTextureCount = 0;
+        rst = vkGetSwapchainImagesKHR(dvcVk, _swapchain, &_embedTextureCount, nullptr);
+        if (!_embedTextureCount) {
             return false;
         }
-        rst = vkGetSwapchainImagesKHR(device, m_swapchain, &m_embedTextureCount, m_images);
+        rst = vkGetSwapchainImagesKHR(dvcVk, _swapchain, &_embedTextureCount, _images);
 
-        for( uint32_t embedImageIndex = 0; embedImageIndex < m_embedTextureCount; ++ embedImageIndex ) {
+        for( uint32_t embedImageIndex = 0; embedImageIndex < _embedTextureCount; ++ embedImageIndex ) {
             TextureDescription colorTexDesc;
             colorTexDesc.depth = 1;
-            colorTexDesc.format = VkFormatToUGI(m_createInfo.imageFormat);
-            colorTexDesc.width = m_createInfo.imageExtent.width;
-            colorTexDesc.height = m_createInfo.imageExtent.height;
+            colorTexDesc.format = VkFormatToUGI(_createInfo.imageFormat);
+            colorTexDesc.width = _createInfo.imageExtent.width;
+            colorTexDesc.height = _createInfo.imageExtent.height;
             colorTexDesc.mipmapLevel = 1;
             colorTexDesc.arrayLayers = 1;
             colorTexDesc.type = TextureType::Texture2D;
-            m_embedTextures[embedImageIndex] = Texture::CreateTexture( _device, m_images[embedImageIndex], VK_NULL_HANDLE, colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
-            if(!m_depthStencilTexture) {
+            _embedTextures[embedImageIndex] = Texture::CreateTexture( device, _images[embedImageIndex], VK_NULL_HANDLE, colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
+            if(!_depthStencilTexture) {
                 TextureDescription depthStencilTexDesc = colorTexDesc;
                 depthStencilTexDesc.format = UGIFormat::Depth32F;
-                m_depthStencilTexture = Texture::CreateTexture( _device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
+                _depthStencilTexture = Texture::CreateTexture( device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
             }
             //
             // auto renderPassObjManager = _device->renderPassObjectManager();
@@ -291,19 +291,19 @@ namespace ugi {
             renderPassDesc.depthStencil.finalAccessType = ResourceAccessType::DepthStencilReadWrite;
             renderPassDesc.inputAttachmentCount = 0;
             //
-            m_renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( _device, renderPassDesc, &m_embedTextures[embedImageIndex], m_depthStencilTexture );
+            _renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( device, renderPassDesc, &_embedTextures[embedImageIndex], _depthStencilTexture );
         }
         return true;
     }
 
     void Swapchain::cleanup( Device* device ) {
-        for( auto& rp : m_renderPasses) {
+        for( auto& rp : _renderPasses) {
             if( rp) {
                 device->destroyRenderPass(rp);
                 rp = nullptr;
             }
         }
-        for( auto& colorTex : m_embedTextures ) {
+        for( auto& colorTex : _embedTextures ) {
             if(colorTex) {
                 device->destroyTexture(colorTex);
                 colorTex = nullptr;
@@ -311,21 +311,21 @@ namespace ugi {
                 break;
             }
         }
-        if( m_depthStencilTexture) {
-            device->destroyTexture(m_depthStencilTexture);
-            m_depthStencilTexture = nullptr;
+        if( _depthStencilTexture) {
+            device->destroyTexture(_depthStencilTexture);
+            _depthStencilTexture = nullptr;
         }        
     }
 
     IRenderPass* Swapchain::renderPass( uint32_t _index ) {
-        return m_renderPasses[_index];
+        return _renderPasses[_index];
     }
 
     uint32_t Swapchain::acquireNextImage( Device* _device, uint32_t _flightIndex ) {
-        if( !m_swapchain ) {
+        if( !_swapchain ) {
             return UINT_MAX;
         }//
-        VkResult rst = vkAcquireNextImageKHR( _device->device(), m_swapchain, UINT64_MAX, *m_imageAvailSemaphores[_flightIndex], VK_NULL_HANDLE, &m_imageIndex);
+        VkResult rst = vkAcquireNextImageKHR( _device->device(), _swapchain, UINT64_MAX, *_imageAvailSemaphores[_flightIndex], VK_NULL_HANDLE, &_imageIndex);
         //
         switch (rst) {
         case VK_SUCCESS:
@@ -335,32 +335,32 @@ namespace ugi {
             // updateSwapchain();
             // 这一帧就舍弃了吧，实际上就算是重建交换链这帧也显示不出来
         default:
-            m_imageIndex = -1;
-            m_available = VK_FALSE;
+            _imageIndex = -1;
+            _available = VK_FALSE;
             return false;
         }
-        m_available = VK_TRUE;
+        _available = VK_TRUE;
         //
-        m_flightIndex = _flightIndex;
+        _flightIndex = _flightIndex;
         //
-        return m_imageIndex;
+        return _imageIndex;
     }
 
-    bool Swapchain::present( Device* _device, CommandQueue* _graphicsQueue, Semaphore* _semaphoreToWait ) {
+    bool Swapchain::present( Device* device, CommandQueue* graphicsQueue, Semaphore* semaphoreToWait ) {
         //
-        VkSemaphore* psem = *_semaphoreToWait;
+        VkSemaphore* psem = *semaphoreToWait;
         VkPresentInfoKHR presentInfo = {
             VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,            // VkStructureType              sType
             nullptr,                                    // const void                  *pNext
             1,                                            // uint32_t                     waitSemaphoreCount
             psem,                                        // const VkSemaphore           *pWaitSemaphores
             1,                                            // uint32_t                     swapchainCount
-            &m_swapchain,                                // const VkSwapchainKHR        *pSwapchains
-            &m_imageIndex,                                // const uint32_t              *pImageIndices
+            &_swapchain,                                // const VkSwapchainKHR        *pSwapchains
+            &_imageIndex,                                // const uint32_t              *pImageIndices
             nullptr                                        // VkResult                    *pResults
         };
         //
-        VkResult result = vkQueuePresentKHR(*_graphicsQueue, &presentInfo);
+        VkResult result = vkQueuePresentKHR(*graphicsQueue, &presentInfo);
 
         switch (result) {
         case VK_SUCCESS:
@@ -371,14 +371,14 @@ namespace ugi {
         default:
             return false;
         }
-        ++m_flightIndex;
-        m_flightIndex = m_flightIndex % MaxFlightCount;
+        ++_flightIndex;
+        _flightIndex = _flightIndex % MaxFlightCount;
         //
         return true;
     }
 
     Semaphore* Swapchain::imageAvailSemaphore() {
-        return m_imageAvailSemaphores[m_flightIndex];
+        return _imageAvailSemaphores[_flightIndex];
     }
 
 }
