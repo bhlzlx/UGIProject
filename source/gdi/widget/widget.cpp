@@ -1,9 +1,12 @@
-#include "widget.h"
+﻿#include "widget.h"
 #include "component.h"
 #include "GdiSystem.h"
 
 namespace ugi {
+
     namespace gdi {
+
+        NamePool GdiNamePool;
 
         Widget::Widget( Component* owner, WidgetType type )
             : _owner( owner )
@@ -20,26 +23,26 @@ namespace ugi {
         }
 
         void Widget::setName(const std::string& name) {
-            _name = name;
+            _name = GdiNamePool.getName(name);
         }
 
         void Widget::setName(std::string&& name) {
-            _name = std::move(name);
+            _name = GdiNamePool.getName(std::move(name));
         }
 
         void Widget::setKey( const std::string& key ) {
             if(_registComponentKey(key)) {
-                _key = key;
+                _key = GdiNamePool.getName(key);
             }
         }
         void Widget::setKey( std::string&& key ) {
             if(_registComponentKey(key)) {
-                _key = std::move(key);
+                _key = GdiNamePool.getName(std::move(key));
             }
         }
 
         const std::string& Widget::key() {
-            return _key;
+            return _key.string();
         }
 
         bool Widget::isStatic() {

@@ -100,7 +100,6 @@ namespace ugi {
             }
         }
         mainComp->setScissor(32, 32, 512, 512);
-
         m_flightIndex = 0;
         return true;
     }

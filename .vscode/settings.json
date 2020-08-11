@@ -79,7 +79,8 @@
         "sstream": "cpp",
         "xfunctional": "cpp",
         "xmemory0": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "xthread": "cpp"
     },
     "editor.tabCompletion": "on",
     "workbench.editor.highlightModifiedTabs": true

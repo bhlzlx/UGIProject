@@ -49,7 +49,7 @@ namespace ugi {
             }
         }
         
-        void Component::addWidget( Widget* widget ) {
+        void Component:: addWidget( Widget* widget ) {
             if( _widgetsRecord.find(widget) != _widgetsRecord.end()) {
                 return;
             }

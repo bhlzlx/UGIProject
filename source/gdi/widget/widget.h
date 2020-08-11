@@ -6,9 +6,12 @@
 #include <set>
 #include <vector>
 #include <string>
+#include "name.h"
 
 namespace ugi {
     namespace gdi {
+
+        extern NamePool GdiNamePool;
 
         enum class LayoutType {
             vbox = 0,
@@ -51,8 +54,8 @@ namespace ugi {
 			friend class Component;
 		protected:
 			WidgetType          _type;
-			std::string			_name;          ///> 这样的可以用Name来代替，省内存
-            std::string         _key;           ///> 这样的可以用Name来代替，省内存
+            Name                _name;
+            Name                _key;
 			uint32_t            _depth;
             // _owner 是指创建此控件的对象，并不是指控件树结构
 			Component*          _owner;
@@ -68,20 +71,19 @@ namespace ugi {
 		public:
 			Widget( Component* owner, WidgetType type = WidgetType::widget);
 
-			uint32_t depth() const;
-			void setName(const std::string& name);
-			void setName(std::string&& name);
-            
-            void setKey( const std::string& key );
-            void setKey( std::string&& key );
-            bool isStatic();
-            void setTransform( const Transform& transform );
-            void setColorMask( uint32_t colorMask );
-            void setGray( float gray );
-            const std::string& key();
-            void setDepth(uint32_t depth);
-            WidgetType type() const;
-            void setRect(const hgl::RectScope2f& rect);
+			uint32_t                depth() const;
+			void                    setName(const std::string& name);
+			void                    setName(std::string&& name);
+            void                    setKey( const std::string& key );
+            void                    setKey( std::string&& key );
+            bool                    isStatic();
+            void                    setTransform( const Transform& transform );
+            void                    setColorMask( uint32_t colorMask );
+            void                    setGray( float gray );
+            const                   std::string& key();
+            void                    setDepth(uint32_t depth);
+            WidgetType              type() const;
+            void                    setRect(const hgl::RectScope2f& rect);
             const hgl::RectScope2f& rect();
         };
 
