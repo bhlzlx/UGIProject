@@ -39,6 +39,7 @@ namespace ugi {
             }
             _buffers.clear();
             auto buf = _device->createBuffer( BufferType::UniformBuffer, sizeTotal );
+            buf->map(_device);
             _ringStart = 0;
             _ringEnd = sizeTotal;
             _buffers.push_back( buf );
@@ -109,8 +110,8 @@ namespace ugi {
                 _buffers.push_back(newbuffer);
                 assert( buffer->size() >= size );
                 _offset = alignedIncreament;
-                targetBuffer = buffer;
-                targetBuffer = 0;
+                targetBuffer = newbuffer;
+                targetOffset = 0;
             }
         } else { //  数组里有多个buffer这种情况完全不需要考虑 ringbuffer 环路重用，不够就继续分配
             auto buffer = _buffers.back();
@@ -124,8 +125,8 @@ namespace ugi {
                 _buffers.push_back(newbuffer);
                 assert( buffer->size() >= size );
                 _offset = alignedIncreament;
-                targetBuffer = buffer;
-                targetBuffer = 0;
+                targetBuffer = newbuffer;
+                targetOffset = 0;
             }
         }
         if( newbuffer ) {

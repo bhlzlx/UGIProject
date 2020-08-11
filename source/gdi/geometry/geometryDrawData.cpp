@@ -196,6 +196,7 @@ namespace ugi {
         void GeometryDrawData::prepareResource( ResourceCommandEncoder* encoder, UniformAllocator* allocator ) {
             for( size_t i = 0; i<_batches.size(); ++i) {
                 uint32_t uboSize = _batches[i]._transArgCount* sizeof(GeometryTransformArgument);
+                // auto ubo = allocator->allocate(32768);
                 auto ubo = allocator->allocate(uboSize);
                 ubo.writeData(0, _batches[i]._transArgBuffer, uboSize);
                 _elementInformationDescriptor.buffer = ubo.buffer();
