@@ -54,10 +54,10 @@ namespace ugi {
         bool submitCommandBuffers( const QueueSubmitBatchInfo& batch ) const;
         void waitIdle() const;
         //
-        CommandQueue( VkQueue _queue, uint32_t _queueFamilyIndex, uint32_t _queueIndex ) 
-            : _queue( _queue )
-            , _queueFamilyIndex( _queueFamilyIndex )
-            , _queueIndex( _queueIndex )
+        CommandQueue( VkQueue queue, uint32_t queueFamilyIndex, uint32_t queueIndex ) 
+            : _queue( queue )
+            , _queueFamilyIndex( queueFamilyIndex )
+            , _queueIndex( queueIndex )
             , _commandPool(VK_NULL_HANDLE)
         {
         }

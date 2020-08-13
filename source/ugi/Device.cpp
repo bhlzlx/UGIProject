@@ -556,9 +556,9 @@ namespace ugi {
 
     void Device::waitForFence( Fence* _fence ) {
         if( _fence->m_waitToSignaled ) {
-            vkWaitForFences( device(), 1, &_fence->m_fence, VK_TRUE, ~0 );
+            vkWaitForFences( device(), 1, &_fence->_fence, VK_TRUE, ~0 );
             _fence->m_waitToSignaled = false;
-            vkResetFences( device(), 1, &_fence->m_fence );
+            vkResetFences( device(), 1, &_fence->_fence );
         }
     }
 

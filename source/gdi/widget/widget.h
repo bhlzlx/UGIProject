@@ -80,7 +80,7 @@ namespace ugi {
             void                    setTransform( const Transform& transform );
             void                    setColorMask( uint32_t colorMask );
             void                    setGray( float gray );
-            const                   std::string& key();
+            const std::string&      key();
             void                    setDepth(uint32_t depth);
             WidgetType              type() const;
             void                    setRect(const hgl::RectScope2f& rect);

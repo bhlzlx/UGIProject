@@ -321,11 +321,12 @@ namespace ugi {
         return _renderPasses[_index];
     }
 
-    uint32_t Swapchain::acquireNextImage( Device* _device, uint32_t _flightIndex ) {
+    uint32_t Swapchain::acquireNextImage( Device* device, uint32_t flightIndex ) {
         if( !_swapchain ) {
             return UINT_MAX;
         }//
-        VkResult rst = vkAcquireNextImageKHR( _device->device(), _swapchain, UINT64_MAX, *_imageAvailSemaphores[_flightIndex], VK_NULL_HANDLE, &_imageIndex);
+        Semaphore* imageAvailSemaphore = _imageAvailSemaphores[flightIndex];
+        VkResult rst = vkAcquireNextImageKHR( device->device(), _swapchain, UINT64_MAX, VkSemaphore(*imageAvailSemaphore), VK_NULL_HANDLE, &_imageIndex);
         //
         switch (rst) {
         case VK_SUCCESS:
@@ -341,7 +342,7 @@ namespace ugi {
         }
         _available = VK_TRUE;
         //
-        _flightIndex = _flightIndex;
+        _flightIndex = flightIndex;
         //
         return _imageIndex;
     }

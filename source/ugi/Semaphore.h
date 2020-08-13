@@ -18,12 +18,12 @@ namespace ugi {
     private:
         VkSemaphore _semaphore;
         //
-        Semaphore( VkSemaphore _sem = 0 ) 
-            : _semaphore( _sem )
+        Semaphore( VkSemaphore sem = 0 ) 
+            : _semaphore( sem )
         {
         }
-        Semaphore( const Semaphore& _sem ) {
-            _semaphore = _sem._semaphore;
+        Semaphore( const Semaphore& sem ) {
+            _semaphore = sem._semaphore;
         }
     public:
         operator VkSemaphore () {
@@ -37,18 +37,18 @@ namespace ugi {
     class Fence {
         friend class Device;
     private:
-        VkFence m_fence;
+        VkFence _fence;
         bool m_waitToSignaled;
         //
         Fence( VkFence _fence )
-            : m_fence( _fence )
+            : _fence( _fence )
             , m_waitToSignaled( false )
         {
         }
     public:
-        static bool IsSignaled( VkDevice _device, const Fence& _fence );
+        static bool IsSignaled( VkDevice device, const Fence& fence );
         operator VkFence() {
-            return m_fence;
+            return _fence;
         }
         void waitToBeSignal() {
             m_waitToSignaled = true;

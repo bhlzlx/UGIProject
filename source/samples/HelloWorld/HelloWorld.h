@@ -7,7 +7,7 @@
 
 namespace ugi {
 
-    class HelloWorld : public UGIApplication {
+    class MemTest : public UGIApplication {
     private:
         void*                   _hwnd;                                             //
         ugi::RenderSystem*      _renderSystem;                                     //

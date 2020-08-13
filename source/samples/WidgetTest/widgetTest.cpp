@@ -118,7 +118,7 @@ namespace ugi {
         auto cmdbuf = _commandBuffers[_flightIndex];
 
         POINT point;
-        GetCursorPos(&point);			// 获取鼠标指针位置（屏幕坐标）
+        GetCursorPos(&point);			        // 获取鼠标指针位置（屏幕坐标）
 		ScreenToClient((HWND)_hwnd, &point);	// 将鼠标指针位置转换为窗口坐标
 
         for( auto& tweenItem: tweenList) {
@@ -187,6 +187,8 @@ namespace ugi {
 		}
         _swapchain->present( _device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
 
+        ++_flightIndex;
+        _flightIndex = _flightIndex % MaxFlightCount;
     }
         
     void WidgetTest::resize(uint32_t width, uint32_t height) {

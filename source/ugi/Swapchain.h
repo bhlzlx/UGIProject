@@ -55,8 +55,8 @@ namespace ugi {
         void cleanup( Device* _device );
         IRenderPass* renderPass( uint32_t _index );
         //
-        uint32_t acquireNextImage( Device* _device, uint32_t _flightIndex );
-        bool present( Device* _device, CommandQueue* _graphicsQueue, Semaphore* _semaphoreToWait );
+        uint32_t acquireNextImage( Device* device, uint32_t flightIndex );
+        bool present( Device* _device, CommandQueue* graphicsQueue, Semaphore* semaphoreToWait );
         //
         Semaphore* imageAvailSemaphore();
     };
