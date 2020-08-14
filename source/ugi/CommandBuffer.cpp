@@ -74,6 +74,13 @@ namespace ugi {
         return 0;
     }
 
+    CommandBuffer::CommandBuffer( VkDevice device, VkCommandBuffer cb ) 
+        : _cmdbuff( cb )
+        , _device(device)
+        , _encodeState(0)
+    {
+    }
+
     CommandBuffer::operator VkCommandBuffer() const {
         return _cmdbuff;
     }
@@ -83,20 +90,17 @@ namespace ugi {
     }
 
     ResourceCommandEncoder* CommandBuffer::resourceCommandEncoder() {
-        if( _encoderState ) {
+        if( _encodeState ) {
             return nullptr;
         }
-        auto encoder = new (&_resourceEncoder) ResourceCommandEncoder( this );
-        return encoder;
+        return &_resourceEncoder;
     }
 
     RenderCommandEncoder* CommandBuffer::renderCommandEncoder( IRenderPass* renderPass ) {
-        if( _encoderState ) {
+        if( _encodeState ) {
             return nullptr;
         }
-        RenderCommandEncoder* encoder = new(&_renderPassEncoder) RenderCommandEncoder(this, renderPass);
-        renderPass->begin(encoder);
-        return encoder;
+        return &_renderEncoder;
     }
 
     void CommandBuffer::reset() {

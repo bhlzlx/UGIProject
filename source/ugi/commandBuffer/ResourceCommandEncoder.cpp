@@ -1,4 +1,5 @@
-#include "../VulkanFunctionDeclare.h"
+﻿#include "../VulkanFunctionDeclare.h"
+#include "ResourceCommandEncoder.h"
 #include "../CommandBuffer.h"
 #include "../UGIDeclare.h"
 #include "../RenderPass.h"
@@ -24,7 +25,7 @@ namespace ugi {
 
     void ResourceCommandEncoder::executionBarrier( PipelineStages _srcStage, PipelineStages _dstStage ) {
         vkCmdPipelineBarrier( 
-            *this->_commandBuffer, 
+            *_commandBuffer, 
             (VkPipelineStageFlagBits)_srcStage,     // 生产阶段
             (VkPipelineStageFlagBits)_dstStage,     // 消费阶段
             VK_DEPENDENCY_BY_REGION_BIT,            // 利用阶段关系来优化消费等待，除非你十分确定GPU执行此命令的时候资源已经完全准备好了就不用填这个了，所以我们就填这个吧
@@ -202,6 +203,53 @@ namespace ugi {
         vkCmdCopyBufferToImage( *_commandBuffer, _src->buffer(), _dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regions.size(), regions.data() );
         // 布局转回来
         // imageTransitionBarrier( _dst, _dst->primaryAccessType(), PipelineStages::Transfer, StageAccess::Write, PipelineStages::Bottom, StageAccess::Read, _dstSubRes );
+    }
+
+    void ResourceCommandEncoder::updateImage( Texture* dst, const uint8_t* data, const BufferImageRegionCopy* copies, uint32_t copyCount ) {
+
+        imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, _dstSubRes  );
+        // 一个 region 只能传输一个 mip level
+        std::vector< VkBufferImageCopy > regions;
+
+        auto baseMipLevel = _dstSubRes ? _dstSubRes->baseMipLevel : 0;
+        auto mipLevelCount = _dstSubRes ? _dstSubRes->mipLevelCount : _dst->desc().mipmapLevel;
+        auto offsetZ = _dstSubRes ? _dstSubRes->offset.z : 0;
+        auto baseArrayLayer = _dstSubRes ? _dstSubRes->baseLayer : 0;
+        auto layerCount = _dstSubRes ? _dstSubRes->layerCount : _dst->desc().arrayLayers;
+        auto depth = _dstSubRes? _dstSubRes->size.depth : _dst->desc().depth;
+        //
+        auto extWidth = _dstSubRes ? _dstSubRes->size.width : _dst->desc().width;
+        auto extHeight = _dstSubRes ? _dstSubRes->size.height : _dst->desc().height;
+        auto offsetX = _dstSubRes ? _dstSubRes->offset.x : 0;
+        auto offsetY = _dstSubRes ? _dstSubRes->offset.y : 0;
+        //
+        for( uint32_t mipLevel = baseMipLevel; mipLevel< baseMipLevel + mipLevelCount; ++mipLevel) {
+            VkBufferImageCopy region;
+            region.imageExtent.height = extHeight;
+            region.imageExtent.width = extWidth;
+            region.imageExtent.depth = depth;
+            region.imageOffset.x = offsetX;
+            region.imageOffset.y = offsetY;
+            region.imageOffset.z = offsetZ;
+            //
+            region.imageSubresource.baseArrayLayer = baseArrayLayer;
+            region.imageSubresource.layerCount = layerCount;
+            region.imageSubresource.aspectMask = _dst->aspectFlags();
+            region.imageSubresource.mipLevel = mipLevel;
+            region.bufferOffset = _srcSubRes->offset;
+            region.bufferRowLength = 0;
+            region.bufferImageHeight = 0;
+            // mip level 变小，复制的大小也应该跟着变小
+            extWidth >>= 1;
+            extHeight >>= 1;
+            offsetX >>= 1;
+            offsetY >>= 1;
+            //
+            regions.push_back( region );
+        }
+        //
+        vkCmdCopyBufferToImage( *_commandBuffer, _src->buffer(), _dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regions.size(), regions.data() );
+
     }
 
 }

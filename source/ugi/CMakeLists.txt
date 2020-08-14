@@ -29,6 +29,7 @@ endif()
 
 
 include_directories( ${CMAKE_SOURCE_DIR}/source/thirdpart )
+include_directories( ${CMAKE_SOURCE_DIR}/source )
 
 UGI_STATIC_LIBRARY( UGI
     VulkanFunctionDefine.cpp
