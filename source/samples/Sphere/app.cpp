@@ -193,15 +193,18 @@ namespace ugi {
 
         updateCmd->endEncode();
         //
-        QueueSubmitBatchInfo submitBatchInfo;
-        QueueSubmitInfo submitInfo;
-        submitBatchInfo.fenceToSignal = nullptr;
-        submitBatchInfo.submitInfoCount = 1;
-        submitBatchInfo.submitInfos = &submitInfo;
-        submitInfo.commandBuffers = &updateCmd;
-        submitInfo.commandCount = 1;
+		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
+		QueueSubmitInfo submitInfo {
+			&updateCmd,
+			1,
+			nullptr,// submitInfo.semaphoresToWait
+			0,
+			nullptr, // submitInfo.semaphoresToSignal
+			0
+		};
+		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
 
-        _uploadQueue->submitCommandBuffers(submitBatchInfo);
+        _uploadQueue->submitCommandBuffers(submitBatch);
 
         _uploadQueue->waitIdle();
         //

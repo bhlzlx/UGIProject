@@ -102,6 +102,17 @@
             ]
         },
         {
+            "name": "(msvc) TPTest",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Windows_64_Debug/TPTest.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
             "name": "(msvc) WidgetTest",
             "type": "cppvsdbg",
             "request": "launch",

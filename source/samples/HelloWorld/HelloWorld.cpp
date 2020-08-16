@@ -18,7 +18,7 @@
 
 namespace ugi {
 
-    bool MemTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
+        bool MemTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
 
         hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/triangle/pipeline.bin"));
         auto pipelineFileSize = pipelineFile->GetSize();

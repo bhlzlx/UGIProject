@@ -110,7 +110,7 @@ namespace ugi {
         }
     }
 
-    void Buffer::release( Device* device ) {
+    void Buffer:: release( Device* device ) {
         if(_allocation) {
             if( _mappedPointer) {
                 unmap(device);
