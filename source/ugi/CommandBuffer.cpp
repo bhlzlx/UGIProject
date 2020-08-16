@@ -93,6 +93,7 @@ namespace ugi {
         if( _encodeState ) {
             return nullptr;
         }
+        new(&_resourceEncoder) ResourceCommandEncoder(this);
         return &_resourceEncoder;
     }
 
@@ -100,6 +101,8 @@ namespace ugi {
         if( _encodeState ) {
             return nullptr;
         }
+        new(&_renderEncoder) RenderCommandEncoder(this, renderPass);
+        renderPass->begin(&_renderEncoder);
         return &_renderEncoder;
     }
 

@@ -274,21 +274,12 @@ namespace ugi {
         }
         cmdbuf->endEncode();
 
-        QueueSubmitInfo submitInfo = {}; {
-            Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
-            submitInfo.commandBuffers = &cmdbuf;
-            submitInfo.commandCount = 1;
-            submitInfo.semaphoresToSignal = &_renderCompleteSemaphores[_flightIndex];
-            submitInfo.semaphoresToSignalCount = 1;
-            submitInfo.semaphoresToWait = &imageAvailSemaphore;
-            submitInfo.semaphoresToWaitCount = 1;
-        }
+        auto imageAvailSempahore = _swapchain->imageAvailSemaphore();
 
-        QueueSubmitBatchInfo submitBatch;{
-            submitBatch.fenceToSignal = _frameCompleteFences[_flightIndex];
-            submitBatch.submitInfos = &submitInfo;
-            submitBatch.submitInfoCount = 1;
-        }
+        QueueSubmitInfo submitInfo( &cmdbuf, 1, &imageAvailSempahore, 1, &_renderCompleteSemaphores[_flightIndex]);
+
+        QueueSubmitBatchInfo submitBatch( &submitInfo, 1, _frameCompleteFences[_flightIndex]);
+
         bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
         assert(submitRst);
         _swapchain->present( _device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );

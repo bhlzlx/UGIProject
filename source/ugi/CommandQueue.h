@@ -16,6 +16,7 @@ namespace ugi {
         uint32_t        semaphoresToWaitCount = 0;
         Semaphore**     semaphoresToSignal = nullptr;
         uint32_t        semaphoresToSignalCount = 0;
+        //
 		QueueSubmitInfo(CommandBuffer** pCmdBuffs, uint32_t cmdCount, Semaphore** pWaitSems, uint32_t semWaitCount, Semaphore** pSigSems, uint32_t semSigCount)
 			: commandBuffers(pCmdBuffs)
 			, commandCount(cmdCount)

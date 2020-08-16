@@ -205,51 +205,34 @@ namespace ugi {
         // imageTransitionBarrier( _dst, _dst->primaryAccessType(), PipelineStages::Transfer, StageAccess::Write, PipelineStages::Bottom, StageAccess::Read, _dstSubRes );
     }
 
-    void ResourceCommandEncoder::updateImage( Texture* dst, const uint8_t* data, const BufferImageRegionCopy* copies, uint32_t copyCount ) {
-
-        imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, _dstSubRes  );
+    void ResourceCommandEncoder::updateImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount ) {
+        imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
         // 一个 region 只能传输一个 mip level
-        std::vector< VkBufferImageCopy > regions;
+        std::vector< VkBufferImageCopy > copies;
 
-        auto baseMipLevel = _dstSubRes ? _dstSubRes->baseMipLevel : 0;
-        auto mipLevelCount = _dstSubRes ? _dstSubRes->mipLevelCount : _dst->desc().mipmapLevel;
-        auto offsetZ = _dstSubRes ? _dstSubRes->offset.z : 0;
-        auto baseArrayLayer = _dstSubRes ? _dstSubRes->baseLayer : 0;
-        auto layerCount = _dstSubRes ? _dstSubRes->layerCount : _dst->desc().arrayLayers;
-        auto depth = _dstSubRes? _dstSubRes->size.depth : _dst->desc().depth;
-        //
-        auto extWidth = _dstSubRes ? _dstSubRes->size.width : _dst->desc().width;
-        auto extHeight = _dstSubRes ? _dstSubRes->size.height : _dst->desc().height;
-        auto offsetX = _dstSubRes ? _dstSubRes->offset.x : 0;
-        auto offsetY = _dstSubRes ? _dstSubRes->offset.y : 0;
-        //
-        for( uint32_t mipLevel = baseMipLevel; mipLevel< baseMipLevel + mipLevelCount; ++mipLevel) {
-            VkBufferImageCopy region;
-            region.imageExtent.height = extHeight;
-            region.imageExtent.width = extWidth;
-            region.imageExtent.depth = depth;
-            region.imageOffset.x = offsetX;
-            region.imageOffset.y = offsetY;
-            region.imageOffset.z = offsetZ;
+        for( uint32_t i = 0; i<regionCount; ++i) {
+            const ImageRegion& region = regions[i];
+            VkBufferImageCopy copy;
+            copy.imageExtent.height = region.extent.height;
+            copy.imageExtent.width = region.extent.width;
+            copy.imageExtent.depth = region.extent.depth;
+            copy.imageOffset.x = region.offset.x;
+            copy.imageOffset.y = region.offset.y;
+            copy.imageOffset.z = region.offset.z;
             //
-            region.imageSubresource.baseArrayLayer = baseArrayLayer;
-            region.imageSubresource.layerCount = layerCount;
-            region.imageSubresource.aspectMask = _dst->aspectFlags();
-            region.imageSubresource.mipLevel = mipLevel;
-            region.bufferOffset = _srcSubRes->offset;
-            region.bufferRowLength = 0;
-            region.bufferImageHeight = 0;
-            // mip level 变小，复制的大小也应该跟着变小
-            extWidth >>= 1;
-            extHeight >>= 1;
-            offsetX >>= 1;
-            offsetY >>= 1;
-            //
-            regions.push_back( region );
+            copy.imageSubresource.baseArrayLayer = region.arrayIndex;
+            copy.imageSubresource.layerCount = 1;
+            copy.imageSubresource.aspectMask = dst->aspectFlags();
+            copy.imageSubresource.mipLevel = region.mipLevel;
+            copy.bufferOffset = offsets[i];
+            copy.bufferRowLength = 0;
+            copy.bufferImageHeight = 0;
+
+            copies.push_back(copy);
         }
-        //
-        vkCmdCopyBufferToImage( *_commandBuffer, _src->buffer(), _dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regions.size(), regions.data() );
 
+        VkCommandBuffer cmdbuf = *_commandBuffer;
+        vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, copies.size(), copies.data() );
     }
 
 }

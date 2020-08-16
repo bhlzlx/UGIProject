@@ -3,10 +3,10 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (location = 0) in vec3 vert_position;
-layout (location = 1) in vec2 vert_uv;
+layout (location = 0) in vec3 Position;
+layout (location = 1) in vec2 Uv;
 
-layout (location = 0) out vec2 frag_uv;
+layout (location = 0) out vec2 outputUV;
 
 out gl_PerVertex 
 {
@@ -14,12 +14,15 @@ out gl_PerVertex
 };
 
 layout( set = 0, binding = 0 ) uniform Argument1 {
-	mat4 transform;
+    vec4 col1;
+    vec4 col2;
 };
 
-void main() 
-{
-	gl_Position = transform * vec4(vert_position, 1.0f);
-	frag_uv = vert_uv;
-	gl_Position.y *= -1;
+void main() {
+    float x = dot( vec3( Position.x, Position.y, 1.0f ), col1.xyz);
+    float y = dot( vec3( Position.x, Position.y, 1.0f ), col2.xyz);
+    //==
+	gl_Position = vec4( x, y, 1.0f, 1.0f);
+	outputUV = Uv;
+	// gl_Position.y *= -1;
 }

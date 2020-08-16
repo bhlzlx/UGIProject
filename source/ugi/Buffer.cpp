@@ -73,7 +73,11 @@ namespace ugi {
             bufferInfo.pNext = nullptr;
             bufferInfo.pQueueFamilyIndices = device->descriptor().queueFamilyIndices;
             bufferInfo.queueFamilyIndexCount = device->descriptor().queueFamilyCount;
-            bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+            if( device->descriptor().queueFamilyCount>1 ) {
+                bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+            }else {
+                bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            }
             bufferInfo.size = size;
             bufferInfo.usage = getVkBufferUsageFlags( type );
         }

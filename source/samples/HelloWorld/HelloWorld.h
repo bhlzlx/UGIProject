@@ -12,7 +12,7 @@ namespace ugi {
         void*                   _hwnd;                                             //
         ugi::RenderSystem*      _renderSystem;                                     //
         ugi::Device*            _device;                                           //
-        ugi::Swapchain*         m_swapchain;                                        //
+        ugi::Swapchain*         _swapchain;                                        //
         //
         ugi::Fence*             _frameCompleteFences[MaxFlightCount];              // command buffer 被GPU消化完会给 fence 一个 signal, 用于双缓冲或者多缓冲逻辑隔帧等待
         ugi::Semaphore*         _renderCompleteSemaphores[MaxFlightCount];         // 用于GPU内部等待
@@ -23,14 +23,14 @@ namespace ugi {
         ///> ===========================================================================
         ugi::ArgumentGroup*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
-        ugi::Texture*           m_texture;
-        ugi::SamplerState       m_samplerState;                                     //
-        ugi::Buffer*            m_vertexBuffer;                                     //
-        ugi::Buffer*            m_indexBuffer;
-        ugi::Drawable*          m_drawable;
+        ugi::Texture*           _texture;
+        ugi::SamplerState       _samplerState;                                     //
+        ugi::Buffer*            _vertexBuffer;                                     //
+        ugi::Buffer*            _indexBuffer;
+        ugi::Drawable*          _drawable;
 
         ugi::UniformAllocator*  _uniformAllocator;
-        ResourceDescriptor      m_uniformDescriptor;
+        ResourceDescriptor      _uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index
         //

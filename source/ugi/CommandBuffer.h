@@ -39,11 +39,6 @@ namespace ugi {
         }
     };
 
-    struct BufferImageRegionCopy {
-        size_t          bufferOffset;
-        ImageRegion     imageRegion;
-    };
-
     class CommandBuffer;
 
     class ResourceCommandEncoder;

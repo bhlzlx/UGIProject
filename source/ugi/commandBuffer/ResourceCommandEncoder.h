@@ -5,7 +5,7 @@
 
 namespace ugi {
 
-    struct BufferImageRegionCopy;
+    struct ImageRegion;
 
     class ResourceCommandEncoder {
     private:
@@ -25,7 +25,7 @@ namespace ugi {
         void imageTransitionBarrier( Texture* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const TextureSubResource* subResource = nullptr );
         void updateBuffer( Buffer* dst, Buffer* src, BufferSubResource* dstSubRes, BufferSubResource* srcSubRes, bool uploadMode = false );
         void updateImage( Texture* dst, Buffer* src, TextureSubResource* dstSubRes, BufferSubResource* srcSubRes, bool uploadMode = false );
-        void updateImage( Texture* dst, const uint8_t* data, const BufferImageRegionCopy* copies, uint32_t copyCount );
+        void updateImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount );
         void endEncode();
     };
 

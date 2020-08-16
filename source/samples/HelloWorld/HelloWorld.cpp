@@ -68,7 +68,7 @@ namespace ugi {
         //
         _argumentGroup = _pipeline->createArgumentGroup();
 
-        m_vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
+        _vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
         Buffer* vertexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
         float vertexData[] = {
             -0.5, -0.5, 0, 0, 0,
@@ -82,7 +82,7 @@ namespace ugi {
         uint16_t indexData[] = {
             0, 1, 2
         };
-        m_indexBuffer = _device->createBuffer( BufferType::IndexBuffer, sizeof(indexData));
+        _indexBuffer = _device->createBuffer( BufferType::IndexBuffer, sizeof(indexData));
         Buffer* indexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, sizeof(indexData) );
         ptr = indexStagingBuffer->map( _device );
         memcpy(ptr, indexData, sizeof(indexData));
@@ -95,14 +95,15 @@ namespace ugi {
         auto resourceEncoder = updateCmd->resourceCommandEncoder();
 
         BufferSubResource subRes;
-        subRes.offset = 0; subRes.size = m_vertexBuffer->size();
-        resourceEncoder->updateBuffer( m_vertexBuffer, vertexStagingBuffer, &subRes, &subRes );
+        subRes.offset = 0; subRes.size = _vertexBuffer->size();
+        resourceEncoder->updateBuffer( _vertexBuffer, vertexStagingBuffer, &subRes, &subRes );
         subRes.size = sizeof(indexData);
-        resourceEncoder->updateBuffer( m_indexBuffer, indexStagingBuffer, &subRes, &subRes );
+        resourceEncoder->updateBuffer( _indexBuffer, indexStagingBuffer, &subRes, &subRes );
 
-        m_drawable = _device->createDrawable(pipelineDesc);
-        m_drawable->setVertexBuffer( m_vertexBuffer, 0, 0 );
-        m_drawable->setIndexBuffer( m_indexBuffer, 0 );
+        _drawable = _device->createDrawable(pipelineDesc);
+        _drawable->setVertexBuffer( _vertexBuffer, 0, 0 );
+        _drawable->setVertexBuffer( _vertexBuffer, 1, 12 );
+        _drawable->setIndexBuffer( _indexBuffer, 0 );
         //
         TextureDescription texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
@@ -112,7 +113,7 @@ namespace ugi {
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
-        m_texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
+        _texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
 
         uint32_t texData[] = {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
@@ -139,42 +140,44 @@ namespace ugi {
         texSubRes.layerCount = 1;
         subRes.size = sizeof(texData);
 
-        resourceEncoder->updateImage( m_texture, texStagingBuffer, &texSubRes, &subRes );
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
         texSubRes.offset.x = 8;
-        resourceEncoder->updateImage( m_texture, texStagingBuffer, &texSubRes, &subRes );
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
         texSubRes.offset.y = 8; texSubRes.offset.x = 0;
-        resourceEncoder->updateImage( m_texture, texStagingBuffer, &texSubRes, &subRes );
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
         texSubRes.offset.y = 8; texSubRes.offset.x = 8;
-        resourceEncoder->updateImage( m_texture, texStagingBuffer, &texSubRes, &subRes );
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
 
         resourceEncoder->endEncode();
 
         updateCmd->endEncode();
         //
-        QueueSubmitBatchInfo submitBatchInfo;
-        QueueSubmitInfo submitInfo;
-        submitBatchInfo.fenceToSignal = nullptr;
-        submitBatchInfo.submitInfoCount = 1;
-        submitBatchInfo.submitInfos = &submitInfo;
-        submitInfo.commandBuffers = &updateCmd;
-        submitInfo.commandCount = 1;
-
-        _uploadQueue->submitCommandBuffers(submitBatchInfo);
+		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
+		QueueSubmitInfo submitInfo {
+			&updateCmd,
+			1,
+			nullptr,// submitInfo.semaphoresToWait
+			0,
+			nullptr, // submitInfo.semaphoresToSignal
+			0
+		};
+		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
+        _uploadQueue->submitCommandBuffers(submitBatch);
 
         _uploadQueue->waitIdle();
         //
         ResourceDescriptor res;
-        m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
-        m_uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
-        m_uniformDescriptor.bufferRange = 64;
+        _uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
+        _uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
+        _uniformDescriptor.bufferRange = 64;
 
         res.type = ArgumentDescriptorType::Sampler;
-        res.sampler = m_samplerState;
+        res.sampler = _samplerState;
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
         _argumentGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
-        res.texture = m_texture;
+        res.texture = _texture;
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
         //
         _argumentGroup->updateDescriptor(res);
@@ -199,23 +202,23 @@ namespace ugi {
             ++angle;
             float sinVal = sin( ((float)angle)/180.0f * 3.1415926f );
             float cosVal = cos( ((float)angle)/180.0f * 3.1415926f );
-            float argMat[] = {
-                cosVal, sinVal, 0, 0,
-                -sinVal, cosVal, 0, 0,
-                0, 0, 1.0f, 0,
-                0, 0, 0, 1.0f,
+
+            float col2[2][4] = {
+                { cosVal, -sinVal, 0, 0 },
+                { sinVal,  cosVal, 0, 0 }
             };
+
             static ugi::RasterizationState rasterizationState;
             if( angle % 180 == 0 ) {
                 rasterizationState.polygonMode = PolygonMode::Fill;
             } else if( angle % 90 == 0) {
                 rasterizationState.polygonMode = PolygonMode::Line;
             }
-            auto ubo = _uniformAllocator->allocate(sizeof(argMat));
-            ubo.writeData(0, &argMat, sizeof(argMat));
-            m_uniformDescriptor.bufferOffset = ubo.offset();
-            m_uniformDescriptor.buffer = ubo.buffer(); 
-            _argumentGroup->updateDescriptor(m_uniformDescriptor);
+            auto ubo = _uniformAllocator->allocate(sizeof(col2));
+            ubo.writeData(0, &col2, sizeof(col2));
+            _uniformDescriptor.bufferOffset = ubo.offset();
+            _uniformDescriptor.buffer = ubo.buffer(); 
+            _argumentGroup->updateDescriptor(_uniformDescriptor);
 
             auto resourceEncoder = cmdbuf->resourceCommandEncoder();
             resourceEncoder->prepareArgumentGroup(_argumentGroup);
@@ -224,7 +227,7 @@ namespace ugi {
             RenderPassClearValues clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
-            clearValues.depth = 0xffffffff;
+            clearValues.stencil = 0xffffffff;
 
             mainRenderPass->setClearValues(clearValues);
 
@@ -235,39 +238,35 @@ namespace ugi {
                 renderCommandEncoder->setScissor( 0, 0, _width, _height );
                 renderCommandEncoder->bindPipeline(_pipeline);
                 renderCommandEncoder->bindArgumentGroup(_argumentGroup);
-                // renderCommandEncoder->drawIndexed( m_drawable, 0, 3 );
-                renderCommandEncoder->draw( m_drawable, 3, 0 );
+                // renderCommandEncoder->drawIndexed( _drawable, 0, 3 );
+                renderCommandEncoder->draw( _drawable, 3, 0 );
             }
             renderCommandEncoder->endEncode();
         }
         cmdbuf->endEncode();
 
-        QueueSubmitInfo submitInfo = {}; {
-            Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
-            submitInfo.commandBuffers = &cmdbuf;
-            submitInfo.commandCount = 1;
-            submitInfo.semaphoresToSignal = &_renderCompleteSemaphores[_flightIndex];
-            submitInfo.semaphoresToSignalCount = 1;
-            submitInfo.semaphoresToWait = &imageAvailSemaphore;
-            submitInfo.semaphoresToWaitCount = 1;
-        }
+		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
+		QueueSubmitInfo submitInfo {
+			&cmdbuf,
+			1,
+			&imageAvailSemaphore,// submitInfo.semaphoresToWait
+			1,
+			&_renderCompleteSemaphores[_flightIndex], // submitInfo.semaphoresToSignal
+			1
+		};
+		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
 
-        QueueSubmitBatchInfo submitBatch;{
-            submitBatch.fenceToSignal = _frameCompleteFences[_flightIndex];
-            submitBatch.submitInfos = &submitInfo;
-            submitBatch.submitInfoCount = 1;
-        }
         bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
         assert(submitRst);
         _swapchain->present( _device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
 
     }
         
-    void MemTest::resize(uint32_t _width, uint32_t _height) {
-        _swapchain->resize( _device, _width, _height );
+    void MemTest::resize(uint32_t width, uint32_t height) {
+        _swapchain->resize( _device, width, height );
         //
-        _width = _width;
-        _height = _height;
+        _width = width;
+        _height = height;
     }
 
     void MemTest::release() {

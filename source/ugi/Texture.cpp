@@ -76,7 +76,8 @@ namespace ugi {
         switch( _accessType ) {
             case ResourceAccessType::ShaderRead:
                 aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; 
-                usageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+                usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+                break;
             case ResourceAccessType::ShaderWrite:
             case ResourceAccessType::ShaderReadWrite:
             case ResourceAccessType::ColorAttachmentRead:
@@ -134,9 +135,17 @@ namespace ugi {
                 info.mipLevels = _desc.mipmapLevel;
                 info.arrayLayers = _desc.arrayLayers;
                 info.samples = VK_SAMPLE_COUNT_1_BIT;
-                info.tiling = VK_IMAGE_TILING_OPTIMAL;
+                if( attachment) {
+                    info.tiling = VK_IMAGE_TILING_OPTIMAL;
+                } else {
+                    info.tiling = VK_IMAGE_TILING_LINEAR;
+                }
                 info.usage = usageFlags;
-                info.sharingMode = VK_SHARING_MODE_CONCURRENT;
+                if( _device->descriptor().queueFamilyCount>1 ) {
+                    info.sharingMode = VK_SHARING_MODE_CONCURRENT;
+                }else {
+                    info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                }
                 info.queueFamilyIndexCount = _device->descriptor().queueFamilyCount;
                 info.pQueueFamilyIndices = _device->descriptor().queueFamilyIndices;
                 info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; ///> 这个值只能是两者之一： VK_IMAGE_LAYOUT_UNDEFINED / VK_IMAGE_LAYOUT_PREINITIALIZED

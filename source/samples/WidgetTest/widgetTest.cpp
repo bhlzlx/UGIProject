@@ -69,6 +69,16 @@ namespace ugi {
         // command queues
         _graphicsQueue = _device->graphicsQueues()[0];
         _uploadQueue = _device->transferQueues()[0];
+                
+        TextureDescription texDesc;
+        texDesc.format = UGIFormat::RGBA8888_UNORM;
+        texDesc.depth = 1;
+        texDesc.width = 16;
+        texDesc.height = 16;
+        texDesc.type = TextureType::Texture2D;
+        texDesc.mipmapLevel = 1;
+        texDesc.arrayLayers = 1;
+        auto tex = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
         //
         for( size_t i = 0; i<MaxFlightCount; ++i) {
             _frameCompleteFences[i] = _device->createFence();
