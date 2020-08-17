@@ -417,6 +417,7 @@ namespace ugi {
             VmaAllocatorCreateInfo vmaAllocatorInfo = {}; {
                 vmaAllocatorInfo.device = deviceVK;
                 vmaAllocatorInfo.physicalDevice = m_deviceDescriptorVk.physicalDevice;
+                vmaAllocatorInfo.instance = m_deviceDescriptorVk.instance;
             }
             VmaAllocator vmaAllocator = nullptr;
             VkResult rst = vmaCreateAllocator( &vmaAllocatorInfo, &vmaAllocator);

@@ -1,0 +1,7 @@
+{
+	"shaderModule" : { 
+		"vert":"sdf2d.vert", 
+		"frag":"sdf2d.frag"
+    },
+    "combineVertex" : true
+}

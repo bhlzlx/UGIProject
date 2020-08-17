@@ -75,11 +75,11 @@ namespace ugi {
 
         switch( _accessType ) {
             case ResourceAccessType::ShaderRead:
+            case ResourceAccessType::ShaderWrite:
+            case ResourceAccessType::ShaderReadWrite:
                 aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; 
                 usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
                 break;
-            case ResourceAccessType::ShaderWrite:
-            case ResourceAccessType::ShaderReadWrite:
             case ResourceAccessType::ColorAttachmentRead:
             case ResourceAccessType::ColorAttachmentWrite:
             case ResourceAccessType::ColorAttachmentReadWrite:

@@ -11,6 +11,7 @@ endif()
 set( PROJECT_SOURCE
     ${PLATFORM_SOURCE}
     ${CMAKE_CURRENT_SOURCE_DIR}/TPTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SDFTextureTileManager.cpp
 )
 
 set ( PROJECT_HEADER 

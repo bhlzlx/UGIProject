@@ -4,7 +4,6 @@
 #include <ugi/UGIDeclare.h>
 #include <ugi/UGITypes.h>
 #include <ugi/Argument.h>
-#include "SDFTextureTileManager.h"
 
 namespace ugi {
 
@@ -23,6 +22,7 @@ namespace ugi {
         ugi::Pipeline*          _pipeline;
         ///> ===========================================================================
         ugi::ArgumentGroup*     _argumentGroup;                                    // 
+        ugi::ArgumentGroup*     _argumentGroup2;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
         ugi::SamplerState       _samplerState;                                     //
@@ -35,8 +35,6 @@ namespace ugi {
         ugi::UniformAllocator*  _uniformAllocator;
         ResourceDescriptor      _transformUniformDescriptor;
         ResourceDescriptor      _SDFUniformDescriptor;
-
-        SDFTextureTileManager*  _sdfTexTileManager;
 
 
         //
