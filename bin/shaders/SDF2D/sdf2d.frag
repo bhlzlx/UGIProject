@@ -10,22 +10,22 @@ vec4 uint32ToVec4( uint val ) {
 
 layout (location = 0) in vec2 frag_uv;
 
-layout ( set = 0, binding = 1 ) uniform sampler triSampler;
-layout ( set = 0, binding = 2 ) uniform texture2DArray  triTexture;
+layout ( set = 0, binding = 1 ) uniform sampler             texArraySampler;
+layout ( set = 0, binding = 2 ) uniform texture2DArray      texArray;
 
 layout ( set = 0, binding = 3 ) uniform SDFArgument {
-    float   sdfMin;
-    float   sdfMax;
-    float   layerIndex;
+    float   smoothstepMin;
+    float   smoothstepMax;
+    float   texArrayLayerIndex;
     uint    colorMask;
 };
 
 layout ( location = 0 ) out vec4 outFragColor;
 
 void main() {
-    vec4 color = texture( sampler2DArray(triTexture, triSampler), vec3(frag_uv, layerIndex) );
-    float value = smoothstep(  sdfMin, sdfMax, color.r );
-    color = vec4( value, value, value, value );
-    vec4 colorMask = uint32ToVec4( colorMask );
+    vec4 color = texture( sampler2DArray(texArray, triSampler), vec3(frag_uv, layerIndex) );
+    float value = smoothstep( smoothstepMin, smoothstepMax, color.r );
+    color = vec4( 1.0f, 1.0f, 1.0f, value );
+    vec4 colorMask = uint32ToVec4(colorMask);
     outFragColor = color * colorMask;
 }

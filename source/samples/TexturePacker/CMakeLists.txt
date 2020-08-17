@@ -12,6 +12,7 @@ set( PROJECT_SOURCE
     ${PLATFORM_SOURCE}
     ${CMAKE_CURRENT_SOURCE_DIR}/TPTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SDFTextureTileManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SDFFontRenderer.cpp
 )
 
 set ( PROJECT_HEADER 

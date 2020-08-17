@@ -27,8 +27,8 @@ namespace ugi {
     };
 
     Vertex RectangleVertices[] = {
-        { -1, -1, 0, 0 }, { 1, -1, 0.45f, 0 },
-        { -1,  1, 0, 0.45f }, { 1,  1, 0.45f, 0.45f },
+        { -1, -1, 0, 0 }, { 1, -1, 0.25f, 0 },
+        { -1,  1, 0, 0.25f }, { 1,  1, 0.25f, 0.25f },
     };
 
     uint16_t RectangleIndices[] = {
@@ -61,7 +61,7 @@ namespace ugi {
         }
 
         _sdfTexTileManager = new SDFTextureTileManager();
-        if(!_sdfTexTileManager->initialize( _device, assetsSource, 36, 1024, 4 )) {
+        if(!_sdfTexTileManager->initialize( _device, assetsSource, 32, 1024, 4 )) {
             return false;
         }
         // Create Pipeline
@@ -161,7 +161,7 @@ namespace ugi {
         //
         _flightIndex = 0;
 
-        const char16_t chars[] = u"像素软件，脚踏实地，做好游戏。";
+        const char16_t chars[] = u"中国智造，慧及全球。";
 
         for( auto& ch : chars ) {
             if(ch == 0) {
@@ -198,7 +198,7 @@ namespace ugi {
                 uint32_t    colorMask;
             };
             SDFArgument SDFArgumentData = {
-                0.49f, 0.496f, 0.0f, 0xffffffff
+                0.46f, 0.50f, 0.0f, 0xffffffff
             };
             _uniformAllocator->allocateForDescriptor(_transformUniformDescriptor, TransformData);
             _uniformAllocator->allocateForDescriptor(_SDFUniformDescriptor, SDFArgumentData);

@@ -37,9 +37,7 @@ namespace ugi {
         ResourceDescriptor      _SDFUniformDescriptor;
 
         SDFTextureTileManager*  _sdfTexTileManager;
-
-
-        //
+        
         uint32_t                _flightIndex;                                      // flight index
         //
         float                   _width;

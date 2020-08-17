@@ -135,11 +135,7 @@ namespace ugi {
                 info.mipLevels = _desc.mipmapLevel;
                 info.arrayLayers = _desc.arrayLayers;
                 info.samples = VK_SAMPLE_COUNT_1_BIT;
-                if( attachment) {
-                    info.tiling = VK_IMAGE_TILING_OPTIMAL;
-                } else {
-                    info.tiling = VK_IMAGE_TILING_LINEAR;
-                }
+                info.tiling = VK_IMAGE_TILING_OPTIMAL;
                 info.usage = usageFlags;
                 if( _device->descriptor().queueFamilyCount>1 ) {
                     info.sharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -152,10 +148,11 @@ namespace ugi {
             }
 
             VmaAllocationCreateInfo allocInfo = {}; {
+                allocInfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+                allocInfo.flags = 0;
                 allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-                allocInfo.memoryTypeBits = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
                 if( attachment ) { // 尽量给 render target 类型的做优化
-                    allocInfo.memoryTypeBits |= VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+                    allocInfo.preferredFlags |= VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
                 }
             };
             VkResult rst = vmaCreateImage( _device->vmaAllocator(), &info, &allocInfo, &_image, &allocation, nullptr);
