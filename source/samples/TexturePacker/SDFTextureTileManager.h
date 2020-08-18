@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <ugi/UGIDeclare.h>
 #include <cstdint>
 #include <unordered_map>
@@ -48,10 +48,18 @@ namespace ugi {
 namespace std {
     template<>
     class hash<ugi::GlyphKey>  {
+    public:
         size_t operator()(const ugi::GlyphKey& key) const {
             return key.handle;
 		}
 	};
+    template<>
+    class equal_to<ugi::GlyphKey> {
+    public:
+        bool operator()(const ugi::GlyphKey & a,const ugi::GlyphKey & b)  const {
+            return a.handle == b.handle;
+        }
+    };
 }
 
 namespace ugi {
@@ -77,7 +85,6 @@ namespace ugi {
         };
     private:
         Device*                                         _device;
-        ResourceManager*                                _resourceManager;
         hgl::assets::AssetsSource*                      _assetsSource;
         Texture*                                        _texArray;
         uint32_t                                        _cellSize;
@@ -87,7 +94,7 @@ namespace ugi {
         uint32_t                                        _col;
         uint32_t                                        _layers;
         //
-        std::unordered_map< GlyphKey, GlyphInfo* >      _glyphRecord;
+        std::unordered_map< ugi::GlyphKey, GlyphInfo*, std::hash<ugi::GlyphKey> > _glyphRecord;
         std::vector<GlyphInfo>                          _glyphInfoPool;
         std::queue< GlyphInfo* >                        _freeTable;
         std::vector< FontInfo >                         _fontTable;
@@ -97,20 +104,22 @@ namespace ugi {
         std::vector<uint8_t>                            _sdfBitmapBuffer;
         std::vector<SDFFlag>                            _SDFFlags;
         std::vector<TileItem>                           _cachedTileItems;
+    private:
+        GlyphInfo* registGlyph( GlyphKey glyph );
+        void unregistGlyph( GlyphKey glyph );
     public:
         SDFTextureTileManager();
         // === 
         bool initialize( Device* device,  hgl::assets::AssetsSource* assetsSource, uint32_t cellSize, uint32_t textureWidth, uint32_t arrayLayer );
         GlyphInfo* allocateGlyph();
-        GlyphInfo* registGlyph( GlyphKey glyph );
-        void unregistGlyph( GlyphKey glyph );
+        GlyphInfo* getGlyph( GlyphKey glyph );
 
         void signedDistanceFieldImage2D(
             uint8_t* src, int32_t srcWid, int32_t srcHei,
             uint8_t* dst, int32_t dstWid, int32_t dstHei
         );
 
-        void resourceTick( ResourceCommandEncoder* encoder );
+        void tickResource( ResourceCommandEncoder* encoder, ResourceManager* resourceManager );
 
         Texture* texture();
     };

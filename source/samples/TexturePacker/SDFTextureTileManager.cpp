@@ -9,7 +9,7 @@
 
 namespace ugi {
 
-    static const int32_t sourceFontSize = 72;
+    static const int32_t sourceFontSize = 96;
     static const int32_t searchDistance = sourceFontSize / 6;
 
     void SDFTextureTileManager::signedDistanceFieldImage2D(
@@ -133,13 +133,12 @@ namespace ugi {
         _SDFFlags.resize(256*256);
         _glyphInfoPool.reserve(_capacity);
         //
-        _sdfBitmapBuffer.reserve( 32*32*32 );   // 预先准备 32 个字体的空间，防止频繁分配buffer
-
-        _resourceManager = new ResourceManager(device);
+        _sdfBitmapBuffer.reserve( cellSize*cellSize*8 );   // 预先准备 32 个字体的空间，防止频繁分配buffer
         //
         {
             // 初始化一个字体（先写死，做个测试）
             auto inputStream = _assetsSource->Open(hgl::UTF8String("hwzhsong.ttf"));
+            // auto inputStream = _assetsSource->Open(hgl::UTF8String("msyahei.ttf"));
             _fontTable.emplace_back();
             FontInfo& fontInfo = _fontTable.back();
             auto size = inputStream->GetSize();
@@ -167,6 +166,16 @@ namespace ugi {
             }
         }
         return info;
+    }
+
+    GlyphInfo* SDFTextureTileManager::getGlyph( GlyphKey glyph ) {
+        auto it = _glyphRecord.find(glyph);
+        if( it != _glyphRecord.end()) {
+            return it->second;
+        }
+        GlyphInfo* glyphInfo = registGlyph(glyph);
+        _glyphRecord[glyph] = glyphInfo;
+        return glyphInfo;
     }
 
     GlyphInfo* SDFTextureTileManager::registGlyph( GlyphKey glyph ) {
@@ -197,7 +206,7 @@ namespace ugi {
         );
         
         int bearingX = x0;
-        int bearingY = -y0;
+        int bearingY = y0;
         int bitmapWidth = x1 - x0;
         int bitmapHeight = y1 - y0;
         int bitmapAdvance = advance * scale;
@@ -249,8 +258,8 @@ namespace ugi {
         // do nothing
     }
 
-    void SDFTextureTileManager::resourceTick( ResourceCommandEncoder* encoder ) {
-        _resourceManager->tick();
+    void SDFTextureTileManager::tickResource( ResourceCommandEncoder* encoder, ResourceManager* resourceManager ) {
+        resourceManager->tick();
         if(_cachedTileItems.size()) {
             size_t stagingBufferSize = this->_sdfBitmapBuffer.size();
             auto stagingBuffer = _device->createBuffer( BufferType::StagingBuffer, stagingBufferSize );
@@ -269,9 +278,9 @@ namespace ugi {
                 regions.push_back(region);
                 offsets.push_back(item.bufferOffset);
             }
-            encoder->updateImage( _texArray, stagingBuffer, regions.data(), offsets.data(), regions.size() );
+            encoder->updateImage( _texArray, stagingBuffer, regions.data(), offsets.data(), (uint32_t)regions.size() );
             //
-            _resourceManager->trackResource(stagingBuffer);
+            resourceManager->trackResource(stagingBuffer);
             _cachedTileItems.clear();
         }
     }

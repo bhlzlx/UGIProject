@@ -10,8 +10,8 @@ vec4 uint32ToVec4( uint val ) {
 
 layout (location = 0) in vec2 frag_uv;
 
-layout ( set = 0, binding = 1 ) uniform sampler             texArraySampler;
-layout ( set = 0, binding = 2 ) uniform texture2DArray      texArray;
+layout ( set = 0, binding = 1 ) uniform sampler             TexArraySampler;
+layout ( set = 0, binding = 2 ) uniform texture2DArray      TexArray;
 
 layout ( set = 0, binding = 3 ) uniform SDFArgument {
     float   smoothstepMin;
@@ -23,14 +23,14 @@ layout ( set = 0, binding = 3 ) uniform SDFArgument {
 layout ( location = 0 ) out vec4 outFragColor;
 
 void main() {
-    vec4 sampledColor = texture( sampler2DArray(texArray, texArraySampler), vec3(frag_uv, texArrayLayerIndex) );
+    vec4 sampledColor = texture( sampler2DArray(TexArray, TexArraySampler), vec3(frag_uv, texArrayLayerIndex) );
     float contentAlpha = smoothstep( smoothstepMin, smoothstepMax, sampledColor.r );
     vec4 contentColor = vec4( 1.0f, 1.0f, 1.0f, contentAlpha);
     vec4 colorMask = uint32ToVec4(colorMask);
     contentColor = contentColor * colorMask;
-    // outlineColor
+    outFragColor = contentColor;
+    /*
     float outlineAlpha = smoothstep(smoothstepMax - 0.2, smoothstepMax,sampledColor.r );
     vec4 outlineColor = vec4(0.0f, 0.0f, 0.0f, outlineAlpha);
-    //outFragColor = contentColor; //mix( outlineColor, contentColor, sampledColor.r );
-    outFragColor = mix( outlineColor, contentColor, contentAlpha);
+    outFragColor = mix( outlineColor, contentColor, contentAlpha);*/
 }

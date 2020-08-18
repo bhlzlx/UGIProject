@@ -29,5 +29,6 @@ target_link_libraries(
     CMCore
     CMAssetsManage
     CMPlatform
+    MathGeoLib
     UGI
 )

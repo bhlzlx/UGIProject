@@ -19,8 +19,12 @@ layout( set = 0, binding = 0 ) uniform Transform {
 };
 
 void main() {
-    float x = dot( vec3( Position.x, Position.y, 1.0f ), col1.xyz);
-    float y = dot( vec3( Position.x, Position.y, 1.0f ), col2.xyz);
-	gl_Position = vec4( x, y, 1.0f, 1.0f);
+    // 转换NDC
+    float ndcX = (Position.x / col1.a) * 2.0f - 1.0f;
+    float ndcY = (Position.y / col2.a) * 2.0f - 1.0f;
+	gl_Position = vec4( ndcX, ndcY, 1.0f, 1.0f);
+    // float x = dot( vec3( Position.x, Position.y, 1.0f ), col1.xyz);
+    // float y = dot( vec3( Position.x, Position.y, 1.0f ), col2.xyz);
+	//gl_Position = vec4( x, y, 1.0f, 1.0f);
 	outputUV = Uv;
 }

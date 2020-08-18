@@ -4,7 +4,7 @@
 #include <ugi/UGIDeclare.h>
 #include <ugi/UGITypes.h>
 #include <ugi/Argument.h>
-#include "SDFTextureTileManager.h"
+#include "SDFFontRenderer.h"
 
 namespace ugi {
 
@@ -21,22 +21,12 @@ namespace ugi {
         ugi::CommandQueue*      _graphicsQueue;                                    // graphics queue
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
         ugi::Pipeline*          _pipeline;
-        ///> ===========================================================================
-        ugi::ArgumentGroup*     _argumentGroup;                                    // 
-        // ugi::Buffer*            m_uniformBuffer;
-        ugi::Texture*           _texture;
-        ugi::SamplerState       _samplerState;                                     //
-        ugi::Buffer*            _vertexBuffer;                                     //
-        ugi::Buffer*            _indexBuffer;
-        ugi::Drawable*          _drawable;
-
+        
         ugi::ResourceManager*   _resourceManager;
-
         ugi::UniformAllocator*  _uniformAllocator;
-        ResourceDescriptor      _transformUniformDescriptor;
-        ResourceDescriptor      _SDFUniformDescriptor;
-
-        SDFTextureTileManager*  _sdfTexTileManager;
+        ///> ===========================================================================
+        ugi::SDFFontRenderer*   _fontRenderer;
+        ugi::SDFFontDrawData*   _drawData;
         
         uint32_t                _flightIndex;                                      // flight index
         //
