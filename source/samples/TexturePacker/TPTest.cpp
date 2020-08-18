@@ -80,7 +80,7 @@ namespace ugi {
         pipelineDesc.pologonMode = PolygonMode::Fill;
         pipelineDesc.topologyMode = TopologyMode::TriangleList;
         pipelineDesc.renderState.cullMode = CullMode::None;
-        pipelineDesc.renderState.blendState.enable = false;
+        pipelineDesc.renderState.blendState.enable = true;
         _pipeline = _device->createPipeline(pipelineDesc);
         _argumentGroup = _pipeline->createArgumentGroup();
         // _argumentGroup2 = _pipeline->createArgumentGroup();
@@ -149,13 +149,13 @@ namespace ugi {
 
         res.type = ArgumentDescriptorType::Sampler;
         res.sampler = _samplerState;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
+        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("texArraySampler", pipelineDesc );
         _argumentGroup->updateDescriptor(res);
         
         _texture = _sdfTexTileManager->texture();
         res.type = ArgumentDescriptorType::Image;
         res.texture = _texture;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
+        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("texArray", pipelineDesc );
         //
         _argumentGroup->updateDescriptor(res);
         //

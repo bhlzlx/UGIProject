@@ -23,9 +23,14 @@ layout ( set = 0, binding = 3 ) uniform SDFArgument {
 layout ( location = 0 ) out vec4 outFragColor;
 
 void main() {
-    vec4 color = texture( sampler2DArray(texArray, triSampler), vec3(frag_uv, layerIndex) );
-    float value = smoothstep( smoothstepMin, smoothstepMax, color.r );
-    color = vec4( 1.0f, 1.0f, 1.0f, value );
+    vec4 sampledColor = texture( sampler2DArray(texArray, texArraySampler), vec3(frag_uv, texArrayLayerIndex) );
+    float value = smoothstep( smoothstepMin, smoothstepMax, sampledColor.r );
+    vec4 contentColor = vec4( 1.0f, 1.0f, 1.0f, value);
     vec4 colorMask = uint32ToVec4(colorMask);
-    outFragColor = color * colorMask;
+    contentColor = contentColor * colorMask;
+    // outlineColor
+    value = smoothstep(smoothstepMax - 0.1, smoothstepMax,sampledColor.r );
+    vec4 outlineColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    //outFragColor = contentColor; //mix( outlineColor, contentColor, sampledColor.r );
+    outFragColor = vec4(outlineColor.xyz, value);// mix( outlineColor, contentColor, sampledColor.r );
 }
