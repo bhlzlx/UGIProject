@@ -49,7 +49,7 @@ namespace ugi {
         if( !_pipeline) {
             return false;
         }
-        bool rst = _texTileManager->initialize( device, assetsSource, 32, 1024, 4);
+        bool rst = _texTileManager->initialize( device, assetsSource, 28, 1024, 4);
         if(!rst) {
             return false;
         }
@@ -78,7 +78,7 @@ namespace ugi {
             // 所以 scaleFactor = destWidth / (destWidth * glyph->SDFScale / targetFontSize * 96.0f)
             // 即 scaleFactor = targetFontSize / ( glyph->SDFScale*96.0f)
 
-            float scaleFactor = targetFontSize / (glyph->SDFScale*96.0f);
+            float scaleFactor = targetFontSize / (glyph->SDFScale*(float)SDFSourceFontSize );
             
             float posLeft = x, posTop = y;
             posLeft += glyph->bitmapBearingX * scaleFactor;

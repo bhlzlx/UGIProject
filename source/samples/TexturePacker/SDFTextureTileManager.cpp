@@ -9,15 +9,12 @@
 
 namespace ugi {
 
-    static const int32_t sourceFontSize = 96;
-    static const int32_t searchDistance = sourceFontSize / 6;
-
     void SDFTextureTileManager::signedDistanceFieldImage2D(
         uint8_t* src, int32_t srcWid, int32_t srcHei,
         uint8_t* dst, int32_t dstWid, int32_t dstHei
     ) {
         SDFFlag* flagMap = _SDFFlags.data();
-        float maxDistance = (float)searchDistance*sqrt(2.0f);
+        float maxDistance = (float)SDFSearchDistance*sqrt(2.0f);
         // 像素类型划分
         // 如果像素是半透
         for( int32_t i = 0; i<srcHei; ++i) {
@@ -40,10 +37,10 @@ namespace ugi {
             for( int32_t j = 0; j<dstWid; ++j) {
 
                 int srcX = j * ratioX, srcY = i * ratioY;
-                int srcMinX = srcX - searchDistance >= 0 ? srcX - searchDistance : 0;
-                int srcMaxX = srcX + searchDistance >= srcWid ? srcWid-1 : srcX + searchDistance;
-                int srcMinY = srcY - searchDistance >= 0 ? srcY - searchDistance : 0;
-                int srcMaxY = srcY + searchDistance >= srcHei ? srcHei-1 : srcY + searchDistance;
+                int srcMinX = srcX - SDFSearchDistance >= 0 ? srcX - SDFSearchDistance : 0;
+                int srcMaxX = srcX + SDFSearchDistance >= srcWid ? srcWid-1 : srcX + SDFSearchDistance;
+                int srcMinY = srcY - SDFSearchDistance >= 0 ? srcY - SDFSearchDistance : 0;
+                int srcMaxY = srcY + SDFSearchDistance >= srcHei ? srcHei-1 : srcY + SDFSearchDistance;
 
                 int srcIndex = srcX + srcY * srcWid;
                 int dstIndex = j + i * dstWid;
@@ -137,8 +134,8 @@ namespace ugi {
         //
         {
             // 初始化一个字体（先写死，做个测试）
-            auto inputStream = _assetsSource->Open(hgl::UTF8String("hwzhsong.ttf"));
-            // auto inputStream = _assetsSource->Open(hgl::UTF8String("msyahei.ttf"));
+            // auto inputStream = _assetsSource->Open(hgl::UTF8String("hwzhsong.ttf"));
+            auto inputStream = _assetsSource->Open(hgl::UTF8String("msyahei.ttf"));
             _fontTable.emplace_back();
             FontInfo& fontInfo = _fontTable.back();
             auto size = inputStream->GetSize();
@@ -184,32 +181,35 @@ namespace ugi {
         }
         //
         float scale = 1.0f;
-        float fontSize = sourceFontSize* _DPI / 72.0f;
+        float fontSize = SDFSourceFontSize* _DPI / 72.0f;
         //
         FontInfo& fontInfo = _fontTable[glyph.fontID];
 
         scale = stbtt_ScaleForMappingEmToPixels(&fontInfo.stbTtfInfo, fontSize);
         //int baseline = (int)(fontInfo.ascent * scale);
         int advance, lsb, x0, y0, x1, y1;
-        float shiftX = 0.0f; float shiftY = 0.0f;
+        float shiftX = (float)SDFSourceFontBorder; float shiftY = (float)SDFSourceFontBorder;
         stbtt_GetCodepointHMetrics(&fontInfo.stbTtfInfo, glyph.charCode, &advance, &lsb);
-        stbtt_GetCodepointBitmapBoxSubpixel(&fontInfo.stbTtfInfo, glyph.charCode, scale, scale, shiftX, shiftY, &x0, &y0, &x1, &y1);
+        stbtt_GetCodepointBitmapBoxSubpixel(&fontInfo.stbTtfInfo, glyph.charCode, scale, scale, 0, 0, &x0, &y0, &x1, &y1);
+        //
+        memset( _rawBitmapBuffer.data(), 0, (x1 - x0 + shiftX*2) *(y1 - y0+shiftY*2) );
+        //
         stbtt_MakeCodepointBitmapSubpixel(
             &fontInfo.stbTtfInfo,
             _rawBitmapBuffer.data(),
             x1 - x0,
             y1 - y0,
-            x1 - x0,
+            x1 - x0 + shiftX*2,
             scale, scale,
             shiftX, shiftY,
             glyph.charCode
         );
         
-        int bearingX = x0;
-        int bearingY = y0;
-        int bitmapWidth = x1 - x0;
-        int bitmapHeight = y1 - y0;
-        int bitmapAdvance = advance * scale;
+        int bearingX = x0 - shiftX;
+        int bearingY = y0 - shiftY;
+        int bitmapWidth = x1 - x0 + shiftX * 2;
+        int bitmapHeight = y1 - y0 + shiftY * 2;
+        int bitmapAdvance = (advance + shiftX) * scale;
         //
         float ratio = (float)_cellSize / ((bitmapWidth>bitmapHeight) ? bitmapWidth: bitmapHeight);
 
@@ -220,7 +220,7 @@ namespace ugi {
         glyphInfo->bitmapHeight = bitmapHeight * ratio;
         glyphInfo->bitmapAdvance = bitmapAdvance * ratio;
         glyphInfo->SDFScale = ratio;
-        /// 
+        /// 分配纹理位置
         uint32_t row = ((uint32_t)glyphInfo->glyphIndex % (_row*_col)) / _row;
         uint32_t col = ((uint32_t)glyphInfo->glyphIndex % (_row*_col)) % _row;
 
@@ -243,7 +243,7 @@ namespace ugi {
         auto outputPosition = _sdfBitmapBuffer.size();
         _sdfBitmapBuffer.resize(outputPosition+destinationPixelCount);
 
-        signedDistanceFieldImage2D( _rawBitmapBuffer.data(), bitmapWidth, bitmapHeight, &_sdfBitmapBuffer[outputPosition], glyphInfo->bitmapWidth, glyphInfo->bitmapHeight );
+        signedDistanceFieldImage2D( _rawBitmapBuffer.data(), bitmapWidth, bitmapHeight, &_sdfBitmapBuffer[outputPosition], glyphInfo->bitmapWidth, glyphInfo->bitmapHeight);
 
         TileItem tileItem;
         tileItem.bufferOffset = outputPosition;
