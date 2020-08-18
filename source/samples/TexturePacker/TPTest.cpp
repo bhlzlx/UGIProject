@@ -198,7 +198,7 @@ namespace ugi {
                 uint32_t    colorMask;
             };
             SDFArgument SDFArgumentData = {
-                0.46f, 0.50f, 0.0f, 0xffffffff
+                0.49f, 0.52f, 0.0f, 0xffffffff
             };
             _uniformAllocator->allocateForDescriptor(_transformUniformDescriptor, TransformData);
             _uniformAllocator->allocateForDescriptor(_SDFUniformDescriptor, SDFArgumentData);

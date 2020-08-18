@@ -24,13 +24,13 @@ layout ( location = 0 ) out vec4 outFragColor;
 
 void main() {
     vec4 sampledColor = texture( sampler2DArray(texArray, texArraySampler), vec3(frag_uv, texArrayLayerIndex) );
-    float value = smoothstep( smoothstepMin, smoothstepMax, sampledColor.r );
-    vec4 contentColor = vec4( 1.0f, 1.0f, 1.0f, value);
+    float contentAlpha = smoothstep( smoothstepMin, smoothstepMax, sampledColor.r );
+    vec4 contentColor = vec4( 1.0f, 1.0f, 1.0f, contentAlpha);
     vec4 colorMask = uint32ToVec4(colorMask);
     contentColor = contentColor * colorMask;
     // outlineColor
-    value = smoothstep(smoothstepMax - 0.1, smoothstepMax,sampledColor.r );
-    vec4 outlineColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    float outlineAlpha = smoothstep(smoothstepMax - 0.2, smoothstepMax,sampledColor.r );
+    vec4 outlineColor = vec4(0.0f, 0.0f, 0.0f, outlineAlpha);
     //outFragColor = contentColor; //mix( outlineColor, contentColor, sampledColor.r );
-    outFragColor = vec4(outlineColor.xyz, value);// mix( outlineColor, contentColor, sampledColor.r );
+    outFragColor = mix( outlineColor, contentColor, contentAlpha);
 }
