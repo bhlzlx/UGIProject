@@ -16,7 +16,8 @@ namespace ugi {
 
     static const int32_t SDFSourceFontBorder = 6;
     static const int32_t SDFSourceFontSize = 96;
-    static const int32_t SDFSearchDistance = SDFSourceFontSize / 4;
+    // static const int32_t SDFSearchDistance = SDFSourceFontSize / 8;
+    static const int32_t SDFSearchDistance = 12;
 
     struct GlyphInfo {
         // ====================Tile管理信息===============

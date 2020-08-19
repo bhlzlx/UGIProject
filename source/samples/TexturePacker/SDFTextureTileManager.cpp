@@ -134,7 +134,7 @@ namespace ugi {
         //
         {
             // 初始化一个字体（先写死，做个测试）
-            // auto inputStream = _assetsSource->Open(hgl::UTF8String("hwzhsong.ttf"));
+            //auto inputStream = _assetsSource->Open(hgl::UTF8String("hwzhsong.ttf"));
             auto inputStream = _assetsSource->Open(hgl::UTF8String("msyahei.ttf"));
             _fontTable.emplace_back();
             FontInfo& fontInfo = _fontTable.back();

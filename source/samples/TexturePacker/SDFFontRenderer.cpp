@@ -49,7 +49,7 @@ namespace ugi {
         if( !_pipeline) {
             return false;
         }
-        bool rst = _texTileManager->initialize( device, assetsSource, 28, 1024, 4);
+        bool rst = _texTileManager->initialize( device, assetsSource, 32, 1024, 4);
         if(!rst) {
             return false;
         }
