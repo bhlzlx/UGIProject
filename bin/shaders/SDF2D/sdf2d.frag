@@ -29,8 +29,8 @@ void main() {
     vec4 colorMask = uint32ToVec4(colorMask);
     contentColor = contentColor * colorMask;
     // outFragColor = contentColor;
-    float outlineAlpha = smoothstep(smoothstepMax - 0.3, smoothstepMax,sampledColor.r );
-    outlineAlpha = smoothstep(0.5, 1.0,outlineAlpha );
+    float outlineAlpha = smoothstep(smoothstepMax - 0.15, smoothstepMax,sampledColor.r );
+    outlineAlpha = smoothstep(0.0, 0.1,outlineAlpha );
     vec4 outlineColor = vec4(0.0f, 0.0f, 0.0f, outlineAlpha);
     outFragColor = mix( outlineColor, contentColor, contentAlpha);
 }

@@ -10,6 +10,9 @@
 #include <ugi/UniformBuffer.h>
 #include <ugi/commandBuffer/ResourceCommandEncoder.h>
 #include <ugi/commandBuffer/RenderCommandEncoder.h>
+#include <hgl/io/InputStream.h>
+
+#include <json.hpp>
 
 namespace ugi {
 
@@ -23,11 +26,29 @@ namespace ugi {
     {
     }
     
-    bool SDFFontRenderer::initialize( Device* device, hgl::assets::AssetsSource* assetsSource ) {
+    bool SDFFontRenderer::initialize( Device* device, hgl::assets::AssetsSource* assetsSource, const SDFRenderParameter& sdfParam ) {
         _device = device;
         _assetsSource = assetsSource;
         _resourceManager = new ResourceManager(device);
         _texTileManager = new SDFTextureTileManager();
+        //
+        _sdfParameter = sdfParam;
+        nlohmann::json js;
+        auto inputStream = assetsSource->Open("./shaders/sdf2d/sdf.json");
+        if(inputStream) {
+            char* configBuffer = new char[inputStream->GetSize()+1];
+            configBuffer[inputStream->GetSize()] = 0;
+            inputStream->ReadFully(configBuffer, inputStream->GetSize());
+            js = nlohmann::json::parse(configBuffer);
+            _sdfParameter.texArraySize = js["textureSize"].get<uint32_t>();
+            _sdfParameter.texLayer = js["layer"];
+            _sdfParameter.destinationSDFSize = js["sdfSize"];
+            _sdfParameter.sourceFontSize = js["sourceSize"];
+            _sdfParameter.extraSourceBorder = js["extraBorder"];
+            _sdfParameter.searchDistance = js["searchDistance"];
+            inputStream->Close();
+        }
+
         // Create Pipeline
         hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/sdf2d/pipeline.bin"));
         auto pipelineFileSize = pipelineFile->GetSize();
@@ -46,10 +67,14 @@ namespace ugi {
         _pipelineDescription.renderState.cullMode = CullMode::None;
         _pipelineDescription.renderState.blendState.enable = true;
         _pipeline = _device->createPipeline(_pipelineDescription);
+        pipelineFile->Close();
         if( !_pipeline) {
             return false;
         }
-        bool rst = _texTileManager->initialize( device, assetsSource, 32, 1024, 4);
+        bool rst = _texTileManager->initialize( device, assetsSource, 
+            _sdfParameter.destinationSDFSize, _sdfParameter.texArraySize, _sdfParameter.texLayer, 
+            _sdfParameter.sourceFontSize, _sdfParameter.extraSourceBorder, _sdfParameter.searchDistance
+        );
         if(!rst) {
             return false;
         }
@@ -78,7 +103,7 @@ namespace ugi {
             // 所以 scaleFactor = destWidth / (destWidth * glyph->SDFScale / targetFontSize * 96.0f)
             // 即 scaleFactor = targetFontSize / ( glyph->SDFScale*96.0f)
 
-            float scaleFactor = targetFontSize / (glyph->SDFScale*(float)SDFSourceFontSize );
+            float scaleFactor = targetFontSize / (glyph->SDFScale*(float)_sdfParameter.sourceFontSize );
             
             float posLeft = x, posTop = y;
             posLeft += glyph->bitmapBearingX * scaleFactor;

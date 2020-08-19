@@ -20,6 +20,15 @@
 
 namespace ugi {
 
+    SDFRenderParameter sdfParam = {
+        1024, // uint32_t texArraySize : 16;
+        4, // uint32_t texLayer : 8;
+        32, // uint32_t destinationSDFSize : 8;
+        64, // uint32_t sourceFontSize : 8;
+        8, // uint32_t extraSourceBorder : 8;
+        8, // uint32_t searchDistance : 8;
+    };
+
     bool TPTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
         printf("initialize\n");
         _renderSystem = new ugi::RenderSystem();
@@ -46,61 +55,25 @@ namespace ugi {
         }
         //
         _fontRenderer = new SDFFontRenderer();
-        _fontRenderer->initialize( _device, assetsSource );
+        _fontRenderer->initialize( _device, assetsSource, sdfParam);
         //
-        std::vector<SDFChar> text = {
-            { 0, 72, u'中'},
-            { 0, 72, u'国'},
-            { 0, 72, u'智'},
-            { 0, 72, u'造'},
-            { 0, 64, u'慧'},
-            { 0, 64, u'及'},
-            { 0, 64, u'全'},
-            { 0, 64, u'球'},
-            { 0, 48, u'中'},
-            { 0, 48, u'国'},
-            { 0, 48, u'智'},
-            { 0, 48, u'造'},
-            { 0, 32, u'慧'},
-            { 0, 32, u'及'},
-            { 0, 32, u'全'},
-            { 0, 32, u'球'},
-            { 0, 28, u'中'},
-            { 0, 28, u'国'},
-            { 0, 28, u'智'},
-            { 0, 28, u'造'},
-            { 0, 18, u'慧'},
-            { 0, 18, u'及'},
-            { 0, 18, u'全'},
-            { 0, 18, u'球'},
-            { 0, 14, u'中'},
-            { 0, 14, u'国'},
-            { 0, 14, u'智'},
-            { 0, 14, u'造'},
-            { 0, 12, u'慧'},
-            { 0, 12, u'及'},
-            { 0, 12, u'全'},
-            { 0, 12, u'球'},
-        };
-        /*std::vector<SDFChar> text = {
-            { 0, 48, u'p'},
-            { 0, 48, u'h'},
-            { 0, 48, u'a'},
-            { 0, 48, u'n'},
-            { 0, 48, u't'},
-            { 0, 48, u'o'},
-            { 0, 48, u'm'},
-            { 0, 48, u'k'},
-            { 0, 48, u'u'},
-            { 0, 48, u's'},
-            { 0, 48, u'u'},
-            { 0, 48, u'g'},
-            { 0, 48, u'a'},
-            { 0, 48, u'w'},
-            { 0, 48, u'a'},
-            { 0, 48, u'!'},
-        };*/
-        _drawData = _fontRenderer->buildDrawData(32, 96, text);
+
+        char16_t text[] = u"中国智造，慧及全球。InnvocationInChina.";
+        uint32_t fontSize[] = { 8, 12, 18, 24, 32, 48, 64, 72 };
+        //
+        uint32_t baseY = 24;
+        for( auto size : fontSize ) {
+            std::vector<SDFChar> chars;
+            for( auto& ch : text) {
+                if(!ch) {
+                    break;
+                }
+                chars.push_back( { 0, (uint32_t)size, (uint32_t)ch} );
+            }
+            auto drawData = _fontRenderer->buildDrawData(32, baseY, chars);
+            _drawDatas.push_back(drawData);
+            baseY += 96;
+        }
         _flightIndex = 0;
         // const char16_t chars[] = u"中国智造，慧及全球。";
         return true;
@@ -110,7 +83,9 @@ namespace ugi {
         _device->waitForFence( _frameCompleteFences[_flightIndex] );
         _uniformAllocator->tick();
         // 测试用。。。
-        _drawData->setScreenSize( _width, _height);
+        for( auto drawData: _drawDatas) {
+            drawData->setScreenSize( _width, _height);
+        }
 
         uint32_t imageIndex = _swapchain->acquireNextImage( _device, _flightIndex );
         IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
@@ -123,7 +98,9 @@ namespace ugi {
             auto resourceEncoder = cmdbuf->resourceCommandEncoder();
 
             _fontRenderer->tickResource(resourceEncoder);
-            _fontRenderer->prepareResource( resourceEncoder, &_drawData, 1, _uniformAllocator );
+            for( auto drawData: _drawDatas) {
+                _fontRenderer->prepareResource( resourceEncoder, &drawData, 1, _uniformAllocator );
+            }
             resourceEncoder->endEncode();
             //
             RenderPassClearValues clearValues;
@@ -137,7 +114,7 @@ namespace ugi {
                 renderCommandEncoder->setLineWidth(1.0f);
                 renderCommandEncoder->setViewport(0, 0, _width, _height, 0, 1.0f );
                 renderCommandEncoder->setScissor( 0, 0, _width, _height );
-                _fontRenderer->draw( renderCommandEncoder, &_drawData, 1 );
+                _fontRenderer->draw( renderCommandEncoder, _drawDatas.data(), _drawDatas.size() );
             }
             renderCommandEncoder->endEncode();
         }

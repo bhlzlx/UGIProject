@@ -1,4 +1,4 @@
-#include "SDFTextureTileManager.h"
+﻿#include "SDFTextureTileManager.h"
 #include <ugi/Device.h>
 #include <ugi/Texture.h>
 #include <ugi/Buffer.h>
@@ -14,7 +14,7 @@ namespace ugi {
         uint8_t* dst, int32_t dstWid, int32_t dstHei
     ) {
         SDFFlag* flagMap = _SDFFlags.data();
-        float maxDistance = (float)SDFSearchDistance*sqrt(2.0f);
+        float maxDistance = (float)_searchDistance*sqrt(2.0f);
         // 像素类型划分
         // 如果像素是半透
         for( int32_t i = 0; i<srcHei; ++i) {
@@ -37,10 +37,10 @@ namespace ugi {
             for( int32_t j = 0; j<dstWid; ++j) {
 
                 int srcX = j * ratioX, srcY = i * ratioY;
-                int srcMinX = srcX - SDFSearchDistance >= 0 ? srcX - SDFSearchDistance : 0;
-                int srcMaxX = srcX + SDFSearchDistance >= srcWid ? srcWid-1 : srcX + SDFSearchDistance;
-                int srcMinY = srcY - SDFSearchDistance >= 0 ? srcY - SDFSearchDistance : 0;
-                int srcMaxY = srcY + SDFSearchDistance >= srcHei ? srcHei-1 : srcY + SDFSearchDistance;
+                int srcMinX = srcX - _searchDistance >= 0 ? srcX - _searchDistance : 0;
+                int srcMaxX = srcX + _searchDistance >= srcWid ? srcWid-1 : srcX + _searchDistance;
+                int srcMinY = srcY - _searchDistance >= 0 ? srcY - _searchDistance : 0;
+                int srcMaxY = srcY + _searchDistance >= srcHei ? srcHei-1 : srcY + _searchDistance;
 
                 int srcIndex = srcX + srcY * srcWid;
                 int dstIndex = j + i * dstWid;
@@ -103,9 +103,13 @@ namespace ugi {
     }
 
 
-    bool SDFTextureTileManager::initialize( Device* device, hgl::assets::AssetsSource* assetsSource, uint32_t cellSize, uint32_t texSize, uint32_t arrayLayer ) {
+    bool SDFTextureTileManager::initialize( Device* device, hgl::assets::AssetsSource* assetsSource, uint32_t cellSize, uint32_t texSize, uint32_t arrayLayer, uint32_t sourceFontSize, uint32_t extraBorder, uint32_t searchDistance ) {
         _device = device;
         _assetsSource = assetsSource;
+        _sourceFontSize = sourceFontSize;
+        _extraBorder = extraBorder;
+        _searchDistance = searchDistance;
+        //
         if(_texArray) {
             return true; // 重复初始化？
         }
@@ -175,33 +179,102 @@ namespace ugi {
         return glyphInfo;
     }
 
+    GlyphInfo* SDFTextureTileManager::registGlyphSDF( GlyphKey glyph ) {
+        if(glyph.fontID >= _fontTable.size()) {
+            return nullptr;
+        }
+        float scale = 1.0f;
+        float fontSize = _sourceFontSize* _DPI / 72.0f;
+        //
+        FontInfo& fontInfo = _fontTable[glyph.fontID];
+        //
+        scale = stbtt_ScaleForMappingEmToPixels(&fontInfo.stbTtfInfo, fontSize);
+        //int baseline = (int)(fontInfo.ascent * scale);
+        int advance, lsb, x0, y0, x1, y1;
+        float shiftX = (float)_extraBorder; float shiftY = (float)_extraBorder;
+        stbtt_GetCodepointHMetrics(&fontInfo.stbTtfInfo, glyph.charCode, &advance, &lsb);
+        int bitmapWidth, bitmapHeight, bitmapOffsetX, bitmapOffsetY;
+
+        auto sdfBuffer = stbtt_GetCodepointSDF(&fontInfo.stbTtfInfo, scale, glyph.charCode, _extraBorder, 127, 50,&bitmapWidth, &bitmapHeight, &bitmapOffsetX, &bitmapOffsetY );
+
+        size_t destBufferPosition = _sdfBitmapBuffer.size();
+        size_t srcBufferPosition = 0; // bitmapWidth + bitmapOffsetX;
+        size_t copySize = bitmapWidth*bitmapHeight;
+        _sdfBitmapBuffer.resize(destBufferPosition + copySize);
+        for( size_t i = 0; i<copySize; ++i) {
+            _sdfBitmapBuffer[destBufferPosition+i] = sdfBuffer[srcBufferPosition+i];
+        }
+
+        int bitmapAdvance = (advance + shiftX) * scale;
+
+        GlyphInfo* glyphInfo = allocateGlyph();
+        glyphInfo->bitmapBearingX = x0 - shiftX;
+        glyphInfo->bitmapBearingY = y0 - shiftY;
+        glyphInfo->bitmapWidth = bitmapWidth;
+        glyphInfo->bitmapHeight = bitmapHeight;
+        glyphInfo->bitmapAdvance = bitmapAdvance;
+
+        glyphInfo->SDFScale = 1.0f;
+        /// 分配纹理位置
+        uint32_t row = ((uint32_t)glyphInfo->glyphIndex % (_row*_col)) / _row;
+        uint32_t col = ((uint32_t)glyphInfo->glyphIndex % (_row*_col)) % _row;
+
+        glyphInfo->bitmapOffsetX = (col * _cellSize);
+        glyphInfo->bitmapOffsetY = (row * _cellSize);
+        glyphInfo->texIndex = glyphInfo->bitmapLayerIndex;
+        glyphInfo->bitmapLayerIndex = glyphInfo->bitmapLayerIndex / (_row*_col);
+
+        float textureSize = _texArray->desc().width;
+        glyphInfo->texWidth = (float)glyphInfo->bitmapWidth / textureSize;
+        glyphInfo->texHeight = (float)glyphInfo->bitmapHeight / textureSize;
+        //
+        glyphInfo->texU = (col * _cellSize) / textureSize;
+        glyphInfo->texV = (row * _cellSize) / textureSize;
+        glyphInfo->texWidth = glyphInfo->bitmapWidth / textureSize;
+        glyphInfo->texHeight = glyphInfo->bitmapHeight / textureSize;
+
+
+        TileItem tileItem;
+        tileItem.bufferOffset = destBufferPosition;
+        tileItem.bufferSize = copySize;
+        tileItem.glyphInfo = glyphInfo;
+        _cachedTileItems.push_back(tileItem);
+
+        return glyphInfo;
+    }
+
     GlyphInfo* SDFTextureTileManager::registGlyph( GlyphKey glyph ) {
         if(glyph.fontID >= _fontTable.size()) {
             return nullptr;
         }
         //
         float scale = 1.0f;
-        float fontSize = SDFSourceFontSize* _DPI / 72.0f;
+        float fontSize = _sourceFontSize* _DPI / 72.0f;
         //
         FontInfo& fontInfo = _fontTable[glyph.fontID];
 
         scale = stbtt_ScaleForMappingEmToPixels(&fontInfo.stbTtfInfo, fontSize);
         //int baseline = (int)(fontInfo.ascent * scale);
         int advance, lsb, x0, y0, x1, y1;
-        float shiftX = (float)SDFSourceFontBorder; float shiftY = (float)SDFSourceFontBorder;
+        float shiftX = (float)_extraBorder; float shiftY = (float)_extraBorder;
         stbtt_GetCodepointHMetrics(&fontInfo.stbTtfInfo, glyph.charCode, &advance, &lsb);
-        stbtt_GetCodepointBitmapBoxSubpixel(&fontInfo.stbTtfInfo, glyph.charCode, scale, scale, 0, 0, &x0, &y0, &x1, &y1);
+        stbtt_GetCodepointBitmapBox(&fontInfo.stbTtfInfo, glyph.charCode, scale, scale, &x0, &y0, &x1, &y1);
+        // stbtt_GetCodepointBitmapBoxSubpixel(&fontInfo.stbTtfInfo, glyph.charCode, scale, scale, 0, 0, &x0, &y0, &x1, &y1);
+        //stbtt_GetCodepointSDF( &fontInfo.stbTtfInfo, scale, glyph.charCode, )
         //
-        memset( _rawBitmapBuffer.data(), 0, (x1 - x0 + shiftX*2) *(y1 - y0+shiftY*2) );
+		uint8_t* rawBitmapPtr = _rawBitmapBuffer.data();
+        memset(rawBitmapPtr, 0, (x1 - x0 + shiftX*2) *(y1 - y0+shiftY*2) );
         //
         stbtt_MakeCodepointBitmapSubpixel(
             &fontInfo.stbTtfInfo,
-            _rawBitmapBuffer.data(),
+			rawBitmapPtr,
             x1 - x0,
             y1 - y0,
             x1 - x0 + shiftX*2,
             scale, scale,
-            shiftX, shiftY,
+            0, 0,
+            // shiftX, shiftY,
+            // shiftX*2, shiftY*2,
             glyph.charCode
         );
         
@@ -211,7 +284,9 @@ namespace ugi {
         int bitmapHeight = y1 - y0 + shiftY * 2;
         int bitmapAdvance = (advance + shiftX) * scale;
         //
+        float diffRatio = (float)_cellSize / (fontSize*0.75f);
         float ratio = (float)_cellSize / ((bitmapWidth>bitmapHeight) ? bitmapWidth: bitmapHeight);
+        ratio = ratio > diffRatio ? diffRatio : ratio;
 
         GlyphInfo* glyphInfo = allocateGlyph();
         glyphInfo->bitmapBearingX = bearingX * ratio;
@@ -243,7 +318,7 @@ namespace ugi {
         auto outputPosition = _sdfBitmapBuffer.size();
         _sdfBitmapBuffer.resize(outputPosition+destinationPixelCount);
 
-        signedDistanceFieldImage2D( _rawBitmapBuffer.data(), bitmapWidth, bitmapHeight, &_sdfBitmapBuffer[outputPosition], glyphInfo->bitmapWidth, glyphInfo->bitmapHeight);
+        signedDistanceFieldImage2D( rawBitmapPtr, bitmapWidth, bitmapHeight, &_sdfBitmapBuffer[outputPosition], glyphInfo->bitmapWidth, glyphInfo->bitmapHeight);
 
         TileItem tileItem;
         tileItem.bufferOffset = outputPosition;

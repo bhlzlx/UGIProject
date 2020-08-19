@@ -12,6 +12,15 @@ namespace hgl {
 
 namespace ugi {
 
+    struct SDFRenderParameter {
+        uint32_t texArraySize : 16;
+        uint32_t texLayer : 8;
+        uint32_t destinationSDFSize : 8;
+        uint32_t sourceFontSize : 8;
+        uint32_t extraSourceBorder : 8;
+        uint32_t searchDistance : 8;
+    };
+
     class SDFTextureTileManager;
 
     struct FontMeshVertex {
@@ -46,7 +55,7 @@ namespace ugi {
             , _indexBuffer( nullptr )
             , _drawable( nullptr )
             , _transform { { 1.0f, 0.0f, 0.0f, 1.0f } , { 0.0f, 1.0f, 0.0f, 0.0f } }
-            , _sdfArgument { { 0.50f, 0.52f }, 0.0f, 0xffffffff }
+            , _sdfArgument { { 0.495f, 0.50f }, 0.0f, 0xffffffff }
         {
         }
 
@@ -78,6 +87,8 @@ namespace ugi {
         uint32_t                    _texture2DArrayHandle;
         uint32_t                    _sdfArgumentHandle;
 
+        SDFRenderParameter          _sdfParameter;
+
         std::vector<FontMeshVertex> _verticesCache;
         std::vector<uint16_t>       _indicesCache;
         //
@@ -89,7 +100,7 @@ namespace ugi {
         std::vector<BufferUpdateItem> _updateItems;
     public:
         SDFFontRenderer();
-        bool initialize( Device* device, hgl::assets::AssetsSource* assetsSource );
+        bool initialize( Device* device, hgl::assets::AssetsSource* assetsSource, const SDFRenderParameter& sdfParam );
         SDFFontDrawData* buildDrawData( float x, float y, const std::vector<SDFChar>& text );
         void tickResource( ResourceCommandEncoder* resEncoder );
         void prepareResource( ResourceCommandEncoder* renderEncoder, SDFFontDrawData** drawDatas, uint32_t drawDataCount, UniformAllocator* uniformAllocator );

@@ -14,10 +14,10 @@ namespace hgl {
 
 namespace ugi {
 
-    static const int32_t SDFSourceFontBorder = 6;
-    static const int32_t SDFSourceFontSize = 96;
-    // static const int32_t SDFSearchDistance = SDFSourceFontSize / 8;
-    static const int32_t SDFSearchDistance = 12;
+    // static const int32_t SDFSourceFontBorder = 12;
+    // static const int32_t SDFSourceFontSize = 64;
+    // // static const int32_t SDFSearchDistance = SDFSourceFontSize / 8;
+    // static const int32_t SDFSearchDistance = 6;
 
     struct GlyphInfo {
         // ====================Tile管理信息===============
@@ -99,6 +99,9 @@ namespace ugi {
         uint32_t                                        _row;
         uint32_t                                        _col;
         uint32_t                                        _layers;
+        int32_t                                         _sourceFontSize;
+        int32_t                                         _extraBorder;
+        int32_t                                         _searchDistance;
         //
         std::unordered_map< ugi::GlyphKey, GlyphInfo*, std::hash<ugi::GlyphKey> > _glyphRecord;
         std::vector<GlyphInfo>                          _glyphInfoPool;
@@ -112,18 +115,18 @@ namespace ugi {
         std::vector<TileItem>                           _cachedTileItems;
     private:
         GlyphInfo* registGlyph( GlyphKey glyph );
+        GlyphInfo* registGlyphSDF( GlyphKey glyph );
         void unregistGlyph( GlyphKey glyph );
-    public:
-        SDFTextureTileManager();
-        // === 
-        bool initialize( Device* device,  hgl::assets::AssetsSource* assetsSource, uint32_t cellSize, uint32_t textureWidth, uint32_t arrayLayer );
-        GlyphInfo* allocateGlyph();
-        GlyphInfo* getGlyph( GlyphKey glyph );
-
         void signedDistanceFieldImage2D(
             uint8_t* src, int32_t srcWid, int32_t srcHei,
             uint8_t* dst, int32_t dstWid, int32_t dstHei
         );
+    public:
+        SDFTextureTileManager();
+        // === 
+        bool initialize( Device* device,  hgl::assets::AssetsSource* assetsSource, uint32_t cellSize, uint32_t textureWidth, uint32_t arrayLayer, uint32_t sourceFontSize, uint32_t extraBorder, uint32_t searchDistance );
+        GlyphInfo* allocateGlyph();
+        GlyphInfo* getGlyph( GlyphKey glyph );
 
         void tickResource( ResourceCommandEncoder* encoder, ResourceManager* resourceManager );
 
