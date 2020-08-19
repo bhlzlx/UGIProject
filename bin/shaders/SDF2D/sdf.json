@@ -2,7 +2,7 @@
     "textureSize" : 1024,
     "layer" : 4,
     "sdfSize" : 32,
-    "sourceSize" : 96,
+    "sourceSize" : 32,
     "extraBorder" : 2,
     "searchDistance" : 18
 }

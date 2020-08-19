@@ -138,8 +138,8 @@ namespace ugi {
         //
         {
             // 初始化一个字体（先写死，做个测试）
-            //auto inputStream = _assetsSource->Open(hgl::UTF8String("hwzhsong.ttf"));
-            auto inputStream = _assetsSource->Open(hgl::UTF8String("msyahei.ttf"));
+            auto inputStream = _assetsSource->Open(hgl::UTF8String("hwzhsong.ttf"));
+            //auto inputStream = _assetsSource->Open(hgl::UTF8String("msyahei.ttf"));
             _fontTable.emplace_back();
             FontInfo& fontInfo = _fontTable.back();
             auto size = inputStream->GetSize();
@@ -174,7 +174,7 @@ namespace ugi {
         if( it != _glyphRecord.end()) {
             return it->second;
         }
-        GlyphInfo* glyphInfo = registGlyph(glyph);
+        GlyphInfo* glyphInfo = registGlyphSDF(glyph);
         _glyphRecord[glyph] = glyphInfo;
         return glyphInfo;
     }
@@ -190,31 +190,32 @@ namespace ugi {
         //
         scale = stbtt_ScaleForMappingEmToPixels(&fontInfo.stbTtfInfo, fontSize);
         //int baseline = (int)(fontInfo.ascent * scale);
-        int advance, lsb, x0, y0, x1, y1;
-        float shiftX = (float)_extraBorder; float shiftY = (float)_extraBorder;
-        stbtt_GetCodepointHMetrics(&fontInfo.stbTtfInfo, glyph.charCode, &advance, &lsb);
-        int bitmapWidth, bitmapHeight, bitmapOffsetX, bitmapOffsetY;
+        int advance, lsb, left, top, right, bottom;
 
-        auto sdfBuffer = stbtt_GetCodepointSDF(&fontInfo.stbTtfInfo, scale, glyph.charCode, _extraBorder, 127, 50,&bitmapWidth, &bitmapHeight, &bitmapOffsetX, &bitmapOffsetY );
+        stbtt_GetCodepointHMetrics(&fontInfo.stbTtfInfo, glyph.charCode, &advance, &lsb);
+        stbtt_GetCodepointBitmapBox(&fontInfo.stbTtfInfo, glyph.charCode, scale, scale, &left, &top, &right, &bottom);
+        int bitmapWidth = right - left, bitmapHeight = bottom - top, bitmapOffsetX, bitmapOffsetY;
+        int bitmapSize = bitmapWidth>bitmapHeight?bitmapWidth:bitmapHeight;
+        float renderScale = (float)(_cellSize-_extraBorder*2) / bitmapSize;
+        float ratio = (float)_cellSize / (bitmapSize+_extraBorder*2);
+        //
+        auto sdfBuffer = stbtt_GetCodepointSDF(&fontInfo.stbTtfInfo, scale*renderScale, glyph.charCode, _extraBorder, 128, 8,&bitmapWidth, &bitmapHeight, &bitmapOffsetX, &bitmapOffsetY );
 
         size_t destBufferPosition = _sdfBitmapBuffer.size();
         size_t srcBufferPosition = 0; // bitmapWidth + bitmapOffsetX;
         size_t copySize = bitmapWidth*bitmapHeight;
-        _sdfBitmapBuffer.resize(destBufferPosition + copySize);
-        for( size_t i = 0; i<copySize; ++i) {
-            _sdfBitmapBuffer[destBufferPosition+i] = sdfBuffer[srcBufferPosition+i];
-        }
-
-        int bitmapAdvance = (advance + shiftX) * scale;
+        _sdfBitmapBuffer.resize(destBufferPosition + copySize); 
+        memcpy( _sdfBitmapBuffer.data()+destBufferPosition, sdfBuffer, copySize);
+        int bitmapAdvance = (advance + _extraBorder) * scale * ratio;
 
         GlyphInfo* glyphInfo = allocateGlyph();
-        glyphInfo->bitmapBearingX = x0 - shiftX;
-        glyphInfo->bitmapBearingY = y0 - shiftY;
+        glyphInfo->bitmapBearingX =  bitmapOffsetX;
+        glyphInfo->bitmapBearingY = bitmapOffsetY;
         glyphInfo->bitmapWidth = bitmapWidth;
         glyphInfo->bitmapHeight = bitmapHeight;
         glyphInfo->bitmapAdvance = bitmapAdvance;
 
-        glyphInfo->SDFScale = 1.0f;
+        glyphInfo->SDFScale = ratio;
         /// 分配纹理位置
         uint32_t row = ((uint32_t)glyphInfo->glyphIndex % (_row*_col)) / _row;
         uint32_t col = ((uint32_t)glyphInfo->glyphIndex % (_row*_col)) % _row;
@@ -278,7 +279,7 @@ namespace ugi {
             glyph.charCode
         );
         
-        int bearingX = x0 - shiftX;
+        int bearingX = (x0 - shiftX);
         int bearingY = y0 - shiftY;
         int bitmapWidth = x1 - x0 + shiftX * 2;
         int bitmapHeight = y1 - y0 + shiftY * 2;
