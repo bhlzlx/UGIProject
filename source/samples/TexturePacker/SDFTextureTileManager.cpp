@@ -196,10 +196,13 @@ namespace ugi {
         stbtt_GetCodepointBitmapBox(&fontInfo.stbTtfInfo, glyph.charCode, scale, scale, &left, &top, &right, &bottom);
         int bitmapWidth = right - left, bitmapHeight = bottom - top, bitmapOffsetX, bitmapOffsetY;
         int bitmapSize = bitmapWidth>bitmapHeight?bitmapWidth:bitmapHeight;
-        float renderScale = (float)(_cellSize-_extraBorder*2) / bitmapSize;
-        float ratio = (float)_cellSize / (bitmapSize+_extraBorder*2);
+        float renderScale = 1.0f, ratio = 1.0f;
+        if((int)_cellSize-_extraBorder*2 < bitmapSize ) {
+            renderScale = (float)(_cellSize-_extraBorder*2) / bitmapSize;
+            ratio = (float)_cellSize / (bitmapSize+_extraBorder*2);
+        }
         //
-        auto sdfBuffer = stbtt_GetCodepointSDF(&fontInfo.stbTtfInfo, scale*renderScale, glyph.charCode, _extraBorder, 128, 8,&bitmapWidth, &bitmapHeight, &bitmapOffsetX, &bitmapOffsetY );
+        auto sdfBuffer = stbtt_GetCodepointSDF(&fontInfo.stbTtfInfo, scale*renderScale, glyph.charCode, _extraBorder, 128, (float)8/renderScale,&bitmapWidth, &bitmapHeight, &bitmapOffsetX, &bitmapOffsetY );
 
         size_t destBufferPosition = _sdfBitmapBuffer.size();
         size_t srcBufferPosition = 0; // bitmapWidth + bitmapOffsetX;
@@ -233,7 +236,6 @@ namespace ugi {
         glyphInfo->texV = (row * _cellSize) / textureSize;
         glyphInfo->texWidth = glyphInfo->bitmapWidth / textureSize;
         glyphInfo->texHeight = glyphInfo->bitmapHeight / textureSize;
-
 
         TileItem tileItem;
         tileItem.bufferOffset = destBufferPosition;
