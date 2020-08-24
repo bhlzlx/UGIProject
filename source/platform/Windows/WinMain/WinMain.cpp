@@ -38,6 +38,12 @@ int APIENTRY wWinMain
     LoadStringW(hInstance, IDC_EMPLTYWINDOW, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
+    FARPROC spdpia = GetProcAddress(GetModuleHandle(TEXT("user32")), "SetProcessDPIAware");
+#ifndef NODPI
+    if (spdpia != NULL) spdpia(); // 去掉这一句可看到DPI缩放效果
+#endif
+
+
     AllocConsole();
     FILE* stream;
     freopen_s(&stream, "CON", "r", stdin);//重定向输入流

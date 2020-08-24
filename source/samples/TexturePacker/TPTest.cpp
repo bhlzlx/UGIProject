@@ -58,7 +58,7 @@ namespace ugi {
         _fontRenderer->initialize( _device, assetsSource, sdfParam);
         //
 
-        char16_t text[] = u"中国智造，慧及全球。InnvocationInChina.";
+        char16_t text[] = u"找不到路径，因为该路径不存在。PixelGame test google...";
         uint32_t fontSize[] = { 12, 18, 24, 36, 48, 60, 72, 96 };
         
         uint32_t baseY = 24;
@@ -104,7 +104,7 @@ namespace ugi {
             resourceEncoder->endEncode();
             //
             RenderPassClearValues clearValues;
-            clearValues.colors[0] = { 1.0f, 1.0f, 1.0f, 1.0f }; // RGBA
+            clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
             clearValues.stencil = 0xffffffff;
 

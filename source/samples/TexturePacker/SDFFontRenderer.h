@@ -55,7 +55,7 @@ namespace ugi {
             , _indexBuffer( nullptr )
             , _drawable( nullptr )
             , _transform { { 1.0f, 0.0f, 0.0f, 1.0f } , { 0.0f, 1.0f, 0.0f, 0.0f } }
-            , _sdfArgument { { 0.49f, 0.50f }, 0.0f, 0x000000ff }
+            , _sdfArgument { { 0.49f, 0.50f }, 0.0f, 0xffffffff }
         {
         }
 

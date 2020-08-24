@@ -1,8 +1,8 @@
 {
     "textureSize" : 1024,
     "layer" : 4,
-    "sdfSize" : 32,
-    "sourceSize" : 32,
-    "extraBorder" : 2,
+    "sdfSize" : 48,
+    "sourceSize" : 96,
+    "extraBorder" : 4,
     "searchDistance" : 18
 }
