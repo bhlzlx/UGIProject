@@ -16,12 +16,12 @@ layout( location = 3) in vec4  _effectColor;
 layout ( set = 0, binding = 4 ) uniform sampler             TexArraySampler;
 layout ( set = 0, binding = 5 ) uniform texture2DArray      TexArray;
 
-const float smoothStepMin = 0.49;
-const float smoothStepMax = 0.50;
-const float outlineThreshold = 0.15;
+const float smoothStepMin = 0.485;
+const float smoothStepMax = 0.51;
+const float outlineThreshold = 0.12;
 const float shadowOffset = 0.0012;
 const float shadowThreshold = 0.2;
-const float innerGlowThreshold = 0.1;
+const float innerGlowThreshold = 0.15;
 
 layout ( location = 0 ) out vec4 outFragColor;
 
@@ -35,9 +35,9 @@ co = αs x Cs + αb x Cb x (1 – αs)
 vec4 srcOverBlend( vec4 src, vec4 dst) {
     float factorA = 1;
     float factorB = 1 - src.a;
-    vec3 rgb = src.a * src.rgb + dst.a * dst.b * (1-src.a);
+    vec3 rgb = src.rgb * src.a  + dst.rgb * dst.a * (1-src.a);
     float alpha = src.a + dst.a * (1-src.a);
-    vec4 rst = vec4( rgb, alpha ); 
+    vec4 rst = vec4( rgb/alpha, alpha ); 
     return rst;
 }
 
@@ -89,6 +89,6 @@ void main() {
     // // 渲染出来的是镂空字模，需要弄成字框
     // innerAlpha = min( innerAlpha, contentAlpha);
     // vec4 innerColor = vec4(1.0f, 0.0f, 0.0f, innerAlpha);
-    // // 弄成字框就可以直接blend到字上了
+    // // 弄成字框就可以直接blend到字上了 
     // outFragColor = srcOverBlend( innerColor, contentOutlineColor );
 }

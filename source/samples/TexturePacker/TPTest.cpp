@@ -58,8 +58,8 @@ namespace ugi {
         _fontRenderer->initialize( _device, assetsSource, sdfParam);
         //
 
-        char16_t text[] = u"Pixel";
-        // char16_t text[] = u"找不到路径，因为该路径不存在。PixelGame test google...";
+        //char16_t text[] = u"Pixel";
+        char16_t text[] = u"找不到路径，因为该路径不存在。PixelGame test google...";
         uint32_t fontSize[] = { 12, 18, 24, 36, 48, 60, 72, 96 };
         uint32_t fontColor[] = { 0xffff00ff, 0xff8800ff, 0x00ffffff, 0x88ff00ff, 0xff0000ff, 0x00ffffff, 0x00ff88ff, 0x0000ffff};
         
@@ -78,9 +78,11 @@ namespace ugi {
                 chr.charCode = ch;
                 chr.color = fontColor[findex];
                 chr.effectColor = fontColor[findex];
+                chr.effectColor = chr.effectColor << 16 | chr.effectColor>>16;
+                chr.effectColor |= 0xff;
                 chr.fontID = 0;
                 chr.fontSize = (uint32_t)size;
-                chr.type = findex%4;
+                chr.type = (findex+2)%4;
                 chars.push_back(chr);
             }
             hgl::Vector3f transforms[2] = {
