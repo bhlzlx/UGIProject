@@ -1,4 +1,4 @@
-#include "SDFFontRenderer.h"
+﻿#include "SDFFontRenderer.h"
 #include "SDFTextureTileManager.h"
 #include <hgl/assets/AssetsSource.h>
 #include <ugi/Device.h>
@@ -19,10 +19,12 @@ namespace ugi {
     SDFFontRenderer::SDFFontRenderer()
         : _device(nullptr)
         , _texTileManager(nullptr)
-        , _transformHandle(0xffffffff)
-        , _sampler2DArrayHandle(0xffffffff)
-        , _texture2DArrayHandle(0xffffffff)
-        , _sdfArgumentHandle(0xffffffff)
+        , _indicesHandle(0xffffffff)
+        , _effectsHandle(0xffffffff)
+        , _transformsHandle(0xffffffff)
+        , _contextHandle(0xffffffff)
+        , _texArraySamplerHandle(0xffffffff)
+        , _texArrayHandle(0xffffffff)
     {
     }
     
@@ -81,12 +83,37 @@ namespace ugi {
         return true;
     }
 
-    SDFFontDrawData* SDFFontRenderer::buildDrawData( float x, float y, const std::vector<SDFChar>& text ) {
-
+    void SDFFontRenderer::beginBuild() {
         _verticesCache.clear();
         _indicesCache.clear();
+        // === 
+        _indices.clear();
+        _effects.clear();
+        _transforms.clear();
+        _effectRecord.clear();
+        _transformRecord.clear();
+    }
+    
+    void SDFFontRenderer::appendText( float x, float y, const std::vector<SDFChar>& text, const hgl::Vector3f (& transform )[2] ) {
+        uint32_t transformIndex = 0;
+
+        SDFFontDrawData::Transform trans = {
+            transform[0], transform[1]
+        };
+        auto iter = _transformRecord.find(trans);
+        if( iter == _transformRecord.end()) {
+            // 没有记录，添加新的
+            transformIndex = (uint32_t)_transforms.size();
+            _transforms.push_back(trans);
+            _transformRecord[trans] = transformIndex;
+        } else {
+            transformIndex = iter->second;
+        }
 
         for( auto& ch : text ) {
+            uint32_t indexID = (uint32_t)_indices.size();
+            uint32_t effectIndex = 0;
+            //
             GlyphKey glyphKey;
             glyphKey.charCode = ch.charCode;
             glyphKey.fontID = ch.fontID;
@@ -102,7 +129,6 @@ namespace ugi {
             // 而 glyph->bitmapWidth = destWidth * glyph->SDFScale / targetFontSize * 96.0f
             // 所以 scaleFactor = destWidth / (destWidth * glyph->SDFScale / targetFontSize * 96.0f)
             // 即 scaleFactor = targetFontSize / ( glyph->SDFScale*96.0f)
-
             float scaleFactor = targetFontSize / (glyph->SDFScale*(float)_sdfParameter.sourceFontSize );
             
             float posLeft = x, posTop = y;
@@ -127,7 +153,7 @@ namespace ugi {
             
             uint16_t baseIndex = _indicesCache.size()? _indicesCache.back()+1:0;
             uint16_t indices[6] = {
-                baseIndex + 0, baseIndex + 1, baseIndex + 2, baseIndex + 0, baseIndex + 2, baseIndex + 3, 
+                baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
             };
             for( auto index : indices ) {
                 _indicesCache.push_back(index);
@@ -136,7 +162,30 @@ namespace ugi {
             _verticesCache.push_back(rect[1]);
             _verticesCache.push_back(rect[2]);
             _verticesCache.push_back(rect[3]);
-        }
+            //
+            SDFFontDrawData::Effect effect;
+            effect.type = ch.type;
+            effect.colorMask = ch.color;
+            effect.effectColor = ch.effectColor;
+            effect.gray = 1.0f;
+            effect.arrayIndex = glyph->texIndex; 
+            {
+                auto iter = _effectRecord.find(effect);
+                if( iter == _effectRecord.end()) {
+                    // 没有记录，添加新的
+                    effectIndex = (uint32_t)_effects.size();
+                    _effects.push_back(effect);
+                } else {
+                    effectIndex = iter->second;
+                }
+            }
+            SDFFontDrawData::Index index = { (uint32_t)effectIndex | ((uint32_t)transformIndex<<16) };
+            _indices.push_back(index);
+        }        
+    }
+
+    SDFFontDrawData* SDFFontRenderer::endBuild() {
+        // === 
         auto vbo = _device->createBuffer( BufferType::VertexBuffer, _verticesCache.size()*sizeof(FontMeshVertex) );
         auto ibo = _device->createBuffer( BufferType::IndexBuffer, _indicesCache.size() * sizeof(uint16_t) );
         // staging buffer 不需要在这里销毁，在更新操作之后再扔到 resource manager　里
@@ -148,29 +197,33 @@ namespace ugi {
         //
         _updateItems.push_back( { vbo, ibo, stagingBuffer } );
         //
+
         SDFFontDrawData* drawData = new SDFFontDrawData();
         // 主要就是设置矩阵
         drawData->_argumentGroup = _pipeline->createArgumentGroup();
-        if( 0xffffffff == _transformHandle) {
-            _transformHandle = drawData->_argumentGroup->GetDescriptorHandle("Transform", _pipelineDescription);
+        if( 0xffffffff == _indicesHandle) {
+            _indicesHandle = drawData->_argumentGroup->GetDescriptorHandle("Indices", _pipelineDescription);
         }
-        if( 0xffffffff == _sampler2DArrayHandle) {
-            _sampler2DArrayHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArraySampler", _pipelineDescription);
+        if( 0xffffffff == _effectsHandle) {
+            _effectsHandle = drawData->_argumentGroup->GetDescriptorHandle("Effects", _pipelineDescription);
         }
-        if( 0xffffffff == _texture2DArrayHandle) {
-            _texture2DArrayHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArray", _pipelineDescription);
+        if( 0xffffffff == _transformsHandle) {
+            _transformsHandle = drawData->_argumentGroup->GetDescriptorHandle("Transforms", _pipelineDescription);
         }
-        if( 0xffffffff == _sdfArgumentHandle) {
-            _sdfArgumentHandle = drawData->_argumentGroup->GetDescriptorHandle("SDFArgument", _pipelineDescription);
+        if( 0xffffffff == _texArraySamplerHandle) {
+            _texArraySamplerHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArraySampler", _pipelineDescription);
+        }
+        if( 0xffffffff == _texArrayHandle) {
+            _texArrayHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArray", _pipelineDescription);
         }
         ResourceDescriptor descriptor;
         descriptor.type = ArgumentDescriptorType::Sampler;
         descriptor.sampler.mag = TextureFilter::Linear;
         descriptor.sampler.mip = TextureFilter::Linear;
         descriptor.sampler.min = TextureFilter::Linear;
-        descriptor.descriptorHandle = _sampler2DArrayHandle;
+        descriptor.descriptorHandle = _texArraySamplerHandle;
         drawData->_argumentGroup->updateDescriptor(descriptor);
-        descriptor.descriptorHandle = _texture2DArrayHandle;
+        descriptor.descriptorHandle = _texArrayHandle;
         descriptor.type = ArgumentDescriptorType::Image;
         descriptor.texture = _texTileManager->texture();
         drawData->_argumentGroup->updateDescriptor(descriptor);
@@ -182,7 +235,11 @@ namespace ugi {
         drawData->_vertexBuffer = vbo;
         drawData->_indexBuffer = ibo;
         drawData->_indexCount = (uint32_t)_indicesCache.size();
-
+        drawData->_indices = std::move(_indices);
+        drawData->_effects = std::move(_effects);
+        drawData->_effectRecord = std::move(_effectRecord);
+        drawData->_transformRecord = std::move(_transformRecord);
+        //
         return drawData;
     }
 
@@ -207,14 +264,29 @@ namespace ugi {
         for( uint32_t i = 0; i<drawDataCount; ++i ) {
             auto drawData = drawDatas[i];
             ResourceDescriptor descriptor;
-            descriptor.descriptorHandle = _transformHandle;
-            descriptor.bufferRange = 32;
-            uniformAllocator->allocateForDescriptor(descriptor, drawData->_transform);
+            descriptor.descriptorHandle = _indicesHandle;
+            descriptor.bufferRange = sizeof(SDFFontDrawData::Index) * 1024;
+            uniformAllocator->allocateForDescriptor(descriptor, drawData->_indices);
             drawData->_argumentGroup->updateDescriptor(descriptor);
 
-            descriptor.descriptorHandle = _sdfArgumentHandle;
-            descriptor.bufferRange = 16;
-            uniformAllocator->allocateForDescriptor(descriptor, drawData->_sdfArgument);
+            descriptor.descriptorHandle = _effectsHandle;
+            descriptor.bufferRange = sizeof(SDFFontDrawData::Effect) * 256;
+            uniformAllocator->allocateForDescriptor(descriptor, drawData->_effects);
+            drawData->_argumentGroup->updateDescriptor(descriptor);
+            drawData->_argumentGroup->prepairResource(resourceEncoder);
+
+            descriptor.descriptorHandle = _transformsHandle;
+            descriptor.bufferRange = sizeof(SDFFontDrawData::Transform) * 256;
+            uniformAllocator->allocateForDescriptor(descriptor, drawData->_transform);
+            drawData->_argumentGroup->updateDescriptor(descriptor);
+            drawData->_argumentGroup->prepairResource(resourceEncoder);
+
+            struct {
+                float width, height;
+            } contextSize = {(float)_width, (float)_height };
+            descriptor.descriptorHandle = _contextHandle;
+            descriptor.bufferRange = sizeof(contextSize);
+            uniformAllocator->allocateForDescriptor(descriptor, contextSize);
             drawData->_argumentGroup->updateDescriptor(descriptor);
             drawData->_argumentGroup->prepairResource(resourceEncoder);
         }

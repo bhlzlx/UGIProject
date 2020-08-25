@@ -58,22 +58,42 @@ namespace ugi {
         _fontRenderer->initialize( _device, assetsSource, sdfParam);
         //
 
-        char16_t text[] = u"找不到路径，因为该路径不存在。PixelGame test google...";
+        char16_t text[] = u"PixelGame.";
+        // char16_t text[] = u"找不到路径，因为该路径不存在。PixelGame test google...";
         uint32_t fontSize[] = { 12, 18, 24, 36, 48, 60, 72, 96 };
         
         uint32_t baseY = 24;
+
+        _fontRenderer->beginBuild();
+
         for( auto size : fontSize ) {
             std::vector<SDFChar> chars;
             for( auto& ch : text) {
                 if(!ch) {
                     break;
                 }
-                chars.push_back( { 0, (uint32_t)size, (uint32_t)ch} );
+                SDFChar chr;
+                chr.charCode = ch;
+                chr.color = 0xffffffff;
+                chr.effectColor = 0xff0000ff;
+                chr.fontID = 0;
+                chr.fontSize = (uint32_t)size;
+                chr.type = 0;
+                chars.push_back(chr);
             }
-            auto drawData = _fontRenderer->buildDrawData(32, baseY, chars);
-            _drawDatas.push_back(drawData);
+            hgl::Vector3f transforms[2] = {
+                { 1.0f, 0.0f, 0.0f },
+                { 0.0f, 1.0f, 0.0f }
+            };
+            _fontRenderer->appendText(32, baseY, chars, transforms);
+            // auto drawData = _fontRenderer->buildDrawData(32, baseY, chars);
+            // _drawDatas.push_back(drawData);
             baseY += 96;
         }
+        auto drawData = _fontRenderer->endBuild();
+
+        _drawDatas.push_back(drawData);
+
         _flightIndex = 0;
         // const char16_t chars[] = u"中国智造，慧及全球。";
         return true;

@@ -74,6 +74,15 @@ namespace ugi {
             descriptor.bufferOffset = ubo.offset();
         }
 
+        template< class T >
+        void allocateForDescriptor( ResourceDescriptor& descriptor, const std::vector<T>& value ) {
+            assert( descriptor.type == ArgumentDescriptorType::UniformBuffer );
+            auto ubo = allocate( value.size() * sizeof(T) );
+            ubo.writeData(0, value.data(), value.size() * sizeof(T) );
+            descriptor.buffer = ubo.buffer();
+            descriptor.bufferOffset = ubo.offset();
+        }
+
         static UniformAllocator* createUniformAllocator( Device* device );
     };
 
