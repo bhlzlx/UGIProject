@@ -61,7 +61,7 @@ layout( set = 0, binding = 3) uniform Context {
         Drawable*           _drawable;
         uint32_t            _indexCount;
         //
-        hgl::Vector4f       _transform[2];
+        //hgl::Vector4f       _transform[2];
         //
         struct {
             float               smoothStepFactor[2];
@@ -70,15 +70,28 @@ layout( set = 0, binding = 3) uniform Context {
         }                   _sdfArgument;
 
         struct Index {
-            uint32_t index;
+            union {
+                uint32_t index;
+                struct {
+                    uint32_t effectIndex :16;
+                    uint32_t transformIndex : 16;
+                };
+            };
         };
         struct Effect {
-            uint32_t    colorMask;     // 颜色参数
-            uint32_t    effectColor;   // 效果颜色
-            uint32_t    type:8;        // 类型 : 加粗、描边、阴影、内发光、无
-            uint32_t    arrayIndex:8;  // 纹理数组索引
-            uint32_t    gray:8;        // 灰度
-            uint32_t    padding:8;  
+            uint32_t    colorMask = 0xffffffff;     // 颜色参数
+            uint32_t    effectColor = 0xffffffff;   // 效果颜色
+            union {
+                uint32_t composedFlags = 0x00000000;
+                struct {
+                    uint32_t    type:8;        // 类型 : 加粗、描边、阴影、内发光、无
+                    uint32_t    arrayIndex:8;  // 纹理数组索引
+                    uint32_t    gray:8;        // 灰度
+                    uint32_t    padding1:8;
+                };
+            };
+            uint32_t    padding2;
+            
             bool operator < ( const Effect& other ) const {
                 return memcmp( this, &other, sizeof(Effect)) < 0;
             }
@@ -86,6 +99,7 @@ layout( set = 0, binding = 3) uniform Context {
         struct Transform {
             hgl::Vector3f col1;
             hgl::Vector3f col2;
+            hgl::Vector2f padding;
             bool operator < ( const Transform& other ) const {
                 return memcmp( this, &other, sizeof(Transform)) < 0;
             }
@@ -102,15 +116,9 @@ layout( set = 0, binding = 3) uniform Context {
             , _vertexBuffer( nullptr )
             , _indexBuffer( nullptr )
             , _drawable( nullptr )
-            , _transform { { 1.0f, 0.0f, 0.0f, 1.0f } , { 0.0f, 1.0f, 0.0f, 0.0f } }
+            //, _transform { { 1.0f, 0.0f, 0.0f, 1.0f } , { 0.0f, 1.0f, 0.0f, 0.0f } }
             , _sdfArgument { { 0.49f, 0.50f }, 0.0f, 0xffffffff }
         {
-        }
-
-        // 这个函数不应该放在这里，但为了测试方便就在这里加了
-        void setScreenSize( float width, float height ) {
-            _transform[0].w = width;
-            _transform[1].w = height;
         }
 
     };
@@ -185,6 +193,7 @@ layout( set = 0, binding = 3) uniform Context {
     public:
         SDFFontRenderer();
         bool initialize( Device* device, hgl::assets::AssetsSource* assetsSource, const SDFRenderParameter& sdfParam );
+        void resize( uint32_t width, uint32_t height );
         //==== Build functions
         void beginBuild();
         void appendText( float x, float y, const std::vector<SDFChar>& text, const hgl::Vector3f (& transform )[2] );

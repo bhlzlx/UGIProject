@@ -167,7 +167,8 @@ namespace ugi {
             effect.type = ch.type;
             effect.colorMask = ch.color;
             effect.effectColor = ch.effectColor;
-            effect.gray = 1.0f;
+            effect.gray = 255;
+            effect.padding1 = 127;
             effect.arrayIndex = glyph->texIndex; 
             {
                 auto iter = _effectRecord.find(effect);
@@ -175,13 +176,21 @@ namespace ugi {
                     // 没有记录，添加新的
                     effectIndex = (uint32_t)_effects.size();
                     _effects.push_back(effect);
+                    _effectRecord[effect] = effectIndex;
                 } else {
                     effectIndex = iter->second;
                 }
             }
-            SDFFontDrawData::Index index = { (uint32_t)effectIndex | ((uint32_t)transformIndex<<16) };
+            SDFFontDrawData::Index index;
+            index.effectIndex = effectIndex;
+            index.transformIndex = transformIndex;
+             //= { (uint32_t)effectIndex | ((uint32_t)transformIndex<<16) };
             _indices.push_back(index);
         }        
+    }
+
+    void SDFFontRenderer::resize( uint32_t width, uint32_t height ) {
+        this->_width = width; this->_height = height;
     }
 
     SDFFontDrawData* SDFFontRenderer::endBuild() {
@@ -210,6 +219,10 @@ namespace ugi {
         if( 0xffffffff == _transformsHandle) {
             _transformsHandle = drawData->_argumentGroup->GetDescriptorHandle("Transforms", _pipelineDescription);
         }
+        if( 0xffffffff == _contextHandle) {
+            _contextHandle = drawData->_argumentGroup->GetDescriptorHandle("Context", _pipelineDescription);
+        }
+
         if( 0xffffffff == _texArraySamplerHandle) {
             _texArraySamplerHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArraySampler", _pipelineDescription);
         }
@@ -238,6 +251,7 @@ namespace ugi {
         drawData->_indices = std::move(_indices);
         drawData->_effects = std::move(_effects);
         drawData->_effectRecord = std::move(_effectRecord);
+        drawData->_transforms = std::move(_transforms);
         drawData->_transformRecord = std::move(_transformRecord);
         //
         return drawData;
@@ -277,7 +291,7 @@ namespace ugi {
 
             descriptor.descriptorHandle = _transformsHandle;
             descriptor.bufferRange = sizeof(SDFFontDrawData::Transform) * 256;
-            uniformAllocator->allocateForDescriptor(descriptor, drawData->_transform);
+            uniformAllocator->allocateForDescriptor(descriptor, drawData->_transforms);
             drawData->_argumentGroup->updateDescriptor(descriptor);
             drawData->_argumentGroup->prepairResource(resourceEncoder);
 

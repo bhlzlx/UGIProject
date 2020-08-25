@@ -58,14 +58,16 @@ namespace ugi {
         _fontRenderer->initialize( _device, assetsSource, sdfParam);
         //
 
-        char16_t text[] = u"PixelGame.";
+        char16_t text[] = u"Pixel";
         // char16_t text[] = u"找不到路径，因为该路径不存在。PixelGame test google...";
         uint32_t fontSize[] = { 12, 18, 24, 36, 48, 60, 72, 96 };
+        uint32_t fontColor[] = { 0xffff00ff, 0xff8800ff, 0x00ffffff, 0x88ff00ff, 0xff0000ff, 0x00ffffff, 0x00ff88ff, 0x0000ffff};
         
         uint32_t baseY = 24;
 
         _fontRenderer->beginBuild();
 
+        uint32_t findex = 0;
         for( auto size : fontSize ) {
             std::vector<SDFChar> chars;
             for( auto& ch : text) {
@@ -74,11 +76,11 @@ namespace ugi {
                 }
                 SDFChar chr;
                 chr.charCode = ch;
-                chr.color = 0xffffffff;
-                chr.effectColor = 0xff0000ff;
+                chr.color = fontColor[findex];
+                chr.effectColor = fontColor[findex];
                 chr.fontID = 0;
                 chr.fontSize = (uint32_t)size;
-                chr.type = 0;
+                chr.type = findex%4;
                 chars.push_back(chr);
             }
             hgl::Vector3f transforms[2] = {
@@ -89,6 +91,7 @@ namespace ugi {
             // auto drawData = _fontRenderer->buildDrawData(32, baseY, chars);
             // _drawDatas.push_back(drawData);
             baseY += 96;
+            ++findex;
         }
         auto drawData = _fontRenderer->endBuild();
 
@@ -102,10 +105,6 @@ namespace ugi {
     void TPTest::tick() {
         _device->waitForFence( _frameCompleteFences[_flightIndex] );
         _uniformAllocator->tick();
-        // 测试用。。。
-        for( auto drawData: _drawDatas) {
-            drawData->setScreenSize( _width, _height);
-        }
 
         uint32_t imageIndex = _swapchain->acquireNextImage( _device, _flightIndex );
         IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
@@ -159,6 +158,7 @@ namespace ugi {
         
     void TPTest::resize(uint32_t width, uint32_t height) {
         _swapchain->resize( _device, width, height );
+        _fontRenderer->resize( width, height );
         _width = width;
         _height = height;
     }
