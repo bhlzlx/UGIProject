@@ -51,6 +51,43 @@ layout( set = 0, binding = 3) uniform Context {
         hgl::Vector2f uv;
     };
 
+    struct IndexHandle {
+        union {
+            uint32_t handle;
+            struct {
+                uint32_t styleIndex:16;        // 样式
+                uint32_t transformIndex:16;     // 变换
+            };
+        };
+    };
+
+    struct Style {
+        uint32_t color = 0xffffffff;
+        uint32_t effectColor = 0xffffffff;
+        union {
+            uint32_t composedFlags = 0x0;
+            struct {
+                uint32_t    type:8;        // 类型 : 加粗、描边、阴影、内发光、无
+                uint32_t    arrayIndex:8;  // 纹理数组索引
+                uint32_t    gray:8;        // 灰度
+                uint32_t    padding1:8;
+            };
+        };
+        uint32_t    reserved;
+        bool operator < ( const Style& other ) const {
+            return memcmp( this, &other, sizeof(Style)) < 0;
+        }
+    };
+
+    struct Transform {
+        hgl::Vector3f col1;
+        hgl::Vector3f col2;
+        hgl::Vector2f padding;
+        bool operator < ( const Transform& other ) const {
+            return memcmp( this, &other, sizeof(Transform)) < 0;
+        }
+    };
+
     class SDFFontDrawData {
         friend class SDFFontRenderer;
     private:
@@ -61,54 +98,10 @@ layout( set = 0, binding = 3) uniform Context {
         Drawable*           _drawable;
         uint32_t            _indexCount;
         //
-        //hgl::Vector4f       _transform[2];
-        //
-        struct {
-            float               smoothStepFactor[2];
-            float               layerIndex;
-            uint32_t            colorMask;
-        }                   _sdfArgument;
-
-        struct Index {
-            union {
-                uint32_t index;
-                struct {
-                    uint32_t effectIndex :16;
-                    uint32_t transformIndex : 16;
-                };
-            };
-        };
-        struct Effect {
-            uint32_t    colorMask = 0xffffffff;     // 颜色参数
-            uint32_t    effectColor = 0xffffffff;   // 效果颜色
-            union {
-                uint32_t composedFlags = 0x00000000;
-                struct {
-                    uint32_t    type:8;        // 类型 : 加粗、描边、阴影、内发光、无
-                    uint32_t    arrayIndex:8;  // 纹理数组索引
-                    uint32_t    gray:8;        // 灰度
-                    uint32_t    padding1:8;
-                };
-            };
-            uint32_t    padding2;
-            
-            bool operator < ( const Effect& other ) const {
-                return memcmp( this, &other, sizeof(Effect)) < 0;
-            }
-        };
-        struct Transform {
-            hgl::Vector3f col1;
-            hgl::Vector3f col2;
-            hgl::Vector2f padding;
-            bool operator < ( const Transform& other ) const {
-                return memcmp( this, &other, sizeof(Transform)) < 0;
-            }
-        };
-        //
-        std::vector<Index>              _indices;
-        std::vector<Effect>             _effects;
+        std::vector<IndexHandle>        _indices;
+        std::vector<Style>              _effects;
         std::vector<Transform>          _transforms;
-        std::map<Effect, uint32_t>      _effectRecord;
+        std::map<Style, uint32_t>       _effectRecord;
         std::map<Transform, uint32_t>   _transformRecord;
     public:
         SDFFontDrawData()
@@ -116,8 +109,6 @@ layout( set = 0, binding = 3) uniform Context {
             , _vertexBuffer( nullptr )
             , _indexBuffer( nullptr )
             , _drawable( nullptr )
-            //, _transform { { 1.0f, 0.0f, 0.0f, 1.0f } , { 0.0f, 1.0f, 0.0f, 0.0f } }
-            , _sdfArgument { { 0.49f, 0.50f }, 0.0f, 0xffffffff }
         {
         }
 
@@ -162,13 +153,13 @@ layout( set = 0, binding = 3) uniform Context {
         SDFTextureTileManager*      _texTileManager;
         ResourceManager*            _resourceManager;
         //
-        uint32_t                    _indicesHandle; // "Indices"
-        uint32_t                    _effectsHandle; // "Effects"
-        uint32_t                    _transformsHandle; // "Transforms"
-        uint32_t                    _contextHandle; // "Context"
+        uint32_t                    _indicesHandle;         // "Indices"
+        uint32_t                    _effectsHandle;         // "Effects"
+        uint32_t                    _transformsHandle;      // "Transforms"
+        uint32_t                    _contextHandle;         // "Context"
         //
         uint32_t                    _texArraySamplerHandle; // "TexArraySampler"
-        uint32_t                    _texArrayHandle; // "TexArray"
+        uint32_t                    _texArrayHandle;        // "TexArray"
 
         uint32_t                    _width;
         uint32_t                    _height;
@@ -178,11 +169,11 @@ layout( set = 0, binding = 3) uniform Context {
         std::vector<FontMeshVertex> _verticesCache;
         std::vector<uint16_t>       _indicesCache;
 
-        std::vector<SDFFontDrawData::Index>             _indices;
-        std::vector<SDFFontDrawData::Effect>            _effects;
-        std::vector<SDFFontDrawData::Transform>         _transforms;
-        std::map<SDFFontDrawData::Effect, uint32_t>     _effectRecord;
-        std::map<SDFFontDrawData::Transform, uint32_t>  _transformRecord;
+        std::vector<IndexHandle>        _indices;
+        std::vector<Style>              _effects;
+        std::vector<Transform>          _transforms;
+        std::map<Style, uint32_t>       _effectRecord;
+        std::map<Transform, uint32_t>   _transformRecord;
         //
         struct BufferUpdateItem {
             Buffer* vertexBuffer;

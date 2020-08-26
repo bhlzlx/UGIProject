@@ -92,12 +92,13 @@ namespace ugi {
         _transforms.clear();
         _effectRecord.clear();
         _transformRecord.clear();
+        //
     }
     
     void SDFFontRenderer::appendText( float x, float y, const std::vector<SDFChar>& text, const hgl::Vector3f (& transform )[2] ) {
         uint32_t transformIndex = 0;
 
-        SDFFontDrawData::Transform trans = {
+        Transform trans = {
             transform[0], transform[1]
         };
         auto iter = _transformRecord.find(trans);
@@ -112,7 +113,7 @@ namespace ugi {
 
         for( auto& ch : text ) {
             uint32_t indexID = (uint32_t)_indices.size();
-            uint32_t effectIndex = 0;
+            uint32_t styleIndex = 0;
             //
             GlyphKey glyphKey;
             glyphKey.charCode = ch.charCode;
@@ -163,26 +164,26 @@ namespace ugi {
             _verticesCache.push_back(rect[2]);
             _verticesCache.push_back(rect[3]);
             //
-            SDFFontDrawData::Effect effect;
-            effect.type = ch.type;
-            effect.colorMask = ch.color;
-            effect.effectColor = ch.effectColor;
-            effect.gray = 255;
-            effect.padding1 = 127;
-            effect.arrayIndex = glyph->texIndex; 
+            Style style;
+            style.type = ch.type;
+            style.color = ch.color;
+            style.effectColor = ch.effectColor;
+            style.gray = 255;
+            style.padding1 = 127;
+            style.arrayIndex = glyph->texIndex; 
             {
-                auto iter = _effectRecord.find(effect);
+                auto iter = _effectRecord.find(style);
                 if( iter == _effectRecord.end()) {
                     // 没有记录，添加新的
-                    effectIndex = (uint32_t)_effects.size();
-                    _effects.push_back(effect);
-                    _effectRecord[effect] = effectIndex;
+                    styleIndex = (uint32_t)_effects.size();
+                    _effects.push_back(style);
+                    _effectRecord[style] = styleIndex;
                 } else {
-                    effectIndex = iter->second;
+                    styleIndex = iter->second;
                 }
             }
-            SDFFontDrawData::Index index;
-            index.effectIndex = effectIndex;
+            IndexHandle index;
+            index.styleIndex = styleIndex;
             index.transformIndex = transformIndex;
              //= { (uint32_t)effectIndex | ((uint32_t)transformIndex<<16) };
             _indices.push_back(index);
@@ -279,18 +280,18 @@ namespace ugi {
             auto drawData = drawDatas[i];
             ResourceDescriptor descriptor;
             descriptor.descriptorHandle = _indicesHandle;
-            descriptor.bufferRange = sizeof(SDFFontDrawData::Index) * 1024;
+            descriptor.bufferRange = sizeof(IndexHandle) * 1024;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_indices);
             drawData->_argumentGroup->updateDescriptor(descriptor);
 
             descriptor.descriptorHandle = _effectsHandle;
-            descriptor.bufferRange = sizeof(SDFFontDrawData::Effect) * 256;
+            descriptor.bufferRange = sizeof(Style) * 256;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_effects);
             drawData->_argumentGroup->updateDescriptor(descriptor);
             drawData->_argumentGroup->prepairResource(resourceEncoder);
 
             descriptor.descriptorHandle = _transformsHandle;
-            descriptor.bufferRange = sizeof(SDFFontDrawData::Transform) * 256;
+            descriptor.bufferRange = sizeof(Transform) * 256;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_transforms);
             drawData->_argumentGroup->updateDescriptor(descriptor);
             drawData->_argumentGroup->prepairResource(resourceEncoder);

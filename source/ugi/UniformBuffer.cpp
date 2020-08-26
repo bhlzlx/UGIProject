@@ -1,4 +1,4 @@
-#include "UniformBuffer.h"
+﻿#include "UniformBuffer.h"
 #include "Buffer.h"
 #include "Device.h"
 #include <cassert>
@@ -20,7 +20,6 @@ namespace ugi {
         , _flightRanges {}
         , _flightIndexInside (0)
     {
-        
     }
 
     void UniformAllocator::tick() 
