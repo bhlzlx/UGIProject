@@ -18,7 +18,13 @@
 #include <stb_truetype.h>
 #include <cmath>
 
+#include <tweeny.h>
+
+#include <random>
+
 namespace ugi {
+
+    hgl::Vector2f anchor3;
 
     SDFRenderParameter sdfParam = {
         1024, // uint32_t texArraySize : 16;
@@ -58,46 +64,72 @@ namespace ugi {
         _fontRenderer->initialize( _device, assetsSource, sdfParam);
         //
 
-        //char16_t text[] = u"Pixel";
-        char16_t text[] = u"找不到路径，因为该路径不存在。PixelGame test google...";
+        char16_t textArray[][64] = {
+            u"找不到路径，",
+            u"因为该路径不存在。",
+            u"PixelGame",
+            u"testgoogle..."
+        };
+        Style styleArray[5] = {
+            { 0xff5555ff, 0xffffffff, 0x00000000 },
+            { 0x55ff55ff, 0xffffffff, 0x00000001 },
+            { 0x5555ffff, 0xffffffff, 0x00000002 },
+            { 0xff0000ff, 0xffffffff, 0x00000003 },
+            { 0x005555ff, 0xffffffff, 0x00000002 },
+        };
         uint32_t fontSize[] = { 12, 18, 24, 36, 48, 60, 72, 96 };
         uint32_t fontColor[] = { 0xffff00ff, 0xff8800ff, 0x00ffffff, 0x88ff00ff, 0xff0000ff, 0x00ffffff, 0x00ff88ff, 0x0000ffff};
         
-        uint32_t baseY = 24;
+        uint32_t baseY = 96;
 
         _fontRenderer->beginBuild();
 
-        uint32_t findex = 0;
-        for( auto size : fontSize ) {
-            std::vector<SDFChar> chars;
-            for( auto& ch : text) {
-                if(!ch) {
-                    break;
-                }
-                SDFChar chr;
-                chr.charCode = ch;
-                chr.color = fontColor[findex];
-                chr.effectColor = fontColor[findex];
-                chr.effectColor = chr.effectColor << 16 | chr.effectColor>>16;
-                chr.effectColor |= 0xff;
-                chr.fontID = 0;
-                chr.fontSize = (uint32_t)size;
-                chr.type = (findex+2)%4;
-                chars.push_back(chr);
-            }
-            hgl::Vector3f transforms[2] = {
-                { 1.0f, 0.0f, 0.0f },
-                { 0.0f, 1.0f, 0.0f }
-            };
-            _fontRenderer->appendText(32, baseY, chars, transforms);
-            // auto drawData = _fontRenderer->buildDrawData(32, baseY, chars);
-            // _drawDatas.push_back(drawData);
-            baseY += 96;
-            ++findex;
-        }
-        auto drawData = _fontRenderer->endBuild();
+        hgl::RectScope2f rc;
 
-        _drawDatas.push_back(drawData);
+        Transform identity = { hgl::Vector3f(1.0f, 0.0f, 0.0f), hgl::Vector3f(0.0f, 1.0f, 0.0f) };
+        std::vector<SDFChar> vecChar;
+        for( auto& ch : textArray[0]) {
+            if(!ch) {
+                break;
+            }
+            SDFChar chr = { 0, 36U, ch };
+            vecChar.push_back(chr);
+        }
+        _h1 = _fontRenderer->appendText(32, baseY, vecChar.data(), vecChar.size(), identity, styleArray[0], rc);
+
+        vecChar.clear();
+        for( auto& ch : textArray[1]) {
+            if(!ch) {
+                break;
+            }
+            SDFChar chr = { 0, 36U, ch };
+            vecChar.push_back(chr);
+        }
+        _h2 = _fontRenderer->appendTextResuseTransform(rc.GetRight(), baseY, vecChar.data(), vecChar.size(), _h1, styleArray[1], rc);
+
+        vecChar.clear();
+        for( auto& ch : textArray[2]) {
+            if(!ch) {
+                break;
+            }
+            SDFChar chr = { 0, 36U, ch };
+            vecChar.push_back(chr);
+        }
+        _h3 = _fontRenderer->appendTextResuseStyle(rc.GetRight(), baseY, vecChar.data(), vecChar.size(), _h2, identity, rc);
+
+        anchor3.Set( rc.GetCenterX(), baseY);
+
+        vecChar.clear();
+        for( auto& ch : textArray[3]) {
+            if(!ch) {
+                break;
+            }
+            SDFChar chr = { 0, 36U, ch };
+            vecChar.push_back(chr);
+        }
+        _h4 = _fontRenderer->appendText(rc.GetRight(), baseY, vecChar.data(), vecChar.size(), identity, styleArray[2], rc);
+
+        _drawData = _fontRenderer->endBuild();
 
         _flightIndex = 0;
         // const char16_t chars[] = u"中国智造，慧及全球。";
@@ -105,6 +137,7 @@ namespace ugi {
     }
 
     void TPTest::tick() {
+
         _device->waitForFence( _frameCompleteFences[_flightIndex] );
         _uniformAllocator->tick();
 
@@ -113,15 +146,45 @@ namespace ugi {
         
         auto cmdbuf = _commandBuffers[_flightIndex];
 
+        static auto t = tweeny::from(1.0).to(2.0).during(60);
+        if(t.progress() == 0.0f) {
+            t = t.forward();
+        } else if( t.progress() == 1.0f ) {
+            t.backward();
+        }
+        auto scale = t.step(1);
+
+        auto trans = Transform::createTransform( anchor3, hgl::Vector2f(scale) );
+        _drawData->updateTransform(_h3, trans);
+
+        static auto redTween = tweeny::from(1.0).to(0.0).during(120);
+        static auto blueTween = tweeny::from(0.0).to(1.0).during(90);
+        static auto greenTween = tweeny::from(1.0).to(0.0).during(180);
+        std::array<tweeny::tween<double>*,3> t3 = {
+            &redTween, &blueTween, &greenTween
+        };
+        float rgb[3];
+        for( uint32_t i = 0; i<3; ++i ) {
+            auto t = t3[i];
+            if(t->progress() == 0.0f) {
+                *t = t->forward();
+            } else if( t->progress() == 1.0f ) {
+                t->backward();
+            }
+            rgb[i] = t->step(1);
+        }
+        uint32_t color = (uint32_t)(rgb[0]*255)<<24 | (uint32_t)(rgb[1]*255)<<16 | (uint32_t)(rgb[2]*255)<<8 | 0xff;
+        Style style = { color, ~color | 0xff, 0x00000001 };
+
+        _drawData->updateStyle(_h2, style);
+
 
         cmdbuf->beginEncode(); {
 
             auto resourceEncoder = cmdbuf->resourceCommandEncoder();
 
             _fontRenderer->tickResource(resourceEncoder);
-            for( auto drawData: _drawDatas) {
-                _fontRenderer->prepareResource( resourceEncoder, &drawData, 1, _uniformAllocator );
-            }
+            _fontRenderer->prepareResource( resourceEncoder, &_drawData, 1, _uniformAllocator );
             resourceEncoder->endEncode();
             //
             RenderPassClearValues clearValues;
@@ -135,7 +198,7 @@ namespace ugi {
                 renderCommandEncoder->setLineWidth(1.0f);
                 renderCommandEncoder->setViewport(0, 0, _width, _height, 0, 1.0f );
                 renderCommandEncoder->setScissor( 0, 0, _width, _height );
-                _fontRenderer->draw( renderCommandEncoder, _drawDatas.data(), _drawDatas.size() );
+                _fontRenderer->draw( renderCommandEncoder, &_drawData, 1 );
             }
             renderCommandEncoder->endEncode();
         }

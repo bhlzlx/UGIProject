@@ -88,30 +88,27 @@ namespace ugi {
         _indicesCache.clear();
         // === 
         _indices.clear();
-        _effects.clear();
+        _styles.clear();
         _transforms.clear();
-        _effectRecord.clear();
-        _transformRecord.clear();
         //
     }
     
-    void SDFFontRenderer::appendText( float x, float y, const std::vector<SDFChar>& text, const hgl::Vector3f (& transform )[2] ) {
-        uint32_t transformIndex = 0;
+    IndexHandle SDFFontRenderer::appendText( float x, float y, SDFChar* text, uint32_t length, const Transform& transform, const Style& style, hgl::RectScope2f& rect ) {
 
-        Transform trans = {
-            transform[0], transform[1]
-        };
-        auto iter = _transformRecord.find(trans);
-        if( iter == _transformRecord.end()) {
-            // 没有记录，添加新的
-            transformIndex = (uint32_t)_transforms.size();
-            _transforms.push_back(trans);
-            _transformRecord[trans] = transformIndex;
-        } else {
-            transformIndex = iter->second;
-        }
+        uint32_t transformIndex = _transforms.size();
+        uint32_t styleIndex = _styles.size();
+        _transforms.push_back(transform);
+        _styles.push_back(style);
 
-        for( auto& ch : text ) {
+        rect.SetLeft(x);
+
+        IndexHandle indexHandle;
+        indexHandle.styleIndex = styleIndex;
+        indexHandle.transformIndex = transformIndex;
+        //
+        for( uint32_t i = 0; i<length; ++i ) {
+            const SDFChar& ch = text[i];
+            //
             uint32_t indexID = (uint32_t)_indices.size();
             uint32_t styleIndex = 0;
             //
@@ -164,30 +161,191 @@ namespace ugi {
             _verticesCache.push_back(rect[2]);
             _verticesCache.push_back(rect[3]);
             //
-            Style style;
-            style.type = ch.type;
-            style.color = ch.color;
-            style.effectColor = ch.effectColor;
-            style.gray = 255;
-            style.padding1 = 127;
-            style.arrayIndex = glyph->texIndex; 
-            {
-                auto iter = _effectRecord.find(style);
-                if( iter == _effectRecord.end()) {
-                    // 没有记录，添加新的
-                    styleIndex = (uint32_t)_effects.size();
-                    _effects.push_back(style);
-                    _effectRecord[style] = styleIndex;
-                } else {
-                    styleIndex = iter->second;
-                }
+            _indices.push_back(indexHandle);
+        }
+        //
+        rect.SetRight(x);
+
+        return indexHandle;
+    }
+
+    IndexHandle SDFFontRenderer::appendTextResuseTransform( 
+        float x, float y, SDFChar* text, uint32_t length, 
+        IndexHandle reuseHandle, const Style& style, hgl::RectScope2f& rect
+    ) {
+
+        rect.SetLeft(x);
+        uint32_t styleIndex = _styles.size();
+        _styles.push_back(style);
+        reuseHandle.styleIndex = styleIndex;
+        //
+        for( uint32_t i = 0; i<length; ++i ) {
+            const SDFChar& ch = text[i];
+            //
+            uint32_t indexID = (uint32_t)_indices.size();
+            uint32_t styleIndex = 0;
+            //
+            GlyphKey glyphKey;
+            glyphKey.charCode = ch.charCode;
+            glyphKey.fontID = ch.fontID;
+            GlyphInfo* glyph = _texTileManager->getGlyph(glyphKey);
+            float targetFontSize = ch.fontSize;
+            float scaleFactor = targetFontSize / (glyph->SDFScale*(float)_sdfParameter.sourceFontSize );
+            
+            float posLeft = x, posTop = y;
+            posLeft += glyph->bitmapBearingX * scaleFactor;
+            posTop += glyph->bitmapBearingY * scaleFactor;
+            float posRight = posLeft + glyph->bitmapWidth * scaleFactor;
+            float posBottom = posTop + glyph->bitmapHeight * scaleFactor;
+            //
+            x += glyph->bitmapAdvance*scaleFactor;
+            //
+            float uvLeft = glyph->texU;
+            float uvRight = glyph->texU + glyph->texWidth;
+            float uvTop = glyph->texV;
+            float uvBottom = glyph->texV + glyph->texHeight;
+
+            FontMeshVertex rect[4] = {
+                { {posLeft, posTop}, {uvLeft, uvTop} },
+                { {posRight, posTop}, {uvRight, uvTop} },
+                { {posRight, posBottom}, {uvRight, uvBottom} },
+                { {posLeft, posBottom}, {uvLeft, uvBottom} },
+            };
+            
+            uint16_t baseIndex = _indicesCache.size()? _indicesCache.back()+1:0;
+            uint16_t indices[6] = {
+                baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
+            };
+            for( auto index : indices ) {
+                _indicesCache.push_back(index);
             }
-            IndexHandle index;
-            index.styleIndex = styleIndex;
-            index.transformIndex = transformIndex;
-             //= { (uint32_t)effectIndex | ((uint32_t)transformIndex<<16) };
-            _indices.push_back(index);
-        }        
+            _verticesCache.push_back(rect[0]);
+            _verticesCache.push_back(rect[1]);
+            _verticesCache.push_back(rect[2]);
+            _verticesCache.push_back(rect[3]);
+            //
+            _indices.push_back(reuseHandle);
+        }
+        rect.SetRight(x);
+
+        return reuseHandle;
+    }
+
+    IndexHandle SDFFontRenderer::appendTextResuseStyle ( 
+        float x, float y, SDFChar* text, uint32_t length, 
+        IndexHandle reuseHandle, const Transform& transform, hgl::RectScope2f& rect
+    ) {
+        uint32_t transformIndex = _transforms.size();
+        _transforms.push_back(transform);
+        reuseHandle.transformIndex = transformIndex;
+
+        rect.SetLeft(x);
+        //
+        for( uint32_t i = 0; i<length; ++i ) {
+            const SDFChar& ch = text[i];
+            //
+            uint32_t indexID = (uint32_t)_indices.size();
+            uint32_t styleIndex = 0;
+            //
+            GlyphKey glyphKey;
+            glyphKey.charCode = ch.charCode;
+            glyphKey.fontID = ch.fontID;
+            GlyphInfo* glyph = _texTileManager->getGlyph(glyphKey);
+            float targetFontSize = ch.fontSize;
+            float scaleFactor = targetFontSize / (glyph->SDFScale*(float)_sdfParameter.sourceFontSize );
+            
+            float posLeft = x, posTop = y;
+            posLeft += glyph->bitmapBearingX * scaleFactor;
+            posTop += glyph->bitmapBearingY * scaleFactor;
+            float posRight = posLeft + glyph->bitmapWidth * scaleFactor;
+            float posBottom = posTop + glyph->bitmapHeight * scaleFactor;
+            //
+            x += glyph->bitmapAdvance*scaleFactor;
+            //
+            float uvLeft = glyph->texU;
+            float uvRight = glyph->texU + glyph->texWidth;
+            float uvTop = glyph->texV;
+            float uvBottom = glyph->texV + glyph->texHeight;
+
+            FontMeshVertex rect[4] = {
+                { {posLeft, posTop}, {uvLeft, uvTop} },
+                { {posRight, posTop}, {uvRight, uvTop} },
+                { {posRight, posBottom}, {uvRight, uvBottom} },
+                { {posLeft, posBottom}, {uvLeft, uvBottom} },
+            };
+            
+            uint16_t baseIndex = _indicesCache.size()? _indicesCache.back()+1:0;
+            uint16_t indices[6] = {
+                baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
+            };
+            for( auto index : indices ) {
+                _indicesCache.push_back(index);
+            }
+            _verticesCache.push_back(rect[0]);
+            _verticesCache.push_back(rect[1]);
+            _verticesCache.push_back(rect[2]);
+            _verticesCache.push_back(rect[3]);
+            _indices.push_back(reuseHandle);
+        }
+        rect.SetRight(x);
+
+        return reuseHandle;
+    }
+
+    IndexHandle SDFFontRenderer::appendTextResuse ( 
+        float x, float y, SDFChar* text, uint32_t length, 
+        IndexHandle reuseHandle, hgl::RectScope2f& rect
+    ) {
+        rect.SetLeft(x);
+        for( uint32_t i = 0; i<length; ++i ) {
+            const SDFChar& ch = text[i];
+            //
+            uint32_t indexID = (uint32_t)_indices.size();
+            uint32_t styleIndex = 0;
+            //
+            GlyphKey glyphKey;
+            glyphKey.charCode = ch.charCode;
+            glyphKey.fontID = ch.fontID;
+            GlyphInfo* glyph = _texTileManager->getGlyph(glyphKey);
+            float targetFontSize = ch.fontSize;
+            float scaleFactor = targetFontSize / (glyph->SDFScale*(float)_sdfParameter.sourceFontSize );
+            
+            float posLeft = x, posTop = y;
+            posLeft += glyph->bitmapBearingX * scaleFactor;
+            posTop += glyph->bitmapBearingY * scaleFactor;
+            float posRight = posLeft + glyph->bitmapWidth * scaleFactor;
+            float posBottom = posTop + glyph->bitmapHeight * scaleFactor;
+            //
+            x += glyph->bitmapAdvance*scaleFactor;
+            //
+            float uvLeft = glyph->texU;
+            float uvRight = glyph->texU + glyph->texWidth;
+            float uvTop = glyph->texV;
+            float uvBottom = glyph->texV + glyph->texHeight;
+
+            FontMeshVertex rect[4] = {
+                { {posLeft, posTop}, {uvLeft, uvTop} },
+                { {posRight, posTop}, {uvRight, uvTop} },
+                { {posRight, posBottom}, {uvRight, uvBottom} },
+                { {posLeft, posBottom}, {uvLeft, uvBottom} },
+            };
+            
+            uint16_t baseIndex = _indicesCache.size()? _indicesCache.back()+1:0;
+            uint16_t indices[6] = {
+                baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
+            };
+            for( auto index : indices ) {
+                _indicesCache.push_back(index);
+            }
+            _verticesCache.push_back(rect[0]);
+            _verticesCache.push_back(rect[1]);
+            _verticesCache.push_back(rect[2]);
+            _verticesCache.push_back(rect[3]);
+            _indices.push_back(reuseHandle);
+        }
+        rect.SetRight(x);
+
+        return reuseHandle;
     }
 
     void SDFFontRenderer::resize( uint32_t width, uint32_t height ) {
@@ -250,10 +408,8 @@ namespace ugi {
         drawData->_indexBuffer = ibo;
         drawData->_indexCount = (uint32_t)_indicesCache.size();
         drawData->_indices = std::move(_indices);
-        drawData->_effects = std::move(_effects);
-        drawData->_effectRecord = std::move(_effectRecord);
+        drawData->_styles = std::move(_styles);
         drawData->_transforms = std::move(_transforms);
-        drawData->_transformRecord = std::move(_transformRecord);
         //
         return drawData;
     }
@@ -286,7 +442,7 @@ namespace ugi {
 
             descriptor.descriptorHandle = _effectsHandle;
             descriptor.bufferRange = sizeof(Style) * 256;
-            uniformAllocator->allocateForDescriptor(descriptor, drawData->_effects);
+            uniformAllocator->allocateForDescriptor(descriptor, drawData->_styles);
             drawData->_argumentGroup->updateDescriptor(descriptor);
             drawData->_argumentGroup->prepairResource(resourceEncoder);
 
@@ -317,6 +473,18 @@ namespace ugi {
             renderEncoder->bindArgumentGroup(drawData->_argumentGroup);
             // 3. draw
             renderEncoder->drawIndexed( drawData->_drawable, 0, drawData->_indexCount, 0);
+        }
+    }
+
+    void SDFFontDrawData::updateTransform( IndexHandle handle, Transform transform ) {
+        if( handle.transformIndex < _transforms.size() ) {
+            _transforms[handle.transformIndex] = transform;
+        }
+    }
+
+    void SDFFontDrawData::updateStyle( IndexHandle handle, Style style ) {
+        if( handle.styleIndex < _styles.size() ) {
+            _styles[handle.styleIndex] = style;
         }
     }
 

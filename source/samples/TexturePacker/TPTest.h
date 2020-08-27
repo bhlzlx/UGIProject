@@ -26,7 +26,9 @@ namespace ugi {
         ugi::UniformAllocator*  _uniformAllocator;
         ///> ===========================================================================
         ugi::SDFFontRenderer*   _fontRenderer;
-        std::vector<ugi::SDFFontDrawData*> _drawDatas;
+        ugi::SDFFontDrawData*   _drawData;
+
+        IndexHandle             _h1, _h2, _h3, _h4;
         
         uint32_t                _flightIndex;                                      // flight index
         //

@@ -3,6 +3,7 @@
 #include <hgl/math/Vector.h>
 #include <ugi/UGIDeclare.h>
 #include <ugi/UGITypes.h>
+#include <hgl/type/RectScope.h>
 #include <map>
 
 namespace hgl {
@@ -63,17 +64,23 @@ layout( set = 0, binding = 3) uniform Context {
 
     struct Style {
         uint32_t color = 0xffffffff;
-        uint32_t effectColor = 0xffffffff;
+        uint32_t styleColor = 0xffffffff;
         union {
             uint32_t composedFlags = 0x0;
             struct {
                 uint32_t    type:8;        // 类型 : 加粗、描边、阴影、内发光、无
-                uint32_t    arrayIndex:8;  // 纹理数组索引
+                uint32_t    arrayIndex:8;  // 纹理数组索引 ( 这个不能再放在这里了，需要单独给一个ｂｕｆｆｅｒ)
                 uint32_t    gray:8;        // 灰度
                 uint32_t    padding1:8;
             };
         };
         uint32_t    reserved;
+        Style( uint32_t c, uint32_t s, uint32_t f)
+            : color(c)
+            , styleColor(s)
+            , composedFlags(f) {
+        }
+
         bool operator < ( const Style& other ) const {
             return memcmp( this, &other, sizeof(Style)) < 0;
         }
@@ -83,8 +90,58 @@ layout( set = 0, binding = 3) uniform Context {
         hgl::Vector3f col1;
         hgl::Vector3f col2;
         hgl::Vector2f padding;
+        Transform( const hgl::Vector3f& c1, const hgl::Vector3f& c2 )
+            : col1(c1)
+            , col2(c2) {
+        }
+        //
         bool operator < ( const Transform& other ) const {
             return memcmp( this, &other, sizeof(Transform)) < 0;
+        }
+
+        static Transform createTransform( const hgl::Vector2f& offset ) {
+            return Transform(
+                hgl::Vector3f( 1.0f, 0.0f, offset.x),
+                hgl::Vector3f( 0.0f, 1.0f, offset.y)
+            );
+        }
+
+        static Transform createTransform( const hgl::Vector2f& anchor, const hgl::Vector2f& scale ) {
+            float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
+            return Transform( 
+                hgl::Vector3f(a, 0, -a*x + x),
+                hgl::Vector3f(0, b, -b*y + y)
+            );
+        }
+
+        static Transform createTransform( const hgl::Vector2f& anchor, float radian ){
+            float cosValue = cos(radian); float sinValue = sin(radian);
+            float x = anchor.x; float y = anchor.y;
+            return Transform(
+                hgl::Vector3f(cosValue, -sinValue, -cosValue*x + sinValue*y + x),
+                hgl::Vector3f(sinValue, cosValue,  -sinValue*x - cosValue*y + y)
+            );
+        }
+        
+        static Transform createTransform(const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
+            float cosValue = cos(rotation); float sinValue = sin(rotation);
+            float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
+            return Transform(
+                hgl::Vector3f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x),
+                hgl::Vector3f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y)
+            );
+        }
+
+
+        static Transform createTransform( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian, const hgl::Vector2f& offset ) {
+            float cosValue = cos(radian); float sinValue = sin(radian);
+            float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
+            Transform rst = Transform(
+                hgl::Vector3f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x),
+                hgl::Vector3f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y)
+            );
+            rst.col1.z += offset.x;
+            rst.col2.z += offset.y;
         }
     };
 
@@ -99,10 +156,8 @@ layout( set = 0, binding = 3) uniform Context {
         uint32_t            _indexCount;
         //
         std::vector<IndexHandle>        _indices;
-        std::vector<Style>              _effects;
+        std::vector<Style>              _styles;
         std::vector<Transform>          _transforms;
-        std::map<Style, uint32_t>       _effectRecord;
-        std::map<Transform, uint32_t>   _transformRecord;
     public:
         SDFFontDrawData()
             : _argumentGroup( nullptr )
@@ -112,34 +167,26 @@ layout( set = 0, binding = 3) uniform Context {
         {
         }
 
+        //==== Update Parameters
+        void updateTransform( IndexHandle handle, Transform transform );
+        void updateStyle( IndexHandle handle, Style style );
+
     };
 
     struct SDFChar {
         uint32_t fontID     : 8;
         uint32_t fontSize   : 8;
         uint32_t charCode   : 16;
-        uint32_t type       : 8;
-        uint32_t renderID   : 16;
-        uint32_t color;
-        uint32_t effectColor;
         SDFChar()
             : fontID(0)
             , fontSize(18)
             , charCode(u'A')
-            , type(0)
-            , renderID(0)
-            , color( 0xffffffff )
-            , effectColor( 0xffffffff )
         {
         }
-        SDFChar( uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f, uint32_t g)
+        SDFChar( uint32_t a, uint32_t b, uint32_t c )
             : fontID(a)
             , fontSize(b)
             , charCode(c)
-            , type(d)
-            , renderID(e)
-            , color(f)
-            , effectColor(g)
         {
         }
     };
@@ -170,10 +217,10 @@ layout( set = 0, binding = 3) uniform Context {
         std::vector<uint16_t>       _indicesCache;
 
         std::vector<IndexHandle>        _indices;
-        std::vector<Style>              _effects;
+        std::vector<Style>              _styles;
         std::vector<Transform>          _transforms;
-        std::map<Style, uint32_t>       _effectRecord;
-        std::map<Transform, uint32_t>   _transformRecord;
+        // std::map<Style, uint32_t>       _effectRecord;
+        // std::map<Transform, uint32_t>   _transformRecord;
         //
         struct BufferUpdateItem {
             Buffer* vertexBuffer;
@@ -187,7 +234,22 @@ layout( set = 0, binding = 3) uniform Context {
         void resize( uint32_t width, uint32_t height );
         //==== Build functions
         void beginBuild();
-        void appendText( float x, float y, const std::vector<SDFChar>& text, const hgl::Vector3f (& transform )[2] );
+        // 这个接口默认会给分配一个新的 style/transform index位以及数据元
+        IndexHandle appendText( float x, float y, SDFChar* text, uint32_t length, const Transform& transform, const Style& style, hgl::RectScope2f& rect );
+        // 这个接口是用来重用的
+        IndexHandle appendTextResuseTransform( 
+            float x, float y, SDFChar* text, uint32_t length,
+            IndexHandle resuseHandle, const Style& style, hgl::RectScope2f& rect
+        );
+        IndexHandle appendTextResuseStyle ( 
+            float x, float y, SDFChar* text, uint32_t length, 
+            IndexHandle resuseHandle, const Transform& transform, hgl::RectScope2f& rect
+        );
+        IndexHandle appendTextResuse ( 
+            float x, float y, SDFChar* text, uint32_t length, 
+            IndexHandle resuseHandle, hgl::RectScope2f& rect
+        );
+
         SDFFontDrawData* endBuild();
         //==== Resource functions
         void tickResource( ResourceCommandEncoder* resEncoder );
