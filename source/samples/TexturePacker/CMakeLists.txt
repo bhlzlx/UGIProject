@@ -1,4 +1,4 @@
-project( TPTest )
+project( SDFTest )
 
 include_directories( ${CMAKE_SOURCE_DIR}/source )
 include_directories( ${CMAKE_SOURCE_DIR}/thirdpart/include )
@@ -20,13 +20,13 @@ set ( PROJECT_HEADER
     ${CMAKE_CURRENT_SOURCE_DIR}/TPTest.h
 )
 
-add_executable( TPTest WIN32
+add_executable( SDFTest WIN32
     ${PROJECT_SOURCE}
     ${PROJECT_HEADER}
 )
 
 target_link_libraries(
-    TPTest
+    SDFTest
     CMCore
     CMAssetsManage
     CMPlatform
