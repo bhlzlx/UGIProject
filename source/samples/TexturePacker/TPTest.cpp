@@ -65,9 +65,9 @@ namespace ugi {
         //
 
         char16_t textArray[][64] = {
-            u"找不到路径，",
+            u".找不到路径，",
             u"因为该路径不存在。",
-            u"PixelGame",
+            u"全英雄选择",
             u"testgoogle..."
         };
         Style styleArray[5] = {
@@ -80,7 +80,7 @@ namespace ugi {
         uint32_t fontSize[] = { 12, 18, 24, 36, 48, 60, 72, 96 };
         uint32_t fontColor[] = { 0xffff00ff, 0xff8800ff, 0x00ffffff, 0x88ff00ff, 0xff0000ff, 0x00ffffff, 0x00ff88ff, 0x0000ffff};
         
-        uint32_t baseY = 96;
+        uint32_t baseY = 360;
 
         _fontRenderer->beginBuild();
 
@@ -105,7 +105,7 @@ namespace ugi {
             SDFChar chr = { 0, 36U, ch };
             vecChar.push_back(chr);
         }
-        _h2 = _fontRenderer->appendTextResuseTransform(rc.GetRight(), baseY, vecChar.data(), vecChar.size(), _h1, styleArray[1], rc);
+        _h2 = _fontRenderer->appendTextReuseTransform(rc.GetRight(), baseY, vecChar.data(), vecChar.size(), _h1, styleArray[1], rc);
 
         vecChar.clear();
         for( auto& ch : textArray[2]) {
@@ -115,7 +115,7 @@ namespace ugi {
             SDFChar chr = { 0, 36U, ch };
             vecChar.push_back(chr);
         }
-        _h3 = _fontRenderer->appendTextResuseStyle(rc.GetRight(), baseY, vecChar.data(), vecChar.size(), _h2, identity, rc);
+        _h3 = _fontRenderer->appendTextReuseStyle(rc.GetRight(), baseY, vecChar.data(), vecChar.size(), _h2, identity, rc);
 
         anchor3.Set( rc.GetCenterX(), baseY);
 
@@ -146,7 +146,7 @@ namespace ugi {
         
         auto cmdbuf = _commandBuffers[_flightIndex];
 
-        static auto t = tweeny::from(1.0).to(2.0).during(60);
+        static auto t = tweeny::from(1.5).to(4.0).during(60);
         if(t.progress() == 0.0f) {
             t = t.forward();
         } else if( t.progress() == 1.0f ) {

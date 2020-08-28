@@ -64,6 +64,7 @@ namespace ugi {
                 pipelineBuffer += shader.spirvSize;
             }
         }
+        //_pipelineDescription.vertexLayout.buffers[2].
         _pipelineDescription.pologonMode = PolygonMode::Fill;
         _pipelineDescription.topologyMode = TopologyMode::TriangleList;
         _pipelineDescription.renderState.cullMode = CullMode::None;
@@ -84,8 +85,8 @@ namespace ugi {
     }
 
     void SDFFontRenderer::beginBuild() {
-        _verticesCache.clear();
-        _indicesCache.clear();
+        _meshVBO.clear();
+        _meshIBO.clear();
         // === 
         _indices.clear();
         _styles.clear();
@@ -149,17 +150,17 @@ namespace ugi {
                 { {posLeft, posBottom}, {uvLeft, uvBottom} },
             };
             
-            uint16_t baseIndex = _indicesCache.size()? _indicesCache.back()+1:0;
+            uint16_t baseIndex = _meshIBO.size()? _meshIBO.back()+1:0;
             uint16_t indices[6] = {
                 baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
             };
             for( auto index : indices ) {
-                _indicesCache.push_back(index);
+                _meshIBO.push_back(index);
             }
-            _verticesCache.push_back(rect[0]);
-            _verticesCache.push_back(rect[1]);
-            _verticesCache.push_back(rect[2]);
-            _verticesCache.push_back(rect[3]);
+            _meshVBO.push_back(rect[0]);
+            _meshVBO.push_back(rect[1]);
+            _meshVBO.push_back(rect[2]);
+            _meshVBO.push_back(rect[3]);
             //
             _indices.push_back(indexHandle);
         }
@@ -169,7 +170,7 @@ namespace ugi {
         return indexHandle;
     }
 
-    IndexHandle SDFFontRenderer::appendTextResuseTransform( 
+    IndexHandle SDFFontRenderer::appendTextReuseTransform( 
         float x, float y, SDFChar* text, uint32_t length, 
         IndexHandle reuseHandle, const Style& style, hgl::RectScope2f& rect
     ) {
@@ -212,17 +213,17 @@ namespace ugi {
                 { {posLeft, posBottom}, {uvLeft, uvBottom} },
             };
             
-            uint16_t baseIndex = _indicesCache.size()? _indicesCache.back()+1:0;
+            uint16_t baseIndex = _meshIBO.size()? _meshIBO.back()+1:0;
             uint16_t indices[6] = {
                 baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
             };
             for( auto index : indices ) {
-                _indicesCache.push_back(index);
+                _meshIBO.push_back(index);
             }
-            _verticesCache.push_back(rect[0]);
-            _verticesCache.push_back(rect[1]);
-            _verticesCache.push_back(rect[2]);
-            _verticesCache.push_back(rect[3]);
+            _meshVBO.push_back(rect[0]);
+            _meshVBO.push_back(rect[1]);
+            _meshVBO.push_back(rect[2]);
+            _meshVBO.push_back(rect[3]);
             //
             _indices.push_back(reuseHandle);
         }
@@ -231,7 +232,7 @@ namespace ugi {
         return reuseHandle;
     }
 
-    IndexHandle SDFFontRenderer::appendTextResuseStyle ( 
+    IndexHandle SDFFontRenderer::appendTextReuseStyle ( 
         float x, float y, SDFChar* text, uint32_t length, 
         IndexHandle reuseHandle, const Transform& transform, hgl::RectScope2f& rect
     ) {
@@ -274,17 +275,17 @@ namespace ugi {
                 { {posLeft, posBottom}, {uvLeft, uvBottom} },
             };
             
-            uint16_t baseIndex = _indicesCache.size()? _indicesCache.back()+1:0;
+            uint16_t baseIndex = _meshIBO.size()? _meshIBO.back()+1:0;
             uint16_t indices[6] = {
                 baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
             };
             for( auto index : indices ) {
-                _indicesCache.push_back(index);
+                _meshIBO.push_back(index);
             }
-            _verticesCache.push_back(rect[0]);
-            _verticesCache.push_back(rect[1]);
-            _verticesCache.push_back(rect[2]);
-            _verticesCache.push_back(rect[3]);
+            _meshVBO.push_back(rect[0]);
+            _meshVBO.push_back(rect[1]);
+            _meshVBO.push_back(rect[2]);
+            _meshVBO.push_back(rect[3]);
             _indices.push_back(reuseHandle);
         }
         rect.SetRight(x);
@@ -292,7 +293,7 @@ namespace ugi {
         return reuseHandle;
     }
 
-    IndexHandle SDFFontRenderer::appendTextResuse ( 
+    IndexHandle SDFFontRenderer::appendTextReuse ( 
         float x, float y, SDFChar* text, uint32_t length, 
         IndexHandle reuseHandle, hgl::RectScope2f& rect
     ) {
@@ -330,17 +331,17 @@ namespace ugi {
                 { {posLeft, posBottom}, {uvLeft, uvBottom} },
             };
             
-            uint16_t baseIndex = _indicesCache.size()? _indicesCache.back()+1:0;
+            uint16_t baseIndex = _meshIBO.size()? _meshIBO.back()+1:0;
             uint16_t indices[6] = {
                 baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
             };
             for( auto index : indices ) {
-                _indicesCache.push_back(index);
+                _meshIBO.push_back(index);
             }
-            _verticesCache.push_back(rect[0]);
-            _verticesCache.push_back(rect[1]);
-            _verticesCache.push_back(rect[2]);
-            _verticesCache.push_back(rect[3]);
+            _meshVBO.push_back(rect[0]);
+            _meshVBO.push_back(rect[1]);
+            _meshVBO.push_back(rect[2]);
+            _meshVBO.push_back(rect[3]);
             _indices.push_back(reuseHandle);
         }
         rect.SetRight(x);
@@ -354,13 +355,13 @@ namespace ugi {
 
     SDFFontDrawData* SDFFontRenderer::endBuild() {
         // === 
-        auto vbo = _device->createBuffer( BufferType::VertexBuffer, _verticesCache.size()*sizeof(FontMeshVertex) );
-        auto ibo = _device->createBuffer( BufferType::IndexBuffer, _indicesCache.size() * sizeof(uint16_t) );
+        auto vbo = _device->createBuffer( BufferType::VertexBuffer, _meshVBO.size()*sizeof(FontMeshVertex) );
+        auto ibo = _device->createBuffer( BufferType::IndexBuffer, _meshIBO.size() * sizeof(uint16_t) );
         // staging buffer 不需要在这里销毁，在更新操作之后再扔到 resource manager　里
         auto stagingBuffer = _device->createBuffer( BufferType::StagingBuffer, vbo->size() + ibo->size());
         uint8_t* ptr= (uint8_t*)stagingBuffer->map(_device);
-        memcpy(ptr, _verticesCache.data(), vbo->size());
-        memcpy(ptr+vbo->size(), _indicesCache.data(), ibo->size());
+        memcpy(ptr, _meshVBO.data(), vbo->size());
+        memcpy(ptr+vbo->size(), _meshIBO.data(), ibo->size());
         stagingBuffer->unmap(_device);
         //
         _updateItems.push_back( { vbo, ibo, stagingBuffer } );
@@ -406,7 +407,7 @@ namespace ugi {
         drawData->_drawable->setVertexBuffer( vbo, 1, 8 );  // uv
         drawData->_vertexBuffer = vbo;
         drawData->_indexBuffer = ibo;
-        drawData->_indexCount = (uint32_t)_indicesCache.size();
+        drawData->_indexCount = (uint32_t)_meshIBO.size();
         drawData->_indices = std::move(_indices);
         drawData->_styles = std::move(_styles);
         drawData->_transforms = std::move(_transforms);

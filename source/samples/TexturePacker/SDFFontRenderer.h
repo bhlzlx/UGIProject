@@ -6,6 +6,10 @@
 #include <hgl/type/RectScope.h>
 #include <map>
 
+/*
+    因为变换这种数据重复率太高了，一般不会有
+*/
+
 namespace hgl {
     namespace assets {
         class AssetsSource;
@@ -23,28 +27,6 @@ namespace ugi {
         uint32_t searchDistance : 8;
     };
 
-    /*
-layout( set = 0, binding = 0 ) uniform Indices {
-    uint effectIndices[8192];
-    uint transformIndices[8192];
-};
-
-// 一个批次最多支持512种样式
-layout( set = 0, binding = 1) uniform Effects {
-    EffectImp effects[512];
-};
-
-// 一个批次最多支持512种变换
-layout( set = 0, binding = 2) uniform Transforms {
-    TransformImp transforms[512];
-};
-
-layout( set = 0, binding = 3) uniform Context {
-    float contextWidth;
-    float contextHeight;
-};
-    */
-
     class SDFTextureTileManager;
 
     struct FontMeshVertex {
@@ -54,10 +36,11 @@ layout( set = 0, binding = 3) uniform Context {
 
     struct IndexHandle {
         union {
-            uint32_t handle;
+            uint32_t handles[2];
             struct {
-                uint32_t styleIndex:16;        // 样式
-                uint32_t transformIndex:16;     // 变换
+                uint32_t styleIndex         :16;    // 样式
+                uint32_t transformIndex     :16;    // 变换
+                uint32_t layerIndex         :8;     // 纹理LayerIndex
             };
         };
     };
@@ -152,6 +135,7 @@ layout( set = 0, binding = 3) uniform Context {
         //
         Buffer*             _vertexBuffer;
         Buffer*             _indexBuffer;
+        Buffer*             _texArrIndexBuffer;
         Drawable*           _drawable;
         uint32_t            _indexCount;
         //
@@ -163,7 +147,9 @@ layout( set = 0, binding = 3) uniform Context {
             : _argumentGroup( nullptr )
             , _vertexBuffer( nullptr )
             , _indexBuffer( nullptr )
+            , _texArrIndexBuffer( nullptr )
             , _drawable( nullptr )
+            , _indexCount(0)
         {
         }
 
@@ -213,8 +199,8 @@ layout( set = 0, binding = 3) uniform Context {
 
         SDFRenderParameter          _sdfParameter;
 
-        std::vector<FontMeshVertex> _verticesCache;
-        std::vector<uint16_t>       _indicesCache;
+        std::vector<FontMeshVertex> _meshVBO;
+        std::vector<uint16_t>       _meshIBO;
 
         std::vector<IndexHandle>        _indices;
         std::vector<Style>              _styles;
@@ -237,15 +223,15 @@ layout( set = 0, binding = 3) uniform Context {
         // 这个接口默认会给分配一个新的 style/transform index位以及数据元
         IndexHandle appendText( float x, float y, SDFChar* text, uint32_t length, const Transform& transform, const Style& style, hgl::RectScope2f& rect );
         // 这个接口是用来重用的
-        IndexHandle appendTextResuseTransform( 
+        IndexHandle appendTextReuseTransform( 
             float x, float y, SDFChar* text, uint32_t length,
             IndexHandle resuseHandle, const Style& style, hgl::RectScope2f& rect
         );
-        IndexHandle appendTextResuseStyle ( 
+        IndexHandle appendTextReuseStyle ( 
             float x, float y, SDFChar* text, uint32_t length, 
             IndexHandle resuseHandle, const Transform& transform, hgl::RectScope2f& rect
         );
-        IndexHandle appendTextResuse ( 
+        IndexHandle appendTextReuse ( 
             float x, float y, SDFChar* text, uint32_t length, 
             IndexHandle resuseHandle, hgl::RectScope2f& rect
         );

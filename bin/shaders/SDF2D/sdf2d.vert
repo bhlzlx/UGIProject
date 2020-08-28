@@ -3,16 +3,12 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (location = 0) in vec2 _position;
-layout (location = 1) in vec2 _uv;
+layout (location = 0) in vec2   _position;
+layout (location = 1) in vec2   _uv;
 
 vec4 uint32ToVec4( uint val ) {
     return vec4( (val>>24)/255.0f, (val>>16&0xff)/255.0f, (val>>8&0xff)/255.0f, (val&0xff)/255.0f );
 }
-
-// struct IndexImp {
-//     uint indexGroup[4];
-// };
 
 struct EffectImp {
     uint    colorMask;     // 颜色参数
@@ -29,7 +25,7 @@ struct TransformImp {
 
 // 一个批次最多能渲染8192个字
 layout( set = 0, binding = 0 ) uniform Indices {
-    ivec4 indices[256];
+    ivec4 indices[512];
 };
 
 // 一个批次最多支持512种样式
@@ -58,14 +54,20 @@ out gl_PerVertex  {
 };
 
 void main() {
-    uint tableIndex = gl_VertexIndex / 4; // 四索引一个四边形
-    uint effectsIndex = tableIndex / 4;
-    uint effectsInnerIndex = tableIndex % 4;
-    uint effectIndex = indices[effectsIndex][effectsInnerIndex]&0xffff;
-    uint transformIndex = indices[effectsIndex][effectsInnerIndex]>>16;
-    EffectImp effect = effects[effectIndex];
+    uint tableIndex = gl_VertexIndex/4; // 四索引一个四边形
+    uint indexerIndex = tableIndex/2;
+    uint indexerInnerIndex = tableIndex%2;
+    
+    uint styleTrans = indices[indexerIndex][indexerInnerIndex*2];
+    uint layerReserved = indices[indexerIndex][indexerInnerIndex*2+1];
+
+    uint styleIndex = styleTrans&0xffff;
+    uint transformIndex = styleTrans>>16;
+    uint layerIndex = layerReserved&0xff;
+
+    EffectImp effect = effects[styleIndex];
     TransformImp transform = transforms[transformIndex];
-    //
+
     // == transform
     vec3 col1 = vec3( transform.col11, transform.col12, transform.col13 );
     vec3 col2 = vec3( transform.col21, transform.col22, transform.col23 );
@@ -81,6 +83,6 @@ void main() {
     effectColor_ = uint32ToVec4( effect.effectColor );
     type_ = effect.type&0xff;
     // == _uv output 
-    float w = (effect.type>>8)&0xff;
+    float w = layerIndex;
 	uvw_ = vec3( _uv, w );
 }
