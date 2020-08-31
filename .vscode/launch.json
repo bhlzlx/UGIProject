@@ -102,10 +102,21 @@
             ]
         },
         {
+            "name": "(msvc) DX11Test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Windows_64_Debug/DX11Test.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
             "name": "(msvc) TPTest",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/TPTest.exe",
+            "program": "${workspaceFolder}/bin/Windows_64_Debug/SDFTest.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",

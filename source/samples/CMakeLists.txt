@@ -65,6 +65,7 @@ else()
         add_subdirectory( WidgetTest )
         add_subdirectory( MemTest )
         add_subdirectory( TexturePacker )
+        add_subdirectory( DX11Test )
         
         SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET Sphere PROPERTY FOLDER "Samples")

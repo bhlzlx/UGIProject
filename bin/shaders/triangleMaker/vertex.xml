@@ -1,0 +1,30 @@
+<vertex>
+    <imports>
+        <import file="TriangleDefine" />
+    </imports>
+    <input>
+        <attriubte name="Position" type="vec2" />
+        <attriubte name="Uv" type="vec2" />
+    </input>
+    <output>
+        <attribute name="fragUV" type="vec2"/>
+    </output>
+    <uniform>
+        <block type="Tranform" name="transform" />
+        layout( set = 0, binding = 0 ) uniform Argument1 {
+            vec4 col1;
+            vec4 col2;
+        };
+    </uniform>
+    <body>
+        out gl_PerVertex {
+            vec4 gl_Position;   
+        };
+        void main() {
+            float x = dot( vec3( Position.x, Position.y, 1.0f ), col1.xyz);
+            float y = dot( vec3( Position.x, Position.y, 1.0f ), col2.xyz);
+            gl_Position = vec4( x, y, 1.0f, 1.0f);
+            fragUV = Uv;
+        }
+    </body>
+</vertex>

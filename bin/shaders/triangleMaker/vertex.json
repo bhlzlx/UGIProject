@@ -1,0 +1,20 @@
+{
+    "inputs":[
+        { "name":"position", "type":"vec2" }, 
+        { "name":"uv", "type":"vec2" }
+    ],
+    "output": [
+        { "name":"fragColor", "type":"vec4" },
+        { "name":"fragGray", "type":"float" },
+        { "name":"fragScreenScissor", "type":"vec4" }
+    ],
+    "internal" : {
+        "input":[],
+        "output":[
+            "gl_Position"
+        ]
+    },
+    "function" : {
+        
+    }
+}

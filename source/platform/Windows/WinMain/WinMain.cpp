@@ -119,12 +119,19 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     frameThicknessX = GetSystemMetrics(SM_CXSIZEFRAME);
     frameThicknessY = GetSystemMetrics(SM_CYSIZEFRAME);
 
+    RECT wndRc = {
+        0, 0, 640, 480
+    };
+    AdjustWindowRect( &wndRc, WS_OVERLAPPEDWINDOW, TRUE);
+
     HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, 512, 512, nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, CW_USEDEFAULT, wndRc.right, wndRc.bottom, nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd) {
         return FALSE;
     }
+
+
 
     object = GetApplication();
 
