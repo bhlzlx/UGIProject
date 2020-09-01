@@ -6,8 +6,40 @@
 namespace ugi {
 
     bool DX11Test::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
-        uint32_t screenWidth = 640, screenHeight = 480;
-#ifndef NDEBUG
+        _device = new DeviceDX11();
+        if(!_device->intialize()) {
+            return false;
+        }
+        _swapchain = new SwapchainDX11(_device, (HWND)_wnd);
+        return true;
+    }
+
+    void DX11Test::tick() {
+        if(!_swapchain->ready()) { // 交换链还没准备好
+            return;
+        }
+    }
+        
+    void DX11Test::resize(uint32_t width, uint32_t height) {
+        _width = width;
+        _height = height;
+        _swapchain->onResize( width, height );
+    }
+
+    void DX11Test::release() {
+        delete this;
+    }
+
+    const char * DX11Test::title() {
+        return "DX11Test";
+    }
+        
+    uint32_t DX11Test::rendererType() {
+        return 0;
+    }
+
+    bool DeviceDX11::intialize() {
+        #ifndef NDEBUG
         uint32_t createDeviceFlags = D3D11_CREATE_DEVICE_DEBUG;
 #else
         uint32_t createDeviceFlags = 0;
@@ -27,90 +59,258 @@ namespace ugi {
         D3D_DRIVER_TYPE selectDriverType;
         D3D_FEATURE_LEVEL selectFeatureLevel;
         HRESULT hr;
+
+        ID3D11Device* device = nullptr;
+        ID3D11DeviceContext* context = nullptr;
         for( uint32_t driverTypeIndex = 0; driverTypeIndex<numDriverTypes; ++driverTypeIndex ) {
             selectDriverType = driverType[driverTypeIndex];
             hr = D3D11CreateDevice(
-                nullptr, selectDriverType, nullptr, createDeviceFlags, featureLevels,
-                numFeatureLevels, D3D11_SDK_VERSION, 
-                _d3d11Device.GetAddressOf(), &selectFeatureLevel, _d3d11Context.GetAddressOf()
+                nullptr, selectDriverType, nullptr, createDeviceFlags, &featureLevels[0], numFeatureLevels, 
+                D3D11_SDK_VERSION,
+                &device, &selectFeatureLevel, &context
             );
-            if( hr == E_INVALIDARG) { // 不支持当前版本, 尝试低版本
+            // 如果返回值是887a002d, 在控制面板里应用和功能里添加可用功能（图形工具）
+            if( hr == E_INVALIDARG) { // 不支持11.1, 创建11.0
                 hr = D3D11CreateDevice(
-                    nullptr, selectDriverType, nullptr, createDeviceFlags, &featureLevels[1], numFeatureLevels - 1,
-                    D3D11_SDK_VERSION, _d3d11Device.GetAddressOf(), &selectFeatureLevel, _d3d11Context.GetAddressOf()
+                    nullptr, selectDriverType, nullptr, createDeviceFlags, &featureLevels[1], 1,
+                    D3D11_SDK_VERSION, 
+                    &device, &selectFeatureLevel, &context
                 );
-            }
-            if(SUCCEEDED(hr)) {
-                break;
+                if(SUCCEEDED(hr)) {
+                    _minorVersion = 0;
+                    break;
+                }
+            } else {
+                if(SUCCEEDED(hr)) {
+                    _minorVersion = 1;
+                    break;
+                }
             }
         }
         if(FAILED(hr)) {
             MessageBox( NULL, L"Create D3D11 Device Failed!", 0, 0);
             return false;
         }
-        // 确认支持的特性
+        // 确认支持的特性(实际根本没必要的，这代码是我抄来的，估计写这段代码的小哥没意识到)
         if ( selectFeatureLevel != D3D_FEATURE_LEVEL_11_0 && selectFeatureLevel != D3D_FEATURE_LEVEL_11_1) {
             MessageBox(0, L"Direct3D Feature Level 11 unsupported.", 0, 0);
             return false;
         }
-        _d3d11Device->CheckMultisampleQualityLevels( DXGI_FORMAT_R8G8B8A8_UNORM, 4, &_msaaQuality );
+        device->CheckMultisampleQualityLevels( DXGI_FORMAT_R8G8B8A8_UNORM, 4, &_msaaQuality );
         assert( _msaaQuality && "这个是一定会支持的！");
-        //
 
-        ComPtr<IDXGIDevice> dxgiDevice = nullptr;
-        ComPtr<IDXGIAdapter> dxgiAdapter = nullptr;
-        ComPtr<IDXGIFactory1> dxgiFactory1 = nullptr;
-        ComPtr<IDXGIFactory2> dxgiFactory2 = nullptr;
+        if( _minorVersion == 1 ) { // dx11.1
+            device->QueryInterface( __uuidof(IDXGIDevice1), (void**)&_device1);
+            context->QueryInterface( __uuidof(ID3D11DeviceContext1), (void**)&_context1);
+            //_device1->GetImmediateContext1(&_context1);
+            device->Release();
+        } else { // dx11
+            _device = device;
+            _context = context;
+            //_device->GetImmediateContext(&_context);
+        }
+        return true;
+    }
 
-        hr = _d3d11Device.As(&dxgiDevice);
+    IDXGISwapChain1* DeviceDX11::createSwapchain1( HWND hwnd, uint32_t width, uint32_t height, bool fullscreen ) {
+
+        IDXGIDevice* dxgiDevice = nullptr;
+        IDXGIAdapter* dxgiAdapter = nullptr;
+        IDXGIFactory1* dxgiFactory1 = nullptr;
+        IDXGIFactory2* dxgiFactory2 = nullptr;
+        HRESULT hr = _device1->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
         if(FAILED(hr)) {
-            return false;
+            return nullptr;
         }
-        hr = dxgiDevice->GetAdapter(dxgiAdapter.GetAddressOf());
+        hr = dxgiDevice->GetAdapter(&dxgiAdapter);
         if(FAILED(hr)) {
-            return false;
+            return nullptr;
         }
-        hr = dxgiAdapter->GetParent(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(dxgiFactory1.GetAddressOf()));
+        hr = dxgiAdapter->GetParent(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&dxgiFactory1));
         if(FAILED(hr)) {
-            return false;
+            return nullptr;
         }
-        hr = dxgiFactory1.As(&dxgiFactory2);
-        if(dxgiFactory2!=nullptr) {
-            // 支持dx11.1
+        hr = dxgiFactory1->QueryInterface(__uuidof(IDXGIFactory2), (void**)&dxgiFactory2);
+        if(FAILED(hr)) {
+            return nullptr;
+        }
+
+        DXGI_SWAP_CHAIN_DESC1 sd;
+		ZeroMemory(&sd, sizeof(sd));
+		sd.Width = width;
+		sd.Height = height;
+		sd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		// 是否开启4倍多重采样？
+        constexpr bool enalbe4xMsaa = true;
+		if (enalbe4xMsaa) {
+			sd.SampleDesc.Count = 4;
+			sd.SampleDesc.Quality = _msaaQuality - 1;
+		} else {
+			sd.SampleDesc.Count = 1;
+			sd.SampleDesc.Quality = 0;
+		}
+		sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		sd.BufferCount = _bufferCount;
+		sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+		sd.Flags = 0;
+
+		DXGI_SWAP_CHAIN_FULLSCREEN_DESC fd;
+		fd.RefreshRate.Numerator = 60;
+		fd.RefreshRate.Denominator = 1;
+		fd.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+		fd.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+		fd.Windowed = fullscreen ? FALSE : TRUE;
+		// 为当前窗口创建交换链
+        IDXGISwapChain1* swapchain = nullptr;
+        hr = dxgiFactory2->CreateSwapChainForHwnd( _device1, hwnd, &sd, &fd, nullptr, &swapchain );
+        if(FAILED(hr)) {
+            return nullptr;
         } else {
-            
+            return swapchain;
         }
+    }
 
+    IDXGISwapChain* DeviceDX11::createSwapchain( HWND hwnd, uint32_t width, uint32_t height, bool fullscreen ) {
+        IDXGIDevice* dxgiDevice = nullptr;
+        IDXGIAdapter* dxgiAdapter = nullptr;
+        IDXGIFactory1* dxgiFactory1 = nullptr;
+        HRESULT hr = _device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
+        if(FAILED(hr)) {
+            return nullptr;
+        }
+        hr = dxgiDevice->GetAdapter(&dxgiAdapter);
+        if(FAILED(hr)) {
+            return nullptr;
+        }
+        hr = dxgiAdapter->GetParent(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&dxgiFactory1));
+        if(FAILED(hr)) {
+            return nullptr;
+        }
+        DXGI_SWAP_CHAIN_DESC sd;
+		ZeroMemory(&sd, sizeof(sd));
+		sd.BufferDesc.Width = width;
+		sd.BufferDesc.Height = height;
+		sd.BufferDesc.RefreshRate.Numerator = 60;
+		sd.BufferDesc.RefreshRate.Denominator = 1;
+		sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+		sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+		// 是否开启4倍多重采样？
+        constexpr bool enalbe4xMsaa = true;
+		if (enalbe4xMsaa) {
+			sd.SampleDesc.Count = 4;
+			sd.SampleDesc.Quality = _msaaQuality - 1;
+		} else {
+			sd.SampleDesc.Count = 1;
+			sd.SampleDesc.Quality = 0;
+		}
+		sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		sd.BufferCount = _bufferCount;
+		sd.OutputWindow = hwnd;
+		sd.Windowed = fullscreen ? FALSE : TRUE;
+		sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+		sd.Flags = 0;
+        IDXGISwapChain* swapchain = nullptr;
+		hr = dxgiFactory1->CreateSwapChain( _device, &sd, &swapchain);
+        if(FAILED(hr)) {
+            return nullptr;
+        } else {
+            return swapchain;
+        }
+    }
+
+    bool SwapchainDX11::onResize( uint32_t width, uint32_t height ) {
+        // ====================================
+        if( _device->minorVersion() ) {
+            if(_swapchain1) {
+                _swapchain1->Release();
+            }
+            this->_swapchain1 = _device->createSwapchain1( _hwnd, width, height );
+            _swapchain1->ResizeBuffers(2, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+            for( uint32_t i = 0; i<2; ++i) {
+                if(_renderTargetViews[i]) {
+                    _renderTargetViews[i]->Release();
+                    _renderBuffers[i]->Release();
+                }
+                _swapchain1->GetBuffer(i, __uuidof(ID3D11Texture2D), (void**)&_renderBuffers[i]);
+                _renderTargetViews[i] = _device->createRenderTargetView(_renderBuffers[i]);
+            }
+
+        } else {
+            if(_swapchain) {
+                _swapchain->Release();
+            }
+            _swapchain = _device->createSwapchain( _hwnd, width, height );
+            _swapchain->ResizeBuffers(2, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+            for( uint32_t i = 0; i<2; ++i) {
+                if(_renderTargetViews[i]) {
+                    _renderTargetViews[i]->Release();
+                    _renderBuffers[i]->Release();
+                }
+                _swapchain->GetBuffer(i, __uuidof(ID3D11Texture2D), (void**)&_renderBuffers[i]);
+                _renderTargetViews[i] = _device->createRenderTargetView(_renderBuffers[i]);
+            }
+        }
+        if(_depthStencilBuffer && _depthStencilView) {
+            _depthStencilView->Release();
+            _depthStencilBuffer->Release();
+        }
+        // depth stencil
+        D3D11_TEXTURE2D_DESC depthStencilDesc = {};
+        depthStencilDesc.Width = width;
+        depthStencilDesc.Height = height;
+        depthStencilDesc.MipLevels = 1;
+        depthStencilDesc.ArraySize = 1;
+        depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        _depthStencilBuffer = _device->createTexture2D(depthStencilDesc);
+        _depthStencilView = _device->createDepthStencilView(_depthStencilBuffer);
 
         return true;
     }
 
-    void DX11Test::tick() {
+    ID3D11Texture2D* DeviceDX11::createTexture2D( const D3D11_TEXTURE2D_DESC& desc ) const {
+        ID3D11Texture2D* tex = nullptr;
+        HRESULT hr;
+        if( _minorVersion == 1 ) {
+            hr = _device1->CreateTexture2D( &desc, nullptr, &tex );
+        } else {
+            hr = _device->CreateTexture2D( &desc, nullptr, &tex );
+        }
+        if(FAILED(hr)) {
+            return nullptr;
+        } else {
+            return tex;
+        }
     }
-        
-    void DX11Test::resize(uint32_t width, uint32_t height) {
-        _width = width;
-        _height = height;
+    
+    ID3D11RenderTargetView* DeviceDX11::createRenderTargetView( ID3D11Texture2D* texture ) {
+        HRESULT hr;
+        ID3D11RenderTargetView* view = nullptr;
+        if(_minorVersion == 1) {
+            hr = _device1->CreateRenderTargetView(texture, nullptr, &view);
+        } else {
+            hr = _device->CreateRenderTargetView(texture, nullptr, &view);
+        }
+        if(FAILED(hr)) {
+            return nullptr;
+        } else {
+            return view;
+        }
     }
 
-    void DX11Test::release() {
-        delete this;
-    }
-
-    const char * DX11Test::title() {
-        return "DX11Test";
-    }
-        
-    uint32_t DX11Test::rendererType() {
-        return 0;
-    }
-
-
-    void SwapchainDX11::onResize( uint32_t width, uint32_t height ) {
-        _swapchainDesc.BufferDesc.Width = width;  
-        _swapchainDesc.BufferDesc.Height = height;
-        //
-
+    ID3D11DepthStencilView* DeviceDX11::createDepthStencilView( ID3D11Texture2D* texture ) {
+        HRESULT hr;
+        ID3D11DepthStencilView* view = nullptr;
+        if(_minorVersion == 1) {
+            hr = _device1->CreateDepthStencilView(texture, nullptr, &view);
+        } else {
+            hr = _device->CreateDepthStencilView(texture, nullptr, &view);
+        }
+        if(FAILED(hr)) {
+            return nullptr;
+        } else {
+            return view;
+        }
     }
 
 }

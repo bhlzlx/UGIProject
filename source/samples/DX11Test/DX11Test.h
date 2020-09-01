@@ -13,26 +13,16 @@ namespace ugi {
 
     using namespace Microsoft::WRL;
 
+    class SwapchainDX11;
+    class DeviceDX11;
+
     class DX11Test : public UGIApplication {
     private:
         void*                           _hwnd;                                             //
         //      
         uint32_t                        _flightIndex;                                      // flight index
-        //      
-        size_t                          _GPUMemorySize;
-        char                            _GPUDescription[128];
-        // D3D11 device
-        ComPtr<ID3D11Device>            _d3d11Device;
-        ComPtr<ID3D11DeviceContext>     _d3d11Context;
-        //
-        // D3D11.1 device
-        ComPtr<ID3D11Device1>           _d3d11Device1;
-        ComPtr<ID3D11DeviceContext1>    _d3d11Context1;
-
+        DeviceDX11*                     _device;
         SwapchainDX11*                  _swapchain;
-
-        uint32_t                        _msaaQuality;
-
         float                           _width;
         float                           _height;
     public:
@@ -46,34 +36,71 @@ namespace ugi {
 
     class DeviceDX11 {
     private:
-
+        union {
+            struct { // dx11
+                ID3D11Device*           _device;
+                ID3D11DeviceContext*    _context;
+            };
+            struct { // dx11.1
+                ID3D11Device1*          _device1;
+                ID3D11DeviceContext1*   _context1;
+            };
+        };
+        uint32_t                        _minorVersion;
+        size_t                          _graphicsCardMemorySize;
+        uint32_t                        _msaaQuality;
+        char                            _graphicsCardDescription[128];
+        uint32_t                        _bufferCount = 2;
     public:
-        DeviceDX11() {            
+        DeviceDX11() {
         }
+
+        bool intialize();
+
+        IDXGISwapChain1* createSwapchain1( HWND hwnd, uint32_t width, uint32_t height, bool fullscreen = false );
+        IDXGISwapChain* createSwapchain( HWND hwnd, uint32_t width, uint32_t height, bool fullscreen = false );
+
+        ID3D11Texture2D* createTexture2D( const D3D11_TEXTURE2D_DESC& desc ) const;
+        ID3D11RenderTargetView* createRenderTargetView( ID3D11Texture2D* texture );
+        ID3D11DepthStencilView* createDepthStencilView( ID3D11Texture2D* texture );
+
+        // 返回低版本号，用来判断是 DX11 还是 DX11.1
+        uint32_t minorVersion() const {
+            return _minorVersion;
+        }
+
 
     };
 
     class SwapchainDX11 {
     private:
-        uint32_t                    _enabled_11_1;
-        union {
-            DXGI_SWAP_CHAIN_DESC    _swapchainDesc;
-            DXGI_SWAP_CHAIN_DESC1   _swapchainDesc1;
-        };
+        DeviceDX11*                 _device;
+        HWND                        _hwnd;
         union {
             IDXGISwapChain*         _swapchain;
             IDXGISwapChain1*        _swapchain1;
         };
+        ID3D11Texture2D*            _renderBuffers[2];
+        ID3D11Texture2D*            _depthStencilBuffer;
+        ID3D11RenderTargetView*     _renderTargetViews[2];
+        ID3D11DepthStencilView*     _depthStencilView;
     public:
-        SwapchainDX11( const DXGI_SWAP_CHAIN_DESC& swapchainDesc )
-            : _swapchainDesc( swapchainDesc )
+        SwapchainDX11( DeviceDX11* device, HWND hwnd )
+            : _device(device)
+            , _hwnd(hwnd)
+            , _swapchain( nullptr )
+            , _renderBuffers {}
+            , _depthStencilBuffer( nullptr )
+            , _renderTargetViews {}
+            , _depthStencilView(nullptr)
         {
         }
 
-        SwapchainDX11* CreateSwapchain( ComPtr<IDXGIFactory2> factory, DXGI_SWAP_CHAIN_DESC1 );
-        SwapchainDX11* CreateSwapchain( ComPtr<IDXGIFactory1> factory, DXGI_SWAP_CHAIN_DESC );
+        bool ready() {
+            return !!_swapchain;
+        }
 
-        void onResize( uint32_t width, uint32_t height );
+        bool onResize( uint32_t width, uint32_t height );
     };
 
 }
