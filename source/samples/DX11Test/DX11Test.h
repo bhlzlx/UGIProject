@@ -36,16 +36,8 @@ namespace ugi {
 
     class DeviceDX11 {
     private:
-        union {
-            struct { // dx11
-                ID3D11Device*           _device;
-                ID3D11DeviceContext*    _context;
-            };
-            struct { // dx11.1
-                ID3D11Device1*          _device1;
-                ID3D11DeviceContext1*   _context1;
-            };
-        };
+        ID3D11Device*                   _device;
+        ID3D11DeviceContext*            _context;
         uint32_t                        _minorVersion;
         size_t                          _graphicsCardMemorySize;
         uint32_t                        _msaaQuality;
@@ -69,8 +61,21 @@ namespace ugi {
             return _minorVersion;
         }
 
+        ID3D11DeviceContext* context() {
+            return _context;
+        }
+
+        ID3D11Device* device() {
+            return _device;
+        }
+
+        ID3D11Device1* queryDevice1();
+        ID3D11DeviceContext1* queryDeviceContext1();
+
 
     };
+
+    constexpr uint32_t BackbufferNum = 1;
 
     class SwapchainDX11 {
     private:
@@ -80,9 +85,9 @@ namespace ugi {
             IDXGISwapChain*         _swapchain;
             IDXGISwapChain1*        _swapchain1;
         };
-        ID3D11Texture2D*            _renderBuffers[2];
+        ID3D11Texture2D*            _renderBuffers[BackbufferNum];
         ID3D11Texture2D*            _depthStencilBuffer;
-        ID3D11RenderTargetView*     _renderTargetViews[2];
+        ID3D11RenderTargetView*     _renderTargetViews[BackbufferNum];
         ID3D11DepthStencilView*     _depthStencilView;
     public:
         SwapchainDX11( DeviceDX11* device, HWND hwnd )
@@ -99,6 +104,10 @@ namespace ugi {
         bool ready() {
             return !!_swapchain;
         }
+
+        void clear( float(& channels)[4], float depth, uint32_t stencil );
+
+        void present();
 
         bool onResize( uint32_t width, uint32_t height );
     };

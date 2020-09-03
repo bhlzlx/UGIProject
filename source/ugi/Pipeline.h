@@ -35,6 +35,8 @@ namespace ugi {
         //
         uint64_t                                            _pipelineLayoutHash;                    ///> pipeline layout 的 hash
 
+        VkPipelineBindPoint                                 _bindPoint;
+
     private:
         static VkShaderModule CreateShaderModule( VkDevice device, const uint32_t* spirvBytes, uint32_t size, VkShaderStageFlagBits shaderStage );
 

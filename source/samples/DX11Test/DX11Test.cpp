@@ -18,6 +18,14 @@ namespace ugi {
         if(!_swapchain->ready()) { // 交换链还没准备好
             return;
         }
+        float channels[] = {
+            0.8f, 0.8f, 0.2f, 1.0f
+        };
+        float depth = 1.0f;
+        uint32_t stencil = 0xff;
+        _swapchain->clear(channels, depth, stencil);
+        //
+        _swapchain->present();
     }
         
     void DX11Test::resize(uint32_t width, uint32_t height) {
@@ -98,18 +106,31 @@ namespace ugi {
         }
         device->CheckMultisampleQualityLevels( DXGI_FORMAT_R8G8B8A8_UNORM, 4, &_msaaQuality );
         assert( _msaaQuality && "这个是一定会支持的！");
-
-        if( _minorVersion == 1 ) { // dx11.1
-            device->QueryInterface( __uuidof(IDXGIDevice1), (void**)&_device1);
-            context->QueryInterface( __uuidof(ID3D11DeviceContext1), (void**)&_context1);
-            //_device1->GetImmediateContext1(&_context1);
-            device->Release();
-        } else { // dx11
-            _device = device;
-            _context = context;
-            //_device->GetImmediateContext(&_context);
-        }
+        //
+        _device = device;
+        _context = context;
+        //
         return true;
+    }
+
+    ID3D11Device1* DeviceDX11::queryDevice1() {
+        ID3D11Device1* device1 = nullptr;
+        HRESULT hr = _context->QueryInterface( __uuidof(ID3D11Device1), (void**)&device1 );
+        if(FAILED(hr)) {
+            return nullptr;
+        } else {
+            return device1;
+        }
+    }
+
+    ID3D11DeviceContext1* DeviceDX11::queryDeviceContext1() {
+        ID3D11DeviceContext1* context1 = nullptr;
+        HRESULT hr = _context->QueryInterface( __uuidof(ID3D11DeviceContext1), (void**)&context1);
+        if(FAILED(hr)) {
+            return nullptr;
+        } else {
+            return context1;
+        }
     }
 
     IDXGISwapChain1* DeviceDX11::createSwapchain1( HWND hwnd, uint32_t width, uint32_t height, bool fullscreen ) {
@@ -118,7 +139,7 @@ namespace ugi {
         IDXGIAdapter* dxgiAdapter = nullptr;
         IDXGIFactory1* dxgiFactory1 = nullptr;
         IDXGIFactory2* dxgiFactory2 = nullptr;
-        HRESULT hr = _device1->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
+        HRESULT hr = _device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
         if(FAILED(hr)) {
             return nullptr;
         }
@@ -162,7 +183,7 @@ namespace ugi {
 		fd.Windowed = fullscreen ? FALSE : TRUE;
 		// 为当前窗口创建交换链
         IDXGISwapChain1* swapchain = nullptr;
-        hr = dxgiFactory2->CreateSwapChainForHwnd( _device1, hwnd, &sd, &fd, nullptr, &swapchain );
+        hr = dxgiFactory2->CreateSwapChainForHwnd( _device, hwnd, &sd, &fd, nullptr, &swapchain );
         if(FAILED(hr)) {
             return nullptr;
         } else {
@@ -227,12 +248,15 @@ namespace ugi {
             }
             this->_swapchain1 = _device->createSwapchain1( _hwnd, width, height );
             _swapchain1->ResizeBuffers(2, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
-            for( uint32_t i = 0; i<2; ++i) {
+            for( uint32_t i = 0; i<BackbufferNum; ++i) {
                 if(_renderTargetViews[i]) {
                     _renderTargetViews[i]->Release();
                     _renderBuffers[i]->Release();
                 }
-                _swapchain1->GetBuffer(i, __uuidof(ID3D11Texture2D), (void**)&_renderBuffers[i]);
+                auto hr = _swapchain1->GetBuffer(i, __uuidof(ID3D11Texture2D), (void**)&_renderBuffers[i]);
+                if(FAILED(hr)) {
+                    return false;
+                }
                 _renderTargetViews[i] = _device->createRenderTargetView(_renderBuffers[i]);
             }
 
@@ -241,8 +265,8 @@ namespace ugi {
                 _swapchain->Release();
             }
             _swapchain = _device->createSwapchain( _hwnd, width, height );
-            _swapchain->ResizeBuffers(2, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
-            for( uint32_t i = 0; i<2; ++i) {
+            _swapchain->ResizeBuffers(BackbufferNum, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+            for( uint32_t i = 0; i<BackbufferNum; ++i) {
                 if(_renderTargetViews[i]) {
                     _renderTargetViews[i]->Release();
                     _renderBuffers[i]->Release();
@@ -256,26 +280,38 @@ namespace ugi {
             _depthStencilBuffer->Release();
         }
         // depth stencil
-        D3D11_TEXTURE2D_DESC depthStencilDesc = {};
-        depthStencilDesc.Width = width;
-        depthStencilDesc.Height = height;
-        depthStencilDesc.MipLevels = 1;
-        depthStencilDesc.ArraySize = 1;
-        depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        _depthStencilBuffer = _device->createTexture2D(depthStencilDesc);
+        D3D11_TEXTURE2D_DESC descDepth;//为什么不用D3D11_BUFFER_DESC
+        ZeroMemory( &descDepth, sizeof(descDepth) );
+        descDepth.Width = width;
+        descDepth.Height = height;
+        descDepth.MipLevels = 1;
+        descDepth.ArraySize = 1;
+        descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        descDepth.SampleDesc.Count = 1;
+        descDepth.SampleDesc.Quality = 0;
+        descDepth.Usage = D3D11_USAGE_DEFAULT;
+        descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        descDepth.CPUAccessFlags = 0;
+        descDepth.MiscFlags = 0;
+        _depthStencilBuffer = _device->createTexture2D(descDepth);
         _depthStencilView = _device->createDepthStencilView(_depthStencilBuffer);
 
         return true;
     }
 
+    void SwapchainDX11::clear( float(& channels)[4], float depth, uint32_t stencil ) {
+        _device->context()->ClearRenderTargetView( _renderTargetViews[0], channels );
+        _device->context()->ClearDepthStencilView( _depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, depth, stencil);
+    }
+
+    void SwapchainDX11::present() {
+        _swapchain->Present(0, 0);
+    }
+
     ID3D11Texture2D* DeviceDX11::createTexture2D( const D3D11_TEXTURE2D_DESC& desc ) const {
         ID3D11Texture2D* tex = nullptr;
         HRESULT hr;
-        if( _minorVersion == 1 ) {
-            hr = _device1->CreateTexture2D( &desc, nullptr, &tex );
-        } else {
-            hr = _device->CreateTexture2D( &desc, nullptr, &tex );
-        }
+        hr = _device->CreateTexture2D( &desc, nullptr, &tex );
         if(FAILED(hr)) {
             return nullptr;
         } else {
@@ -286,11 +322,7 @@ namespace ugi {
     ID3D11RenderTargetView* DeviceDX11::createRenderTargetView( ID3D11Texture2D* texture ) {
         HRESULT hr;
         ID3D11RenderTargetView* view = nullptr;
-        if(_minorVersion == 1) {
-            hr = _device1->CreateRenderTargetView(texture, nullptr, &view);
-        } else {
-            hr = _device->CreateRenderTargetView(texture, nullptr, &view);
-        }
+        hr = _device->CreateRenderTargetView(texture, nullptr, &view);
         if(FAILED(hr)) {
             return nullptr;
         } else {
@@ -301,11 +333,7 @@ namespace ugi {
     ID3D11DepthStencilView* DeviceDX11::createDepthStencilView( ID3D11Texture2D* texture ) {
         HRESULT hr;
         ID3D11DepthStencilView* view = nullptr;
-        if(_minorVersion == 1) {
-            hr = _device1->CreateDepthStencilView(texture, nullptr, &view);
-        } else {
-            hr = _device->CreateDepthStencilView(texture, nullptr, &view);
-        }
+        hr = _device->CreateDepthStencilView(texture, nullptr, &view);
         if(FAILED(hr)) {
             return nullptr;
         } else {

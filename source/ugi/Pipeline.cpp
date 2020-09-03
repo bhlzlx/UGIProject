@@ -196,6 +196,11 @@ namespace ugi {
         pipeline._device = device;
         // pipeline create info 准备好了
         //
+        if(pipelineDescription.shaders[(uint8_t)ShaderModuleType::ComputeShader].spirvData) {
+            pipeline._bindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
+        } else {
+            pipeline._bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        }
         return pipelinePtr;
     }
 
@@ -272,7 +277,7 @@ namespace ugi {
         UGIHash<APHash> hasher;
         _hashRasterizationState( hasher );
         VkPipeline pipeline = preparePipelineStateObject( hasher,  encoder );
-        vkCmdBindPipeline( *encoder->commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+        vkCmdBindPipeline( *encoder->commandBuffer(), _bindPoint, pipeline );
     }
 
     ArgumentGroup* Pipeline::createArgumentGroup() const {
