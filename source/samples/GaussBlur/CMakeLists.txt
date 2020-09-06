@@ -10,10 +10,12 @@ endif()
 set( PROJECT_SOURCE
     ${PLATFORM_SOURCE}
     ${CMAKE_CURRENT_SOURCE_DIR}/GaussBlur.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GaussBlurProcessor.cpp
 )
 
 set ( PROJECT_HEADER 
     ${CMAKE_CURRENT_SOURCE_DIR}/GaussBlur.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/GaussBlurProcessor.h
 )
 
 add_executable( GaussBlurTest WIN32

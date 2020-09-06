@@ -1,0 +1,5 @@
+{
+	"shaderModule" : { 
+		"comp":"GaussBlur.comp"
+    }
+}

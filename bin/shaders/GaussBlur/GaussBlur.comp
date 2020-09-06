@@ -1,0 +1,26 @@
+#version 450
+#define VULKAN 100
+
+layout (local_size_x = 16, local_size_y = 16) in;
+
+layout (binding = 0, rgba8) uniform readonly image2D InputImage;
+layout (binding = 1, rgba8) uniform image2D OutputImage;
+
+layout( binding = 2, set = 0 ) uniform BlurParameter {
+    vec2    dir;
+    float   gauss[9];
+};
+																																				
+void main () {
+    ivec2 imgTc = ivec2(gl_GlobalInvocationID.xy);
+    vec4 origColor = imageLoad( inputImage, imgTc ) * gauss[0];
+    //
+    vec4 composedColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    composedColor += origColor;
+	for ( int i = 1 ; i < 9; i++ ) {
+        vec4 colorRight = imageLoad(inputImage, ivec2(imgTc + dir*i));
+		vec4 colorLeft = imageLoad(inputImage, ivec2(imgTc - dir*i));
+        composedColor += ( colorRight + colorRight ) * gauss[i];
+    };
+	imageStore(outputImage, imgTc, composedColor);
+}

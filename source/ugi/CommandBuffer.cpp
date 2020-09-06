@@ -106,6 +106,14 @@ namespace ugi {
         return &_renderEncoder;
     }
 
+    ComputeCommandEncoder* CommandBuffer::computeCommandEncoder() {
+        if( _encodeState ) {
+            return nullptr;
+        }
+        new(&_computeEncoder) ComputeCommandEncoder(this);
+        return &_computeEncoder;
+    }
+
     void CommandBuffer::reset() {
         vkResetCommandBuffer(_cmdbuff, 0);
     }

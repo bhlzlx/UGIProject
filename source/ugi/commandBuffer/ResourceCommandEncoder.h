@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../UGIDeclare.h"
 #include "../VulkanDeclare.h"
 #include "../UGITypes.h"

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "commandBuffer/ResourceCommandEncoder.h"
 #include "commandBuffer/RenderCommandEncoder.h"
+#include "commandBuffer/ComputeCommandEncoder.h"
 #include "UGITypes.h"
 #include <cstdint>
 
@@ -53,6 +54,7 @@ namespace ugi {
             uint32_t                                    _encodeState;
             ResourceCommandEncoder                      _resourceEncoder;
             RenderCommandEncoder                        _renderEncoder;
+            ComputeCommandEncoder                       _computeEncoder;
         };
     private:
 		~CommandBuffer() = default;
@@ -64,6 +66,7 @@ namespace ugi {
 
         ResourceCommandEncoder* resourceCommandEncoder();
         RenderCommandEncoder* renderCommandEncoder( IRenderPass* renderPass );
+        ComputeCommandEncoder* computeCommandEncoder();
         //
         void reset();
         void beginEncode();

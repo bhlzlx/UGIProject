@@ -36,11 +36,7 @@ UGI_STATIC_LIBRARY( UGI
     VulkanDebugConfigurator.cpp
     Device.cpp
     CommandQueue.cpp
-    CommandBuffer.cpp
-    ./commandBuffer/RenderCommandEncoder.cpp
-    ./commandBuffer/ResourceCommandEncoder.cpp
     ArgumentGroupLayout.cpp
-    ./resourcePool/ArgumentGroupLayoutPool.cpp
     Texture.cpp
     Buffer.cpp
     RenderPass.cpp
@@ -52,4 +48,9 @@ UGI_STATIC_LIBRARY( UGI
     Pipeline.cpp
     Drawable.cpp
     UniformBuffer.cpp
+    ./resourcePool/ArgumentGroupLayoutPool.cpp
+    CommandBuffer.cpp
+    ./commandBuffer/RenderCommandEncoder.cpp
+    ./commandBuffer/ResourceCommandEncoder.cpp
+    ./commandBuffer/ComputeCommandEncoder.cpp
 )

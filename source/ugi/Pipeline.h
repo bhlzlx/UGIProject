@@ -32,13 +32,8 @@ namespace ugi {
         // 因为在逻辑里我们会经常改变pipeline的这个属性，所以我们将处理成动态，通过hash得到不同的pipeline object
         VkPipelineRasterizationStateCreateInfo              _RSStateCreateInfo;                     ///> 这个不会用到的，只是放着给参考一下
         VkGraphicsPipelineCreateInfo                        _pipelineCreateInfo;
-        //
         uint64_t                                            _pipelineLayoutHash;                    ///> pipeline layout 的 hash
-
-        VkPipelineBindPoint                                 _bindPoint;
-
     private:
-        static VkShaderModule CreateShaderModule( VkDevice device, const uint32_t* spirvBytes, uint32_t size, VkShaderStageFlagBits shaderStage );
 
         VkPipeline preparePipelineStateObject( UGIHash<APHash>& hasher, const RenderCommandEncoder* encoder );
         void _hashRasterizationState( UGIHash<APHash>& hasher );
@@ -50,8 +45,26 @@ namespace ugi {
         void setRasterizationState( const RasterizationState& _state );
         void setDepthStencilState(  );
         void bind( RenderCommandEncoder* encoder );
+        void bind( ComputeCommandEncoder* encoder );
         //
         ArgumentGroup* createArgumentGroup() const;
+    };
+
+
+    class ComputePipeline {
+    private:
+        Device*                                             _device;
+        VkPipeline                                          _pipeline;
+        VkComputePipelineCreateInfo                         _createInfo;
+        uint64_t                                            _pipelineLayoutHash;
+    public:
+        ComputePipeline() {
+        }
+        static ComputePipeline* CreatePipeline( Device* device, const PipelineDescription& pipelineDesc );
+        ArgumentGroup* createArgumentGroup() const ;
+        VkPipeline pipeline() {
+            return _pipeline;
+        }
     };
 
 }

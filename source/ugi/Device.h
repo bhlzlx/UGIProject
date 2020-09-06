@@ -116,6 +116,7 @@ namespace ugi {
         IRenderPass* createRenderPass( const RenderPassDescription& _renderPass, Texture** _colors, Texture* _depthStencil );
         Swapchain* createSwapchain( void* _wnd );
         Pipeline* createPipeline( const PipelineDescription& pipelineDescription );
+        ComputePipeline* createComputePipeline( const PipelineDescription& pipelineDescription );
         Drawable* createDrawable( const PipelineDescription& pipelineDescription );
         UniformAllocator* createUniformAllocator();
 

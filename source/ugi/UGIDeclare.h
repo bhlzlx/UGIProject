@@ -8,6 +8,7 @@ namespace ugi {
     class CommandBuffer;
     class ResourceCommandEncoder;
     class RenderCommandEncoder;
+    class ComputeCommandEncoder;
     class CommandQueue;
     class Swapchain;
     class Semaphore;
@@ -23,4 +24,5 @@ namespace ugi {
     class UniformAllocator;
     class ResourceManager;
     class ArgumentGroupLayout;
+    class ComputePipeline;
 }

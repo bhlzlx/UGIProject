@@ -567,6 +567,11 @@ namespace ugi {
         return Pipeline::CreatePipeline( this, pipelineDescription);
     }
 
+    ComputePipeline* Device::createComputePipeline( const PipelineDescription& pipelineDescription ) {
+        assert( pipelineDescription.shaders[(uint32_t)ShaderModuleType::ComputeShader].spirvData );
+        return ComputePipeline::CreatePipeline(this, pipelineDescription);
+    }
+
     Drawable* Device::createDrawable( const PipelineDescription& pipelineDescription ) {
         Drawable* drawable = new Drawable(pipelineDescription.vertexLayout.bufferCount);
         return drawable;
@@ -594,4 +599,3 @@ namespace ugi {
         buffer->release(this);
     }
 }
-

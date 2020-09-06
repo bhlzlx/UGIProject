@@ -19,6 +19,21 @@ namespace ugi {
         VK_DYNAMIC_STATE_DEPTH_BIAS
     };
 
+    VkShaderModule CreateShaderModule( VkDevice device, const uint32_t* spirvBytes, uint32_t size, VkShaderStageFlagBits shaderStage ) {
+        VkShaderModuleCreateInfo createInfo;
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+        createInfo.pCode = spirvBytes;
+        createInfo.codeSize = size;
+        VkShaderModule module;
+        auto rst = vkCreateShaderModule(device, &createInfo, nullptr, &module );
+        if( VK_SUCCESS != rst ) {
+            return VK_NULL_HANDLE;
+        }
+        return module;
+    }
+
     Pipeline::Pipeline() 
         : _IAStateCreateInfo {}
         , _attachmnetBlendState {}
@@ -195,12 +210,6 @@ namespace ugi {
         pipeline._pipelineCreateInfo.basePipelineIndex = -1;
         pipeline._device = device;
         // pipeline create info 准备好了
-        //
-        if(pipelineDescription.shaders[(uint8_t)ShaderModuleType::ComputeShader].spirvData) {
-            pipeline._bindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
-        } else {
-            pipeline._bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        }
         return pipelinePtr;
     }
 
@@ -231,21 +240,6 @@ namespace ugi {
         return pipeline;
     }
 
-    VkShaderModule Pipeline::CreateShaderModule( VkDevice device, const uint32_t* spirvBytes, uint32_t size, VkShaderStageFlagBits shaderStage ) {
-        VkShaderModuleCreateInfo createInfo;
-        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = 0;
-        createInfo.pCode = spirvBytes;
-        createInfo.codeSize = size;
-        VkShaderModule module;
-        auto rst = vkCreateShaderModule(device, &createInfo, nullptr, &module );
-        if( VK_SUCCESS != rst ) {
-            return VK_NULL_HANDLE;
-        }
-        return module;
-    }
-
     void Pipeline::setRasterizationState( const RasterizationState& _state ) {
         _RSStateCreateInfo.polygonMode = polygonModeToVk(_state.polygonMode); 
         _RSStateCreateInfo.cullMode = cullModeToVk(_state.cullMode); 
@@ -272,12 +266,11 @@ namespace ugi {
         }
     }
 
-    void Pipeline::bind( RenderCommandEncoder* encoder )
-    {
+    void Pipeline::bind( RenderCommandEncoder* encoder ) {
         UGIHash<APHash> hasher;
         _hashRasterizationState( hasher );
         VkPipeline pipeline = preparePipelineStateObject( hasher,  encoder );
-        vkCmdBindPipeline( *encoder->commandBuffer(), _bindPoint, pipeline );
+        vkCmdBindPipeline( *encoder->commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
     }
 
     ArgumentGroup* Pipeline::createArgumentGroup() const {
@@ -289,6 +282,51 @@ namespace ugi {
         //
         ArgumentGroup* group = new ArgumentGroup(argumentLayout);
         return group;        
+    }
+
+    ComputePipeline* ComputePipeline::CreatePipeline( Device* device, const PipelineDescription& pipelineDesc ) {
+        uint64_t pipelineLayoutHash;
+        VkComputePipelineCreateInfo createInfo;
+        createInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+        createInfo.basePipelineHandle = VK_NULL_HANDLE;
+        createInfo.basePipelineIndex = 0;
+        auto pipelineLayout = device->getArgumentGroupLayout(pipelineDesc, pipelineLayoutHash);
+        createInfo.layout = ugi::GetPipelineLayout(pipelineLayout);
+        VkPipelineShaderStageCreateInfo stageInfo; {
+            stageInfo.flags = 0;
+            stageInfo.pName = "main";
+            uint32_t* spirvData = (uint32_t*)pipelineDesc.shaders[(uint32_t)ShaderModuleType::ComputeShader].spirvData;
+            uint32_t sprivDataLength = pipelineDesc.shaders[(uint32_t)ShaderModuleType::ComputeShader].spirvSize;
+            stageInfo.module = CreateShaderModule( device->device(), spirvData, sprivDataLength, (VkShaderStageFlagBits)VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT );
+            stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+            stageInfo.pSpecializationInfo = nullptr;
+            stageInfo.pNext = nullptr;
+        }
+        createInfo.stage = stageInfo;
+        VkPipeline pipeline;
+        VkResult rst = vkCreateComputePipelines( device->device(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &pipeline);
+        if( rst == VK_SUCCESS ) {
+            ComputePipeline* computePipeline = new ComputePipeline();
+            computePipeline->_device = device;
+            computePipeline->_pipeline = pipeline;
+            computePipeline->_pipelineLayoutHash = pipelineLayoutHash;
+            computePipeline->_createInfo = createInfo;
+            return computePipeline;
+        }
+        return nullptr;
+    }
+
+    ArgumentGroup* ComputePipeline::createArgumentGroup() const  {
+        const auto argumentLayout = _device->getArgumentGroupLayout(_pipelineLayoutHash);
+        assert(argumentLayout);
+        if( !argumentLayout) {
+            return nullptr;
+        }
+        ArgumentGroup* group = new ArgumentGroup(argumentLayout);
+        return group; 
     }
 
 }

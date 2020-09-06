@@ -232,7 +232,7 @@ namespace ugi {
             if( type == ArgumentDescriptorType::Image ) {
                 commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderRead, PipelineStages::Top, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
             } else if( type == ArgumentDescriptorType::StorageImage ) {
-                commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderRead, PipelineStages::Top, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Write);
+                commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderReadWrite, PipelineStages::Top, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
             }
         }
         return true;
