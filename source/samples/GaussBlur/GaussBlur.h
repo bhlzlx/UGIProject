@@ -43,9 +43,11 @@ namespace ugi {
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
         ugi::Texture*           _bluredTexture;
+        ugi::Texture*           _bluredTextureFinal;
         //
         ugi::GaussBlurProcessor*    _gaussProcessor;
         ugi::GaussBlurItem*         _blurItem;
+        ugi::GaussBlurItem*         _blurItem2;
 
         ugi::UniformAllocator*  _uniformAllocator;
         ResourceDescriptor      _uniformDescriptor;

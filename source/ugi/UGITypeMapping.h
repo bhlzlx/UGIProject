@@ -188,8 +188,12 @@ namespace ugi {
             case ResourceAccessType::Present: {
                 layout = VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; break;
             }
-            case ResourceAccessType::ShaderRead: {
+            case ResourceAccessType::ShaderRead: { // sampled texture
                 layout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; break;
+            }
+            case ResourceAccessType::ShaderReadWrite: { // storage image
+                layout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
+                break;
             }
             case ResourceAccessType::TransferDestination: {
                 layout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; break;

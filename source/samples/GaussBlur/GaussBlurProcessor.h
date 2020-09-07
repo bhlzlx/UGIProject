@@ -12,7 +12,9 @@ namespace hgl {
 namespace ugi {
 
     struct GaussBlurParameter {
-        float       direction[4];
+        float       direction[2];
+        uint32_t    radius;
+        uint32_t    padding;
         float       gaussDistribution[8];
     };
 

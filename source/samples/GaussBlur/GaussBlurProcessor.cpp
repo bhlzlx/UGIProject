@@ -68,7 +68,6 @@ namespace ugi {
 		encoder->bindPipeline(_pipeline);
         encoder->bindArgumentGroup(argGroup);
         encoder->dispatch(32, 32, 1);
-        encoder->endEncode();
     }
 
     GaussBlurItem::GaussBlurItem( ArgumentGroup* group, Texture* texture0, Texture* texture1 )

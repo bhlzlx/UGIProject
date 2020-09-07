@@ -8,6 +8,7 @@ layout (binding = 1, rgba8) uniform image2D OutputImage;
 
 layout( binding = 2, set = 0, std140 ) uniform BlurParameter {
     vec2    dir;
+    uint    radius;
     vec4    gauss[2];
 };
 																																				
@@ -17,13 +18,13 @@ void main () {
     //
     vec4 composedColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
     composedColor += origColor;
-	for ( int i = 1 ; i < 5; i++ ) {
+	for ( int i = 1 ; i < radius; i++ ) {
         uint index0 = i/4;
         uint index1 = i%4;
         float ratio = gauss[index0][index1];
         vec4 colorRight = imageLoad(InputImage, ivec2(imgTc + dir*i));
 		vec4 colorLeft = imageLoad(InputImage, ivec2(imgTc - dir*i));
-        composedColor += ( colorRight + colorRight ) * ratio;
+        composedColor += (( colorRight + colorLeft ) * ratio);
     };
 	imageStore(OutputImage, imgTc, composedColor);
 }

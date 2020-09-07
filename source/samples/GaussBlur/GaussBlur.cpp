@@ -95,6 +95,7 @@ namespace ugi {
         textureDescription.type = TextureType::Texture2D;
         _texture = _device->createTexture(textureDescription);
         _bluredTexture = _device->createTexture(textureDescription);
+        _bluredTextureFinal = _device->createTexture(textureDescription);
         //
         delete fileStream;
         TextureUtility textureUtility(_device, _uploadQueue, _graphicsQueue);
@@ -107,10 +108,16 @@ namespace ugi {
         auto rst = _gaussProcessor->intialize(_device, assetsSource);
         _blurItem = _gaussProcessor->createGaussBlurItem(_texture, _bluredTexture);
         GaussBlurParameter parameter = {
-            { 1.0f, 0.0f },
+            { 1.0f, 0.0f }, 5, 0,
             { 0.227027f, 0.1945946f, 0.1216216f, 0.054054f, 0.016216f },
         };
         _blurItem->setParameter(parameter);
+        _blurItem2 = _gaussProcessor->createGaussBlurItem(_bluredTexture, _bluredTextureFinal);
+        GaussBlurParameter parameter2 = {
+            { 0.0f, 1.0f }, 5, 0,
+            { 0.227027f, 0.1945946f, 0.1216216f, 0.054054f, 0.016216f },
+        };
+        _blurItem2->setParameter(parameter);
         //
         return true;
     }
@@ -129,6 +136,7 @@ namespace ugi {
 
             auto resourceEncoder = cmdbuf->resourceCommandEncoder(); {
                 _gaussProcessor->prepareResource( _blurItem, resourceEncoder, _uniformAllocator);
+                _gaussProcessor->prepareResource( _blurItem2, resourceEncoder, _uniformAllocator);
             }
             
             resourceEncoder->endEncode();
@@ -142,6 +150,7 @@ namespace ugi {
 
             auto computeEncoder = cmdbuf->computeCommandEncoder(); {
                 _gaussProcessor->processBlur(_blurItem, computeEncoder);
+                _gaussProcessor->processBlur(_blurItem2, computeEncoder);
                 computeEncoder->endEncode();
             }
 
