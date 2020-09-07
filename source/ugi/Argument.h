@@ -43,7 +43,7 @@ namespace ugi {
         bool validateIntegrility();
         bool validateDescriptorSets();
     public:
-        ArgumentGroup( const ArgumentGroupLayout* groupLayout );
+        ArgumentGroup( const ArgumentGroupLayout* groupLayout, VkPipelineBindPoint bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS );
         //* 更新绑定的 API
         void updateDescriptor( const ResourceDescriptor& resource );
         bool prepairResource( ResourceCommandEncoder* encoder );

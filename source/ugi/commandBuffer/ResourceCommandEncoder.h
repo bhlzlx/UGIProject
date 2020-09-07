@@ -24,8 +24,10 @@ namespace ugi {
         void bufferTransitionBarrier( Buffer* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const BufferSubResource* subResource = nullptr );
         void imageTransitionBarrier( Texture* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const TextureSubResource* subResource = nullptr );
         void updateBuffer( Buffer* dst, Buffer* src, BufferSubResource* dstSubRes, BufferSubResource* srcSubRes, bool uploadMode = false );
-        void updateImage( Texture* dst, Buffer* src, TextureSubResource* dstSubRes, BufferSubResource* srcSubRes, bool uploadMode = false );
+        // update texture region for specified regions( render command queue )
         void updateImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount );
+        // update texture region for specified regions( transfer queue )
+        void replaceImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount );
         void endEncode();
     };
 

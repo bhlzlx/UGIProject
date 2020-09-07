@@ -7,6 +7,24 @@
 
 namespace ugi {
 
+    class GaussBlurProcessor;
+    class GaussBlurItem;
+
+    class TextureUtility {
+    private:
+        Device*             _device;
+        CommandQueue*       _transferQueue;
+        CommandQueue*       _graphicsQueue;
+    public:
+        TextureUtility( Device* device, CommandQueue* transferQueue, CommandQueue* graphicsQueue )
+            : _device(device)
+            , _transferQueue(transferQueue)
+            , _graphicsQueue(graphicsQueue) {
+        }
+        // replace texture
+        void replaceTexture( CommandQueue* transferQueue, Texture* texture, const ImageRegion* regions,void* data, uint32_t dataLength, uint32_t* offsets, uint32_t regionCount );
+    };
+
     class GaussBlurTest : public UGIApplication {
     private:
         void*                   _hwnd;                                             //
@@ -24,10 +42,10 @@ namespace ugi {
         ugi::ArgumentGroup*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
-        ugi::SamplerState       _samplerState;                                     //
-        ugi::Buffer*            _vertexBuffer;                                     //
-        ugi::Buffer*            _indexBuffer;
-        ugi::Drawable*          _drawable;
+        ugi::Texture*           _bluredTexture;
+        //
+        ugi::GaussBlurProcessor*    _gaussProcessor;
+        ugi::GaussBlurItem*         _blurItem;
 
         ugi::UniformAllocator*  _uniformAllocator;
         ResourceDescriptor      _uniformDescriptor;

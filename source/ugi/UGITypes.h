@@ -87,20 +87,37 @@ namespace ugi {
 
     typedef Rect<int> Scissor;
 
-    // 仅能表达某一级mipmap
-    struct TextureRegion {
-        uint32_t mipLevel; // mip map level
-        // for texture 2d, baseLayer must be 0
-        // for texture 2d array, baseLayer is the index
-        // for texture cube, baseLayer is from 0 ~ 5
-        // for texture cube array, baseLayer is ( index * 6 + face )
-        // for texture 3d, baseLayer is ( depth the destination layer )
-        // for texture 3d array, baseLayer is ( {texture depth} * index + depth of the destination layer )
-        uint32_t baseLayer;
-        // for texture 2d, offset.z must be 0
-        Offset3D<uint32_t> offset;
-        // for texture 2d, size.depth must be 1
-        Size3D<uint32_t> size;
+    struct ImageRegion {
+        struct Offset {
+            int32_t x; int32_t y; int32_t z;
+            Offset( int32_t x = 0, int32_t y = 0, int32_t z = 0)
+                : x(x)
+                , y(y)
+                , z(z)
+            {
+            }
+        };
+        struct Extent {
+            uint32_t width; uint32_t height; uint32_t depth;
+            Extent( uint32_t width = 1, uint32_t height = 1, uint32_t depth = 1)
+                : width(width)
+                , height(height)
+                , depth(depth)
+            {
+            }
+        };
+        uint32_t    mipLevel;
+        uint32_t    arrayIndex;        // texture array index only avail for texture array
+        Offset      offset;
+        Extent      extent;
+        //
+        ImageRegion( uint32_t mipLevel = 0, uint32_t arrayIndex = 0 )
+            : mipLevel(mipLevel)
+            , arrayIndex(arrayIndex)
+            , offset()
+            , extent()
+        {
+        }
     };
 
     struct TextureSubResource {
@@ -623,14 +640,6 @@ namespace ugi {
             , type( ArgumentDescriptorType::UniformBuffer )
             , buffer( nullptr ) {
         }
-    };
-
-    struct BufferImageUpload {
-        const void*                         data;
-        uint32_t                            length;
-        TextureRegion                       baseMipRegion;
-        uint32_t                            mipCount;
-        uint64_t                            mipDataOffsets[MaxMipLevelCount];
     };
 
 }

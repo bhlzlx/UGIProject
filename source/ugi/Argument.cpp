@@ -104,7 +104,7 @@ namespace ugi {
                 pImageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 pImageInfo->sampler = VK_NULL_HANDLE; // 再也不和sampler混合绑定了
                 write.pImageInfo = pImageInfo;
-            }            
+            }
             break;
         }
         case ArgumentDescriptorType::Sampler:{
@@ -119,13 +119,23 @@ namespace ugi {
             }            
             break;
         }
+        case ArgumentDescriptorType::StorageImage: {
+            VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
+            if( pImageInfo->imageView != resource.texture->imageView()) {
+                pImageInfo->imageView = resource.texture->imageView();
+                pImageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                pImageInfo->sampler = VK_NULL_HANDLE;
+                write.pImageInfo = pImageInfo;
+            }            
+            break;
+        }
         default:
             assert(false);// 没支持的以后再支持
             break;
         }
     }
 
-    ArgumentGroup::ArgumentGroup( const ArgumentGroupLayout* groupLayout ) 
+    ArgumentGroup::ArgumentGroup( const ArgumentGroupLayout* groupLayout, VkPipelineBindPoint bindPoint )
             : _groupLayout( groupLayout )
             , _resourceMasks {}
             , _resources {}
@@ -136,7 +146,7 @@ namespace ugi {
             , _descriptorSets {}
             , _imageResources {}
             , _reallocDescriptorSetBits (0)
-            , _bindPoint( VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS )
+            , _bindPoint(bindPoint)
         {
         }
 

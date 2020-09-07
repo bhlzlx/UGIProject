@@ -55,16 +55,19 @@ namespace ugi {
         auto argGroup = item->argumentGroup();
         ResourceDescriptor descriptor;
         descriptor.descriptorHandle = _parameterHandle;
+        descriptor.bufferRange = sizeof(GaussBlurParameter);
         descriptor.type = ArgumentDescriptorType::UniformBuffer;
         uniformAllocator->allocateForDescriptor( descriptor, item->parameter());
+		argGroup->updateDescriptor(descriptor);
         // prepare for descriptor set
         encoder->prepareArgumentGroup(argGroup);
     }
 
     void GaussBlurProcessor::processBlur( GaussBlurItem* item, ComputeCommandEncoder* encoder) {
         auto argGroup = item->argumentGroup();
+		encoder->bindPipeline(_pipeline);
         encoder->bindArgumentGroup(argGroup);
-        encoder->dispatch(16, 16, 1);
+        encoder->dispatch(32, 32, 1);
         encoder->endEncode();
     }
 
