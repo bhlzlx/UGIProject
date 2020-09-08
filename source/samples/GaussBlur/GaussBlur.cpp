@@ -107,16 +107,18 @@ namespace ugi {
 		_gaussProcessor = new GaussBlurProcessor();
         auto rst = _gaussProcessor->intialize(_device, assetsSource);
         _blurItem = _gaussProcessor->createGaussBlurItem(_texture, _bluredTexture);
+
+        auto distributions = GenerateGaussDistribution(3.5f);
+
         GaussBlurParameter parameter = {
-            { 1.0f, 0.0f }, 5, 0,
-            { 0.227027f, 0.1945946f, 0.1216216f, 0.054054f, 0.016216f },
+            { 1.0f, 0.0f }, distributions.size()/2+1, 0,
+            {},
         };
+        memcpy( parameter.gaussDistribution, distributions.data()+distributions.size()/2, (distributions.size()/2+1)*sizeof(float) );
         _blurItem->setParameter(parameter);
-        _blurItem2 = _gaussProcessor->createGaussBlurItem(_bluredTexture, _bluredTextureFinal);
-        GaussBlurParameter parameter2 = {
-            { 0.0f, 1.0f }, 5, 0,
-            { 0.227027f, 0.1945946f, 0.1216216f, 0.054054f, 0.016216f },
-        };
+        _blurItem2 = _gaussProcessor->createGaussBlurItem(_bluredTexture, _texture);
+        parameter.direction[0] = 0.0f;
+        parameter.direction[1] = 1.0f;
         _blurItem2->setParameter(parameter);
         //
         return true;
@@ -133,13 +135,6 @@ namespace ugi {
         auto cmdbuf = _commandBuffers[_flightIndex];
 
         cmdbuf->beginEncode(); {
-
-            auto resourceEncoder = cmdbuf->resourceCommandEncoder(); {
-                _gaussProcessor->prepareResource( _blurItem, resourceEncoder, _uniformAllocator);
-                _gaussProcessor->prepareResource( _blurItem2, resourceEncoder, _uniformAllocator);
-            }
-            
-            resourceEncoder->endEncode();
             //
             RenderPassClearValues clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
@@ -148,10 +143,12 @@ namespace ugi {
 
             mainRenderPass->setClearValues(clearValues);
 
-            auto computeEncoder = cmdbuf->computeCommandEncoder(); {
-                _gaussProcessor->processBlur(_blurItem, computeEncoder);
-                _gaussProcessor->processBlur(_blurItem2, computeEncoder);
-                computeEncoder->endEncode();
+            static int c = 8; {
+                if(c) {
+                    _gaussProcessor->processBlur(_blurItem, cmdbuf, _uniformAllocator);
+                    _gaussProcessor->processBlur(_blurItem2, cmdbuf, _uniformAllocator);
+                    --c;
+                }
             }
 
             auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {

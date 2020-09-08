@@ -15,7 +15,7 @@ namespace ugi {
         float       direction[2];
         uint32_t    radius;
         uint32_t    padding;
-        float       gaussDistribution[8];
+        float       gaussDistribution[12];
     };
 
     class GaussBlurItem {
@@ -52,8 +52,7 @@ namespace ugi {
         //
         bool intialize( ugi::Device* device, hgl::assets::AssetsSource* assetsSource );
         //
-        void prepareResource( GaussBlurItem* task, ResourceCommandEncoder* encoder, UniformAllocator* uniformAllocator );
-        void processBlur( GaussBlurItem* task, ComputeCommandEncoder* computeEncoder );
+        void processBlur( GaussBlurItem* item, CommandBuffer* commandBuffer, UniformAllocator* uniformAllocator );
 
         GaussBlurItem* createGaussBlurItem( ugi::Texture* texture0, ugi::Texture* texture1 );
     };

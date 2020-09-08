@@ -7,6 +7,28 @@
 
 namespace ugi {
 
+    std::vector<float> GenerateGaussDistribution( float sigma ) {
+        sigma = sigma > 0 ? sigma : -sigma;  
+        int ksize = ceil(sigma * 3) * 2 + 1;
+        std::vector<float> distribution(ksize);
+        //计算一维高斯核
+        float scale = -0.5f/(sigma*sigma);  
+        const double PI = 3.141592653f;  
+        float cons = 1/sqrt(-scale / PI);  
+        float sum = 0.0f;  
+        int kcenter = ksize/2;  
+        int i = 0;
+        for(i = 0; i < ksize; i++) {  
+            int x = i - kcenter;  
+            distribution[i] = cons * exp(x * x * scale);//一维高斯函数  
+            sum += distribution[i] ;
+        }
+        for(i = 0; i < ksize; i++) {  
+            distribution[i] /= sum;  
+        }
+        return distribution;
+    }
+
     class GaussBlurProcessor;
     class GaussBlurItem;
 

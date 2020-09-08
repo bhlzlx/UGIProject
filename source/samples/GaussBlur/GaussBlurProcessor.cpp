@@ -50,8 +50,9 @@ namespace ugi {
         _parameter = parameter;
     }
 
-    void GaussBlurProcessor::prepareResource( GaussBlurItem* item, ResourceCommandEncoder* encoder, UniformAllocator* uniformAllocator ) {
+    void GaussBlurProcessor::processBlur( GaussBlurItem* item, CommandBuffer* commandBuffer, UniformAllocator* uniformAllocator ) {
         // update uniform buffer
+        auto resEncoder = commandBuffer->resourceCommandEncoder();
         auto argGroup = item->argumentGroup();
         ResourceDescriptor descriptor;
         descriptor.descriptorHandle = _parameterHandle;
@@ -60,14 +61,14 @@ namespace ugi {
         uniformAllocator->allocateForDescriptor( descriptor, item->parameter());
 		argGroup->updateDescriptor(descriptor);
         // prepare for descriptor set
-        encoder->prepareArgumentGroup(argGroup);
-    }
-
-    void GaussBlurProcessor::processBlur( GaussBlurItem* item, ComputeCommandEncoder* encoder) {
-        auto argGroup = item->argumentGroup();
-		encoder->bindPipeline(_pipeline);
-        encoder->bindArgumentGroup(argGroup);
-        encoder->dispatch(32, 32, 1);
+        resEncoder->prepareArgumentGroup(argGroup);
+        resEncoder->endEncode();
+        //
+        auto computeEncoder = commandBuffer->computeCommandEncoder();
+		computeEncoder->bindPipeline(_pipeline);
+        computeEncoder->bindArgumentGroup(argGroup);
+        computeEncoder->dispatch(32, 32, 1);
+        computeEncoder->endEncode();
     }
 
     GaussBlurItem::GaussBlurItem( ArgumentGroup* group, Texture* texture0, Texture* texture1 )
