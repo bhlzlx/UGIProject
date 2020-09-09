@@ -149,6 +149,27 @@ namespace ugi {
         // 源buffer一般用完就回收了，可以省去转换回来的处理
     }
 
+    void ResourceCommandEncoder::blitImage( Texture* dst, Texture* src, const ImageRegion* dstRegions, const ImageRegion* srcRegions, uint32_t regionCount ) {
+        imageTransitionBarrier( src, ResourceAccessType::TransferSource, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Read );
+        imageTransitionBarrier( dst, ResourceAccessType::TransferDestination, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Write );
+        std::vector<VkImageBlit> regions;
+        for( uint32_t i = 0; i<regionCount; ++i) {
+            VkImageBlit r;
+            r.srcSubresource.aspectMask = src->aspectFlags();
+            r.srcSubresource.baseArrayLayer = 0;
+            r.srcSubresource.layerCount = src->desc().arrayLayers;
+            r.srcSubresource.mipLevel = src->desc().mipmapLevel;
+            r.srcOffsets = {};
+            //
+            r.srcSubresource.aspectMask = src->aspectFlags();
+            r.srcSubresource.baseArrayLayer = 0;
+            r.srcSubresource.layerCount = src->desc().arrayLayers;
+            r.srcSubresource.mipLevel = src->desc().mipmapLevel;
+            r.srcOffsets->x = r.srcOffsets->y = r.srcOffsets->z = 0;
+        }
+        vkCmdBlitImage( *_commandBuffer, src->image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->image(), VK_IMAGE_USAGE_TRANSFER_DST_BIT, regionCount,   )
+    }
+
     void ResourceCommandEncoder::updateImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount ) {
         imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
         // 一个 region 只能传输一个 mip level
