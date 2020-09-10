@@ -20,7 +20,7 @@ namespace ugi {
         int i = 0;
         for(i = 0; i < ksize; i++) {  
             int x = i - kcenter;  
-            distribution[i] = cons * exp(x * x * scale);//一维高斯函数  
+            distribution[i] = cons * exp(x * x * scale);
             sum += distribution[i] ;
         }
         for(i = 0; i < ksize; i++) {  

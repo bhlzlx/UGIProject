@@ -62,6 +62,10 @@ namespace ugi {
 		argGroup->updateDescriptor(descriptor);
         // prepare for descriptor set
         resEncoder->prepareArgumentGroup(argGroup);
+
+        resEncoder->imageTransitionBarrier( item->source(), ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
+        resEncoder->imageTransitionBarrier( item->target(), ResourceAccessType::ShaderWrite, PipelineStages::Bottom, StageAccess::Read, PipelineStages::Top, StageAccess::Write);
+
         resEncoder->endEncode();
         //
         auto computeEncoder = commandBuffer->computeCommandEncoder();

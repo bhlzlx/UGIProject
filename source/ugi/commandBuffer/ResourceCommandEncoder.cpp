@@ -154,20 +154,23 @@ namespace ugi {
         imageTransitionBarrier( dst, ResourceAccessType::TransferDestination, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Write );
         std::vector<VkImageBlit> regions;
         for( uint32_t i = 0; i<regionCount; ++i) {
-            VkImageBlit r;
+            VkImageBlit r = {};
             r.srcSubresource.aspectMask = src->aspectFlags();
             r.srcSubresource.baseArrayLayer = 0;
-            r.srcSubresource.layerCount = src->desc().arrayLayers;
-            r.srcSubresource.mipLevel = src->desc().mipmapLevel;
-            r.srcOffsets = {};
+            r.srcSubresource.layerCount = 1;
+            r.srcSubresource.mipLevel = srcRegions->mipLevel;
+            r.srcOffsets[0] = { (int32_t)srcRegions[i].offset.x, (int32_t)srcRegions[i].offset.y, (int32_t)srcRegions[i].offset.z };
+            r.srcOffsets[1] = { (int32_t)srcRegions[i].extent.width + srcRegions[i].offset.x, (int32_t)srcRegions[i].extent.height + srcRegions[i].offset.y, (int32_t)srcRegions[i].extent.depth+srcRegions[i].offset.z };
             //
-            r.srcSubresource.aspectMask = src->aspectFlags();
-            r.srcSubresource.baseArrayLayer = 0;
-            r.srcSubresource.layerCount = src->desc().arrayLayers;
-            r.srcSubresource.mipLevel = src->desc().mipmapLevel;
-            r.srcOffsets->x = r.srcOffsets->y = r.srcOffsets->z = 0;
+            r.dstSubresource.aspectMask = dst->aspectFlags();
+            r.dstSubresource.baseArrayLayer = 0;
+            r.dstSubresource.layerCount = 1;
+            r.dstSubresource.mipLevel = dstRegions->mipLevel;
+            r.dstOffsets[0] = { (int32_t)dstRegions[i].offset.x, (int32_t)dstRegions[i].offset.y, (int32_t)dstRegions[i].offset.z };
+            r.dstOffsets[1] = { (int32_t)dstRegions[i].extent.width + dstRegions[i].offset.x, (int32_t)dstRegions[i].extent.height + dstRegions[i].offset.y, (int32_t)dstRegions[i].extent.depth+dstRegions[i].offset.z };
+            regions.push_back(r);
         }
-        vkCmdBlitImage( *_commandBuffer, src->image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->image(), VK_IMAGE_USAGE_TRANSFER_DST_BIT, regionCount,   )
+        vkCmdBlitImage( *_commandBuffer, src->image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regionCount, regions.data(), VkFilter::VK_FILTER_NEAREST );
     }
 
     void ResourceCommandEncoder::updateImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount ) {

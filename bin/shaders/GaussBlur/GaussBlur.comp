@@ -11,7 +11,7 @@ layout( binding = 2, set = 0, std140 ) uniform BlurParameter {
     uint    radius;
     vec4    gauss[4];
 };
-																																				
+
 void main () {
     ivec2 imgTc = ivec2(gl_GlobalInvocationID.xy);
     vec4 origColor = imageLoad( InputImage, imgTc ) * gauss[0][0];

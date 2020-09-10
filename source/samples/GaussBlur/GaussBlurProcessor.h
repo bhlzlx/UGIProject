@@ -33,8 +33,13 @@ namespace ugi {
         ArgumentGroup* argumentGroup() const {
             return _argGroup;
         }
+        Texture* source() const {
+            return _texture0;
+        }
         //
-        Texture* target() const;
+        Texture* target() const {
+            return _texture1;
+        }
     };
 
     class GaussBlurProcessor {

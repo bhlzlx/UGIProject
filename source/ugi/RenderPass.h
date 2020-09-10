@@ -51,6 +51,7 @@ namespace ugi {
         virtual void begin( RenderCommandEncoder* encoder ) const = 0;
         virtual void end( RenderCommandEncoder* encoder ) const = 0;
         virtual void release( Device* device ) = 0;
+        virtual Texture* color( uint32_t index ) = 0;
     };
 
     class RenderPass : IRenderPass {
@@ -89,6 +90,12 @@ namespace ugi {
         }
         virtual VkRenderPass renderPass() const override {
             return _renderPass;
+        }
+        virtual Texture* color( uint32_t index ) {
+            if(index<_colorTextureCount) {
+                return _colorTextures[index];
+            }
+            return nullptr;
         }
         virtual void begin( RenderCommandEncoder* encoder ) const override;
         virtual void end( RenderCommandEncoder* encoder ) const override;

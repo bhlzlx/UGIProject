@@ -19,6 +19,7 @@
 #include <stb_image.h>
 
 #include <cmath>
+#include <tweeny.h>
 
 namespace ugi {
 
@@ -106,9 +107,9 @@ namespace ugi {
         //
 		_gaussProcessor = new GaussBlurProcessor();
         auto rst = _gaussProcessor->intialize(_device, assetsSource);
-        _blurItem = _gaussProcessor->createGaussBlurItem(_texture, _bluredTexture);
+        _blurItem = _gaussProcessor->createGaussBlurItem(_bluredTexture, _bluredTextureFinal);
 
-        auto distributions = GenerateGaussDistribution(3.5f);
+        auto distributions = GenerateGaussDistribution(1.8f);
 
         GaussBlurParameter parameter = {
             { 1.0f, 0.0f }, distributions.size()/2+1, 0,
@@ -116,7 +117,7 @@ namespace ugi {
         };
         memcpy( parameter.gaussDistribution, distributions.data()+distributions.size()/2, (distributions.size()/2+1)*sizeof(float) );
         _blurItem->setParameter(parameter);
-        _blurItem2 = _gaussProcessor->createGaussBlurItem(_bluredTexture, _texture);
+        _blurItem2 = _gaussProcessor->createGaussBlurItem(_bluredTextureFinal, _bluredTexture);
         parameter.direction[0] = 0.0f;
         parameter.direction[1] = 1.0f;
         _blurItem2->setParameter(parameter);
@@ -143,13 +144,38 @@ namespace ugi {
 
             mainRenderPass->setClearValues(clearValues);
 
-            static int c = 8; {
-                if(c) {
-                    _gaussProcessor->processBlur(_blurItem, cmdbuf, _uniformAllocator);
-                    _gaussProcessor->processBlur(_blurItem2, cmdbuf, _uniformAllocator);
-                    --c;
-                }
+            ugi::ImageRegion srcRegion;
+            srcRegion.arrayIndex = 0; srcRegion.mipLevel = 0;
+            srcRegion.offset = {};
+            srcRegion.extent = { _texture->desc().width, _texture->desc().height, 1 };
+            ugi::ImageRegion dstRegion;
+            dstRegion.arrayIndex = 0; dstRegion.mipLevel = 0;
+            dstRegion.offset = {};
+            dstRegion.extent = { _texture->desc().width, _texture->desc().height, 1 };
+
+            auto resEncoder = cmdbuf->resourceCommandEncoder();
+            resEncoder->blitImage( _bluredTexture, _texture, &dstRegion, &srcRegion, 1 );
+            resEncoder->endEncode();
+
+            static auto tween = tweeny::from(0).to(12).during(60);
+            auto v = tween.step(1);
+            auto progress = tween.progress();
+            if( progress == 1.0f ) {
+                tween = tween.backward();
+            } else if( progress == 0.0f ) {
+                tween = tween.forward();
             }
+            for( int i = 0; i<v; ++i) {
+                _gaussProcessor->processBlur(_blurItem, cmdbuf, _uniformAllocator);
+                _gaussProcessor->processBlur(_blurItem2, cmdbuf, _uniformAllocator);
+            }
+            resEncoder = cmdbuf->resourceCommandEncoder();
+            Texture* screen = mainRenderPass->color(0);
+            resEncoder->blitImage( screen, _bluredTextureFinal, &dstRegion, &srcRegion, 1 );
+            dstRegion.offset = { (int32_t)srcRegion.extent.width, 0, 0 };
+            resEncoder->blitImage( screen, _texture, &dstRegion, &srcRegion, 1 );
+            
+            resEncoder->endEncode();
 
             auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
             }

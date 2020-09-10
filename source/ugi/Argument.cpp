@@ -240,9 +240,9 @@ namespace ugi {
         for( uint32_t i = 0; i < _groupLayout->imageResourceTotal(); ++i ) {
             auto type = _groupLayout->imageResourceType(i);
             if( type == ArgumentDescriptorType::Image ) {
-                commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderRead, PipelineStages::Top, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
+                commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
             } else if( type == ArgumentDescriptorType::StorageImage ) {
-                commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderReadWrite, PipelineStages::Top, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
+                commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
             }
         }
         return true;
