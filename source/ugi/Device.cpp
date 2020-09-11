@@ -545,9 +545,9 @@ namespace ugi {
         return Texture::CreateTexture( this, 0, 0, _desc, _accessType);
     }
 
-    Swapchain* Device::createSwapchain( void* _wnd ) {
+    Swapchain* Device::createSwapchain( void* _wnd, AttachmentLoadAction loadAction ) {
         Swapchain* swapchain = new Swapchain();
-        bool rst = swapchain->initialize( this, _wnd);
+        bool rst = swapchain->initialize( this, _wnd, loadAction );
         if( rst ) {
             return swapchain;
         }

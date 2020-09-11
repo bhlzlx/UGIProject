@@ -1,5 +1,5 @@
-﻿#include "../VulkanFunctionDeclare.h"
-#include "ResourceCommandEncoder.h"
+﻿#include "ResourceCommandEncoder.h"
+#include "../VulkanFunctionDeclare.h"
 #include "../CommandBuffer.h"
 #include "../UGIDeclare.h"
 #include "../RenderPass.h"
@@ -200,7 +200,7 @@ namespace ugi {
         }
 
         VkCommandBuffer cmdbuf = *_commandBuffer;
-        vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, copies.size(), copies.data() );
+        vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)copies.size(), copies.data() );
     }
 
     void ResourceCommandEncoder::replaceImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount ) {
@@ -230,7 +230,7 @@ namespace ugi {
             copies.push_back(copy);
         }
         VkCommandBuffer cmdbuf = *_commandBuffer;
-        vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, copies.size(), copies.data() );
+        vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)copies.size(), copies.data() );
     }
 
 }

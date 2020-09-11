@@ -13,6 +13,7 @@ namespace ugi {
         VkSwapchainKHR                      _swapchain;
         VkSwapchainCreateInfoKHR            _createInfo;
         VkSurfaceKHR                        _surface;
+        AttachmentLoadAction                _loadAction;
         // resource objects
 
         Semaphore*                          _imageAvailSemaphores[MaxFlightCount];
@@ -49,7 +50,7 @@ namespace ugi {
         {
         }
 
-        bool initialize( Device* _device, void* _window );
+        bool initialize( Device* _device, void* _window, AttachmentLoadAction loadAction );
         bool resize( Device* _device, uint32_t _width, uint32_t _height );
         bool updateSwapchain( Device* _device );
         void cleanup( Device* _device );

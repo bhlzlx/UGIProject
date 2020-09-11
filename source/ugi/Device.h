@@ -114,7 +114,7 @@ namespace ugi {
         Buffer* createBuffer( BufferType _type, size_t _size );
         Texture* createTexture( const TextureDescription& _desc, ResourceAccessType _accessType = ResourceAccessType::ShaderReadWrite );
         IRenderPass* createRenderPass( const RenderPassDescription& _renderPass, Texture** _colors, Texture* _depthStencil );
-        Swapchain* createSwapchain( void* _wnd );
+        Swapchain* createSwapchain( void* wnd, AttachmentLoadAction loadAction = AttachmentLoadAction::Clear );
         Pipeline* createPipeline( const PipelineDescription& pipelineDescription );
         ComputePipeline* createComputePipeline( const PipelineDescription& pipelineDescription );
         Drawable* createDrawable( const PipelineDescription& pipelineDescription );

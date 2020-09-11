@@ -66,8 +66,9 @@ namespace ugi {
 
     }
 
-    bool Swapchain::initialize( Device* deviceVulkan, void* window ) {
+    bool Swapchain::initialize( Device* deviceVulkan, void* window, AttachmentLoadAction loadAction ) {
         _hwnd = window;
+        _loadAction = loadAction;
         VkPhysicalDevice _physicalDevice = deviceVulkan->physicalDevice();
         VkDevice _device = deviceVulkan->device();
         // VkInstance _instance = _deviceVulkan->instance();
@@ -280,7 +281,7 @@ namespace ugi {
             RenderPassDescription renderPassDesc;
             renderPassDesc.colorAttachmentCount = 1;
             renderPassDesc.colorAttachments[0].format = colorTexDesc.format;
-            renderPassDesc.colorAttachments[0].loadAction = AttachmentLoadAction::Keep;
+            renderPassDesc.colorAttachments[0].loadAction = _loadAction;
             renderPassDesc.colorAttachments[0].multisample = MultiSampleType::MsaaNone;
             renderPassDesc.colorAttachments[0].initialAccessType = ResourceAccessType::Present; ///> 这里就是说这个swapchain只有一个作用就是渲染完就显示，永远不用作其它类型
             renderPassDesc.colorAttachments[0].finalAccessType = ResourceAccessType::Present;

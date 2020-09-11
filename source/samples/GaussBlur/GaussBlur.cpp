@@ -65,7 +65,7 @@ namespace ugi {
         }
         _device = _renderSystem->createDevice(descriptor, assetsSource);
         _uniformAllocator = _device->createUniformAllocator();
-        _swapchain = _device->createSwapchain( _wnd );
+        _swapchain = _device->createSwapchain( _wnd, AttachmentLoadAction::Keep );
         // command queues
         _graphicsQueue = _device->graphicsQueues()[0];
         _uploadQueue = _device->transferQueues()[0];
@@ -118,8 +118,7 @@ namespace ugi {
         memcpy( parameter.gaussDistribution, distributions.data()+distributions.size()/2, (distributions.size()/2+1)*sizeof(float) );
         _blurItem->setParameter(parameter);
         _blurItem2 = _gaussProcessor->createGaussBlurItem(_bluredTextureFinal, _bluredTexture);
-        parameter.direction[0] = 0.0f;
-        parameter.direction[1] = 1.0f;
+        parameter.direction[0] = 0.0f; parameter.direction[1] = 1.0f;
         _blurItem2->setParameter(parameter);
         //
         return true;
@@ -155,6 +154,7 @@ namespace ugi {
 
             auto resEncoder = cmdbuf->resourceCommandEncoder();
             resEncoder->blitImage( _bluredTexture, _texture, &dstRegion, &srcRegion, 1 );
+            resEncoder->blitImage( _bluredTextureFinal, _texture, &dstRegion, &srcRegion, 1 );
             resEncoder->endEncode();
 
             static auto tween = tweeny::from(0).to(12).during(60);
@@ -174,7 +174,7 @@ namespace ugi {
             resEncoder->blitImage( screen, _bluredTextureFinal, &dstRegion, &srcRegion, 1 );
             dstRegion.offset = { (int32_t)srcRegion.extent.width, 0, 0 };
             resEncoder->blitImage( screen, _texture, &dstRegion, &srcRegion, 1 );
-            
+
             resEncoder->endEncode();
 
             auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
