@@ -563,8 +563,8 @@ namespace ugi {
         }
     }
 
-    Pipeline* Device::createPipeline( const PipelineDescription& pipelineDescription ) {
-        return Pipeline::CreatePipeline( this, pipelineDescription);
+    GraphicsPipeline* Device::createGraphicsPipeline( const PipelineDescription& pipelineDescription ) {
+        return GraphicsPipeline::CreatePipeline( this, pipelineDescription);
     }
 
     ComputePipeline* Device::createComputePipeline( const PipelineDescription& pipelineDescription ) {

@@ -33,7 +33,7 @@ namespace ugi {
             pipelineDesc.topologyMode = TopologyMode::TriangleList;
             pipelineDesc.renderState.cullMode = CullMode::None;
             pipelineDesc.renderState.blendState.enable = true;
-            _pipeline = _device->createPipeline(pipelineDesc);
+            _pipeline = _device->createGraphicsPipeline(pipelineDesc);
             _pipelineDesc = *(ugi::PipelineDescription*)mem;
             free(mem);
             if (!_pipeline) {
@@ -43,7 +43,7 @@ namespace ugi {
             return true;
         }
 
-        ugi::Pipeline* GDIContext::pipeline() const
+        ugi::GraphicsPipeline* GDIContext::pipeline() const
         {
             return _pipeline;
         }

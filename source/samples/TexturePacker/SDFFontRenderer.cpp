@@ -69,7 +69,7 @@ namespace ugi {
         _pipelineDescription.topologyMode = TopologyMode::TriangleList;
         _pipelineDescription.renderState.cullMode = CullMode::None;
         _pipelineDescription.renderState.blendState.enable = true;
-        _pipeline = _device->createPipeline(_pipelineDescription);
+        _pipeline = _device->createGraphicsPipeline(_pipelineDescription);
         pipelineFile->Close();
         if( !_pipeline) {
             return false;

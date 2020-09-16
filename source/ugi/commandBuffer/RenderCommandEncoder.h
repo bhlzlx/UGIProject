@@ -21,7 +21,7 @@ namespace ugi {
             , _subpass( 0 )
         {
         }
-        void bindPipeline( Pipeline* pipeline );
+        void bindPipeline( GraphicsPipeline* pipeline );
         void bindArgumentGroup( ArgumentGroup* argumentGroup );
         void setViewport( float x, float y, float width ,float height, float minDepth, float maxDepth );
         void setScissor( int x, int y, int width, int height );

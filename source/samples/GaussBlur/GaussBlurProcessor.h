@@ -38,7 +38,7 @@ namespace ugi {
         }
         //
         Texture* target() const {
-            return _texture1;
+            return _texture1;   
         }
     };
 

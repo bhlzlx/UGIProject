@@ -18,7 +18,7 @@
 
 namespace ugi {
 
-        bool MemTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
+        bool HelloWorld::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
 
         hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/triangle/pipeline.bin"));
         auto pipelineFileSize = pipelineFile->GetSize();
@@ -64,7 +64,7 @@ namespace ugi {
         }
         pipelineDesc.renderState.cullMode = CullMode::None;
         pipelineDesc.renderState.blendState.enable = false;
-        _pipeline = _device->createPipeline(pipelineDesc);
+        _pipeline = _device->createGraphicsPipeline(pipelineDesc);
         //
         _argumentGroup = _pipeline->createArgumentGroup();
 
@@ -186,7 +186,7 @@ namespace ugi {
         return true;
     }
 
-    void MemTest::tick() {
+    void HelloWorld::tick() {
         
         _device->waitForFence( _frameCompleteFences[_flightIndex] );
         _uniformAllocator->tick();
@@ -262,27 +262,27 @@ namespace ugi {
 
     }
         
-    void MemTest::resize(uint32_t width, uint32_t height) {
+    void HelloWorld::resize(uint32_t width, uint32_t height) {
         _swapchain->resize( _device, width, height );
         //
         _width = width;
         _height = height;
     }
 
-    void MemTest::release() {
+    void HelloWorld::release() {
     }
 
-    const char * MemTest::title() {
+    const char * HelloWorld::title() {
         return "HelloWorld";
     }
         
-    uint32_t MemTest::rendererType() {
+    uint32_t HelloWorld::rendererType() {
         return 0;
     }
 
 }
 
-ugi::MemTest theapp;
+ugi::HelloWorld theapp;
 
 UGIApplication* GetApplication() {
     return &theapp;

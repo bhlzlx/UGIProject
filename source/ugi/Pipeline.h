@@ -11,7 +11,7 @@
 
 namespace ugi {
 
-    class Pipeline {
+    class GraphicsPipeline {
     private:
         Device*                                             _device;
         std::unordered_map<uint64_t, VkPipeline>            _pipelineTable;
@@ -38,9 +38,9 @@ namespace ugi {
         VkPipeline preparePipelineStateObject( UGIHash<APHash>& hasher, const RenderCommandEncoder* encoder );
         void _hashRasterizationState( UGIHash<APHash>& hasher );
     public:
-        static Pipeline* CreatePipeline( Device* device, const PipelineDescription& pipelineDescription);
+        static GraphicsPipeline* CreatePipeline( Device* device, const PipelineDescription& pipelineDescription);
 
-        Pipeline();
+        GraphicsPipeline();
 
         void setRasterizationState( const RasterizationState& _state );
         void setDepthStencilState(  );
@@ -64,7 +64,7 @@ namespace ugi {
         ArgumentGroup* createArgumentGroup() const ;
         VkPipeline pipeline() {
             return _pipeline;
-        }
+        }     
     };
 
 }

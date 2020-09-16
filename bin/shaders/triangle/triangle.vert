@@ -6,10 +6,13 @@
 layout (location = 0) in vec2 Position;
 layout (location = 1) in vec2 Uv;
 
-layout (location = 0) out vec2 outputUV;
+// layout (location = 0) out vec2 outputUV;
 
-out gl_PerVertex 
-{
+layout (location = 0) out struct {
+    vec2 outputUV;
+} vs_out;
+
+out gl_PerVertex {
     vec4 gl_Position;   
 };
 
@@ -23,6 +26,6 @@ void main() {
     float y = dot( vec3( Position.x, Position.y, 1.0f ), col2.xyz);
     //==
 	gl_Position = vec4( x, y, 1.0f, 1.0f);
-	outputUV = Uv;
+	vs_out.outputUV = Uv;
 	// gl_Position.y *= -1;
 }

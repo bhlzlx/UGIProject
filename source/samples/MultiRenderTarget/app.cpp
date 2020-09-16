@@ -70,7 +70,7 @@ namespace ugi {
         }
         pipelineDesc.renderState.cullMode = CullMode::None;
         pipelineDesc.renderState.blendState.enable = false;
-        _pipeline = _device->createPipeline(pipelineDesc);
+        _pipeline = _device->createGraphicsPipeline(pipelineDesc);
         //
         _argumentGroup = _pipeline->createArgumentGroup();
 

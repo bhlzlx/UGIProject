@@ -123,7 +123,7 @@
             "externalConsole": false
         },
         {
-            "name": "(msvc) TPTest",
+            "name": "(msvc) SDFTest",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/Windows_64_Debug/SDFTest.exe",

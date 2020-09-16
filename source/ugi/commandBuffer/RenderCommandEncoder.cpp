@@ -23,7 +23,7 @@ namespace ugi {
         vkCmdDraw( *_commandBuffer, vertexCount, 1, baseVertexIndex, 0 );
     }
 
-    void RenderCommandEncoder::bindPipeline( Pipeline* pipeline ) {
+    void RenderCommandEncoder::bindPipeline( GraphicsPipeline* pipeline ) {
         pipeline->bind(this);
     }
 

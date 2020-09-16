@@ -7,7 +7,7 @@
 
 namespace ugi {
 
-    class MemTest : public UGIApplication {
+    class HelloWorld : public UGIApplication {
     private:
         void*                   _hwnd;                                             //
         ugi::RenderSystem*      _renderSystem;                                     //
@@ -19,7 +19,7 @@ namespace ugi {
         ugi::CommandBuffer*     _commandBuffers[MaxFlightCount];                   // command buffer for each frame
         ugi::CommandQueue*      _graphicsQueue;                                    // graphics queue
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
-        ugi::Pipeline*          _pipeline;
+        ugi::GraphicsPipeline*          _pipeline;
         ///> ===========================================================================
         ugi::ArgumentGroup*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;

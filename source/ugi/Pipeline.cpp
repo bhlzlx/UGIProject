@@ -34,7 +34,7 @@ namespace ugi {
         return module;
     }
 
-    Pipeline::Pipeline() 
+    GraphicsPipeline::GraphicsPipeline() 
         : _IAStateCreateInfo {}
         , _attachmnetBlendState {}
         , _renderTargetBlendStateCreateInfo {}
@@ -63,9 +63,9 @@ namespace ugi {
 
     VkPipelineLayout GetPipelineLayout(const ArgumentGroupLayout* argGroupLayout);
 
-    Pipeline* Pipeline::CreatePipeline( Device* device, const PipelineDescription& pipelineDescription ) {
-        Pipeline* pipelinePtr = new Pipeline();
-        Pipeline& pipeline = *pipelinePtr;
+    GraphicsPipeline* GraphicsPipeline::CreatePipeline( Device* device, const PipelineDescription& pipelineDescription ) {
+        GraphicsPipeline* pipelinePtr = new GraphicsPipeline();
+        GraphicsPipeline& pipeline = *pipelinePtr;
         // 1. shader stages
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 		for (uint32_t i = 0; i < (uint32_t)ShaderModuleType::ShaderTypeCount; ++i) {
@@ -213,7 +213,7 @@ namespace ugi {
         return pipelinePtr;
     }
 
-    VkPipeline Pipeline::preparePipelineStateObject( UGIHash<APHash>& hasher, const RenderCommandEncoder* encoder ) 
+    VkPipeline GraphicsPipeline::preparePipelineStateObject( UGIHash<APHash>& hasher, const RenderCommandEncoder* encoder ) 
     {
         const IRenderPass* renderPass = encoder->renderPass();
         uint32_t currentSubpass = encoder->subpass();
@@ -240,7 +240,7 @@ namespace ugi {
         return pipeline;
     }
 
-    void Pipeline::setRasterizationState( const RasterizationState& _state ) {
+    void GraphicsPipeline::setRasterizationState( const RasterizationState& _state ) {
         _RSStateCreateInfo.polygonMode = polygonModeToVk(_state.polygonMode); 
         _RSStateCreateInfo.cullMode = cullModeToVk(_state.cullMode); 
         _RSStateCreateInfo.frontFace = frontFaceToVk(_state.frontFace); 
@@ -252,7 +252,7 @@ namespace ugi {
         //
     }
 
-    void Pipeline::_hashRasterizationState( UGIHash<APHash>& hasher ) {
+    void GraphicsPipeline::_hashRasterizationState( UGIHash<APHash>& hasher ) {
         hasher.hashPOD(_RSStateCreateInfo.polygonMode);
         hasher.hashPOD(_RSStateCreateInfo.cullMode);
         hasher.hashPOD(_RSStateCreateInfo.frontFace);
@@ -266,14 +266,14 @@ namespace ugi {
         }
     }
 
-    void Pipeline::bind( RenderCommandEncoder* encoder ) {
+    void GraphicsPipeline::bind( RenderCommandEncoder* encoder ) {
         UGIHash<APHash> hasher;
         _hashRasterizationState( hasher );
         VkPipeline pipeline = preparePipelineStateObject( hasher,  encoder );
         vkCmdBindPipeline( *encoder->commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
     }
 
-    ArgumentGroup* Pipeline::createArgumentGroup() const {
+    ArgumentGroup* GraphicsPipeline::createArgumentGroup() const {
         const auto argumentLayout = this->_device->getArgumentGroupLayout(_pipelineLayoutHash);
         assert(argumentLayout);
         if( !argumentLayout) {

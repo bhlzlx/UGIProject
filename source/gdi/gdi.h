@@ -22,7 +22,7 @@ namespace ugi {
             ugi::Device*                _device;
             hgl::assets::AssetsSource*  _assetsSource;
             ugi::PipelineDescription    _pipelineDesc;
-            ugi::Pipeline*              _pipeline;
+            ugi::GraphicsPipeline*              _pipeline;
             //
             hgl::Vector2f               _standardSize;
             hgl::Vector2f               _size;          // context size( width,height )
@@ -45,7 +45,7 @@ namespace ugi {
                 return _assetsSource;
             }
 
-            ugi::Pipeline* pipeline() const ;
+            ugi::GraphicsPipeline* pipeline() const ;
             const ugi::PipelineDescription& pipelineDescription() const ;
             //
             void setSize(const hgl::Vector2f& size);

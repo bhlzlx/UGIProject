@@ -180,7 +180,7 @@ namespace ugi {
     class SDFFontRenderer {
     private:
         Device*                     _device;
-        Pipeline*                   _pipeline;
+        GraphicsPipeline*                   _pipeline;
         PipelineDescription         _pipelineDescription;
         hgl::assets::AssetsSource*  _assetsSource;
         SDFTextureTileManager*      _texTileManager;

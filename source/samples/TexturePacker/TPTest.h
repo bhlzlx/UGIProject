@@ -20,7 +20,7 @@ namespace ugi {
         ugi::CommandBuffer*     _commandBuffers[MaxFlightCount];                   // command buffer for each frame
         ugi::CommandQueue*      _graphicsQueue;                                    // graphics queue
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
-        ugi::Pipeline*          _pipeline;
+        ugi::GraphicsPipeline*          _pipeline;
         
         ugi::ResourceManager*   _resourceManager;
         ugi::UniformAllocator*  _uniformAllocator;
