@@ -1,4 +1,5 @@
 #pragma once
+
 #include "UGITypes.h"
 namespace ugi {
 

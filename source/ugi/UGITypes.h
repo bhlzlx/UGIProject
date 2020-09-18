@@ -107,7 +107,8 @@ namespace ugi {
             }
         };
         uint32_t    mipLevel;
-        uint32_t    arrayIndex;        // texture array index only avail for texture array
+        uint32_t    arrayIndex; // texture array index only avail for texture array
+        uint32_t    arrayCount;
         Offset      offset;
         Extent      extent;
         //

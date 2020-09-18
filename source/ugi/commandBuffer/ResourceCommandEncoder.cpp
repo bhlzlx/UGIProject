@@ -220,7 +220,7 @@ namespace ugi {
             copy.imageOffset.z = region.offset.z;
             //
             copy.imageSubresource.baseArrayLayer = region.arrayIndex;
-            copy.imageSubresource.layerCount = 1;
+            copy.imageSubresource.layerCount = region.arrayCount;
             copy.imageSubresource.aspectMask = dst->aspectFlags();
             copy.imageSubresource.mipLevel = region.mipLevel;
             copy.bufferOffset = offsets[i];

@@ -38,6 +38,7 @@ UGI_STATIC_LIBRARY( UGI
     CommandQueue.cpp
     ArgumentGroupLayout.cpp
     Texture.cpp
+    TextureUtility.cpp
     Buffer.cpp
     RenderPass.cpp
     Swapchain.cpp
@@ -48,8 +49,8 @@ UGI_STATIC_LIBRARY( UGI
     Pipeline.cpp
     Drawable.cpp
     UniformBuffer.cpp
-    ./resourcePool/ArgumentGroupLayoutPool.cpp
     CommandBuffer.cpp
+    ./resourcePool/ArgumentGroupLayoutPool.cpp
     ./commandBuffer/RenderCommandEncoder.cpp
     ./commandBuffer/ResourceCommandEncoder.cpp
     ./commandBuffer/ComputeCommandEncoder.cpp

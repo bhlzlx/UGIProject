@@ -80,7 +80,8 @@
         "xfunctional": "cpp",
         "xmemory0": "cpp",
         "random": "cpp",
-        "xthread": "cpp"
+        "xthread": "cpp",
+        "cassert": "cpp"
     },
     "editor.tabCompletion": "on",
     "workbench.editor.highlightModifiedTabs": true

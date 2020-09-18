@@ -14,6 +14,7 @@
 #include <ugi/UniformBuffer.h>
 #include <hgl/assets/AssetsSource.h>
 
+#include <ugi/TextureUtility.h>
 #include "GaussBlurProcessor.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -22,34 +23,6 @@
 #include <tweeny.h>
 
 namespace ugi {
-
-    void TextureUtility::replaceTexture( CommandQueue* transferQueue, Texture* texture, const ImageRegion* regions,void* data, uint32_t dataLength, uint32_t* offsets, uint32_t regionCount  ) {
-
-        auto commandBuffer = transferQueue->createCommandBuffer(_device); 
-        auto stagingBuffer = _device->createBuffer( ugi::BufferType::StagingBuffer, dataLength );
-        commandBuffer->beginEncode(); {
-            auto resCmdEncoder = commandBuffer->resourceCommandEncoder();
-            void* mappingPtr = stagingBuffer->map(_device);
-            memcpy( mappingPtr, data, dataLength);
-            stagingBuffer->unmap(_device);
-            resCmdEncoder->replaceImage( texture, stagingBuffer, regions, offsets, regionCount);
-            resCmdEncoder->endEncode();
-        }
-        commandBuffer->endEncode();
-		QueueSubmitInfo submitInfo {
-			&commandBuffer,
-			1,
-			nullptr,// submitInfo.semaphoresToWait
-			0,
-			nullptr, // submitInfo.semaphoresToSignal
-			0
-		};
-		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, nullptr );
-        _transferQueue->submitCommandBuffers(submitBatch);
-        _transferQueue->waitIdle();
-        //
-        stagingBuffer->release(_device);
-    }
 
     bool GaussBlurTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
 
@@ -78,33 +51,27 @@ namespace ugi {
         //
         _flightIndex = 0;
         //
+        TextureUtility texUtil(_device, _uploadQueue);
+        //
         auto fileStream = assetsSource->Open("image/island.png");
         size_t fileSize = fileStream->GetSize();
         uint8_t* fileBuff = (uint8_t*)malloc(fileStream->GetSize());
         fileStream->ReadFully(fileBuff, fileStream->GetSize());
         fileStream->Close();
-        int x; int y; int channels;
-        auto pixel = stbi_load_from_memory( fileBuff, fileSize,&x, &y, &channels, 4 );
-        //
-        TextureDescription textureDescription;
-        textureDescription.format = ugi::UGIFormat::RGBA8888_UNORM;
-        textureDescription.width = x;
-        textureDescription.height = y;
-        textureDescription.depth = 1;
-        textureDescription.mipmapLevel = 1;
-        textureDescription.arrayLayers = 1;
-        textureDescription.type = TextureType::Texture2D;
-        _texture = _device->createTexture(textureDescription);
-        _bluredTexture = _device->createTexture(textureDescription);
-        _bluredTextureFinal = _device->createTexture(textureDescription);
-        //
+        _texture = texUtil.createTexturePNG(fileBuff, fileSize);
+        free(fileBuff);
         delete fileStream;
-        TextureUtility textureUtility(_device, _uploadQueue, _graphicsQueue);
-        ImageRegion region;
-        region.extent = ImageRegion::Extent(x, y, 1);
-        uint32_t offset = 0;
-        textureUtility.replaceTexture( _uploadQueue, _texture, &region, pixel, x*y*4, &offset, 1 );
-        //
+
+        _bluredTexture = _device->createTexture(_texture->desc(), ResourceAccessType::ShaderReadWrite );
+        _bluredTextureFinal = _device->createTexture(_texture->desc(), ResourceAccessType::ShaderReadWrite);
+
+        // fileStream = assetsSource->Open(u8"image/island.ktx");
+        // if(fileStream) {
+        //     fileBuff = (uint8_t*)malloc(fileStream->GetSize());
+        //     fileStream->ReadFully( fileBuff,fileStream->GetSize());
+        //     TextureUtility texUtil(_device, _uploadQueue);
+        //     _texture = texUtil.createTextureKTX(fileBuff, fileStream->GetSize());
+        // }
 		_gaussProcessor = new GaussBlurProcessor();
         auto rst = _gaussProcessor->intialize(_device, assetsSource);
         _blurItem = _gaussProcessor->createGaussBlurItem(_bluredTexture, _bluredTextureFinal);

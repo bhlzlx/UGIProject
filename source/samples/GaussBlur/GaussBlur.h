@@ -31,21 +31,7 @@ namespace ugi {
 
     class GaussBlurProcessor;
     class GaussBlurItem;
-
-    class TextureUtility {
-    private:
-        Device*             _device;
-        CommandQueue*       _transferQueue;
-        CommandQueue*       _graphicsQueue;
-    public:
-        TextureUtility( Device* device, CommandQueue* transferQueue, CommandQueue* graphicsQueue )
-            : _device(device)
-            , _transferQueue(transferQueue)
-            , _graphicsQueue(graphicsQueue) {
-        }
-        // replace texture
-        void replaceTexture( CommandQueue* transferQueue, Texture* texture, const ImageRegion* regions,void* data, uint32_t dataLength, uint32_t* offsets, uint32_t regionCount );
-    };
+    
 
     class GaussBlurTest : public UGIApplication {
     private:
