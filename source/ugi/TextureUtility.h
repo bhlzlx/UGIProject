@@ -36,6 +36,7 @@ namespace ugi {
 
         Texture* createTextureKTX( const void* data, uint32_t length ) const;
         Texture* createTexturePNG( const void* data, uint32_t length ) const;
+        void generateMipmaps( Texture* texture ) const;
     };
 
 }

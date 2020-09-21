@@ -7,6 +7,7 @@
 #include "CommandQueue.h"
 #include "CommandBuffer.h"
 #include "Buffer.h"
+#include "Texture.h"
 #include <stb_image.h>
 #include <GLES3/gl31.h>
 #include <GLES2/gl2ext.h>
@@ -213,12 +214,21 @@ namespace ugi {
 	Texture* TextureUtility::createTexturePNG( const void* data, uint32_t length ) const {
         int x; int y; int channels;
         auto pixel = stbi_load_from_memory( (stbi_uc*)data, length,&x, &y, &channels, 4 );
+		//
+		uint32_t mipmapLevel = 1; {
+			int mipmapRefSize = x > y ? x : y;
+			while(mipmapRefSize!=1) {
+				++mipmapLevel;
+				mipmapRefSize = mipmapRefSize >> 1;
+			}
+		}
+
         TextureDescription textureDescription;
         textureDescription.format = ugi::UGIFormat::RGBA8888_UNORM;
         textureDescription.width = x;
         textureDescription.height = y;
         textureDescription.depth = 1;
-        textureDescription.mipmapLevel = 1;
+        textureDescription.mipmapLevel = mipmapLevel;
         textureDescription.arrayLayers = 1;
         textureDescription.type = TextureType::Texture2D;
         auto texture = _device->createTexture(textureDescription);
@@ -234,7 +244,62 @@ namespace ugi {
 		replaceTexture( texture, &region, pixel, x*y*4, &offset, 1 );
 		stbi_image_free(pixel); // cleanup!!!
 		//
+		generateMipmaps(texture);
+		//
 		return texture;
+	}
+
+	void TextureUtility::generateMipmaps( Texture* texture ) const {
+		if( texture->desc().mipmapLevel == 1 ) {
+			return; // no need to generate mipmaps
+		}
+		auto cmdbuf = _transferQueue->createCommandBuffer( _device );
+		cmdbuf->beginEncode();
+		auto resEncoder = cmdbuf->resourceCommandEncoder();
+		// 转换为LayoutGeneral
+		resEncoder->imageTransitionBarrier( texture, ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write );
+		resEncoder->endEncode();
+		VkCommandBuffer cmdbufVk = *cmdbuf;
+		VkImage image = texture->image();
+		std::vector<VkImageBlit> mipmapBlits;
+		for( uint32_t i = 1; i<texture->desc().mipmapLevel; ++i ) {
+			VkImageBlit blit;
+			blit.srcOffsets[0] = {};
+			blit.srcOffsets[1] = { (int32_t)texture->desc().width, (int32_t)texture->desc().height, (int32_t)texture->desc().depth };
+			blit.srcSubresource.aspectMask = texture->aspectFlags();
+			blit.srcSubresource.baseArrayLayer = 0;
+			blit.srcSubresource.layerCount = texture->desc().arrayLayers;
+			blit.srcSubresource.mipLevel = 0;
+			//
+			blit.dstOffsets[0] = {};
+			blit.dstOffsets[1] = { (int32_t)texture->desc().width>>i, (int32_t)texture->desc().height>>i, (int32_t)texture->desc().depth };
+			blit.dstSubresource.aspectMask = texture->aspectFlags();
+			blit.dstSubresource.baseArrayLayer = 0;
+			blit.dstSubresource.layerCount = texture->desc().arrayLayers;
+			blit.dstSubresource.mipLevel = i;
+			//
+			mipmapBlits.push_back(blit);
+		}
+		// 注意Nearest和Linear的过滤器，到时候看看效果，因为他们肯定是有效果的区别的，而且是从原图直接生成的各级mipmap
+		vkCmdBlitImage( cmdbufVk, image, VK_IMAGE_LAYOUT_GENERAL, image, VK_IMAGE_LAYOUT_GENERAL, (uint32_t)mipmapBlits.size(), mipmapBlits.data(), VkFilter::VK_FILTER_NEAREST );
+		//
+		resEncoder->imageTransitionBarrier( texture, texture->primaryAccessType(), PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read );
+		resEncoder->endEncode();
+		//
+		cmdbuf->endEncode();
+
+		QueueSubmitInfo submitInfo {
+			&cmdbuf,
+			1,
+			nullptr,// submitInfo.semaphoresToWait
+			0,
+			nullptr, // submitInfo.semaphoresToSignal
+			0
+		};
+		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, nullptr );
+        _transferQueue->submitCommandBuffers(submitBatch);
+        _transferQueue->waitIdle();
+		_transferQueue->destroyCommandBuffer( _device, cmdbuf );
 	}
 
 }
