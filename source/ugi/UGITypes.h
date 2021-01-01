@@ -313,26 +313,33 @@ namespace ugi {
         Texture3D
     };
 
-    // enum class TextureUsageFlagBits :uint8_t {
-    //     TextureUsageNone = 0x0,
-    //     TextureUsageTransferSource = 0x1,
-    //     TextureUsageTransferDestination = 0x2,
-    //     TextureUsageSampled = 0x4,
-    //     TextureUsageStorage = 0x8,
-    //     TextureUsageColorAttachment = 0x10,
-    //     TextureUsageDepthStencilAttachment = 0x20,
-    //     TextureUsageTransientAttachment = 0x40,
-    //     TextureUsageInputAttachment = 0x80
-    // };
+    // image - image view
+    // 源数据和读出来的数据我们可能需要让它们不一样，比如说 通道 互换
+    // 源类型可能与读取类型不一样，比如说，image是 texture2DArray, 但实际我们只读一个texture2D，这个需要指定subResource以及viewType
+    enum class ChannelMapping : uint8_t {
+        identity,
+        one,
+        zero,
+        red,green,blue,alpha
+    };
 
-    // enum class AttachmentUsageBits : uint8_t {
-    //     ColorAttachment,
-    //     DepthStencilAttachment,
-    //     ShaderRead,
-    //     TransferSource,
-    //     TransferDestination,
-    //     Present,
-    // };
+    struct ImageViewParameter {
+        TextureType         viewType;
+        // =======================================
+        uint32_t            baseMipLevel;
+        uint32_t            levelCount;
+        uint32_t            baseArrayLayer;
+        uint32_t            layerCount;
+        // =======================================
+        ChannelMapping      red;
+        ChannelMapping      green;
+        ChannelMapping      blue;
+        ChannelMapping      alpha;
+        //
+        bool operator < ( const ImageViewParameter& viewParam ) const {
+            return memcmp( this, &viewParam, sizeof(ImageViewParameter));
+        }
+    };
 
     enum class BufferType : uint8_t {
         VertexBuffer,

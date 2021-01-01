@@ -84,5 +84,6 @@
         "cassert": "cpp"
     },
     "editor.tabCompletion": "on",
-    "workbench.editor.highlightModifiedTabs": true
+    "workbench.editor.highlightModifiedTabs": true,
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
