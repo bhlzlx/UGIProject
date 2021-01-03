@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 namespace ugi {
 
     template< class Prototype__, class TargetType__, class HostType__, class HashMethod__, class CreateMethod__, class DestroyMethod__ >

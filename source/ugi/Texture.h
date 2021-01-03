@@ -11,17 +11,17 @@ namespace ugi {
     
     class Texture : public Resource {
     private:
-        TextureDescription          _description;        // descriptor
-        VkImage                     _image;            // image
-        VkImageView                 _imageView;        // default image view
-        VmaAllocation               _allocation;        // memory allocation
+        TextureDescription          _description;           // descriptor
+        VkImage                     _image;                 // image
+        VkImageView                 _imageView;             // default image view
+        VmaAllocation               _allocation;            // memory allocation
         // == resource state flags ==
-        VkPipelineStageFlags        _pipelineStageFlags; // pipeline stage flags
-        ResourceAccessType          _primaryAccessType;  //
-        ResourceAccessType          _currentAccessType;  //
-        VkImageAspectFlags          _aspectFlags;        // color / depth /stencil / 
+        VkPipelineStageFlags        _pipelineStageFlags;    // pipeline stage flags
+        ResourceAccessType          _primaryAccessType;     //
+        ResourceAccessType          _currentAccessType;     //
+        VkImageAspectFlags          _aspectFlags;           // color / depth /stencil / 
         bool                        _ownsImage;
-        bool                        _ownsImageView;      // 
+        bool                        _ownsImageView;         // 
     private:
     public:
         VkImage image() const {

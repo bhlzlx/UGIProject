@@ -25,4 +25,6 @@ namespace ugi {
     class ResourceManager;
     class ArgumentGroupLayout;
     class ComputePipeline;
+
+    using TextureView = void*;
 }
