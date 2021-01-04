@@ -87,6 +87,7 @@ namespace ugi {
 
     typedef Rect<int> Scissor;
 
+    // image region used for operation
     struct ImageRegion {
         struct Offset {
             int32_t x; int32_t y; int32_t z;
@@ -121,7 +122,8 @@ namespace ugi {
         }
     };
 
-    struct TextureSubResource {
+    // image sub resource used for resource access synchornize
+    struct ImageSubResource {
         uint32_t            baseMipLevel;
         uint32_t            mipLevelCount;
         uint32_t            baseLayer;

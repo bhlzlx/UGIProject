@@ -86,7 +86,7 @@ namespace ugi {
         buffer->updateAccessType(dstAccessType);
     }
 
-    void ResourceCommandEncoder::imageTransitionBarrier( Texture* texture, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const TextureSubResource* subResource) {
+    void ResourceCommandEncoder::imageTransitionBarrier( Texture* texture, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const ImageSubResource* subResource) {
         if( texture->accessType() == dstAccessType ) {
             return;
         }

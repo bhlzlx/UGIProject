@@ -131,7 +131,7 @@ namespace ugi {
         texStagingBuffer->unmap(_device);
         
         
-        //TextureSubResource texSubRes;
+        //ImageSubResource texSubRes;
 
 
         ImageRegion region;

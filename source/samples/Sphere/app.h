@@ -174,7 +174,7 @@ namespace ugi {
         ///> ===========================================================================
         ugi::ArgumentGroup*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
-        ugi::Texture*           m_texture;
+        ugi::Texture*           _texture;
         ugi::SamplerState       m_samplerState;                                     //
         ugi::Buffer*            m_vertexBuffer;                                     //
         ugi::Buffer*            m_indexBuffer;
