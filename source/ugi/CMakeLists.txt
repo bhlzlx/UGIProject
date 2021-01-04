@@ -36,6 +36,7 @@ target_sources( UGI
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/UniformBuffer.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/CommandBuffer.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Sampler.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ImageView.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/resourcePool/ArgumentGroupLayoutPool.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/RenderCommandEncoder.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ResourceCommandEncoder.cpp

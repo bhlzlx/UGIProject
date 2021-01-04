@@ -33,7 +33,7 @@ namespace ugi {
         uint32_t                                                        _argumentBitMask;
         VkDescriptorSet                                                 _descriptorSets[MaxArgumentCount];
         //
-        Texture*                                                        _imageResources[16];
+        ImageView                                                       _imageResources[16];
         //
         uint32_t                                                        _reallocDescriptorSetBits;      ///> 某些descriptr绑定改变就需要更新/更换 descriptor set
         VkPipelineBindPoint                                             _bindPoint;

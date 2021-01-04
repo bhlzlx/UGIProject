@@ -5,6 +5,7 @@
 #include <vk_mem_alloc.h>
 #include "Resource.h"
 #include <map>
+#include "ImageView.h"
 
 namespace ugi {
 
@@ -33,6 +34,19 @@ namespace ugi {
         ChannelMapping      blue;
         ChannelMapping      alpha;
         //
+        ImageViewParameter() {
+            viewType = TextureType::Texture2D;
+            baseMipLevel = 0;
+            levelCount = 1;
+            baseArrayLayer = 0;
+            layerCount = 1;
+            //
+            red = ChannelMapping::identity;
+            green = ChannelMapping::identity;
+            blue = ChannelMapping::identity;
+            alpha = ChannelMapping::identity;
+        }
+        //
         bool operator < ( const ImageViewParameter& viewParam ) const {
             return memcmp( this, &viewParam, sizeof(ImageViewParameter)) < 0;
         }
@@ -52,53 +66,31 @@ namespace ugi {
                 return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE; break;
             case TextureType::TextureCubeArray:
                 return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE_ARRAY; break;
-
         }
-    }
-
-    static VkImageViewCreateInfo imageViewCreateInfo( const ImageViewParameter& param ) {
-        VkImageViewCreateInfo info;
-        //
-        info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        info.flags = 0;
-        info.image = VK_FORMAT_UNDEFINED;
-        info.pNext = nullptr;
-        //
-        info.components.a = (VkComponentSwizzle)param.alpha;
-        info.components.r = (VkComponentSwizzle)param.red;
-        info.components.g = (VkComponentSwizzle)param.green;
-        info.components.b = (VkComponentSwizzle)param.blue;
-        //
-        info.viewType = 
+        return VkImageViewType::VK_IMAGE_VIEW_TYPE_1D;
     }
     
     class Texture : public Resource {
     private:
-        TextureDescription          _description;           // descriptor
-        VkImage                     _image;                 // image
-        VmaAllocation               _allocation;            // memory allocation
+        TextureDescription                              _description;           // descriptor
+        VkImage                                         _image;                 // image
+        VmaAllocation                                   _allocation;            // memory allocation
         // == resource state flags ==
-        VkPipelineStageFlags        _pipelineStageFlags;    // pipeline stage flags
-        ResourceAccessType          _primaryAccessType;     //
-        ResourceAccessType          _currentAccessType;     //
-        VkImageAspectFlags          _aspectFlags;           // color / depth /stencil / 
-        bool                        _ownsImage;
+        VkPipelineStageFlags                            _pipelineStageFlags;    // pipeline stage flags
+        ResourceAccessType                              _primaryAccessType;     //
+        ResourceAccessType                              _currentAccessType;     //
+        VkImageAspectFlags                              _aspectFlags;           // color / depth /stencil / 
+        bool                                            _ownsImage;
         // image view 
-        std::map<ImageViewParameter, VkImageView>           _imageViews;
+        std::map<ImageViewParameter, ImageView>         _imageViews;
     private:
     public:
+
         VkImage image() const {
             return _image;
         }
-        VkImageView imageView( Device* device, const ImageViewParameter& param ) const {
-            auto iter = _imageViews.find(param);
-            if(iter == _imageViews.end()) {
-                vkCreateImageView( device->device());
-            }
-            if(_imageViews.find(param)) {
-            }
-            return _imageView;
-        }
+
+        ImageView view( Device* device, const ImageViewParameter& param );
 
         ResourceAccessType accessType() const {
             return _currentAccessType;

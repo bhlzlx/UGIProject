@@ -3,9 +3,10 @@
 #include "Texture.h"
 #include "Descriptor.h"
 #include "Device.h"
-#include <cstring>
 #include "CommandBuffer.h"
 #include "ArgumentGroupLayout.inl"
+#include <cstring>
+#include <cstdint>
 
 namespace ugi {
 
@@ -99,8 +100,8 @@ namespace ugi {
         }
         case ArgumentDescriptorType::Image:{
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
-            if( pImageInfo->imageView != resource.texture->imageView()) {
-                pImageInfo->imageView = resource.texture->imageView();
+            if( pImageInfo->imageView != (VkImageView)resource.imageView.imageView ) {
+                pImageInfo->imageView = (VkImageView)resource.imageView.imageView ;
                 pImageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 pImageInfo->sampler = VK_NULL_HANDLE; // 再也不和sampler混合绑定了
                 write.pImageInfo = pImageInfo;
@@ -121,8 +122,8 @@ namespace ugi {
         }
         case ArgumentDescriptorType::StorageImage: {
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
-            if( pImageInfo->imageView != resource.texture->imageView()) {
-                pImageInfo->imageView = resource.texture->imageView();
+            if( pImageInfo->imageView != (VkImageView)resource.imageView.imageView) {
+                pImageInfo->imageView = (VkImageView)resource.imageView.imageView;
                 pImageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
                 pImageInfo->sampler = VK_NULL_HANDLE;
                 write.pImageInfo = pImageInfo;
@@ -161,7 +162,7 @@ namespace ugi {
         uint32_t binding = h.binding;
 
         if( resource.type == ArgumentDescriptorType::Image || resource.type == ArgumentDescriptorType::StorageImage) {
-            _imageResources[h.specifiedIndex] = resource.texture;
+            _imageResources[h.specifiedIndex] = resource.imageView;
         }
         //
         _resourceMasks[setIndex] |= (1<<binding);
@@ -240,9 +241,9 @@ namespace ugi {
         for( uint32_t i = 0; i < _groupLayout->imageResourceTotal(); ++i ) {
             auto type = _groupLayout->imageResourceType(i);
             if( type == ArgumentDescriptorType::Image ) {
-                commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
+                commandEncoder->imageTransitionBarrier( (Texture*)_imageResources[i].texture, ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
             } else if( type == ArgumentDescriptorType::StorageImage ) {
-                commandEncoder->imageTransitionBarrier( _imageResources[i], ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
+                commandEncoder->imageTransitionBarrier( (Texture*)_imageResources[i].texture, ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
             }
         }
         return true;

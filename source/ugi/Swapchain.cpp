@@ -271,10 +271,14 @@ namespace ugi {
             colorTexDesc.arrayLayers = 1;
             colorTexDesc.type = TextureType::Texture2D;
             _embedTextures[embedImageIndex] = Texture::CreateTexture( device, _images[embedImageIndex], VK_NULL_HANDLE, colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
-            if(!_depthStencilTexture) {
+            //
+            ImageViewParameter vp;
+            _embedColorView[embedImageIndex] = _embedTextures[embedImageIndex]->view( device, vp );
+            if(!_dsv.texture) {
                 TextureDescription depthStencilTexDesc = colorTexDesc;
                 depthStencilTexDesc.format = UGIFormat::Depth32F;
-                _depthStencilTexture = Texture::CreateTexture( device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
+                _dsvTex = Texture::CreateTexture( device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
+                _dsv = _dsvTex->view( device, vp);
             }
             //
             // auto renderPassObjManager = _device->renderPassObjectManager();
@@ -292,7 +296,7 @@ namespace ugi {
             renderPassDesc.depthStencil.finalAccessType = ResourceAccessType::DepthStencilReadWrite;
             renderPassDesc.inputAttachmentCount = 0;
             //
-            _renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( device, renderPassDesc, &_embedTextures[embedImageIndex], _depthStencilTexture );
+            _renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( device, renderPassDesc, &_embedColorView[embedImageIndex], _dsv );
         }
         return true;
     }
@@ -312,9 +316,11 @@ namespace ugi {
                 break;
             }
         }
-        if( _depthStencilTexture) {
-            device->destroyTexture(_depthStencilTexture);
-            _depthStencilTexture = nullptr;
+        if( _dsvTex) {
+            device->destroyTexture(_dsvTex);
+            _dsvTex = nullptr;
+            _dsv.texture = nullptr;
+            _dsv.imageView = nullptr;
         }        
     }
 

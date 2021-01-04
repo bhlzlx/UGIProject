@@ -619,14 +619,19 @@ namespace ugi {
         alignas(1) PolygonMode                      pologonMode;
     };
 
+    struct ImageView {
+        void*           imageView;
+        void*           texture;
+    };
+
     constexpr uint32_t PipelineDescriptionSize = sizeof(PipelineDescription);
 
     struct ResourceDescriptor {
         uint32_t                descriptorHandle;
         ArgumentDescriptorType  type;                   // 资源类型
         union {
-            Buffer*       buffer;
-            Texture*            texture;
+            Buffer*             buffer;
+            ImageView           imageView;
             SamplerState        sampler;
         };
         union {

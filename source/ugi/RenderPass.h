@@ -51,7 +51,7 @@ namespace ugi {
         virtual void begin( RenderCommandEncoder* encoder ) const = 0;
         virtual void end( RenderCommandEncoder* encoder ) const = 0;
         virtual void release( Device* device ) = 0;
-        virtual Texture* color( uint32_t index ) = 0;
+        virtual ImageView color( uint32_t index ) = 0;
     };
 
     class RenderPass : IRenderPass {
@@ -63,9 +63,9 @@ namespace ugi {
         VkFramebuffer                               _framebuffer;                              ///> framebuffer 对象
         VkRenderPass                                _renderPass;                               // renderpass - 含一个subpass
         //
-        Texture*                                    _colorTextures[MaxRenderTarget];           // RT所使用的纹理对象
+        ImageView                                   _colorViews[MaxRenderTarget];           // RT所使用的纹理对象
         uint32_t                                    _colorTextureCount;                        // RT数量
-        Texture*                                    _depthStencilTexture;                      // 深度和模板所使用的纹理对象
+        ImageView                                   _dsv;                                   // 深度和模板所使用的纹理对象
 
         VkImageLayout                               _colorImageLayouts[MaxRenderTarget];
         VkImageLayout                               _depthStencilImageLayout;
@@ -91,21 +91,17 @@ namespace ugi {
         virtual VkRenderPass renderPass() const override {
             return _renderPass;
         }
-        virtual Texture* color( uint32_t index ) {
+        virtual ImageView color( uint32_t index ) {
             if(index<_colorTextureCount) {
-                return _colorTextures[index];
+                return _colorViews[index];
             }
-            return nullptr;
+            return ImageView();
         }
         virtual void begin( RenderCommandEncoder* encoder ) const override;
         virtual void end( RenderCommandEncoder* encoder ) const override;
         virtual void release( Device* device ) override;
         //
-        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _renderPass, Texture** _colors, Texture* _depthStencil );
-    };
-
-    class OptimizedRenderPass {
-
+        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _renderPass, ImageView* colorView, ImageView dsv );
     };
 
 }

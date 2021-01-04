@@ -129,24 +129,27 @@ namespace ugi {
         ptr = texStagingBuffer->map(_device);
         memcpy(ptr, texData, sizeof(texData));
         texStagingBuffer->unmap(_device);
+        
+        
+        //TextureSubResource texSubRes;
 
-        TextureSubResource texSubRes;
-        texSubRes.baseLayer = 0;
-        texSubRes.offset = { 0, 0, 0 };
-        texSubRes.size.depth = 1;
-        texSubRes.size.width = texSubRes.size.height = 8;
-        texSubRes.mipLevelCount = 1;
-        texSubRes.baseMipLevel = 0;
-        texSubRes.layerCount = 1;
-        subRes.size = sizeof(texData);
 
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
-        texSubRes.offset.x = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
-        texSubRes.offset.y = 8; texSubRes.offset.x = 0;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
-        texSubRes.offset.y = 8; texSubRes.offset.x = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
+        ImageRegion region;
+        region.offset = {};
+        region.mipLevel = 0;
+        region.arrayIndex = 0;
+        region.arrayCount = 1;
+        region.extent.height = region.extent.width = 8;
+        region.extent.depth = 1;
+
+        uint32_t offset = 0;
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
+        region.offset.x = 8;
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
+        region.offset.x = 0; region.offset.y = 8;
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
+        region.offset.x = 8; region.offset.y = 8;
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
 
         resourceEncoder->endEncode();
 
@@ -177,7 +180,8 @@ namespace ugi {
         _argumentGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
-        res.texture = _texture;
+        ImageViewParameter ivp;
+        res.imageView = _texture->view(_device, ivp);
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
         //
         _argumentGroup->updateDescriptor(res);

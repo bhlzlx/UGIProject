@@ -9,6 +9,30 @@
 
 namespace ugi {
 
+    static VkImageViewCreateInfo imageViewCreateInfo( Texture* texture, const ImageViewParameter& param ) {
+        VkImageViewCreateInfo info;
+        //
+        info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        info.flags = 0;
+        info.format = UGIFormatToVk(texture->desc().format);
+        info.pNext = nullptr;
+        // components
+        info.components.a = (VkComponentSwizzle)param.alpha;
+        info.components.r = (VkComponentSwizzle)param.red;
+        info.components.g = (VkComponentSwizzle)param.green;
+        info.components.b = (VkComponentSwizzle)param.blue;
+        // view type
+        info.viewType = imageViewType(param.viewType);
+        // sub resource
+        info.subresourceRange.aspectMask = texture->aspectFlags();
+        info.subresourceRange.baseArrayLayer = param.baseArrayLayer;
+        info.subresourceRange.layerCount = param.layerCount;
+        info.subresourceRange.levelCount = param.levelCount;
+        info.subresourceRange.baseMipLevel = param.baseMipLevel;
+        info.image = texture->image();
+        return info;
+    }
+
     Texture* Texture::CreateTexture( Device* _device, VkImage _image, VkImageView _imageView, const TextureDescription& _desc, ResourceAccessType _accessType  ) {
 
         VkFormat format = UGIFormatToVk(_desc.format);
@@ -163,11 +187,9 @@ namespace ugi {
         Texture* texture = new Texture();{
             texture->_description = _desc;
             texture->_image = _image;
-            texture->_imageView = _imageView;
             texture->_allocation = allocation;
             texture->_aspectFlags = aspectMask;
             texture->_ownsImage = ownImage;
-            texture->_ownsImageView = ownImageView;
             // texture->m_accessFlags = 0;
             texture->_pipelineStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             texture->_currentAccessType = ResourceAccessType::None;
@@ -183,11 +205,28 @@ namespace ugi {
             _ownsImage = false;
             _allocation = nullptr;
         }
-        if( _ownsImageView && _imageView ) {
-            vkDestroyImageView( _device->device(), _imageView, nullptr);
-            _imageView = VK_NULL_HANDLE;
+        for( auto& iv : _imageViews) {
+            vkDestroyImageView(_device->device(), (VkImageView)iv.second.imageView, nullptr);
         }
         delete this;
+    }
+
+    ImageView Texture::view( Device* device, const ImageViewParameter& param ) {
+        auto iter = _imageViews.find(param);
+        if(iter == _imageViews.end()) {
+            auto imageViewInfo = imageViewCreateInfo( this, param );
+            VkImageView imageView = VK_NULL_HANDLE;
+            auto rst = vkCreateImageView( device->device(), &imageViewInfo, nullptr, &imageView );
+            if( rst == VK_SUCCESS) {
+                ImageView iv = { (void*)imageView, (void*)this };
+                _imageViews[param] = iv;
+                return iv;
+            } else {
+                return {};
+            }
+        } else {
+            return iter->second;
+        }
     }
 
 }
