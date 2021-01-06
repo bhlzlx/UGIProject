@@ -230,6 +230,7 @@ namespace ugi {
         res.type = ArgumentDescriptorType::Image;
 
         ImageViewParameter ivp;
+        ivp.red = ChannelMapping::zero;
         res.imageView = _texture->view(_device, ivp);
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
         //
@@ -258,7 +259,7 @@ namespace ugi {
             // mvp[0] = hgl::Matrix4f::Translate(hgl::Vector3f(4,4,4)) * mvp[0];
             mvp[1] = ugi::LookAt(
                 hgl::Vector3f(2, 2, 2),         ///> eye
-                hgl::Vector3f(0, 0, 0)         ///> target
+                hgl::Vector3f(0, 0, 0)          ///> target
             );
             mvp[2] = Perspective( 3.1415926f/2, (float)_width/(float)_height, 0.1f, 50.0f); //hgl::Matrix4f::OpenGLOrthoProjRH(0.1f, 50, _width, _height);
             _uniformAllocator->allocateForDescriptor( m_uniformDescriptor, mvp );
@@ -288,15 +289,14 @@ namespace ugi {
         }
         cmdbuf->endEncode();
 
-        auto imageAvailSempahore = _swapchain->imageAvailSemaphore();
-
-        QueueSubmitInfo submitInfo {
+        Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
+		QueueSubmitInfo submitInfo {
 			&cmdbuf,
 			1,
-			nullptr,// submitInfo.semaphoresToWait
-			0,
-			nullptr, // submitInfo.semaphoresToSignal
-			0
+			&imageAvailSemaphore,// submitInfo.semaphoresToWait
+			1,
+			&_renderCompleteSemaphores[_flightIndex], // submitInfo.semaphoresToSignal
+			1
 		};
 
         QueueSubmitBatchInfo submitBatch( &submitInfo, 1, _frameCompleteFences[_flightIndex]);

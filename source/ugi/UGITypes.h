@@ -621,9 +621,51 @@ namespace ugi {
         alignas(1) PolygonMode                      pologonMode;
     };
 
+    // 纹理具备的属性
+
+    // image - image view
+    // 源数据和读出来的数据我们可能需要让它们不一样，比如说 通道 互换
+    // 源类型可能与读取类型不一样，比如说，image是 texture2DArray, 但实际我们只读一个texture2D，这个需要指定subResource以及viewType
+    enum class ChannelMapping : uint8_t {
+        identity = 0,
+        zero,
+        one,
+        red,green,blue,alpha
+    };
+
+    struct ImageViewParameter {
+        TextureType         viewType;
+        // =======================================
+        uint32_t            baseMipLevel;
+        uint32_t            levelCount;
+        uint32_t            baseArrayLayer;
+        uint32_t            layerCount;
+        // =======================================
+        ChannelMapping      red;
+        ChannelMapping      green;
+        ChannelMapping      blue;
+        ChannelMapping      alpha;
+        //
+        ImageViewParameter() {
+            viewType = TextureType::Texture2D;
+            baseMipLevel = 0;
+            levelCount = 1;
+            baseArrayLayer = 0;
+            layerCount = 1;
+            //
+            red = ChannelMapping::identity;
+            green = ChannelMapping::identity;
+            blue = ChannelMapping::identity;
+            alpha = ChannelMapping::identity;
+        }
+        //
+        bool operator < ( const ImageViewParameter& viewParam ) const {
+            return memcmp( this, &viewParam, sizeof(ImageViewParameter)) < 0;
+        }
+    };
+
     struct ImageView {
-        void*           imageView;
-        void*           texture;
+        uint64_t oqaqueData[2];
     };
 
     constexpr uint32_t PipelineDescriptionSize = sizeof(PipelineDescription);
