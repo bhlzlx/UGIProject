@@ -274,7 +274,7 @@ namespace ugi {
             //
             ImageViewParameter vp;
             _embedColorView[embedImageIndex] = _embedTextures[embedImageIndex]->view( device, vp );
-            if(!_dsv.texture) {
+            if(!_dsv.texture()) {
                 TextureDescription depthStencilTexDesc = colorTexDesc;
                 depthStencilTexDesc.format = UGIFormat::Depth32F;
                 _dsvTex = Texture::CreateTexture( device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
@@ -296,7 +296,7 @@ namespace ugi {
             renderPassDesc.depthStencil.finalAccessType = ResourceAccessType::DepthStencilReadWrite;
             renderPassDesc.inputAttachmentCount = 0;
             //
-            _renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( device, renderPassDesc, &_embedColorView[embedImageIndex], _dsv );
+            _renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( device, renderPassDesc, &_embedColorView[embedImageIndex].externalImageView(), _dsv.externalImageView() );
         }
         return true;
     }
@@ -319,8 +319,7 @@ namespace ugi {
         if( _dsvTex) {
             device->destroyTexture(_dsvTex);
             _dsvTex = nullptr;
-            _dsv.texture = nullptr;
-            _dsv.imageView = nullptr;
+            _dsv.reset();
         }        
     }
 

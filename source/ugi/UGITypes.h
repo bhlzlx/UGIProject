@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "UGIDeclare.h"
+#include <string.h>
 
 namespace ugi {
 

@@ -100,8 +100,9 @@ namespace ugi {
         }
         case ArgumentDescriptorType::Image:{
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
-            if( pImageInfo->imageView != (VkImageView)resource.imageView.imageView ) {
-                pImageInfo->imageView = (VkImageView)resource.imageView.imageView ;
+            InternalImageView view(resource.imageView);
+            if( pImageInfo->imageView != view.view() ) {
+                pImageInfo->imageView = view.view();
                 pImageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 pImageInfo->sampler = VK_NULL_HANDLE; // 再也不和sampler混合绑定了
                 write.pImageInfo = pImageInfo;
@@ -122,8 +123,9 @@ namespace ugi {
         }
         case ArgumentDescriptorType::StorageImage: {
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
-            if( pImageInfo->imageView != (VkImageView)resource.imageView.imageView) {
-                pImageInfo->imageView = (VkImageView)resource.imageView.imageView;
+            InternalImageView view(resource.imageView);
+            if( pImageInfo->imageView != view.view()) {
+                pImageInfo->imageView = view.view();
                 pImageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
                 pImageInfo->sampler = VK_NULL_HANDLE;
                 write.pImageInfo = pImageInfo;
@@ -241,9 +243,9 @@ namespace ugi {
         for( uint32_t i = 0; i < _groupLayout->imageResourceTotal(); ++i ) {
             auto type = _groupLayout->imageResourceType(i);
             if( type == ArgumentDescriptorType::Image ) {
-                commandEncoder->imageTransitionBarrier( (Texture*)_imageResources[i].texture, ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
+                commandEncoder->imageTransitionBarrier( _imageResources[i].texture(), ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
             } else if( type == ArgumentDescriptorType::StorageImage ) {
-                commandEncoder->imageTransitionBarrier( (Texture*)_imageResources[i].texture, ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
+                commandEncoder->imageTransitionBarrier( _imageResources[i].texture(), ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
             }
         }
         return true;

@@ -206,7 +206,7 @@ namespace ugi {
             _allocation = nullptr;
         }
         for( auto& iv : _imageViews) {
-            vkDestroyImageView(_device->device(), (VkImageView)iv.second.imageView, nullptr);
+            vkDestroyImageView(_device->device(), iv.second.view(), nullptr);
         }
         delete this;
     }
@@ -218,14 +218,14 @@ namespace ugi {
             VkImageView imageView = VK_NULL_HANDLE;
             auto rst = vkCreateImageView( device->device(), &imageViewInfo, nullptr, &imageView );
             if( rst == VK_SUCCESS) {
-                ImageView iv = { (void*)imageView, (void*)this };
-                _imageViews[param] = iv;
-                return iv;
+                InternalImageView view( imageView, this );
+                _imageViews[param] = view;
+                return view.externalImageView();
             } else {
                 return {};
             }
         } else {
-            return iter->second;
+            return iter->second.externalImageView();
         }
     }
 

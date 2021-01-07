@@ -34,6 +34,15 @@ namespace ugi {
         Texture* texture() const {
             return _image;
         }
+        const ImageView& externalImageView() const {
+            return _externalImageView;
+        }
+        void reset() {
+            _imageView = VK_NULL_HANDLE;
+            _image = VK_NULL_HANDLE;
+        }
     };
+
+    static_assert( sizeof(InternalImageView) <= sizeof(ImageView), "" );
 
 }

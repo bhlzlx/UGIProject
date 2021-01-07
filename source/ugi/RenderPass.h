@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "UGITypes.h"
 #include "UGIDeclare.h"
+#include "UGIVulkanPrivate.h"
 #include "VulkanDeclare.h"
 #include <array>
 #include <unordered_map>
@@ -63,9 +64,9 @@ namespace ugi {
         VkFramebuffer                               _framebuffer;                              ///> framebuffer 对象
         VkRenderPass                                _renderPass;                               // renderpass - 含一个subpass
         //
-        ImageView                                   _colorViews[MaxRenderTarget];           // RT所使用的纹理对象
+        InternalImageView                           _colorViews[MaxRenderTarget];           // RT所使用的纹理对象
         uint32_t                                    _colorTextureCount;                        // RT数量
-        ImageView                                   _dsv;                                   // 深度和模板所使用的纹理对象
+        InternalImageView                           _dsv;                                   // 深度和模板所使用的纹理对象
 
         VkImageLayout                               _colorImageLayouts[MaxRenderTarget];
         VkImageLayout                               _depthStencilImageLayout;
@@ -93,7 +94,7 @@ namespace ugi {
         }
         virtual ImageView color( uint32_t index ) {
             if(index<_colorTextureCount) {
-                return _colorViews[index];
+                return _colorViews[index].externalImageView();
             }
             return ImageView();
         }
@@ -101,7 +102,7 @@ namespace ugi {
         virtual void end( RenderCommandEncoder* encoder ) const override;
         virtual void release( Device* device ) override;
         //
-        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _renderPass, ImageView* colorView, ImageView dsv );
+        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _renderPass, const ImageView* colorView, ImageView dsv );
     };
 
 }

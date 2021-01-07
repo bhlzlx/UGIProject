@@ -38,7 +38,7 @@ namespace ugi {
         VkImageAspectFlags                              _aspectFlags;           // color / depth /stencil / 
         bool                                            _ownsImage;
         // image view 
-        std::map<ImageViewParameter, InternalImageView>         _imageViews;
+        std::map<ImageViewParameter, InternalImageView> _imageViews;
     private:
     public:
 

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "VulkanDeclare.h"
-#include "UGITypes.h"
+#include "UGIVulkanPrivate.h"
 #include "UGIDeclare.h"
 #include <Windows.h>
 
@@ -23,9 +23,9 @@ namespace ugi {
         uint32_t                            _embedTextureCount;
         VkImage                             _images[4];
         Texture*                            _embedTextures[4];
-        ImageView                           _embedColorView[4];
+        InternalImageView                   _embedColorView[4];
         Texture*                            _dsvTex;
-        ImageView                           _dsv;
+        InternalImageView                   _dsv;
         IRenderPass*                        _renderPasses[4];
         // state description
         uint32_t                            _imageIndex;
