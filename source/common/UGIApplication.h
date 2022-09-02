@@ -37,14 +37,11 @@ public:
         
     }
     virtual void resume( void* _wnd, uint32_t _width, uint32_t _height ) {
-
     }
 
     virtual void onKeyEvent(unsigned char _key, eKeyEvent _event) {
-
     }
     virtual void onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y) {
-
     }
 };
 

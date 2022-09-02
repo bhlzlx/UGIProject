@@ -13,9 +13,9 @@
 
 namespace ugi {
 
-    void RenderCommandEncoder::drawIndexed( Drawable* drawable, uint32_t indexOffset, uint32_t indexCount, uint32_t vertexOffset ) {
+    void RenderCommandEncoder::drawIndexed( Drawable* drawable, uint32_t indexOffset, uint32_t indexCount, uint32_t vertexOffset, uint32_t instanceCount) {
         drawable->bind(_commandBuffer);
-        vkCmdDrawIndexed( *_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0 );
+        vkCmdDrawIndexed( *_commandBuffer, indexCount, instanceCount, indexOffset, vertexOffset, 0);
     }
 
     void RenderCommandEncoder::draw( Drawable* drawable, uint32_t vertexCount, uint32_t baseVertexIndex) {

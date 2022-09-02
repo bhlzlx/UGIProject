@@ -19,7 +19,25 @@
 //#include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 
+
 namespace ugi {
+
+    const hgl::vec3<float> PlaneVertices[] = {
+        {-0.5f, -0.5f, 0.5f},
+        {0.5f, -0.5f, 0.5f},
+        {0.5f, 0.5f, 0.5f},
+        {-0.5f, 0.5f, 0.5f},
+    };
+    const hgl::vec3<float> QueryRect[] = {
+        {-0.5f, -0.5f, 0.5f},
+        {0.5f, 0.5f, 0.5f},
+    };
+    const uint16_t PlaneIndices[] = {
+        0,1,2,0,2,3,0,1,2,0,2,3
+    };
+    const uint32_t PlaneIndices32[] = {
+        0,1,2,0,2,3,0,1,2,0,2,3
+    };
 
     hgl::Matrix4f Perspective( float fov, float aspect, float zNear, float zFar) {
         assert(abs(aspect - std::numeric_limits<float>::epsilon()) > static_cast<float>(0));
@@ -63,13 +81,15 @@ namespace ugi {
 
 namespace ugi {
 
-    ugi::Buffer* planeVtxBuffer = nullptr;
-    ugi::Buffer* planeIdxBuffer = nullptr;
-    ugi::Drawable* planeDrawable = nullptr;
-
     bool App::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource) {
+		_offsetX = 0.0f;
+		_offsetY = 0.0f;
 
-        hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/sphere/pipeline.bin"));
+        _oc = OCCapsule::GetInstance();
+        _oc->Initialize(480,320,0.01f);
+        _oc->ClearBuffer();
+
+        hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/OcclusionCulling/pipeline.bin"));
         auto pipelineFileSize = pipelineFile->GetSize();
         
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
@@ -85,6 +105,7 @@ namespace ugi {
 
         pipelineDesc.pologonMode = PolygonMode::Fill;
         pipelineDesc.topologyMode = TopologyMode::TriangleList;
+        pipelineDesc.renderState.depthState.testable = 1;
 
         // 因为我们buffer放同一块内存了，这里特殊处理一下
         uint32_t fullStride = 0;
@@ -125,22 +146,17 @@ namespace ugi {
         //
         _argumentGroup = _pipeline->createArgumentGroup();
 
-        std::vector<CVertex>        vertices;
-        std::vector<uint16_t>       indices;
-        CreateSphere(16, 16, vertices, indices);
-
-        m_vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(CVertex) * vertices.size() );
-        m_indexBuffer = _device->createBuffer( BufferType::IndexBuffer, sizeof(uint16_t) * indices.size() );
-
+        m_vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(CVertex) * 4);
+        m_indexBuffer = _device->createBuffer( BufferType::IndexBuffer, sizeof(uint16_t) * 6);
         Buffer* vertexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, m_vertexBuffer->size() );
         Buffer* indexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, m_indexBuffer->size() );
 
-        void* ptr = vertexStagingBuffer->map( _device );
-        memcpy(ptr, vertices.data(), m_vertexBuffer->size());
+        auto ptr = vertexStagingBuffer->map( _device );
+        memcpy(ptr, PlaneVertices, m_vertexBuffer->size());
         vertexStagingBuffer->unmap(_device);
 
         ptr = indexStagingBuffer->map( _device );
-        memcpy(ptr, indices.data(), m_indexBuffer->size());
+        memcpy(ptr, PlaneIndices, m_indexBuffer->size());
         indexStagingBuffer->unmap(_device);
 
         auto updateCmd = _uploadQueue->createCommandBuffer( _device );
@@ -154,19 +170,11 @@ namespace ugi {
         resourceEncoder->updateBuffer( m_vertexBuffer, vertexStagingBuffer, &subRes, &subRes );
         subRes.size = m_indexBuffer->size();
         resourceEncoder->updateBuffer( m_indexBuffer, indexStagingBuffer, &subRes, &subRes );
+        subRes.size = m_vertexBuffer->size();
 
         m_drawable = _device->createDrawable(pipelineDesc);
         m_drawable->setVertexBuffer( m_vertexBuffer, 0, 0 );
-        m_drawable->setVertexBuffer( m_vertexBuffer, 1, 12 );
-        m_drawable->setVertexBuffer( m_vertexBuffer, 2, 24 );
         m_drawable->setIndexBuffer( m_indexBuffer, 0 );
-
-        planeDrawable = _device->createDrawable(pipelineDesc);
-        planeDrawable->setVertexBuffer( planeVtxBuffer, 0, 0 );
-        planeDrawable->setVertexBuffer( planeVtxBuffer, 1, 12 );
-        planeDrawable->setVertexBuffer( planeVtxBuffer, 2, 24 );
-        planeDrawable->setIndexBuffer( planeIdxBuffer, 0 );
-
         //
         TextureDescription texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
@@ -176,39 +184,6 @@ namespace ugi {
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
-        _texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
-
-        uint32_t texData[] = {
-            0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-            0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-            0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-            0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-            0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-            0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-            0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-            0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-        };
-        auto texStagingBuffer =  _device->createBuffer( BufferType::StagingBuffer, sizeof(texData) );
-        ptr = texStagingBuffer->map(_device);
-        memcpy(ptr, texData, sizeof(texData));
-        texStagingBuffer->unmap(_device);
-
-        ImageRegion region;
-        region.offset = {};
-        region.mipLevel = 0;
-        region.arrayIndex = 0;
-        region.arrayCount = 1;
-        region.extent.height = region.extent.width = 8;
-        region.extent.depth = 1;
-
-        uint32_t offset = 0;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
-        region.offset.x = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
-        region.offset.x = 0; region.offset.y = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
-        region.offset.x = 8; region.offset.y = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
 
         resourceEncoder->endEncode();
 
@@ -229,24 +204,9 @@ namespace ugi {
 
         _uploadQueue->waitIdle();
         //
-        ResourceDescriptor res;
         m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
         m_uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument", pipelineDesc );
-        m_uniformDescriptor.bufferRange = 64 * 3;
-
-        res.type = ArgumentDescriptorType::Sampler;
-        res.sampler = m_samplerState;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
-        _argumentGroup->updateDescriptor(res);
-        
-        res.type = ArgumentDescriptorType::Image;
-
-        ImageViewParameter ivp;
-        ivp.red = ChannelMapping::zero;
-        res.imageView = _texture->view(_device, ivp);
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
-        //
-        _argumentGroup->updateDescriptor(res);
+        m_uniformDescriptor.bufferRange = 64 * 4;
         //
         _flightIndex = 0;
         return true;
@@ -257,7 +217,6 @@ namespace ugi {
         _device->waitForFence( _frameCompleteFences[_flightIndex] );
         _uniformAllocator->tick();
         uint32_t imageIndex = _swapchain->acquireNextImage( _device, _flightIndex );
-        // _frameCompleteFences[_flightIndex]->
         IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
         
         auto cmdbuf = _commandBuffers[_flightIndex];
@@ -266,14 +225,24 @@ namespace ugi {
             static uint64_t angle = 0;
             ++angle;
 
-            hgl::Matrix4f mvp[3];
-            mvp[0] = hgl::Matrix4f::RotateAxisAngle( hgl::Vector3f(0,0,1), (float)angle/180*3.1415926f );
-            // mvp[0] = hgl::Matrix4f::Translate(hgl::Vector3f(4,4,4)) * mvp[0];
-            mvp[1] = ugi::LookAt(
-                hgl::Vector3f(5, 5, 5),         ///> eye
+            hgl::Matrix4f mvp[4];
+            mvp[0] = hgl::Matrix4f::identity;
+            mvp[1] = hgl::Matrix4f::Translate(hgl::Vector3f(_offsetX,_offsetY,0.5f)) * hgl::Matrix4f::Scale({0.5f,0.5f,0.5f});
+            mvp[2] = ugi::LookAt(
+                hgl::Vector3f(0, 0, 5),         ///> eye
                 hgl::Vector3f(0, 0, 0)          ///> target
             );
-            mvp[2] = Perspective( 3.1415926f/4, (float)_width/(float)_height, 0.1f, 50.0f); //hgl::Matrix4f::OpenGLOrthoProjRH(0.1f, 50, _width, _height);
+            mvp[3] = Perspective( 3.1415926f/4, (float)_width/(float)_height, 0.1f, 50.0f); //hgl::Matrix4f::OpenGLOrthoProjRH(0.1f, 50, _width, _height);
+// occlusion culling
+            hgl::Matrix4f vp = mvp[2] * mvp[3];
+            _oc->SetViewProjMatrix((float*)&vp);
+            _oc->SetModelMatrix((float*)&mvp[0]);
+            _oc->SubmitOccluder((float*)PlaneVertices, PlaneIndices32, 4, 6);
+            _oc->SetModelMatrix((float*)&mvp[1]);
+            bool qr = true;
+            _oc->QueryVisibility((float*)QueryRect, 1, &qr);
+            _oc->ClearBuffer();
+
             _uniformAllocator->allocateForDescriptor( m_uniformDescriptor, mvp );
             _argumentGroup->updateDescriptor(m_uniformDescriptor);
 
@@ -283,6 +252,9 @@ namespace ugi {
             //
             RenderPassClearValues clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
+            if(qr) {
+                clearValues.colors[0].r = 0;
+            }
             clearValues.depth = 1.0f;
             clearValues.stencil = 0xffffffff;
 
@@ -294,10 +266,10 @@ namespace ugi {
                 renderCommandEncoder->setScissor( 0, 0, _width, _height );
                 renderCommandEncoder->bindPipeline(_pipeline);
                 renderCommandEncoder->bindArgumentGroup(_argumentGroup);
-                renderCommandEncoder->drawIndexed( m_drawable, 0, m_indexBuffer->size() / sizeof(uint16_t));
-                // renderCommandEncoder->draw( m_drawable, 3, 0 );
+                renderCommandEncoder->drawIndexed( m_drawable, 0, m_indexBuffer->size() / sizeof(uint16_t), 0, 2);
             }
             renderCommandEncoder->endEncode();
+
         }
         cmdbuf->endEncode();
 
@@ -328,13 +300,41 @@ namespace ugi {
     }
 
     const char * App::title() {
-        return "Sphere";
+        return "OcclusionCulling";
     }
         
     uint32_t App::rendererType() {
         return 0;
     }
 
+    void App::onKeyEvent(unsigned char _key, eKeyEvent _event) {
+        switch(_key) {
+            case 'W':
+            case 'w': {
+                _offsetY -= 0.1f;
+                break;
+            }
+            case 'S':
+            case 's': {
+                _offsetY += 0.1f;
+                break;
+            }
+            case 'A':
+            case 'a': {
+                _offsetX -= 0.1f;
+                break;
+            }
+            case 'D':
+            case 'd': {
+                _offsetX += 0.1f;
+                break;
+            }
+        }
+    }
+
+    void App::onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y) {
+
+    }
 }
 
 ugi::App theapp;

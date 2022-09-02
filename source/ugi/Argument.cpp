@@ -33,6 +33,7 @@ namespace ugi {
         handle.descriptorIndex = 0;
         handle.specifiedIndex = 0;
         handle.binding = 0;
+        handle.handle = 0;
         //
         uint32_t dynamicBufferIndex = 0;
         uint32_t imageIndex = 0;

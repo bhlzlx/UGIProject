@@ -107,7 +107,7 @@ namespace ugi {
                 info.usage = usageFlags;
                 if( _device->descriptor().queueFamilyCount>1 ) {
                     info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                }else {
+                } else {
                     info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
                 }
                 info.queueFamilyIndexCount = _device->descriptor().queueFamilyCount;

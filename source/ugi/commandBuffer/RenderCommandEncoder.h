@@ -27,7 +27,7 @@ namespace ugi {
         void setScissor( int x, int y, int width, int height );
         void setLineWidth( float lineWidth );
         void draw( Drawable* drawable, uint32_t vertexCount, uint32_t baseVertexIndex);
-        void drawIndexed( Drawable* drawable, uint32_t offset, uint32_t indexCount, uint32_t vertexOffset = 0 );
+        void drawIndexed( Drawable* drawable, uint32_t offset, uint32_t indexCount, uint32_t vertexOffset = 0, uint32_t instanceCount = 1);
         void nextSubpass();
         void endEncode();
         //
