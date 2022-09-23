@@ -8,8 +8,8 @@ namespace ugi {
         union {
             ImageView _externalImageView;
             struct {
-                VkImageView _imageView;
-                Texture*    _image;
+                VkImageView         _imageView;
+                Texture const*      _image;
             };
         };
         InternalImageView()
@@ -23,7 +23,7 @@ namespace ugi {
             _imageView = internalImageView._imageView;
             _image = internalImageView._image;
         }
-        InternalImageView( VkImageView imageView, Texture* image )
+        InternalImageView( VkImageView imageView, Texture const* image )
             : _imageView(imageView)
             , _image(image)
         {
@@ -31,7 +31,7 @@ namespace ugi {
         VkImageView view() const {
             return _imageView;
         }
-        Texture* texture() const {
+        Texture const* texture() const {
             return _image;
         }
         const ImageView& externalImageView() const {

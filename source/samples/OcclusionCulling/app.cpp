@@ -224,23 +224,30 @@ namespace ugi {
         cmdbuf->beginEncode(); {
             static uint64_t angle = 0;
             ++angle;
+            hgl::Vector3f eye (0, 0, 5);         ///> eye
+            hgl::Vector3f target(0, 0, 0);          ///> target
+            hgl::Vector3f dir = target - eye;          ///> target
+            dir.Normalize();
 
             hgl::Matrix4f mvp[4];
             mvp[0] = hgl::Matrix4f::identity;
             mvp[1] = hgl::Matrix4f::Translate(hgl::Vector3f(_offsetX,_offsetY,0.5f)) * hgl::Matrix4f::Scale({0.5f,0.5f,0.5f});
+
             mvp[2] = ugi::LookAt(
-                hgl::Vector3f(0, 0, 5),         ///> eye
-                hgl::Vector3f(0, 0, 0)          ///> target
+                eye, target
             );
             mvp[3] = Perspective( 3.1415926f/4, (float)_width/(float)_height, 0.1f, 50.0f); //hgl::Matrix4f::OpenGLOrthoProjRH(0.1f, 50, _width, _height);
-// occlusion culling
+            // occlusion culling
             hgl::Matrix4f vp = mvp[2] * mvp[3];
-            _oc->SetViewProjMatrix((float*)&vp);
-            _oc->SetModelMatrix((float*)&mvp[0]);
-            _oc->SubmitOccluder((float*)PlaneVertices, PlaneIndices32, 4, 6);
-            _oc->SetModelMatrix((float*)&mvp[1]);
+            _oc->SetViewProjMatrix((float*)&vp, (float const*)&eye, (float const*)& dir);
+            _oc->SubmitOccluder((float*)PlaneVertices, PlaneIndices32, 4, 6, (float const*)&mvp[0]);
             bool qr = true;
-            _oc->QueryVisibility((float*)QueryRect, 1, &qr);
+
+            hgl::vec3<float> abox[2];
+            abox[0] = (hgl::vec4<float>(QueryRect[0].x, QueryRect[0].y, QueryRect[0].z, 1.0f) * mvp[1]).xyz();
+            abox[1] = (hgl::vec4<float>(QueryRect[1].x, QueryRect[1].y, QueryRect[1].z, 1.0f) * mvp[1]).xyz();
+            _oc->QueryVisibility((float*)abox, 1, &qr, (float*)&mvp[1]);
+            // _oc->QueryVisibility((float*)QueryRect, 1, &qr, (float*)&mvp[1]);
             _oc->ClearBuffer();
 
             _uniformAllocator->allocateForDescriptor( m_uniformDescriptor, mvp );

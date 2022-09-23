@@ -20,8 +20,8 @@ namespace ugi {
 
     DescriptorSetAllocator::DescriptorSetAllocator()
         : _device( nullptr )
-        , _freeTable {}
-        , _allocatedTable {}
+        // , _freeTable {}
+        // , _allocatedTable {}
         , _vecDescriptorPool {}
     {
     }
@@ -43,50 +43,51 @@ namespace ugi {
         return VK_NULL_HANDLE;
     }
 
-    VkDescriptorSet DescriptorSetAllocator::allocate( VkDescriptorSetLayout setLayout ) 
+    VkDescriptorSet DescriptorSetAllocator::allocate(VkDescriptorSetLayout setLayout) 
     {
+        VkDescriptorSetAllocateInfo inf = {}; {
+            inf.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            inf.pNext = nullptr;
+            inf.descriptorSetCount = 1;
+            inf.pSetLayouts = &setLayout;
+        }
         VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-        // 从缓存里查找
-        auto iter = _freeTable.find(setLayout);
-        if( iter != _freeTable.end() && iter->second.size() ) {
-            descriptorSet = iter->second.back();
-            iter->second.pop_back();
-        } else {
-            // 从pool里分配
-            auto pool = _vecDescriptorPool.back();
-            VkDescriptorSetAllocateInfo inf = {}; {
-                inf.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-                inf.pNext = nullptr;
-                inf.descriptorPool = pool;
-                inf.descriptorSetCount = 1;
-                inf.pSetLayouts = &setLayout;
-            }
-            auto rst = vkAllocateDescriptorSets( _device, &inf, &descriptorSet);
-            if( rst != VK_SUCCESS) {
-                // pool 不够了，新pool!
-                pool = _createDescriporPool();
-                _vecDescriptorPool.push_back(pool);
-                rst = vkAllocateDescriptorSets( _device, &inf, &descriptorSet);
-                assert(rst == VK_SUCCESS);
-                if( VK_SUCCESS != rst ) {
-                    return VK_NULL_HANDLE;
-                }
+        // 遍历现有pool，去试着分配
+        for(auto startIndex = _activePool; startIndex < _activePool+_vecDescriptorPool.size(); ++startIndex) {
+            auto realIndex = startIndex % _vecDescriptorPool.size();
+            auto pool = _vecDescriptorPool[realIndex];
+            inf.descriptorPool = pool;
+            auto rst = vkAllocateDescriptorSets(_device, &inf, &descriptorSet);
+            if(rst == VK_SUCCESS) {
+                _activePool = realIndex;
+                return descriptorSet;
             }
         }
-        // 添加分配记录
-        _allocatedTable[descriptorSet] = setLayout;
+        // pool 不够了，新pool!
+        auto pool = _createDescriporPool();
+        _vecDescriptorPool.push_back(pool);
+        inf.descriptorPool = pool;
+        _activePool = _vecDescriptorPool.size() - 1;
+        auto rst = vkAllocateDescriptorSets(_device, &inf, &descriptorSet);
+        assert(rst == VK_SUCCESS);
+        if( VK_SUCCESS != rst ) {
+            return VK_NULL_HANDLE;
+        }
+        //
+        AllocationInfo* info = nullptr;
+        if(_allocationFlights[_flight].size()) {
+            if(_allocationFlights[_flight].back().pool == _vecDescriptorPool[_activePool]) {
+                info = &_allocationFlights[_flight].back();
+            }
+        }
+        if(!info) {
+            _vecDescriptorPool.emplace_back();
+            info = &_allocationFlights[_flight].back();
+            info->pool = _vecDescriptorPool[_activePool];
+        }
+        info->sets.push_back(descriptorSet);
+        ++info->count;
         return descriptorSet;
-    }
-
-    void DescriptorSetAllocator::free( VkDescriptorSet descriptorSet ) 
-    {
-        auto iter = _allocatedTable.find(descriptorSet);
-        assert(iter != _allocatedTable.end());
-        if( iter == _allocatedTable.end()) {
-            return;
-        }
-        _freeTable[iter->second].push_back(iter->first);
-        _allocatedTable.erase(iter);
     }
 
     bool DescriptorSetAllocator::initialize( VkDevice device ) 
@@ -97,7 +98,17 @@ namespace ugi {
             return false;
         }
         _vecDescriptorPool.push_back(pool);
+        _activePool = 0;
         return true;
+    }
+
+    void DescriptorSetAllocator::tick(uint32_t flight) {
+        _flight = flight;
+        auto& allocations = _allocationFlights[_flight];
+        for(auto allocation: allocations) {
+            vkFreeDescriptorSets(_device, allocation.pool, allocation.count, allocation.sets.data());
+        }
+        allocations.clear();
     }
 
     DescriptorSetAllocator* DescriptorSetAllocator::Instance() 

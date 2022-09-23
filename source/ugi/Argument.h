@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <memory.h>
 #include <map>
+#include <bitset>
 
 namespace ugi {
     //

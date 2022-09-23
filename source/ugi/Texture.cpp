@@ -9,7 +9,7 @@
 
 namespace ugi {
 
-    static VkImageViewCreateInfo imageViewCreateInfo( Texture* texture, const ImageViewParameter& param ) {
+    static VkImageViewCreateInfo imageViewCreateInfo( Texture const* texture, const ImageViewParameter& param ) {
         VkImageViewCreateInfo info;
         //
         info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -33,7 +33,7 @@ namespace ugi {
         return info;
     }
 
-    Texture* Texture::CreateTexture( Device* _device, VkImage _image, VkImageView _imageView, const TextureDescription& _desc, ResourceAccessType _accessType  ) {
+    Texture* Texture::CreateTexture( Device* _device, VkImage _image, const TextureDescription& _desc, ResourceAccessType _accessType  ) {
 
         VkFormat format = UGIFormatToVk(_desc.format);
         VkImageAspectFlags aspectMask = 0;
@@ -138,51 +138,6 @@ namespace ugi {
         if (!aspectMask){
             aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         }
-        bool ownImageView = false;
-        if (!_imageView) {
-            ownImageView = true;
-            // create image view
-            VkImageViewCreateInfo createInfo = {};
-            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createInfo.image = _image;
-            createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            //
-            createInfo.subresourceRange.aspectMask = aspectMask;
-
-            createInfo.subresourceRange.baseMipLevel = 0;
-            createInfo.subresourceRange.levelCount = _desc.mipmapLevel;
-            createInfo.subresourceRange.baseArrayLayer = 0;
-            createInfo.subresourceRange.layerCount = _desc.depth;
-
-            createInfo.pNext = nullptr;
-            switch (_desc.type)
-            {
-            case TextureType::Texture2D:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; break;
-            case TextureType::Texture2DArray:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY; break;
-            case TextureType::TextureCube:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE; break;
-            case TextureType::TextureCubeArray:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY; break;
-            case TextureType::Texture3D:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_3D; break;
-            case TextureType::Texture1D:
-            default:
-                assert(false);
-            }
-            createInfo.format = format;
-            createInfo.flags = 0;
-            // texture aspect should have all aspect information
-            // but the image view should not have the stencil aspect
-            createInfo.subresourceRange.aspectMask &= ~VK_IMAGE_ASPECT_STENCIL_BIT;
-            VkDevice device = _device->device();
-            VkResult rst = vkCreateImageView(device, &createInfo, nullptr, &_imageView);
-            assert(VK_SUCCESS == rst);
-        }
         //
         Texture* texture = new Texture();{
             texture->_description = _desc;
@@ -205,28 +160,24 @@ namespace ugi {
             _ownsImage = false;
             _allocation = nullptr;
         }
-        for( auto& iv : _imageViews) {
-            vkDestroyImageView(_device->device(), iv.second.view(), nullptr);
-        }
         delete this;
     }
 
-    ImageView Texture::view( Device* device, const ImageViewParameter& param ) {
-        auto iter = _imageViews.find(param);
-        if(iter == _imageViews.end()) {
-            auto imageViewInfo = imageViewCreateInfo( this, param );
-            VkImageView imageView = VK_NULL_HANDLE;
-            auto rst = vkCreateImageView( device->device(), &imageViewInfo, nullptr, &imageView );
-            if( rst == VK_SUCCESS) {
-                InternalImageView view( imageView, this );
-                _imageViews[param] = view;
-                return view.externalImageView();
-            } else {
-                return {};
-            }
+    ImageView Texture::createImageView(Device* device, const ImageViewParameter& param) const {
+        auto imageViewInfo = imageViewCreateInfo(this, param );
+        VkImageView imageView = VK_NULL_HANDLE;
+        auto rst = vkCreateImageView( device->device(), &imageViewInfo, nullptr, &imageView );
+        if( rst == VK_SUCCESS) {
+            InternalImageView view(imageView, this);
+            return view.externalImageView();
         } else {
-            return iter->second.externalImageView();
+            return {};
         }
+    }
+
+    void Texture::destroyImageView(Device* device, ImageView const& view) const {
+        InternalImageView internalView(view);
+        vkDestroyImageView(device->device(), internalView.view(), nullptr);
     }
 
 }

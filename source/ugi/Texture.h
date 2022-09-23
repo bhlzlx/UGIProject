@@ -25,7 +25,7 @@ namespace ugi {
         }
         return VkImageViewType::VK_IMAGE_VIEW_TYPE_1D;
     }
-    
+
     class Texture : public Resource {
     private:
         TextureDescription                              _description;           // descriptor
@@ -37,16 +37,14 @@ namespace ugi {
         ResourceAccessType                              _currentAccessType;     //
         VkImageAspectFlags                              _aspectFlags;           // color / depth /stencil / 
         bool                                            _ownsImage;
-        // image view 
-        std::map<ImageViewParameter, InternalImageView> _imageViews;
-    private:
     public:
-
         VkImage image() const {
             return _image;
         }
 
-        ImageView view( Device* device, const ImageViewParameter& param );
+        ImageView createImageView(Device* device, const ImageViewParameter& param) const;
+
+        void destroyImageView(Device* device, ImageView const& view) const;
 
         ResourceAccessType accessType() const {
             return _currentAccessType;
@@ -70,7 +68,7 @@ namespace ugi {
 
         virtual void release( Device* _device ) override;
         //
-        static Texture* CreateTexture( Device* _device, VkImage _image, VkImageView _imageView, const TextureDescription& _desc, ResourceAccessType _accessType );
+        static Texture* CreateTexture( Device* _device, VkImage _image, const TextureDescription& _desc, ResourceAccessType _accessType );
     };
 
 }
