@@ -12,13 +12,14 @@
 #include <ugi/Texture.h>
 #include <ugi/Drawable.h>
 #include <ugi/UniformBuffer.h>
+#include <ugi/Descriptor.h>
 #include <hgl/assets/AssetsSource.h>
 
 #include <cmath>
 
 namespace ugi {
 
-        bool HelloWorld::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
+    bool HelloWorld::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
 
         hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/triangle/pipeline.bin"));
         auto pipelineFileSize = pipelineFile->GetSize();
@@ -52,6 +53,7 @@ namespace ugi {
         }
         _device = _renderSystem->createDevice(descriptor, assetsSource);
         _uniformAllocator = _device->createUniformAllocator();
+        _descriptorSetAllocator = _device->descriptorSetAllocator();
         _swapchain = _device->createSwapchain( _wnd );
         // command queues
         _graphicsQueue = _device->graphicsQueues()[0];
@@ -66,7 +68,7 @@ namespace ugi {
         pipelineDesc.renderState.blendState.enable = false;
         _pipeline = _device->createGraphicsPipeline(pipelineDesc);
         //
-        _argumentGroup = _pipeline->createArgumentGroup();
+        _argumentGroup = _pipeline->argumentBinder();
 
         _vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
         Buffer* vertexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
@@ -114,7 +116,8 @@ namespace ugi {
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
         _texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
-
+        ImageViewParameter ivp;
+        _imageView = _texture->createImageView(_device, ivp);
         uint32_t texData[] = {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
             0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
@@ -130,10 +133,7 @@ namespace ugi {
         memcpy(ptr, texData, sizeof(texData));
         texStagingBuffer->unmap(_device);
         
-        
         //ImageSubResource texSubRes;
-
-
         ImageRegion region;
         region.offset = {};
         region.mipLevel = 0;
@@ -180,8 +180,7 @@ namespace ugi {
         _argumentGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
-        ImageViewParameter ivp;
-        res.imageView = _texture->view(_device, ivp);
+        res.imageView = _imageView;
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
         //
         _argumentGroup->updateDescriptor(res);
@@ -193,8 +192,9 @@ namespace ugi {
     void HelloWorld::tick() {
         
         _device->waitForFence( _frameCompleteFences[_flightIndex] );
+        _descriptorSetAllocator->tick();
         _uniformAllocator->tick();
-        uint32_t imageIndex = _swapchain->acquireNextImage( _device, _flightIndex );
+        uint32_t imageIndex = _swapchain->acquireNextImage(_device, _flightIndex);
         // _frameCompleteFences[_flightIndex]->
         IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
         

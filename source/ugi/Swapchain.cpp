@@ -270,15 +270,15 @@ namespace ugi {
             colorTexDesc.mipmapLevel = 1;
             colorTexDesc.arrayLayers = 1;
             colorTexDesc.type = TextureType::Texture2D;
-            _embedTextures[embedImageIndex] = Texture::CreateTexture( device, _images[embedImageIndex], VK_NULL_HANDLE, colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
+            _embedTextures[embedImageIndex] = Texture::CreateTexture( device, _images[embedImageIndex], colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
             //
             ImageViewParameter vp;
-            _embedColorView[embedImageIndex] = _embedTextures[embedImageIndex]->view( device, vp );
+            _embedColorView[embedImageIndex] = _embedTextures[embedImageIndex]->createImageView(device, vp);
             if(!_dsv.texture()) {
                 TextureDescription depthStencilTexDesc = colorTexDesc;
                 depthStencilTexDesc.format = UGIFormat::Depth32F;
-                _dsvTex = Texture::CreateTexture( device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
-                _dsv = _dsvTex->view( device, vp);
+                _dsvTex = Texture::CreateTexture( device, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
+                _dsv = _dsvTex->createImageView(device, vp);
             }
             //
             // auto renderPassObjManager = _device->renderPassObjectManager();
@@ -308,11 +308,13 @@ namespace ugi {
                 rp = nullptr;
             }
         }
-        for( auto& colorTex : _embedTextures ) {
+        for(uint32_t i = 0; i<4; ++i) {
+            auto& colorTex = _embedTextures[i];
             if(colorTex) {
+                colorTex->destroyImageView(device, _embedColorView[i].externalImageView());
                 device->destroyTexture(colorTex);
                 colorTex = nullptr;
-            }else {
+            } else {
                 break;
             }
         }

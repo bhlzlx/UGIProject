@@ -33,12 +33,14 @@ namespace ugi {
         VkPipelineRasterizationStateCreateInfo              _RSStateCreateInfo;                     ///> 这个不会用到的，只是放着给参考一下
         VkGraphicsPipelineCreateInfo                        _pipelineCreateInfo;
         uint64_t                                            _pipelineLayoutHash;                    ///> pipeline layout 的 hash
-    private:
 
-        VkPipeline preparePipelineStateObject( UGIHash<APHash>& hasher, const RenderCommandEncoder* encoder );
-        void _hashRasterizationState( UGIHash<APHash>& hasher );
+        ArgumentGroup*                                      _argumentBinder;
+    private:
+        VkPipeline preparePipelineStateObject(UGIHash<APHash>& hasher, const RenderCommandEncoder* encoder);
+        void _hashRasterizationState(UGIHash<APHash>& hasher);
+        ArgumentGroup* createArgumentGroup() const;
     public:
-        static GraphicsPipeline* CreatePipeline( Device* device, const PipelineDescription& pipelineDescription);
+        static GraphicsPipeline* CreatePipeline(Device* device, const PipelineDescription& pipelineDescription);
 
         GraphicsPipeline();
 
@@ -47,7 +49,9 @@ namespace ugi {
         void bind( RenderCommandEncoder* encoder );
         void bind( ComputeCommandEncoder* encoder );
         //
-        ArgumentGroup* createArgumentGroup() const;
+        ArgumentGroup* argumentBinder() const {
+            return _argumentBinder;
+        }
     };
 
 

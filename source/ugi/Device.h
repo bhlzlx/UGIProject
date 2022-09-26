@@ -53,9 +53,6 @@ namespace ugi {
     private:
         DeviceDescriptorVulkan              _descriptor;
         VkDevice                            _device;
-        // std::vector<VkQueue>    _graphicsQueues;
-        // std::vector<VkQueue>    m_transferQueues;
-        //      
         std::vector<CommandQueue*>          _graphicsCommandQueues;
         std::vector<CommandQueue*>          _transferCommandQueues;
         //      
@@ -119,6 +116,7 @@ namespace ugi {
         ComputePipeline* createComputePipeline( const PipelineDescription& pipelineDescription );
         Drawable* createDrawable( const PipelineDescription& pipelineDescription );
         UniformAllocator* createUniformAllocator();
+        // DescriptorSetAllocator* createDescriptorSetAllocator() const;
 
         void destroyRenderPass( IRenderPass* renderPass );
         void destroyTexture( Texture* texture );
@@ -126,6 +124,9 @@ namespace ugi {
 
         const ArgumentGroupLayout* getArgumentGroupLayout( const PipelineDescription& pipelineDescription, uint64_t& hashval );
         const ArgumentGroupLayout* getArgumentGroupLayout( uint64_t hashval );
+        DescriptorSetAllocator* descriptorSetAllocator() const {
+            return _descriptorSetAllocator;
+        }
         ///> --------------- Hash Function For Graphics Objects ------------------
         template< class T >
         uint64_t hashObject();
@@ -166,8 +167,7 @@ namespace ugi {
     public:
         RenderSystem() {
         }
-        Device*
-        createDevice( const DeviceDescriptor& _descriptor, hgl::assets::AssetsSource* assetSource );
+        Device* createDevice( const DeviceDescriptor& _descriptor, hgl::assets::AssetsSource* assetSource );
         //
         const DeviceDescriptorVulkan* getVulkanDeviceDescriptor() const {
             return &m_deviceDescriptorVk;

@@ -89,7 +89,7 @@ namespace ugi {
         case ArgumentDescriptorType::UniformBuffer: {
             VkDescriptorBufferInfo* pBufferInfo = (VkDescriptorBufferInfo*)&mixedDescriptor;
             if( pBufferInfo->buffer != resource.buffer->buffer()) {
-                _reallocDescriptorSetBits |= 1 << h.setID;
+                _reallocBitMask.set(h.setID);
                 pBufferInfo->buffer = resource.buffer->buffer();
                 pBufferInfo->offset = 0; // resource.bufferOffset;  这个offset为什么是0？？因为绑定的时候还会再设置一次动态offset
                 pBufferInfo->range = resource.bufferRange;
@@ -116,7 +116,7 @@ namespace ugi {
             pImageInfo->imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             auto sampler = CreateSampler( _groupLayout->device(), resource.sampler );
             if( pImageInfo->sampler != sampler ) {
-                _reallocDescriptorSetBits |= 1 << h.setID;
+                _reallocBitMask.set(h.setID);
                 pImageInfo->sampler = sampler; // 再也不和 texture 混合绑定了
                 write.pImageInfo = pImageInfo;
             }            
@@ -139,20 +139,21 @@ namespace ugi {
         }
     }
 
-    ArgumentGroup::ArgumentGroup( const ArgumentGroupLayout* groupLayout, VkPipelineBindPoint bindPoint )
-            : _groupLayout( groupLayout )
-            , _resourceMasks {}
-            , _resources {}
-            , _vecMixedDesciptorInfo( groupLayout->descriptorCountTotal() )
-            , _descriptorWrites( groupLayout->descriptorCountTotal() )
-            , _dynamicOffsets( groupLayout->dynamicBufferCountTotal() )
-            , _argumentBitMask( groupLayout->descriptorSetBitMask() )
-            , _descriptorSets {}
-            , _imageResources {}
-            , _reallocDescriptorSetBits (0)
-            , _bindPoint(bindPoint)
-        {
-        }
+    ArgumentGroup::ArgumentGroup( const ArgumentGroupLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint )
+        : _groupLayout( groupLayout )
+        , _resourceMasks {}
+        , _resources {}
+        , _vecMixedDesciptorInfo( groupLayout->descriptorCountTotal() )
+        , _descriptorWrites( groupLayout->descriptorCountTotal() )
+        , _dynamicOffsets( groupLayout->dynamicBufferCountTotal() )
+        , _argumentBitMask( groupLayout->descriptorSetBitMask() )
+        , _descriptorSets {}
+        , _imageResources {}
+        , _reallocBitMask (0)
+        , _bindPoint(bindPoint)
+    {
+        _reallocBitMask.flip();
+    }
 
     bool ArgumentGroup::validateIntegrility() {
         return _groupLayout->validateResourceIntegrility(_resourceMasks);
@@ -180,11 +181,8 @@ namespace ugi {
         }
         // 有必要就更新set
         for( uint32_t setID = 0; setID<MaxArgumentCount; ++setID) {
-            if( _reallocDescriptorSetBits & 1<<setID ) {
-                if( _descriptorSets[setID]) {
-                    DescriptorSetAllocator::Instance()->free(_descriptorSets[setID]);
-                }
-                _descriptorSets[setID] = DescriptorSetAllocator::Instance()->allocate(_groupLayout->descriptorSetLayout(setID));
+            if( _reallocBitMask.test(setID) ) {
+                _descriptorSets[setID] = _descriptorSetAllocator->allocate(_groupLayout->descriptorSetLayout(setID));
                 VkDevice device = _groupLayout->device()->device();
                 uint32_t descriptorCount = _groupLayout->descriptorCount(setID);
                 uint32_t descriptorWriteBaseIndex = _groupLayout->descriptorWriteBaseIndex(setID);
@@ -199,14 +197,17 @@ namespace ugi {
                     0,      // 不复制
                     nullptr
                 );
-                _reallocDescriptorSetBits ^= (1<<setID);
+                _reallocBitMask.flip(setID);
             }
         }
         return true;
     }
 
     void ArgumentGroup::bind( CommandBuffer* commandBuffer ) {
-        //
+        if(!validateDescriptorSets()) { // update descriptor set binding
+            assert(false);
+            return;
+        }
         VkCommandBuffer cmdbuf = *commandBuffer;
         VkPipelineLayout pipelineLayout = _groupLayout->pipelineLayout();
         VkDescriptorSet desciprotSets[MaxArgumentCount];
@@ -229,40 +230,29 @@ namespace ugi {
         return argGroupLayout->pipelineLayout();
     }
 
-    bool ArgumentGroup::prepairResource() {
-        if (!validateDescriptorSets()) {
-            return false;
-        }
-        return true;
-    }
+    // bool ArgumentGroup::prepairResource( ResourceCommandEncoder* commandEncoder ) {
+    //     if( !validateDescriptorSets()) {
+    //         return false;
+    //     }
+    //      // update all image layouts
+    //     for( uint32_t i = 0; i < _groupLayout->imageResourceTotal(); ++i ) {
+    //         auto type = _groupLayout->imageResourceType(i);
+    //         if( type == ArgumentDescriptorType::Image ) {
+    //             commandEncoder->imageTransitionBarrier( _imageResources[i].texture(), ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
+    //         } else if( type == ArgumentDescriptorType::StorageImage ) {
+    //             commandEncoder->imageTransitionBarrier( _imageResources[i].texture(), ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
+    //         }
+    //     }
+    //     return true;
+    // }
 
-    bool ArgumentGroup::prepairResource( ResourceCommandEncoder* commandEncoder ) {
-        if( !validateDescriptorSets()) {
-            return false;
-        }
-         // update all image layouts
-        for( uint32_t i = 0; i < _groupLayout->imageResourceTotal(); ++i ) {
-            auto type = _groupLayout->imageResourceType(i);
-            if( type == ArgumentDescriptorType::Image ) {
-                commandEncoder->imageTransitionBarrier( _imageResources[i].texture(), ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
-            } else if( type == ArgumentDescriptorType::StorageImage ) {
-                commandEncoder->imageTransitionBarrier( _imageResources[i].texture(), ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
-            }
-        }
-        return true;
+    void ArgumentGroup::tick() {
+        _reallocBitMask.reset();
+        _reallocBitMask.flip();
     }
-
+    
     ArgumentGroup::~ArgumentGroup() {
-        // 只需要回收 descriptor set 对象
-        for( auto descSet : _descriptorSets ) {
-            if(descSet) {
-                DescriptorSetAllocator::Instance()->free(descSet);
-            } else {
-                break;
-            }
-        }
     }
-
 }
 
 

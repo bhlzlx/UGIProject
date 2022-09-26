@@ -32,19 +32,16 @@ namespace ugi {
         VkDevice                                                        _device;
         uint32_t                                                        _activePool;
         uint32_t                                                        _flight;         
-        std::vector<VkDescriptorPool>                                   _vecDescriptorPool;
+        std::vector<VkDescriptorPool>                                   _descriptorPools;
         std::array<std::vector<AllocationInfo>, MaxFlightCount>         _allocationFlights;
-        //
-        static DescriptorSetAllocator* global_singleton_ptr;
     private:
         VkDescriptorPool _createDescriporPool();
-        DescriptorSetAllocator();
     public:        
+        DescriptorSetAllocator();
         bool initialize( VkDevice device );
-        void tick(uint32_t flight);
+        void tick();
         VkDescriptorSet allocate(VkDescriptorSetLayout setLayout);
-        //
-        static DescriptorSetAllocator* Instance();
+        void destroy();
     };
 
 }

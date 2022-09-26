@@ -16,15 +16,13 @@ namespace ugi {
 		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT           , 512 },
 	};
 
-    DescriptorSetAllocator* DescriptorSetAllocator::global_singleton_ptr = nullptr;
-
     DescriptorSetAllocator::DescriptorSetAllocator()
         : _device( nullptr )
-        // , _freeTable {}
-        // , _allocatedTable {}
-        , _vecDescriptorPool {}
-    {
-    }
+        , _descriptorPools {}
+        , _activePool(0)
+        , _flight(0)         
+        , _allocationFlights{}
+    {}
 
     VkDescriptorPool DescriptorSetAllocator::_createDescriporPool() 
     {
@@ -53,9 +51,9 @@ namespace ugi {
         }
         VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
         // 遍历现有pool，去试着分配
-        for(auto startIndex = _activePool; startIndex < _activePool+_vecDescriptorPool.size(); ++startIndex) {
-            auto realIndex = startIndex % _vecDescriptorPool.size();
-            auto pool = _vecDescriptorPool[realIndex];
+        for(auto startIndex = _activePool; startIndex < _activePool+_descriptorPools.size(); ++startIndex) {
+            auto realIndex = startIndex % _descriptorPools.size();
+            auto pool = _descriptorPools[realIndex];
             inf.descriptorPool = pool;
             auto rst = vkAllocateDescriptorSets(_device, &inf, &descriptorSet);
             if(rst == VK_SUCCESS) {
@@ -65,9 +63,9 @@ namespace ugi {
         }
         // pool 不够了，新pool!
         auto pool = _createDescriporPool();
-        _vecDescriptorPool.push_back(pool);
+        _descriptorPools.push_back(pool);
         inf.descriptorPool = pool;
-        _activePool = _vecDescriptorPool.size() - 1;
+        _activePool = _descriptorPools.size() - 1;
         auto rst = vkAllocateDescriptorSets(_device, &inf, &descriptorSet);
         assert(rst == VK_SUCCESS);
         if( VK_SUCCESS != rst ) {
@@ -76,14 +74,14 @@ namespace ugi {
         //
         AllocationInfo* info = nullptr;
         if(_allocationFlights[_flight].size()) {
-            if(_allocationFlights[_flight].back().pool == _vecDescriptorPool[_activePool]) {
+            if(_allocationFlights[_flight].back().pool == _descriptorPools[_activePool]) {
                 info = &_allocationFlights[_flight].back();
             }
         }
         if(!info) {
-            _vecDescriptorPool.emplace_back();
+            _descriptorPools.emplace_back();
             info = &_allocationFlights[_flight].back();
-            info->pool = _vecDescriptorPool[_activePool];
+            info->pool = _descriptorPools[_activePool];
         }
         info->sets.push_back(descriptorSet);
         ++info->count;
@@ -97,13 +95,14 @@ namespace ugi {
         if( !pool ) {
             return false;
         }
-        _vecDescriptorPool.push_back(pool);
+        _descriptorPools.push_back(pool);
         _activePool = 0;
+        _flight = 0;
         return true;
     }
 
-    void DescriptorSetAllocator::tick(uint32_t flight) {
-        _flight = flight;
+    void DescriptorSetAllocator::tick() {
+        _flight++;
         auto& allocations = _allocationFlights[_flight];
         for(auto allocation: allocations) {
             vkFreeDescriptorSets(_device, allocation.pool, allocation.count, allocation.sets.data());
@@ -111,11 +110,10 @@ namespace ugi {
         allocations.clear();
     }
 
-    DescriptorSetAllocator* DescriptorSetAllocator::Instance() 
-    {
-        if( global_singleton_ptr == nullptr ) {
-            global_singleton_ptr = new DescriptorSetAllocator();
+    void DescriptorSetAllocator::destroy() {
+        for( auto pool : _descriptorPools ) {
+            vkDestroyDescriptorPool(_device, pool, nullptr);
         }
-        return global_singleton_ptr;
     }
+
 }

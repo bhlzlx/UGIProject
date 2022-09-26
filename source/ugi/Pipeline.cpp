@@ -279,8 +279,7 @@ namespace ugi {
         if( !argumentLayout) {
             return nullptr;
         }
-        //
-        ArgumentGroup* group = new ArgumentGroup(argumentLayout);
+        ArgumentGroup* group = new ArgumentGroup(argumentLayout, _device->descriptorSetAllocator());
         return group;        
     }
 
@@ -325,8 +324,8 @@ namespace ugi {
         if( !argumentLayout) {
             return nullptr;
         }
-        ArgumentGroup* group = new ArgumentGroup( argumentLayout, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE );
-        return group; 
+        ArgumentGroup* group = new ArgumentGroup(argumentLayout, _device->descriptorSetAllocator(), VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE);
+        return group;
     }
 
 }

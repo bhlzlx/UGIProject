@@ -20,7 +20,7 @@ namespace ugi {
     }
 
     void ResourceCommandEncoder::prepareArgumentGroup( ArgumentGroup* argumentGroup ) {
-        argumentGroup->prepairResource(this);
+        // argumentGroup->prepairResource(this);
     }
 
     void ResourceCommandEncoder::executionBarrier( PipelineStages _srcStage, PipelineStages _dstStage ) {

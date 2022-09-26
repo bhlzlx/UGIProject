@@ -27,29 +27,27 @@ namespace ugi {
             };
         }; // 24 bytes
         std::vector<MixedDescriptorInfo>                                _vecMixedDesciptorInfo;
+        InternalImageView                                               _imageResources[16];
         std::vector<VkWriteDescriptorSet>                               _descriptorWrites;
-        //VkWriteDescriptorSet                                            _descriptorWrites[MaxDescriptorCount][MaxArgumentCount]; ///> vulkan 的刷新 descriptor set的结构， 这里实际上还能再省内存
         std::vector<uint32_t>                                           _dynamicOffsets;
         //
         uint32_t                                                        _argumentBitMask;
         VkDescriptorSet                                                 _descriptorSets[MaxArgumentCount];
-        //
-        InternalImageView                                               _imageResources[16];
-        //
-        uint32_t                                                        _reallocDescriptorSetBits;      ///> 某些descriptr绑定改变就需要更新/更换 descriptor set
+        std::bitset<MaxArgumentCount>                                   _reallocBitMask;      ///> 某些descriptr绑定改变就需要更新/更换 descriptor set
         VkPipelineBindPoint                                             _bindPoint;
+        DescriptorSetAllocator*                                         _descriptorSetAllocator;
     private:
         void _writeDescriptorResource( const ResourceDescriptor& resource );
         // 看 descriptor set 需要不需要重建，如果需要就重建 descriptor set，回收旧的
         bool validateIntegrility();
         bool validateDescriptorSets();
     public:
-        ArgumentGroup( const ArgumentGroupLayout* groupLayout, VkPipelineBindPoint bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS );
+        ArgumentGroup(const ArgumentGroupLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS );
+        void tick();
         //* 更新绑定的 API
-        void updateDescriptor( const ResourceDescriptor& resource );
-        bool prepairResource( ResourceCommandEncoder* encoder );
-        bool prepairResource();
-        void bind( CommandBuffer* commandBuffer );
+        void updateDescriptor(const ResourceDescriptor& resource);
+        // bool prepairResource(ResourceCommandEncoder* encoder);
+        void bind(CommandBuffer* commandBuffer);
         ~ArgumentGroup();
     public:
         static uint32_t GetDescriptorHandle( const char* descriptorName, const PipelineDescription& pipelineDescription );

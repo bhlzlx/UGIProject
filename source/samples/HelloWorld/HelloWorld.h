@@ -19,17 +19,19 @@ namespace ugi {
         ugi::CommandBuffer*     _commandBuffers[MaxFlightCount];                   // command buffer for each frame
         ugi::CommandQueue*      _graphicsQueue;                                    // graphics queue
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
-        ugi::GraphicsPipeline*          _pipeline;
+        ugi::GraphicsPipeline*  _pipeline;
         ///> ===========================================================================
         ugi::ArgumentGroup*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
+        ugi::ImageView          _imageView; 
         ugi::SamplerState       _samplerState;                                     //
         ugi::Buffer*            _vertexBuffer;                                     //
         ugi::Buffer*            _indexBuffer;
         ugi::Drawable*          _drawable;
 
         ugi::UniformAllocator*  _uniformAllocator;
+        ugi::DescriptorSetAllocator* _descriptorSetAllocator;
         ResourceDescriptor      _uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index

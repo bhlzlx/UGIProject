@@ -425,16 +425,14 @@ namespace ugi {
                 return nullptr;
             }
             auto device = new Device( m_deviceDescriptorVk, deviceVK, vmaAllocator );
-            
-            // device->_graphicsQueues = graphicsQueue;
-            // device->m_transferQueues = transferQueue;
-            
             device->_graphicsCommandQueues = std::move(graphicsCommandQueues);
             device->_transferCommandQueues = std::move(transferCommandQueues);
-            //
+            // create render pass object manager
             device->_renderPassObjectManager = new RenderPassObjectManager();
-            device->_descriptorSetAllocator = DescriptorSetAllocator::Instance();
-            device->_descriptorSetAllocator->initialize(device->device());
+            // create descriptor set allocator
+            auto descriptorSetAllocator = new DescriptorSetAllocator();
+            descriptorSetAllocator->initialize(deviceVK);
+            device->_descriptorSetAllocator = descriptorSetAllocator;
             return device;
         }
         throw DeviceCreationException( DeviceCreationException::EXCEPTION_CREATE_DEVICE_FAILED);
@@ -542,7 +540,7 @@ namespace ugi {
     }
 
     Texture* Device::createTexture( const TextureDescription& _desc, ResourceAccessType _accessType ) {
-        return Texture::CreateTexture( this, 0, 0, _desc, _accessType);
+        return Texture::CreateTexture( this, 0, _desc, _accessType);
     }
 
     Swapchain* Device::createSwapchain( void* _wnd, AttachmentLoadAction loadAction ) {
@@ -580,7 +578,6 @@ namespace ugi {
     IRenderPass* Device::createRenderPass( const RenderPassDescription& rpdesc, ImageView* colors, ImageView depthStencil ) {
         return RenderPass::CreateRenderPass( this, rpdesc, colors, depthStencil);
     }
-
 
     UniformAllocator* Device::createUniformAllocator() {
         auto allocator = UniformAllocator::createUniformAllocator(this);
