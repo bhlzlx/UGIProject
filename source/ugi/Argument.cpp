@@ -151,6 +151,7 @@ namespace ugi {
         , _imageResources {}
         , _reallocBitMask (0)
         , _bindPoint(bindPoint)
+        , _descriptorSetAllocator(setAllocator)
     {
         _reallocBitMask.flip();
     }
@@ -180,7 +181,7 @@ namespace ugi {
             return false;
         }
         // 有必要就更新set
-        for( uint32_t setID = 0; setID<MaxArgumentCount; ++setID) {
+        for( uint32_t setID = 0; setID<_groupLayout->_descriptorSetCount; ++setID) {
             if( _reallocBitMask.test(setID) ) {
                 _descriptorSets[setID] = _descriptorSetAllocator->allocate(_groupLayout->descriptorSetLayout(setID));
                 VkDevice device = _groupLayout->device()->device();

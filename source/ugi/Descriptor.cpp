@@ -103,6 +103,7 @@ namespace ugi {
 
     void DescriptorSetAllocator::tick() {
         _flight++;
+        _flight %= MaxFlightCount;
         auto& allocations = _allocationFlights[_flight];
         for(auto allocation: allocations) {
             vkFreeDescriptorSets(_device, allocation.pool, allocation.count, allocation.sets.data());

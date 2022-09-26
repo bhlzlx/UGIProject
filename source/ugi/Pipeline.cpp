@@ -210,6 +210,8 @@ namespace ugi {
         pipeline._pipelineCreateInfo.basePipelineIndex = -1;
         pipeline._device = device;
         // pipeline create info 准备好了
+        auto argGroup = pipelinePtr->createArgumentGroup();
+        pipelinePtr->_argumentBinder = argGroup;
         return pipelinePtr;
     }
 
