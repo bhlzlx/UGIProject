@@ -68,8 +68,7 @@ namespace ugi {
         pipelineDesc.renderState.blendState.enable = false;
         _pipeline = _device->createGraphicsPipeline(pipelineDesc);
         //
-        _argumentGroup = _pipeline->argumentBinder();
-
+        auto argGroup = _pipeline->argumentBinder();
         _vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
         Buffer* vertexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
         float vertexData[] = {
@@ -177,13 +176,13 @@ namespace ugi {
         res.type = ArgumentDescriptorType::Sampler;
         res.sampler = _samplerState;
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
-        _argumentGroup->updateDescriptor(res);
+        argGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
         res.imageView = _imageView;
         res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
         //
-        _argumentGroup->updateDescriptor(res);
+        argGroup->updateDescriptor(res);
         //
         _flightIndex = 0;
         return true;
@@ -194,10 +193,10 @@ namespace ugi {
         _device->waitForFence( _frameCompleteFences[_flightIndex] );
         _descriptorSetAllocator->tick();
         _uniformAllocator->tick();
+        auto argGroup = _pipeline->argumentBinder();
         uint32_t imageIndex = _swapchain->acquireNextImage(_device, _flightIndex);
-        // _frameCompleteFences[_flightIndex]->
+        //
         IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
-        
         auto cmdbuf = _commandBuffers[_flightIndex];
 
         cmdbuf->beginEncode(); {
@@ -222,10 +221,10 @@ namespace ugi {
             ubo.writeData(0, &col2, sizeof(col2));
             _uniformDescriptor.bufferOffset = ubo.offset();
             _uniformDescriptor.buffer = ubo.buffer(); 
-            _argumentGroup->updateDescriptor(_uniformDescriptor);
+            argGroup->updateDescriptor(_uniformDescriptor);
 
             auto resourceEncoder = cmdbuf->resourceCommandEncoder();
-            resourceEncoder->prepareArgumentGroup(_argumentGroup);
+            resourceEncoder->prepareArgumentGroup(argGroup);
             resourceEncoder->endEncode();
             //
             RenderPassClearValues clearValues;
@@ -241,7 +240,7 @@ namespace ugi {
                 renderCommandEncoder->setViewport(0, 0, _width, _height, 0, 1.0f );
                 renderCommandEncoder->setScissor( 0, 0, _width, _height );
                 renderCommandEncoder->bindPipeline(_pipeline);
-                renderCommandEncoder->bindArgumentGroup(_argumentGroup);
+                renderCommandEncoder->bindArgumentGroup(argGroup);
                 // renderCommandEncoder->drawIndexed( _drawable, 0, 3 );
                 renderCommandEncoder->draw( _drawable, 3, 0 );
             }

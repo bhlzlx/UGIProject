@@ -21,7 +21,6 @@ namespace ugi {
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
         ugi::GraphicsPipeline*  _pipeline;
         ///> ===========================================================================
-        ugi::ArgumentGroup*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
         ugi::ImageView          _imageView; 
