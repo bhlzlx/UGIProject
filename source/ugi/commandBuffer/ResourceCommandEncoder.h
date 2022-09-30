@@ -16,7 +16,7 @@ namespace ugi {
         {
         }
         ///> interface
-        void prepareArgumentGroup( ArgumentGroup* argumentGroup );
+        void prepareArgumentGroup( DescriptorBinder* argumentGroup );
         
         void executionBarrier( PipelineStages srcStage, PipelineStages dstStage);
         //// 队列里有很多指令，我目前想等待这些指令（部分执行）完，让其它阶段的的命令去处理

@@ -231,12 +231,12 @@ namespace ugi {
         //
         ResourceDescriptor res;
         m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
-        m_uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument", pipelineDesc );
+        m_uniformDescriptor.descriptorHandle = DescriptorBinder::GetDescriptorHandle("Argument", pipelineDesc );
         m_uniformDescriptor.bufferRange = 64 * 3;
 
         res.type = ArgumentDescriptorType::Sampler;
         res.sampler = m_samplerState;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
+        res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triSampler", pipelineDesc );
         _argumentGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
@@ -244,7 +244,7 @@ namespace ugi {
         ImageViewParameter ivp;
         ivp.red = ChannelMapping::zero;
         res.imageView = _texture->view(_device, ivp);
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
+        res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triTexture", pipelineDesc );
         //
         _argumentGroup->updateDescriptor(res);
         //

@@ -44,7 +44,7 @@ namespace ugi {
         vkCmdSetScissor( *_commandBuffer, 0, 1, &scissor );
     }
 
-    void RenderCommandEncoder::bindArgumentGroup( ArgumentGroup* argGroup ) {
+    void RenderCommandEncoder::bindArgumentGroup( DescriptorBinder* argGroup ) {
         argGroup->bind(_commandBuffer );
     }
 

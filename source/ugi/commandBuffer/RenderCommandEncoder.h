@@ -22,7 +22,7 @@ namespace ugi {
         {
         }
         void bindPipeline( GraphicsPipeline* pipeline );
-        void bindArgumentGroup( ArgumentGroup* argumentGroup );
+        void bindArgumentGroup( DescriptorBinder* argumentGroup );
         void setViewport( float x, float y, float width ,float height, float minDepth, float maxDepth );
         void setScissor( int x, int y, int width, int height );
         void setLineWidth( float lineWidth );

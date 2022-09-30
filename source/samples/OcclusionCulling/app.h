@@ -30,7 +30,7 @@ namespace ugi {
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
         ugi::GraphicsPipeline*          _pipeline;
         ///> ===========================================================================
-        ugi::ArgumentGroup*     _argumentGroup;                                    // 
+        ugi::DescriptorBinder*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Buffer*            m_vertexBuffer;                                     //
         ugi::Buffer*            m_indexBuffer;

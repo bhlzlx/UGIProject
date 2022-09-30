@@ -1,4 +1,15 @@
-﻿#pragma once
+﻿/**
+ * @file Argument.h
+ * @author lixin
+ * @brief 
+ * @version 0.1
+ * @date 2022-09-28
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
+#pragma once
 #include "UGIDeclare.h"
 #include "UGIVulkanPrivate.h"
 #include "VulkanFunctionDeclare.h"
@@ -11,7 +22,7 @@
 
 namespace ugi {
     //
-    class ArgumentGroup {
+    class DescriptorBinder {
     private:
         const ArgumentGroupLayout*                                      _groupLayout;
         // 资源绑定信息最终决定放在ArgumentGroup对象里了，主要是因为这个uniform更新的时候如果是做ringbuffer那么这个buffer在下一次绑定的时候可能就不是它了，这个情况下需要重新生成新的 descriptor,旧的 descriptor 回收
@@ -42,15 +53,15 @@ namespace ugi {
         bool validateIntegrility();
         bool validateDescriptorSets();
     public:
-        ArgumentGroup(const ArgumentGroupLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS );
+        DescriptorBinder(const ArgumentGroupLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS );
         void tick();
         //* 更新绑定的 API
         void updateDescriptor(const ResourceDescriptor& resource);
         // bool prepairResource(ResourceCommandEncoder* encoder);
         void bind(CommandBuffer* commandBuffer);
-        ~ArgumentGroup();
+        ~DescriptorBinder();
     public:
-        static uint32_t GetDescriptorHandle( const char* descriptorName, const PipelineDescription& pipelineDescription );
+        static uint32_t GetDescriptorHandle( const char* descriptorName, const PipelineDescription& pipelineDescription, ArgumentDescriptorInfo* descriptorInfo = nullptr);
     };
 
 }

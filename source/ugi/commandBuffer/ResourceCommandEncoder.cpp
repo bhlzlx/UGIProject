@@ -19,7 +19,7 @@ namespace ugi {
         _commandBuffer = nullptr;
     }
 
-    void ResourceCommandEncoder::prepareArgumentGroup( ArgumentGroup* argumentGroup ) {
+    void ResourceCommandEncoder::prepareArgumentGroup( DescriptorBinder* argumentGroup ) {
         // argumentGroup->prepairResource(this);
     }
 
@@ -122,7 +122,6 @@ namespace ugi {
 
 
     void ResourceCommandEncoder::updateBuffer( Buffer* _dst, Buffer* _src, BufferSubResource* _dstSubRes, BufferSubResource* _srcSubRes, bool uploadMode ) {
-
         VkBufferCopy region;
 
         VkDeviceSize dstOffset = _dstSubRes ? _dstSubRes->offset : 0;

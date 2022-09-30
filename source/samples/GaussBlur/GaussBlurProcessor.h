@@ -20,17 +20,17 @@ namespace ugi {
 
     class GaussBlurItem {
     private:
-        ArgumentGroup*      _argGroup;
+        DescriptorBinder*      _argGroup;
         Texture*            _texture0;
         Texture*            _texture1;
         GaussBlurParameter  _parameter;
     public:
-        GaussBlurItem( ArgumentGroup* group, Texture* texture0, Texture* texture1 );
+        GaussBlurItem( DescriptorBinder* group, Texture* texture0, Texture* texture1 );
         void setParameter( const GaussBlurParameter& parameter );
         const GaussBlurParameter& parameter() const {
             return _parameter;
         }
-        ArgumentGroup* argumentGroup() const {
+        DescriptorBinder* argumentGroup() const {
             return _argGroup;
         }
         Texture* source() const {

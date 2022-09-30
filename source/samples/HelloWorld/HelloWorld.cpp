@@ -19,6 +19,21 @@
 
 namespace ugi {
 
+    bool RenderContext::initialize(void* wnd, ugi::DeviceDescriptor deviceDesc, hgl::assets::AssetsSource* assetsSource) {
+        renderSystem = new RenderSystem();
+        device = renderSystem->createDevice(deviceDesc, assetsSource);
+        uniformAllocator = device->createUniformAllocator();
+        descriptorSetAllocator = device->descriptorSetAllocator();
+        swapchain = device->createSwapchain(wnd);
+        graphicsQueue = device->graphicsQueues()[0];
+        uploadQueue = device->transferQueues()[0];
+        for( size_t i = 0; i<MaxFlightCount; ++i) {
+            frameCompleteFences[i] = device->createFence();
+            renderCompleteSemaphores[i] = device->createSemaphore();
+            commandBuffers[i] = graphicsQueue->createCommandBuffer(device);
+        }
+    }
+
     bool HelloWorld::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
 
         hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/triangle/pipeline.bin"));
@@ -41,8 +56,6 @@ namespace ugi {
 
         printf("initialize\n");
 
-        _renderSystem = new ugi::RenderSystem();
-
         ugi::DeviceDescriptor descriptor; {
             descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
             descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
@@ -51,45 +64,33 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         }
-        _device = _renderSystem->createDevice(descriptor, assetsSource);
-        _uniformAllocator = _device->createUniformAllocator();
-        _descriptorSetAllocator = _device->descriptorSetAllocator();
-        _swapchain = _device->createSwapchain( _wnd );
-        // command queues
-        _graphicsQueue = _device->graphicsQueues()[0];
-        _uploadQueue = _device->transferQueues()[0];
-        //
-        for( size_t i = 0; i<MaxFlightCount; ++i) {
-            _frameCompleteFences[i] = _device->createFence();
-            _renderCompleteSemaphores[i] = _device->createSemaphore();
-            _commandBuffers[i] = _graphicsQueue->createCommandBuffer( _device );
-        }
+        _renderContext.initialize(_wnd, descriptor, assetsSource);
         pipelineDesc.renderState.cullMode = CullMode::None;
         pipelineDesc.renderState.blendState.enable = false;
-        _pipeline = _device->createGraphicsPipeline(pipelineDesc);
+        _pipeline = _renderContext.device->createGraphicsPipeline(pipelineDesc);
         //
         auto argGroup = _pipeline->argumentBinder();
-        _vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
-        Buffer* vertexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
+        _vertexBuffer = _renderContext.device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
+        Buffer* vertexStagingBuffer = _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
         float vertexData[] = {
             -0.5, -0.5, 0, 0, 0,
             0, 0.5, 0, 0.5, 1.0,
             0.5, -0.5, 0, 1.0, 0
         };
-        void* ptr = vertexStagingBuffer->map( _device );
+        void* ptr = vertexStagingBuffer->map( _renderContext.device );
         memcpy(ptr, vertexData, sizeof(vertexData));
-        vertexStagingBuffer->unmap(_device);
+        vertexStagingBuffer->unmap(_renderContext.device);
 
         uint16_t indexData[] = {
             0, 1, 2
         };
-        _indexBuffer = _device->createBuffer( BufferType::IndexBuffer, sizeof(indexData));
-        Buffer* indexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, sizeof(indexData) );
-        ptr = indexStagingBuffer->map( _device );
+        _indexBuffer = _renderContext.device->createBuffer( BufferType::IndexBuffer, sizeof(indexData));
+        Buffer* indexStagingBuffer = _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(indexData) );
+        ptr = indexStagingBuffer->map( _renderContext.device );
         memcpy(ptr, indexData, sizeof(indexData));
-        indexStagingBuffer->unmap(_device);
+        indexStagingBuffer->unmap(_renderContext.device);
 
-        auto updateCmd = _uploadQueue->createCommandBuffer( _device );
+        auto updateCmd = _uploadQueue->createCommandBuffer( _renderContext.device );
 
         updateCmd->beginEncode();
 
@@ -101,7 +102,7 @@ namespace ugi {
         subRes.size = sizeof(indexData);
         resourceEncoder->updateBuffer( _indexBuffer, indexStagingBuffer, &subRes, &subRes );
 
-        _drawable = _device->createDrawable(pipelineDesc);
+        _drawable = _renderContext.device->createDrawable(pipelineDesc);
         _drawable->setVertexBuffer( _vertexBuffer, 0, 0 );
         _drawable->setVertexBuffer( _vertexBuffer, 1, 12 );
         _drawable->setIndexBuffer( _indexBuffer, 0 );
@@ -114,9 +115,9 @@ namespace ugi {
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
-        _texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
+        _texture = _renderContext.device->createTexture(texDesc, ResourceAccessType::ShaderRead );
         ImageViewParameter ivp;
-        _imageView = _texture->createImageView(_device, ivp);
+        _imageView = _texture->createImageView(_renderContext.device, ivp);
         uint32_t texData[] = {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
             0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
@@ -127,10 +128,10 @@ namespace ugi {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
             0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
         };
-        auto texStagingBuffer =  _device->createBuffer( BufferType::StagingBuffer, sizeof(texData) );
-        ptr = texStagingBuffer->map(_device);
+        auto texStagingBuffer =  _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(texData) );
+        ptr = texStagingBuffer->map(_renderContext.device);
         memcpy(ptr, texData, sizeof(texData));
-        texStagingBuffer->unmap(_device);
+        texStagingBuffer->unmap(_renderContext.device);
         
         //ImageSubResource texSubRes;
         ImageRegion region;
@@ -149,7 +150,6 @@ namespace ugi {
         resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
         region.offset.x = 8; region.offset.y = 8;
         resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
-
         resourceEncoder->endEncode();
 
         updateCmd->endEncode();
@@ -168,19 +168,20 @@ namespace ugi {
 
         _uploadQueue->waitIdle();
         //
+        ArgumentDescriptorInfo argDescInfo = {};
+        _uniformDescriptor.descriptorHandle = DescriptorBinder::GetDescriptorHandle("Argument1", pipelineDesc, &argDescInfo);
+        _uniformDescriptor.type = argDescInfo.type;
+        _uniformDescriptor.bufferRange = argDescInfo.dataSize;
+        // 
         ResourceDescriptor res;
-        _uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
-        _uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
-        _uniformDescriptor.bufferRange = 64;
-
         res.type = ArgumentDescriptorType::Sampler;
         res.sampler = _samplerState;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
+        res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triSampler", pipelineDesc, &argDescInfo );
         argGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
         res.imageView = _imageView;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
+        res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triTexture", pipelineDesc, &argDescInfo );
         //
         argGroup->updateDescriptor(res);
         //
@@ -190,17 +191,18 @@ namespace ugi {
 
     void HelloWorld::tick() {
         
-        _device->waitForFence( _frameCompleteFences[_flightIndex] );
+        _renderContext.device->waitForFence( _frameCompleteFences[_flightIndex] );
         _descriptorSetAllocator->tick();
         _uniformAllocator->tick();
         auto argGroup = _pipeline->argumentBinder();
-        uint32_t imageIndex = _swapchain->acquireNextImage(_device, _flightIndex);
+        uint32_t imageIndex = _swapchain->acquireNextImage(_renderContext.device, _flightIndex);
         //
         IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
         auto cmdbuf = _commandBuffers[_flightIndex];
-
         cmdbuf->beginEncode(); {
-
+            auto resourceEncoder = cmdbuf->resourceCommandEncoder();
+            resourceEncoder->imageTransitionBarrier(_texture, ugi::ResourceAccessType::ShaderRead, ugi::PipelineStages::Transfer, ugi::StageAccess::Write, ugi::PipelineStages::FragmentShading, ugi::StageAccess::Read);
+            resourceEncoder->endEncode();
             static uint64_t angle = 0;
             ++angle;
             float sinVal = sin( ((float)angle)/180.0f * 3.1415926f );
@@ -223,9 +225,10 @@ namespace ugi {
             _uniformDescriptor.buffer = ubo.buffer(); 
             argGroup->updateDescriptor(_uniformDescriptor);
 
-            auto resourceEncoder = cmdbuf->resourceCommandEncoder();
-            resourceEncoder->prepareArgumentGroup(argGroup);
-            resourceEncoder->endEncode();
+            // auto resourceEncoder = cmdbuf->resourceCommandEncoder();
+            // // resourceEncoder->imageTransitionBarrier(_imageResources[i].texture(), ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
+            // resourceEncoder->prepareArgumentGroup(argGroup);
+            // resourceEncoder->endEncode();
             //
             RenderPassClearValues clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
@@ -261,12 +264,12 @@ namespace ugi {
 
         bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
         assert(submitRst);
-        _swapchain->present( _device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
+        _swapchain->present( _renderContext.device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
 
     }
         
     void HelloWorld::resize(uint32_t width, uint32_t height) {
-        _swapchain->resize( _device, width, height );
+        _swapchain->resize( _renderContext.device, width, height );
         //
         _width = width;
         _height = height;

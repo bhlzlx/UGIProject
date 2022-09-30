@@ -75,7 +75,7 @@ namespace ugi {
         computeEncoder->endEncode();
     }
 
-    GaussBlurItem::GaussBlurItem( ArgumentGroup* group, Texture* texture0, Texture* texture1 )
+    GaussBlurItem::GaussBlurItem( DescriptorBinder* group, Texture* texture0, Texture* texture1 )
         : _argGroup( group )
         , _texture0( texture0 )
         , _texture1( texture1 )

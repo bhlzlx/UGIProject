@@ -18,7 +18,7 @@ namespace ugi {
     class RenderPass;
     class RenderPassObjectManager;
     class GraphicsPipeline;
-    class ArgumentGroup;
+    class DescriptorBinder;
     class DescriptorSetAllocator;
     class Drawable;
     class UniformAllocator;

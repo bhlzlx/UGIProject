@@ -131,7 +131,7 @@ namespace ugi {
     class SDFFontDrawData {
         friend class SDFFontRenderer;
     private:
-        ArgumentGroup*      _argumentGroup;
+        DescriptorBinder*      _argumentGroup;
         //
         Buffer*             _vertexBuffer;
         Buffer*             _indexBuffer;

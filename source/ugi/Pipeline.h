@@ -33,23 +33,22 @@ namespace ugi {
         VkPipelineRasterizationStateCreateInfo              _RSStateCreateInfo;                     ///> 这个不会用到的，只是放着给参考一下
         VkGraphicsPipelineCreateInfo                        _pipelineCreateInfo;
         uint64_t                                            _pipelineLayoutHash;                    ///> pipeline layout 的 hash
-
-        ArgumentGroup*                                      _argumentBinder;
+        DescriptorBinder*                                   _argumentBinder;
     private:
         VkPipeline preparePipelineStateObject(UGIHash<APHash>& hasher, const RenderCommandEncoder* encoder);
         void _hashRasterizationState(UGIHash<APHash>& hasher);
-        ArgumentGroup* createArgumentGroup() const;
+        DescriptorBinder* createArgumentGroup() const;
     public:
         static GraphicsPipeline* CreatePipeline(Device* device, const PipelineDescription& pipelineDescription);
 
         GraphicsPipeline();
 
-        void setRasterizationState( const RasterizationState& _state );
-        void setDepthStencilState(  );
-        void bind( RenderCommandEncoder* encoder );
-        void bind( ComputeCommandEncoder* encoder );
+        void setRasterizationState(const RasterizationState& _state);
+        void setDepthStencilState();
+        void bind(RenderCommandEncoder* encoder);
+        void bind(ComputeCommandEncoder* encoder);
         //
-        ArgumentGroup* argumentBinder() const {
+        DescriptorBinder* argumentBinder() const {
             return _argumentBinder;
         }
     };
@@ -65,7 +64,7 @@ namespace ugi {
         ComputePipeline() {
         }
         static ComputePipeline* CreatePipeline( Device* device, const PipelineDescription& pipelineDesc );
-        ArgumentGroup* createArgumentGroup() const ;
+        DescriptorBinder* createArgumentGroup() const ;
         VkPipeline pipeline() {
             return _pipeline;
         }     

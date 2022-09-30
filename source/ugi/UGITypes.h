@@ -412,27 +412,16 @@ namespace ugi {
 
 	// 一个属性对应一个buffer,所以其stride不可能过大，这里255已经很大了
     struct VertexBufferDescription {
-        alignas(4) char			name[MaxNameLength];
-        alignas(1) VertexType	type;
-        alignas(1) uint8_t      offset;
-		alignas(1) uint8_t		stride;
-		alignas(1) uint8_t		instanceMode;
-        VertexBufferDescription()
-			: name {}
-			, type(VertexType::Float)
-			, instanceMode(0)
-		{
-        }
+        alignas(4) char			name[MaxNameLength] = {};
+        alignas(1) VertexType	type = VertexType::Float;
+        alignas(1) uint8_t      offset = 0;
+		alignas(1) uint8_t		stride = 0;
+		alignas(1) uint8_t		instanceMode = 0;
     };
 
     struct VertexLayout {
-        alignas(4) uint32_t                 bufferCount;
+        alignas(4) uint32_t                 bufferCount = 0;
         alignas(4) VertexBufferDescription  buffers[MaxVertexAttribute];
-        VertexLayout() 
-            : bufferCount(0) 
-            , buffers {}
-        {
-        }
     };
 
     struct DepthState {
@@ -497,7 +486,7 @@ namespace ugi {
     };
 
     struct PipelineState {
-        alignas(1) uint8_t                  writeMask = 0xf;
+        alignas(1) uint8_t                  writeMask = 0xff;
         alignas(1) CullMode                 cullMode = CullMode::None;
         alignas(1) FrontFace                windingMode = FrontFace::ClockWise;
         alignas(1) uint8_t                  scissorEnable = 1;

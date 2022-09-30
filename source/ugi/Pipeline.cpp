@@ -275,13 +275,13 @@ namespace ugi {
         vkCmdBindPipeline( *encoder->commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
     }
 
-    ArgumentGroup* GraphicsPipeline::createArgumentGroup() const {
+    DescriptorBinder* GraphicsPipeline::createArgumentGroup() const {
         const auto argumentLayout = this->_device->getArgumentGroupLayout(_pipelineLayoutHash);
         assert(argumentLayout);
         if( !argumentLayout) {
             return nullptr;
         }
-        ArgumentGroup* group = new ArgumentGroup(argumentLayout, _device->descriptorSetAllocator());
+        DescriptorBinder* group = new DescriptorBinder(argumentLayout, _device->descriptorSetAllocator());
         return group;        
     }
 
@@ -320,13 +320,13 @@ namespace ugi {
         return nullptr;
     }
 
-    ArgumentGroup* ComputePipeline::createArgumentGroup() const  {
+    DescriptorBinder* ComputePipeline::createArgumentGroup() const  {
         const auto argumentLayout = _device->getArgumentGroupLayout(_pipelineLayoutHash);
         assert(argumentLayout);
         if( !argumentLayout) {
             return nullptr;
         }
-        ArgumentGroup* group = new ArgumentGroup(argumentLayout, _device->descriptorSetAllocator(), VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE);
+        DescriptorBinder* group = new DescriptorBinder(argumentLayout, _device->descriptorSetAllocator(), VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE);
         return group;
     }
 

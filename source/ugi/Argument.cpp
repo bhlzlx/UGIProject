@@ -27,7 +27,7 @@ namespace ugi {
     };
     
     // vulkan 的 handle是 set/binding 组合
-    uint32_t ArgumentGroup::GetDescriptorHandle( const char* descriptorName, const PipelineDescription& pipelineDescription ) 
+    uint32_t DescriptorBinder::GetDescriptorHandle(const char* descriptorName, const PipelineDescription& pipelineDescription, ArgumentDescriptorInfo* descriptorInfo ) 
     {
         DescriptorHandleImp handle;
         handle.descriptorIndex = 0;
@@ -55,6 +55,9 @@ namespace ugi {
                         handle.specifiedIndex = imageIndex;
                     }
                     assert( handle.specifiedIndex < 16 );
+                    if(descriptorInfo) {
+                        *descriptorInfo = descriptor;
+                    }
                     return handle.handle;
                 }
                 ++handle.descriptorIndex;
@@ -69,7 +72,7 @@ namespace ugi {
         return ~0;
     }
 
-    void ArgumentGroup::_writeDescriptorResource( const ResourceDescriptor& resource ) {
+    void DescriptorBinder::_writeDescriptorResource( const ResourceDescriptor& resource ) {
         DescriptorHandleImp h;
         h.handle = resource.descriptorHandle;
         //
@@ -139,7 +142,7 @@ namespace ugi {
         }
     }
 
-    ArgumentGroup::ArgumentGroup( const ArgumentGroupLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint )
+    DescriptorBinder::DescriptorBinder( const ArgumentGroupLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint )
         : _groupLayout( groupLayout )
         , _resourceMasks {}
         , _resources {}
@@ -156,11 +159,11 @@ namespace ugi {
         _reallocBitMask.flip();
     }
 
-    bool ArgumentGroup::validateIntegrility() {
+    bool DescriptorBinder::validateIntegrility() {
         return _groupLayout->validateResourceIntegrility(_resourceMasks);
     }
 
-    void ArgumentGroup::updateDescriptor( const ResourceDescriptor& resource ) {
+    void DescriptorBinder::updateDescriptor( const ResourceDescriptor& resource ) {
         DescriptorHandleImp h;
         h.handle = resource.descriptorHandle;
         uint32_t setIndex = h.setID;
@@ -176,7 +179,7 @@ namespace ugi {
         _writeDescriptorResource(resource);
     }
 
-    bool ArgumentGroup::validateDescriptorSets() {
+    bool DescriptorBinder::validateDescriptorSets() {
         if(!validateIntegrility()) {
             return false;
         }
@@ -204,7 +207,7 @@ namespace ugi {
         return true;
     }
 
-    void ArgumentGroup::bind( CommandBuffer* commandBuffer ) {
+    void DescriptorBinder::bind( CommandBuffer* commandBuffer ) {
         if(!validateDescriptorSets()) { // update descriptor set binding
             assert(false);
             return;
@@ -247,12 +250,12 @@ namespace ugi {
     //     return true;
     // }
 
-    void ArgumentGroup::tick() {
+    void DescriptorBinder::tick() {
         _reallocBitMask.reset();
         _reallocBitMask.flip();
     }
     
-    ArgumentGroup::~ArgumentGroup() {
+    DescriptorBinder::~DescriptorBinder() {
     }
 }
 

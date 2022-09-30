@@ -7,18 +7,42 @@
 
 namespace ugi {
 
+    struct Material {
+        
+    };
+
+    struct RenderContext {
+        ugi::RenderSystem*              renderSystem;                                     //
+        ugi::Device*                    device;                                           //
+        ugi::Swapchain*                 swapchain;                                        //
+        ugi::Fence*                     frameCompleteFences[MaxFlightCount];              // command buffer 被GPU消化完会给 fence 一个 signal, 用于双缓冲或者多缓冲逻辑隔帧等待
+        ugi::Semaphore*                 renderCompleteSemaphores[MaxFlightCount];         // 用于GPU内部等待
+        ugi::CommandBuffer*             commandBuffers[MaxFlightCount];                   // command buffer for each frame
+        ugi::CommandQueue*              graphicsQueue;                                    // graphics queue
+        ugi::CommandQueue*              uploadQueue;                                      // upload queue
+        ugi::UniformAllocator*          uniformAllocator;
+        ugi::DescriptorSetAllocator*    descriptorSetAllocator;
+
+        RenderContext() {
+        }
+
+        bool initialize(void* _wnd,ugi::DeviceDescriptor deviceDesc, hgl::assets::AssetsSource* assetsSource);
+    };
+
+    class Render {
+    private:
+        ugi::GraphicsPipeline*          _pipeline;
+    public:
+        Render(ugi::GraphicsPipeline* pipeline)
+            : _pipeline(pipeline)
+        {
+        }
+    };
+
     class HelloWorld : public UGIApplication {
     private:
         void*                   _hwnd;                                             //
-        ugi::RenderSystem*      _renderSystem;                                     //
-        ugi::Device*            _device;                                           //
-        ugi::Swapchain*         _swapchain;                                        //
-        //
-        ugi::Fence*             _frameCompleteFences[MaxFlightCount];              // command buffer 被GPU消化完会给 fence 一个 signal, 用于双缓冲或者多缓冲逻辑隔帧等待
-        ugi::Semaphore*         _renderCompleteSemaphores[MaxFlightCount];         // 用于GPU内部等待
-        ugi::CommandBuffer*     _commandBuffers[MaxFlightCount];                   // command buffer for each frame
-        ugi::CommandQueue*      _graphicsQueue;                                    // graphics queue
-        ugi::CommandQueue*      _uploadQueue;                                      // upload queue
+        RenderContext           _renderContext; //
         ugi::GraphicsPipeline*  _pipeline;
         ///> ===========================================================================
         // ugi::Buffer*            m_uniformBuffer;
@@ -29,8 +53,6 @@ namespace ugi {
         ugi::Buffer*            _indexBuffer;
         ugi::Drawable*          _drawable;
 
-        ugi::UniformAllocator*  _uniformAllocator;
-        ugi::DescriptorSetAllocator* _descriptorSetAllocator;
         ResourceDescriptor      _uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index

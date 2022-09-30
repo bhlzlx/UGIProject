@@ -23,7 +23,7 @@ namespace ugi {
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
         ugi::ResourceManager*   _resourceManager;                                  // resource manager
         ///> ===========================================================================
-        ugi::ArgumentGroup*     _argumentGroup;                                    //
+        ugi::DescriptorBinder*     _argumentGroup;                                    //
 
         ugi::gdi::GDIContext*   m_GdiContext;                                       // gdi context
         ugi::gdi::UI2DSystem*   m_UiSys;                                            // gdi widget
