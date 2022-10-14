@@ -654,31 +654,36 @@ namespace ugi {
         }
     };
 
-    struct ImageView {
-        uint64_t oqaqueData[2];
+    constexpr uint32_t PipelineDescriptionSize = sizeof(PipelineDescription);
+
+    struct image_view_t {
+        size_t handle;
     };
 
-    constexpr uint32_t PipelineDescriptionSize = sizeof(PipelineDescription);
+    struct buffer_desc_t {
+        size_t          buffer;
+        uint32_t        offset;
+        uint32_t        size;
+    };
+
+    struct resource_union {
+        union {
+            buffer_desc_t buffer;
+            uint64_t      imageView;
+            SamplerState  samplerState;
+        };
+    };
 
     struct ResourceDescriptor {
         uint32_t                descriptorHandle;
         ArgumentDescriptorType  type;                   // 资源类型
-        union {
-            Buffer*             buffer;
-            ImageView           imageView;
-            SamplerState        sampler;
-        };
-        union {
-            struct {
-                uint32_t            bufferOffset;
-                uint32_t            bufferRange;
-            };
-        };
+        resource_union          res;
         //
         ResourceDescriptor()
             : descriptorHandle(~0)
             , type( ArgumentDescriptorType::UniformBuffer )
-            , buffer( nullptr ) {
+            , res{}
+        {
         }
     };
 

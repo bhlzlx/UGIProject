@@ -52,7 +52,7 @@ namespace ugi {
         virtual void begin( RenderCommandEncoder* encoder ) const = 0;
         virtual void end( RenderCommandEncoder* encoder ) const = 0;
         virtual void release( Device* device ) = 0;
-        virtual ImageView color( uint32_t index ) = 0;
+        virtual image_view_t color( uint32_t index ) = 0;
     };
 
     class RenderPass : IRenderPass {
@@ -64,9 +64,11 @@ namespace ugi {
         VkFramebuffer                               _framebuffer;                              ///> framebuffer 对象
         VkRenderPass                                _renderPass;                               // renderpass - 含一个subpass
         //
-        InternalImageView                           _colorViews[MaxRenderTarget];           // RT所使用的纹理对象
         uint32_t                                    _colorTextureCount;                        // RT数量
-        InternalImageView                           _dsv;                                   // 深度和模板所使用的纹理对象
+        Texture*                                    _colorTexture[MaxRenderTarget]
+        VkImageView                                 _colorViews[MaxRenderTarget];           // RT所使用的纹理对象
+        Texture*                                    _dsTexturer;
+        VkImageView                                 _dsView;;                                   // 深度和模板所使用的纹理对象
 
         VkImageLayout                               _colorImageLayouts[MaxRenderTarget];
         VkImageLayout                               _depthStencilImageLayout;
@@ -92,17 +94,17 @@ namespace ugi {
         virtual VkRenderPass renderPass() const override {
             return _renderPass;
         }
-        virtual ImageView color( uint32_t index ) {
+        virtual image_view_t color( uint32_t index ) {
             if(index<_colorTextureCount) {
-                return _colorViews[index].externalImageView();
+                return image_view_t(_colorViews[index]);
             }
-            return ImageView();
+            return image_view_t();
         }
         virtual void begin( RenderCommandEncoder* encoder ) const override;
         virtual void end( RenderCommandEncoder* encoder ) const override;
         virtual void release( Device* device ) override;
         //
-        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _renderPass, const ImageView* colorView, ImageView dsv );
+        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _desc, Texture* colors, Texture* depth, ImageViewParameter const* colorView, ImageViewParameter const* depthView);
     };
 
 }

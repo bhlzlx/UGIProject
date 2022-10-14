@@ -47,7 +47,7 @@ namespace ugi {
         ///> ===========================================================================
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
-        ugi::ImageView          _imageView; 
+        ugi::image_view_t          _imageView; 
         ugi::SamplerState       _samplerState;                                     //
         ugi::Buffer*            _vertexBuffer;                                     //
         ugi::Buffer*            _indexBuffer;

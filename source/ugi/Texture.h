@@ -42,9 +42,9 @@ namespace ugi {
             return _image;
         }
 
-        ImageView createImageView(Device* device, const ImageViewParameter& param) const;
+        image_view_t createImageView(Device* device, const ImageViewParameter& param) const;
 
-        void destroyImageView(Device* device, ImageView const& view) const;
+        void destroyImageView(Device* device, image_view_t const& view) const;
 
         ResourceAccessType accessType() const {
             return _currentAccessType;

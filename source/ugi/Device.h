@@ -110,7 +110,7 @@ namespace ugi {
         bool isSignaled( const Fence* _fence );
         Buffer* createBuffer( BufferType _type, size_t _size );
         Texture* createTexture( const TextureDescription& _desc, ResourceAccessType _accessType = ResourceAccessType::ShaderReadWrite );
-        IRenderPass* createRenderPass( const RenderPassDescription& _renderPass, ImageView* _colors, ImageView _depthStencil );
+        IRenderPass* createRenderPass( const RenderPassDescription& _renderPass, image_view_t* _colors, image_view_t _depthStencil );
         Swapchain* createSwapchain( void* wnd, AttachmentLoadAction loadAction = AttachmentLoadAction::Clear );
         GraphicsPipeline* createGraphicsPipeline( const PipelineDescription& pipelineDescription );
         ComputePipeline* createComputePipeline( const PipelineDescription& pipelineDescription );

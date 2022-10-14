@@ -17,29 +17,31 @@ target_include_directories( UGI
 )
 
 target_sources( UGI 
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/VulkanFunctionDefine.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/VulkanDebugConfigurator.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Device.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentGroupLayout.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Texture.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/TextureUtility.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/RenderPass.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Swapchain.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Semaphore.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ResourceManager.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Argument.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Pipeline.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Drawable.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/UniformBuffer.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/CommandBuffer.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Sampler.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/resourcePool/ArgumentGroupLayoutPool.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/RenderCommandEncoder.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ResourceCommandEncoder.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ComputeCommandEncoder.cpp
+PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/VulkanFunctionDefine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/VulkanDebugConfigurator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Device.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentGroupLayout.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Texture.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextureUtility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/RenderPass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Swapchain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Semaphore.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ResourceManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Argument.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Drawable.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/UniformBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sampler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/resourcePool/ArgumentGroupLayoutPool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/RenderCommandEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ResourceCommandEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ComputeCommandEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/pipeline_material.cpp
 )
 
 if( MSVC )

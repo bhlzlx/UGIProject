@@ -163,7 +163,7 @@ namespace ugi {
         delete this;
     }
 
-    ImageView Texture::createImageView(Device* device, const ImageViewParameter& param) const {
+    image_view_t Texture::createImageView(Device* device, const ImageViewParameter& param) const {
         auto imageViewInfo = imageViewCreateInfo(this, param );
         VkImageView imageView = VK_NULL_HANDLE;
         auto rst = vkCreateImageView( device->device(), &imageViewInfo, nullptr, &imageView );
@@ -175,7 +175,7 @@ namespace ugi {
         }
     }
 
-    void Texture::destroyImageView(Device* device, ImageView const& view) const {
+    void Texture::destroyImageView(Device* device, image_view_t const& view) const {
         InternalImageView internalView(view);
         vkDestroyImageView(device->device(), internalView.view(), nullptr);
     }

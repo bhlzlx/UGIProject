@@ -170,7 +170,7 @@ namespace ugi {
         return VK_NULL_HANDLE;
     }
     
-    IRenderPass* RenderPass::CreateRenderPass( Device* _device, const RenderPassDescription& _desc, const ImageView* colorView, ImageView dsv ) {
+    IRenderPass* RenderPass::CreateRenderPass( Device* _device, const RenderPassDescription& _desc, Texture* colors, Texture* depth, ImageViewParameter const* colorView, ImageViewParameter const* depthView) {
         // 为什么要预先创建好纹理再传进来呢？其实是有原因的，因为RenderPass有一个自动转Layout的过程，所以它需要一个初始Layout一个最终Layout，我们需要告诉它，然后
         // 让它自动转，所以我们提供的纹理需要是指定的初始Layout，但是直接创建出来的纹理只能是通用或者未定义的布局，这个没办法和初始Layout完全对应
         // 所以需要我们传进来纹理布局是已经转换好的
@@ -264,11 +264,9 @@ namespace ugi {
             _clearValues[i].color.float32[1] = clearValues.colors[i].g;
             _clearValues[i].color.float32[2] = clearValues.colors[i].b;
             _clearValues[i].color.float32[3] = clearValues.colors[i].a;
-        }
-        if( _dsv.texture()) {
-            _clearValues[_colorTextureCount].depthStencil.depth = clearValues.depth;
-            _clearValues[_colorTextureCount].depthStencil.stencil = clearValues.stencil;
-        }
+        } // no matter it's have depth-stencil or don't have
+        _clearValues[_colorTextureCount].depthStencil.depth = clearValues.depth;
+        _clearValues[_colorTextureCount].depthStencil.stencil = clearValues.stencil;
     }
 
     void RenderPass::begin( RenderCommandEncoder* encoder ) const {
