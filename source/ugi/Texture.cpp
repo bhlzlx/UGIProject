@@ -9,7 +9,7 @@
 
 namespace ugi {
 
-    static VkImageViewCreateInfo imageViewCreateInfo( Texture const* texture, const ImageViewParameter& param ) {
+    static VkImageViewCreateInfo imageViewCreateInfo( Texture const* texture, const image_view_param_t& param ) {
         VkImageViewCreateInfo info;
         //
         info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -163,7 +163,7 @@ namespace ugi {
         delete this;
     }
 
-    image_view_t Texture::createImageView(Device* device, const ImageViewParameter& param) const {
+    image_view_t Texture::createImageView(Device* device, const image_view_param_t& param) const {
         auto imageViewInfo = imageViewCreateInfo(this, param );
         VkImageView imageView = VK_NULL_HANDLE;
         auto rst = vkCreateImageView( device->device(), &imageViewInfo, nullptr, &imageView );

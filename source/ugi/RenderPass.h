@@ -65,10 +65,10 @@ namespace ugi {
         VkRenderPass                                _renderPass;                               // renderpass - 含一个subpass
         //
         uint32_t                                    _colorTextureCount;                        // RT数量
-        Texture*                                    _colorTexture[MaxRenderTarget]
-        VkImageView                                 _colorViews[MaxRenderTarget];           // RT所使用的纹理对象
-        Texture*                                    _dsTexturer;
-        VkImageView                                 _dsView;;                                   // 深度和模板所使用的纹理对象
+        Texture*                                    _colorTexture[MaxRenderTarget];
+        image_view_t                                _colorViews[MaxRenderTarget];           // RT所使用的纹理对象
+        Texture*                                    _dsTexture;
+        image_view_t                                _dsView;;                                   // 深度和模板所使用的纹理对象
 
         VkImageLayout                               _colorImageLayouts[MaxRenderTarget];
         VkImageLayout                               _depthStencilImageLayout;
@@ -96,7 +96,7 @@ namespace ugi {
         }
         virtual image_view_t color( uint32_t index ) {
             if(index<_colorTextureCount) {
-                return image_view_t(_colorViews[index]);
+                return _colorViews[index];
             }
             return image_view_t();
         }
@@ -104,7 +104,7 @@ namespace ugi {
         virtual void end( RenderCommandEncoder* encoder ) const override;
         virtual void release( Device* device ) override;
         //
-        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _desc, Texture* colors, Texture* depth, ImageViewParameter const* colorView, ImageViewParameter const* depthView);
+        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _desc, Texture** colors, Texture* depth, image_view_param_t const* colorView, image_view_param_t depthView);
     };
 
 }

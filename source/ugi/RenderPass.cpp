@@ -1,5 +1,4 @@
-﻿//
-#include "VulkanFunctionDeclare.h"
+﻿#include "VulkanFunctionDeclare.h"
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 //
@@ -170,7 +169,7 @@ namespace ugi {
         return VK_NULL_HANDLE;
     }
     
-    IRenderPass* RenderPass::CreateRenderPass( Device* _device, const RenderPassDescription& _desc, Texture* colors, Texture* depth, ImageViewParameter const* colorView, ImageViewParameter const* depthView) {
+    IRenderPass* RenderPass::CreateRenderPass( Device* _device, const RenderPassDescription& _desc, Texture** colors, Texture* depth, image_view_param_t const* colorView, image_view_param_t depthView) {
         // 为什么要预先创建好纹理再传进来呢？其实是有原因的，因为RenderPass有一个自动转Layout的过程，所以它需要一个初始Layout一个最终Layout，我们需要告诉它，然后
         // 让它自动转，所以我们提供的纹理需要是指定的初始Layout，但是直接创建出来的纹理只能是通用或者未定义的布局，这个没办法和初始Layout完全对应
         // 所以需要我们传进来纹理布局是已经转换好的
@@ -190,25 +189,25 @@ namespace ugi {
         // 计算清屏数量
         rst->_colorTextureCount = 0;
         for (uint32_t i = 0; i < _desc.colorAttachmentCount; ++i) {
-            rst->_colorViews[i] = colorView[i];
+            rst->_colorViews[i] = colors[i]->createImageView(_device, colorView[i]);
             ++rst->_colorTextureCount;
             if (_desc.colorAttachments[i].loadAction == AttachmentLoadAction::Clear) {
                 ++clearCount;
             }
         }
         if (_desc.depthStencil.format != UGIFormat::InvalidFormat) {
-            rst->_dsv = dsv;
+            rst->_dsView = depth->createImageView(_device, depthView);
             if (_desc.depthStencil.loadAction == AttachmentLoadAction::Clear) {
                 ++clearCount;
             }
         }
         uint32_t width = 0, height = 0;
-        if( rst->_colorViews[0].texture() ) {
-            width =  rst->_colorViews[0].texture()->desc().width;
-            height = rst->_colorViews[0].texture()->desc().height;
+        if(colors[0]) {
+            width =  rst->_colorTexture[0]->desc().width;
+            height =  rst->_colorTexture[0]->desc().height;
         } else {
-            width =  rst->_dsv.texture()->desc().width;
-            height = rst->_dsv.texture()->desc().height;
+            width =  rst->_dsTexture->desc().width;
+            height =  rst->_dsTexture->desc().height;
         }
         //
         rst->_size.width = width;
@@ -224,11 +223,11 @@ namespace ugi {
             uint32_t attachmentCount = 0;
             VkImageView imageViews[MaxRenderTarget + 1];
             for (uint32_t i = 0; i<_desc.colorAttachmentCount; ++i) {
-                imageViews[attachmentCount] = rst->_colorViews[i].view();
+                imageViews[attachmentCount] = (VkImageView)rst->_colorViews[i].handle;
                 ++attachmentCount;
             }
             if (_desc.depthStencil.format != UGIFormat::InvalidFormat) {
-                imageViews[attachmentCount] = rst->_dsv.view();
+                imageViews[attachmentCount] = (VkImageView)rst->_dsView.handle;
                 ++attachmentCount;
             }
             VkFramebufferCreateInfo fbinfo = {}; {
@@ -251,7 +250,7 @@ namespace ugi {
         rst->_renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         rst->_renderPassBeginInfo.framebuffer = rst->_framebuffer;
         rst->_renderPassBeginInfo.pClearValues = rst->_clearValues;
-        rst->_renderPassBeginInfo.clearValueCount = rst->_dsv.texture()? rst->_colorTextureCount + 1: rst->_colorTextureCount;
+        rst->_renderPassBeginInfo.clearValueCount = rst->_dsTexture? rst->_colorTextureCount + 1: rst->_colorTextureCount;
         rst->_renderPassBeginInfo.renderArea.offset = { 0, 0 };
         rst->_renderPassBeginInfo.renderArea.extent = { rst->_size.width, rst->_size.height };
         //
@@ -271,10 +270,10 @@ namespace ugi {
 
     void RenderPass::begin( RenderCommandEncoder* encoder ) const {
         for( uint32_t i = 0; i<_decription.colorAttachmentCount; ++i ) {
-            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier((Texture*)_colorViews[i].texture(), _decription.colorAttachments[i].initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::ColorAttachmentOutput, StageAccess::Write );
+            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier(_colorTexture[i], _decription.colorAttachments[i].initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::ColorAttachmentOutput, StageAccess::Write );
         }
-        if(_dsv.texture()) {
-            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier( (Texture*)_dsv.texture(), _decription.depthStencil.initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::EaryFragmentTestShading, StageAccess::Write);
+        if(_dsTexture) {
+            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier(_dsTexture, _decription.depthStencil.initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::EaryFragmentTestShading, StageAccess::Write);
         }
         //
         vkCmdBeginRenderPass( *encoder->commandBuffer(), &_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -283,10 +282,10 @@ namespace ugi {
     void RenderPass::end( RenderCommandEncoder* encoder ) const {
         vkCmdEndRenderPass(*encoder->commandBuffer());
         for( uint32_t i = 0; i<_decription.colorAttachmentCount; ++i ) {
-            ((Texture*)_colorViews[i].texture())->updateAccessType( _decription.colorAttachments[i].finalAccessType );
+            _colorTexture[i]->updateAccessType( _decription.colorAttachments[i].finalAccessType );
         }
-        if(_dsv.texture()) {
-            ((Texture*)_dsv.texture())->updateAccessType(_decription.depthStencil.finalAccessType);
+        if(_dsTexture) {
+            _dsTexture->updateAccessType(_decription.depthStencil.finalAccessType);
         }
     }
 

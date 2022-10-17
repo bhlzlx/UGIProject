@@ -241,7 +241,7 @@ namespace ugi {
         
         res.type = ArgumentDescriptorType::Image;
 
-        ImageViewParameter ivp;
+        image_view_param_t ivp;
         ivp.red = ChannelMapping::zero;
         res.imageView = _texture->view(_device, ivp);
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triTexture", pipelineDesc );

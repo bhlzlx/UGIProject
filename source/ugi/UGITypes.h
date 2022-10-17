@@ -623,7 +623,7 @@ namespace ugi {
         red,green,blue,alpha
     };
 
-    struct ImageViewParameter {
+    struct image_view_param_t {
         TextureType         viewType;
         // =======================================
         uint32_t            baseMipLevel;
@@ -636,7 +636,7 @@ namespace ugi {
         ChannelMapping      blue;
         ChannelMapping      alpha;
         //
-        ImageViewParameter() {
+        image_view_param_t() {
             viewType = TextureType::Texture2D;
             baseMipLevel = 0;
             levelCount = 1;
@@ -649,8 +649,8 @@ namespace ugi {
             alpha = ChannelMapping::identity;
         }
         //
-        bool operator < ( const ImageViewParameter& viewParam ) const {
-            return memcmp( this, &viewParam, sizeof(ImageViewParameter)) < 0;
+        bool operator < ( const image_view_param_t& viewParam ) const {
+            return memcmp( this, &viewParam, sizeof(image_view_param_t)) < 0;
         }
     };
 
@@ -666,7 +666,7 @@ namespace ugi {
         uint32_t        size;
     };
 
-    struct resource_union {
+    struct resource_union_t {
         union {
             buffer_desc_t buffer;
             uint64_t      imageView;
@@ -677,7 +677,7 @@ namespace ugi {
     struct ResourceDescriptor {
         uint32_t                descriptorHandle;
         ArgumentDescriptorType  type;                   // 资源类型
-        resource_union          res;
+        resource_union_t        res;
         //
         ResourceDescriptor()
             : descriptorHandle(~0)

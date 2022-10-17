@@ -116,7 +116,7 @@ namespace ugi {
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
         _texture = _renderContext.device->createTexture(texDesc, ResourceAccessType::ShaderRead );
-        ImageViewParameter ivp;
+        image_view_param_t ivp;
         _imageView = _texture->createImageView(_renderContext.device, ivp);
         uint32_t texData[] = {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 

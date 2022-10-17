@@ -22,10 +22,10 @@ namespace ugi {
         //
         uint32_t                            _embedTextureCount;
         VkImage                             _images[4];
-        Texture*                            _embedTextures[4];
-        InternalImageView                   _embedColorView[4];
-        Texture*                            _dsvTex;
-        InternalImageView                   _dsv;
+        Texture*                            _embedColors[4];
+        image_view_t                        _embedColorViews[4];
+        Texture*                            _dsTexture;
+        image_view_t                        _dsv;
         IRenderPass*                        _renderPasses[4];
         // state description
         uint32_t                            _imageIndex;
@@ -42,9 +42,9 @@ namespace ugi {
             , _imageAvailSemaphores{}
             , _embedTextureCount(4)
             , _images{ VK_NULL_HANDLE }
-            , _embedTextures{}
-            , _embedColorView{}
-            , _dsvTex(nullptr)
+            , _embedColors{}
+            , _embedColorViews{}
+            , _dsTexture(nullptr)
             , _dsv{}
             , _renderPasses{}
             , _imageIndex(0)

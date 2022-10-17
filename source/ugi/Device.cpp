@@ -575,8 +575,8 @@ namespace ugi {
         return drawable;
     }
 
-    IRenderPass* Device::createRenderPass( const RenderPassDescription& rpdesc, image_view_t* colors, image_view_t depthStencil ) {
-        return RenderPass::CreateRenderPass( this, rpdesc, colors, depthStencil);
+    IRenderPass* Device::createRenderPass( const RenderPassDescription& _renderPass, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView ) {
+        return RenderPass::CreateRenderPass( this, rpdesc, colors, ds, colorViews, dsView);
     }
 
     UniformAllocator* Device::createUniformAllocator() {

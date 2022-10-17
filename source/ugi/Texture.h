@@ -42,7 +42,7 @@ namespace ugi {
             return _image;
         }
 
-        image_view_t createImageView(Device* device, const ImageViewParameter& param) const;
+        image_view_t createImageView(Device* device, const image_view_param_t& param) const;
 
         void destroyImageView(Device* device, image_view_t const& view) const;
 

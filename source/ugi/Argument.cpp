@@ -91,7 +91,7 @@ namespace ugi {
         {
         case ArgumentDescriptorType::UniformBuffer: {
             VkDescriptorBufferInfo* pBufferInfo = (VkDescriptorBufferInfo*)&mixedDescriptor;
-            if( pBufferInfo->buffer != resource.buffer->buffer()) {
+            if( pBufferInfo->buffer != (VkBuffer)resource.res.buffer.buffer)) {
                 _reallocBitMask.set(h.setID);
                 pBufferInfo->buffer = resource.buffer->buffer();
                 pBufferInfo->offset = 0; // resource.bufferOffset;  这个offset为什么是0？？因为绑定的时候还会再设置一次动态offset
@@ -99,14 +99,14 @@ namespace ugi {
                 write.pBufferInfo = pBufferInfo;
             }
             pBufferInfo->range = resource.bufferRange;
-            _dynamicOffsets[h.specifiedIndex] = resource.bufferOffset;
+            _dynamicOffsets[h.specifiedIndex] = resource.res.buffer.offset;
             break;
         }
         case ArgumentDescriptorType::Image:{
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
-            InternalImageView view(resource.imageView);
-            if( pImageInfo->imageView != view.view() ) {
-                pImageInfo->imageView = view.view();
+            VkImageView iv = (VkImageView)resource.res.imageView;
+            if(pImageInfo->imageView != iv) {
+                pImageInfo->imageView = iv;
                 pImageInfo->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 pImageInfo->sampler = VK_NULL_HANDLE; // 再也不和sampler混合绑定了
                 write.pImageInfo = pImageInfo;
@@ -117,7 +117,7 @@ namespace ugi {
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
             pImageInfo->imageView = VK_NULL_HANDLE;
             pImageInfo->imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            auto sampler = CreateSampler( _groupLayout->device(), resource.sampler );
+            auto sampler = CreateSampler( _groupLayout->device(), resource.res.samplerState );
             if( pImageInfo->sampler != sampler ) {
                 _reallocBitMask.set(h.setID);
                 pImageInfo->sampler = sampler; // 再也不和 texture 混合绑定了
@@ -127,13 +127,13 @@ namespace ugi {
         }
         case ArgumentDescriptorType::StorageImage: {
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
-            InternalImageView view(resource.imageView);
-            if( pImageInfo->imageView != view.view()) {
-                pImageInfo->imageView = view.view();
+            VkImageView iv = (VkImageView)resource.res.imageView;
+            if( pImageInfo->imageView != iv) {
+                pImageInfo->imageView = iv;
                 pImageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
                 pImageInfo->sampler = VK_NULL_HANDLE;
                 write.pImageInfo = pImageInfo;
-            }            
+            }
             break;
         }
         default:
@@ -170,7 +170,7 @@ namespace ugi {
         uint32_t binding = h.binding;
 
         if( resource.type == ArgumentDescriptorType::Image || resource.type == ArgumentDescriptorType::StorageImage) {
-            _imageResources[h.specifiedIndex] = resource.imageView;
+            _imageResources[h.specifiedIndex] = resource.res.imageView;
         }
         //
         _resourceMasks[setIndex] |= (1<<binding);

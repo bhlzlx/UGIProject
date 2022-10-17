@@ -38,7 +38,7 @@ namespace ugi {
             };
         }; // 24 bytes
         std::vector<MixedDescriptorInfo>                                _vecMixedDesciptorInfo;
-        InternalImageView                                               _imageResources[16];
+        size_t                                                          _imageResources[16];
         std::vector<VkWriteDescriptorSet>                               _descriptorWrites;
         std::vector<uint32_t>                                           _dynamicOffsets;
         //
