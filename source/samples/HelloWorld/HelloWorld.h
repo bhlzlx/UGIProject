@@ -26,7 +26,7 @@ namespace ugi {
         RenderContext() {
         }
 
-        bool initialize(void* _wnd,ugi::DeviceDescriptor deviceDesc, hgl::assets::AssetsSource* assetsSource);
+        bool initialize(void* _wnd, ugi::DeviceDescriptor deviceDesc, hgl::assets::AssetsSource* assetsSource);
     };
 
     class Render {
