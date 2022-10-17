@@ -26,12 +26,6 @@
 #include "Drawable.h"
 #include "UniformBuffer.h"
 
-
-#include <hgl/filesystem/FileSystem.h>
-#include <hgl/assets/AssetsSource.h>
-
-// * VULKAN
-
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -575,7 +569,7 @@ namespace ugi {
         return drawable;
     }
 
-    IRenderPass* Device::createRenderPass( const RenderPassDescription& _renderPass, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView ) {
+    IRenderPass* Device::createRenderPass( const RenderPassDescription& rpdesc, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView ) {
         return RenderPass::CreateRenderPass( this, rpdesc, colors, ds, colorViews, dsView);
     }
 

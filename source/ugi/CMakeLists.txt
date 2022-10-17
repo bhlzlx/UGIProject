@@ -3,17 +3,12 @@ project( UGI )
 add_library( UGI STATIC )
 
 target_include_directories( UGI
-    PRIVATE ${SOLUTION_DIR}/thirdpart/include
-    PRIVATE ${SOLUTION_DIR}/thirdpart/CMCore/inc
-    PRIVATE ${SOLUTION_DIR}/thirdpart/CMPlatform/inc
-    PRIVATE ${SOLUTION_DIR}/thirdpart/CMUtil/inc
-    PRIVATE ${SOLUTION_DIR}/thirdpart/CMAssetsManage/inc
-    PRIVATE ${SOLUTION_DIR}/source
-    PRIVATE ${SOLUTION_DIR}/source/utility
-    PRIVATE ${SOLUTION_DIR}/source/thirdpart
-    PRIVATE ${SOLUTION_DIR}/source/thirdpart/CMCore/inc
-    PRIVATE ${SOLUTION_DIR}/source/thirdpart/CMUtil/inc
-    PRIVATE ${SOLUTION_DIR}/source/thirdpart/CMPlatform/inc
+PRIVATE
+    ${SOLUTION_DIR}/thirdpart/include
+    ${SOLUTION_DIR}/source
+    ${SOLUTION_DIR}/source/utility
+    ${SOLUTION_DIR}/source/thirdpart
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_sources( UGI 
