@@ -19,9 +19,9 @@
 
 namespace ugi {
 
-    bool RenderContext::initialize(void* wnd, ugi::DeviceDescriptor deviceDesc, hgl::assets::AssetsSource* assetsSource) {
+    bool RenderContext::initialize(void* wnd, ugi::DeviceDescriptor deviceDesc, common::IArchive* archive) {
         renderSystem = new RenderSystem();
-        device = renderSystem->createDevice(deviceDesc, assetsSource);
+        device = renderSystem->createDevice(deviceDesc, archive);
         uniformAllocator = device->createUniformAllocator();
         descriptorSetAllocator = device->descriptorSetAllocator();
         swapchain = device->createSwapchain(wnd);
@@ -32,15 +32,14 @@ namespace ugi {
             renderCompleteSemaphores[i] = device->createSemaphore();
             commandBuffers[i] = graphicsQueue->createCommandBuffer(device);
         }
+        return true;
     }
 
-    bool HelloWorld::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
-
-        hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/triangle/pipeline.bin"));
-        auto pipelineFileSize = pipelineFile->GetSize();
-        
+    bool HelloWorld::initialize( void* _wnd, common::IArchive* arch) {
+        auto pipelineFile = arch->openIStream("/shaders/triangle/pipeline.bin", {common::ReadFlag::binary});
+        auto pipelineFileSize = pipelineFile->size();
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
-        pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
+        pipelineFile->read(pipelineBuffer,pipelineFile->size());
         pipeline_desc_t& pipelineDesc = *(pipeline_desc_t*)pipelineBuffer;
         pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : pipelineDesc.shaders ) {
@@ -49,11 +48,8 @@ namespace ugi {
                 pipelineBuffer += shader.spirvSize;
             }
         }
-        
         pipelineDesc.pologonMode = polygon_mode_t::Fill;
-        //
         pipelineDesc.topologyMode = topology_mode_t::TriangleList;
-
         printf("initialize\n");
 
         ugi::DeviceDescriptor descriptor; {
@@ -64,7 +60,7 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         }
-        _renderContext.initialize(_wnd, descriptor, assetsSource);
+        _renderContext.initialize(_wnd, descriptor, arch);
         pipelineDesc.renderState.cullMode = CullMode::None;
         pipelineDesc.renderState.blendState.enable = false;
         _pipeline = _renderContext.device->createGraphicsPipeline(pipelineDesc);
@@ -89,72 +85,69 @@ namespace ugi {
         ptr = indexStagingBuffer->map( _renderContext.device );
         memcpy(ptr, indexData, sizeof(indexData));
         indexStagingBuffer->unmap(_renderContext.device);
+        auto updateCmd = _renderContext.uploadQueue->createCommandBuffer( _renderContext.device ); {
+            updateCmd->beginEncode();
+            auto resourceEncoder = updateCmd->resourceCommandEncoder();
+            BufferSubResource subRes;
+            subRes.offset = 0; subRes.size = _vertexBuffer->size();
+            resourceEncoder->updateBuffer( _vertexBuffer, vertexStagingBuffer, &subRes, &subRes );
+            subRes.size = sizeof(indexData);
+            resourceEncoder->updateBuffer( _indexBuffer, indexStagingBuffer, &subRes, &subRes );
 
-        auto updateCmd = _uploadQueue->createCommandBuffer( _renderContext.device );
+            _drawable = _renderContext.device->createDrawable(pipelineDesc);
+            _drawable->setVertexBuffer( _vertexBuffer, 0, 0 );
+            _drawable->setVertexBuffer( _vertexBuffer, 1, 12 );
+            _drawable->setIndexBuffer( _indexBuffer, 0 );
+            //
+            tex_desc_t texDesc;
+            texDesc.format = UGIFormat::RGBA8888_UNORM;
+            texDesc.depth = 1;
+            texDesc.width = 16;
+            texDesc.height = 16;
+            texDesc.type = TextureType::Texture2D;
+            texDesc.mipmapLevel = 1;
+            texDesc.arrayLayers = 1;
+            _texture = _renderContext.device->createTexture(texDesc, ResourceAccessType::ShaderRead );
+            image_view_param_t ivp;
+            _imageView = _texture->createImageView(_renderContext.device, ivp);
+            uint32_t texData[] = {
+                0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
+                0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
+                0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
+                0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
+                0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
+                0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
+                0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
+                0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
+            };
+            auto texStagingBuffer =  _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(texData) );
+            ptr = texStagingBuffer->map(_renderContext.device);
+            memcpy(ptr, texData, sizeof(texData));
+            texStagingBuffer->unmap(_renderContext.device);
+            
+            //ImageSubResource texSubRes;
+            ImageRegion region;
+            region.offset = {};
+            region.mipLevel = 0;
+            region.arrayIndex = 0;
+            region.arrayCount = 1;
+            region.extent.height = region.extent.width = 8;
+            region.extent.depth = 1;
 
-        updateCmd->beginEncode();
+            uint32_t offset = 0;
+            resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
+            region.offset.x = 8;
+            resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
+            region.offset.x = 0; region.offset.y = 8;
+            resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
+            region.offset.x = 8; region.offset.y = 8;
+            resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
+            resourceEncoder->endEncode();
 
-        auto resourceEncoder = updateCmd->resourceCommandEncoder();
-
-        BufferSubResource subRes;
-        subRes.offset = 0; subRes.size = _vertexBuffer->size();
-        resourceEncoder->updateBuffer( _vertexBuffer, vertexStagingBuffer, &subRes, &subRes );
-        subRes.size = sizeof(indexData);
-        resourceEncoder->updateBuffer( _indexBuffer, indexStagingBuffer, &subRes, &subRes );
-
-        _drawable = _renderContext.device->createDrawable(pipelineDesc);
-        _drawable->setVertexBuffer( _vertexBuffer, 0, 0 );
-        _drawable->setVertexBuffer( _vertexBuffer, 1, 12 );
-        _drawable->setIndexBuffer( _indexBuffer, 0 );
+            updateCmd->endEncode();
+        }
         //
-        tex_desc_t texDesc;
-        texDesc.format = UGIFormat::RGBA8888_UNORM;
-        texDesc.depth = 1;
-        texDesc.width = 16;
-        texDesc.height = 16;
-        texDesc.type = TextureType::Texture2D;
-        texDesc.mipmapLevel = 1;
-        texDesc.arrayLayers = 1;
-        _texture = _renderContext.device->createTexture(texDesc, ResourceAccessType::ShaderRead );
-        image_view_param_t ivp;
-        _imageView = _texture->createImageView(_renderContext.device, ivp);
-        uint32_t texData[] = {
-            0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-            0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-            0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-            0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-            0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-            0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-            0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-            0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-        };
-        auto texStagingBuffer =  _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(texData) );
-        ptr = texStagingBuffer->map(_renderContext.device);
-        memcpy(ptr, texData, sizeof(texData));
-        texStagingBuffer->unmap(_renderContext.device);
-        
-        //ImageSubResource texSubRes;
-        ImageRegion region;
-        region.offset = {};
-        region.mipLevel = 0;
-        region.arrayIndex = 0;
-        region.arrayCount = 1;
-        region.extent.height = region.extent.width = 8;
-        region.extent.depth = 1;
-
-        uint32_t offset = 0;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
-        region.offset.x = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
-        region.offset.x = 0; region.offset.y = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
-        region.offset.x = 8; region.offset.y = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &region, &offset, 1);
-        resourceEncoder->endEncode();
-
-        updateCmd->endEncode();
-        //
-		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
+		Semaphore* imageAvailSemaphore = _renderContext.swapchain->imageAvailSemaphore();
 		QueueSubmitInfo submitInfo {
 			&updateCmd,
 			1,
@@ -163,24 +156,23 @@ namespace ugi {
 			nullptr, // submitInfo.semaphoresToSignal
 			0
 		};
-		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
-        _uploadQueue->submitCommandBuffers(submitBatch);
-
-        _uploadQueue->waitIdle();
+		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _renderContext.frameCompleteFences[_flightIndex]);
+        _renderContext.uploadQueue->submitCommandBuffers(submitBatch);
+        _renderContext.uploadQueue->waitIdle();
         //
         res_descriptor_info_t argDescInfo = {};
         _uniformDescriptor.descriptorHandle = DescriptorBinder::GetDescriptorHandle("Argument1", pipelineDesc, &argDescInfo);
         _uniformDescriptor.type = argDescInfo.type;
-        _uniformDescriptor.bufferRange = argDescInfo.dataSize;
+        _uniformDescriptor.res.buffer.size = argDescInfo.dataSize;
         // 
         res_descriptor_t res;
         res.type = res_descriptor_type::Sampler;
-        res.sampler = _samplerState;
+        res.res.samplerState = _samplerState;
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triSampler", pipelineDesc, &argDescInfo );
         argGroup->updateDescriptor(res);
         
         res.type = res_descriptor_type::Image;
-        res.imageView = _imageView;
+        res.res.imageView = _imageView.handle;;
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triTexture", pipelineDesc, &argDescInfo );
         //
         argGroup->updateDescriptor(res);
@@ -191,14 +183,14 @@ namespace ugi {
 
     void HelloWorld::tick() {
         
-        _renderContext.device->waitForFence( _frameCompleteFences[_flightIndex] );
-        _descriptorSetAllocator->tick();
-        _uniformAllocator->tick();
+        _renderContext.device->waitForFence( _renderContext.frameCompleteFences[_flightIndex] );
+        _renderContext.descriptorSetAllocator->tick();
+        _renderContext.uniformAllocator->tick();
         auto argGroup = _pipeline->argumentBinder();
-        uint32_t imageIndex = _swapchain->acquireNextImage(_renderContext.device, _flightIndex);
+        uint32_t imageIndex = _renderContext.swapchain->acquireNextImage(_renderContext.device, _flightIndex);
         //
-        IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
-        auto cmdbuf = _commandBuffers[_flightIndex];
+        IRenderPass* mainRenderPass = _renderContext.swapchain->renderPass(imageIndex);
+        auto cmdbuf = _renderContext.commandBuffers[_flightIndex];
         cmdbuf->beginEncode(); {
             auto resourceEncoder = cmdbuf->resourceCommandEncoder();
             resourceEncoder->imageTransitionBarrier(_texture, ugi::ResourceAccessType::ShaderRead, ugi::PipelineStages::Transfer, ugi::StageAccess::Write, ugi::PipelineStages::FragmentShading, ugi::StageAccess::Read);
@@ -219,10 +211,10 @@ namespace ugi {
             } else if( angle % 90 == 0) {
                 rasterizationState.polygonMode = polygon_mode_t::Line;
             }
-            auto ubo = _uniformAllocator->allocate(sizeof(col2));
+            auto ubo = _renderContext.uniformAllocator->allocate(sizeof(col2));
             ubo.writeData(0, &col2, sizeof(col2));
-            _uniformDescriptor.bufferOffset = ubo.offset();
-            _uniformDescriptor.buffer = ubo.buffer(); 
+            _uniformDescriptor.res.buffer.offset = ubo.offset();
+            _uniformDescriptor.res.buffer.buffer = (size_t)ubo.buffer()->buffer(); 
             argGroup->updateDescriptor(_uniformDescriptor);
 
             // auto resourceEncoder = cmdbuf->resourceCommandEncoder();
@@ -251,25 +243,25 @@ namespace ugi {
         }
         cmdbuf->endEncode();
 
-		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
+		Semaphore* imageAvailSemaphore = _renderContext.swapchain->imageAvailSemaphore();
 		QueueSubmitInfo submitInfo {
 			&cmdbuf,
 			1,
 			&imageAvailSemaphore,// submitInfo.semaphoresToWait
 			1,
-			&_renderCompleteSemaphores[_flightIndex], // submitInfo.semaphoresToSignal
+			&_renderContext.renderCompleteSemaphores[_flightIndex], // submitInfo.semaphoresToSignal
 			1
 		};
-		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
+		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _renderContext.frameCompleteFences[_flightIndex]);
 
-        bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
+        bool submitRst = _renderContext.graphicsQueue->submitCommandBuffers(submitBatch);
         assert(submitRst);
-        _swapchain->present( _renderContext.device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
+        _renderContext.swapchain->present( _renderContext.device, _renderContext.graphicsQueue, _renderContext.renderCompleteSemaphores[_flightIndex] );
 
     }
         
     void HelloWorld::resize(uint32_t width, uint32_t height) {
-        _swapchain->resize( _renderContext.device, width, height );
+        _renderContext.swapchain->resize( _renderContext.device, width, height );
         //
         _width = width;
         _height = height;

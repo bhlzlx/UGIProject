@@ -190,6 +190,7 @@ namespace ugi {
         rst->_colorTextureCount = 0;
         for (uint32_t i = 0; i < _desc.colorAttachmentCount; ++i) {
             rst->_colorViews[i] = colors[i]->createImageView(_device, colorView[i]);
+            rst->_colorTexture[i] = colors[i];
             ++rst->_colorTextureCount;
             if (_desc.colorAttachments[i].loadAction == AttachmentLoadAction::Clear) {
                 ++clearCount;

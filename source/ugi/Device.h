@@ -10,14 +10,13 @@
 #include "UGIDeclare.h"
 #include "UGITypes.h"
 
-namespace hgl {
-    namespace assets {
-        class AssetsSource;
-    }
+namespace common {
+
+    class IArchive;
+
 }
 
 namespace ugi {
-
 
     class ArgumentGroupLayout;
     struct DeviceDescriptorVulkan : public DeviceDescriptor {
@@ -28,7 +27,7 @@ namespace ugi {
         VkPhysicalDeviceProperties              properties;
         VkPhysicalDevice                        physicalDevice;
         VkSurfaceKHR                            surface;
-        hgl::assets::AssetsSource*              assetSource;
+        common::IArchive*                       archive;
         //
         //
         uint32_t                                queueFamilyCount;
@@ -39,7 +38,7 @@ namespace ugi {
             , properties( {} )
             , physicalDevice( nullptr )
             , surface ( 0 )
-            , assetSource( nullptr ) {
+            , archive( nullptr ) {
         }
         
         DeviceDescriptorVulkan( const DeviceDescriptor& _baseDesc )
@@ -167,7 +166,7 @@ namespace ugi {
     public:
         RenderSystem() {
         }
-        Device* createDevice( const DeviceDescriptor& _descriptor, hgl::assets::AssetsSource* assetSource );
+        Device* createDevice( const DeviceDescriptor& _descriptor, common::IArchive* archive);
         //
         const DeviceDescriptorVulkan* getVulkanDeviceDescriptor() const {
             return &m_deviceDescriptorVk;

@@ -3,7 +3,7 @@ project( UGI )
 add_library( UGI STATIC )
 
 target_include_directories( UGI
-PRIVATE
+PUBLIC
     ${SOLUTION_DIR}/thirdpart/include
     ${SOLUTION_DIR}/source
     ${SOLUTION_DIR}/source/utility

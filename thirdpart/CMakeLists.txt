@@ -14,3 +14,5 @@ include_directories(
 )
 
 add_subdirectory( tweeny )
+add_subdirectory( LightWeightCommon )
+add_subdirectory( glm )

@@ -5,6 +5,8 @@
 #include <ugi/UGITypes.h>
 #include <ugi/Argument.h>
 
+#include <io/archive.h>
+
 namespace ugi {
 
     struct Material {
@@ -26,7 +28,7 @@ namespace ugi {
         RenderContext() {
         }
 
-        bool initialize(void* _wnd, ugi::DeviceDescriptor deviceDesc, hgl::assets::AssetsSource* assetsSource);
+        bool initialize(void* _wnd, ugi::DeviceDescriptor deviceDesc, common::IArchive* archive);
     };
 
     class Render {
@@ -47,20 +49,20 @@ namespace ugi {
         ///> ===========================================================================
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
-        ugi::image_view_t          _imageView; 
-        ugi::SamplerState       _samplerState;                                     //
-        ugi::sampler_state_t       _vertexBuffer;                                     //
+        ugi::image_view_t       _imageView; 
+        ugi::sampler_state_t    _samplerState;                                     //
+        ugi::Buffer*            _vertexBuffer;                                     //
         ugi::Buffer*            _indexBuffer;
         ugi::Drawable*          _drawable;
 
-        res_descriptor_t      _uniformDescriptor;
+        res_descriptor_t        _uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index
         //
         float                   _width;
         float                   _height;
     public:
-        virtual bool initialize( void* _wnd,  hgl::assets::AssetsSource* assetsSource );
+        virtual bool initialize(void* _wnd, common::IArchive* arch);
         virtual void resize( uint32_t _width, uint32_t _height );
         virtual void release();
         virtual void tick();

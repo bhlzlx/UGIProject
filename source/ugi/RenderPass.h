@@ -100,6 +100,7 @@ namespace ugi {
             }
             return image_view_t();
         }
+        virtual ~RenderPass() {};
         virtual void begin( RenderCommandEncoder* encoder ) const override;
         virtual void end( RenderCommandEncoder* encoder ) const override;
         virtual void release( Device* device ) override;

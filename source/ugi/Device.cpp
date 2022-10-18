@@ -100,7 +100,7 @@ namespace ugi {
     DebugReporterVk debugReporter;
 
     Device*
-    RenderSystem::createDevice( const DeviceDescriptor& _descriptor, hgl::assets::AssetsSource* assetSource ) {
+    RenderSystem::createDevice( const DeviceDescriptor& _descriptor, common::IArchive* archive) {
         m_deviceDescriptorVk = _descriptor;
         auto library = OpenLibrary(VULKAN_LIBRARY_NAME);
         if (library == NULL) {
@@ -130,7 +130,7 @@ namespace ugi {
 //          };
 // #endif
         createVulkanInstance( _descriptor.debugLayer );
-        m_deviceDescriptorVk.assetSource = assetSource;
+        m_deviceDescriptorVk.archive = archive;
         // setup debug
         if (_descriptor.debugLayer) {
             debugReporter.setupDebugReport( m_deviceDescriptorVk.instance );

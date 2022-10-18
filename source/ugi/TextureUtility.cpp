@@ -168,7 +168,7 @@ namespace ugi {
         Texture* texture = _device->createTexture( desc, ugi::ResourceAccessType::ShaderRead );
 		ptr += header->bytesOfKeyValueData;
 		uint32_t bpp = 8;
-		uint32_t pixelsize = bpp / 8;
+		// uint32_t pixelsize = bpp / 8;
 		// should care about the alignment of the cube slice & mip slice
 		// but reference to the ETC2 & EAC & `KTX format reference`, for 4x4 block compression type, the alignment should be zero
 		// so we can ignore the alignment
