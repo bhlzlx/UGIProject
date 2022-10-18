@@ -181,7 +181,7 @@ namespace ugi {
         ugi::Drawable*          m_drawable;
 
         ugi::UniformAllocator*  _uniformAllocator;
-        ResourceDescriptor      m_uniformDescriptor;
+        res_descriptor_t      m_uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index
         //

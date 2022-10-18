@@ -166,7 +166,7 @@ namespace ugi {
 
         _uploadQueue->waitIdle();
         //
-        ResourceDescriptor res;
+        res_descriptor_t res;
         m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
         m_uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
         m_uniformDescriptor.bufferRange = 64;

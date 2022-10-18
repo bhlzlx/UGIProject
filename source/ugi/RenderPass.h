@@ -94,7 +94,7 @@ namespace ugi {
         virtual VkRenderPass renderPass() const override {
             return _renderPass;
         }
-        virtual image_view_t color( uint32_t index ) {
+        virtual image_view_t color( uint32_t index ) override {
             if(index<_colorTextureCount) {
                 return _colorViews[index];
             }

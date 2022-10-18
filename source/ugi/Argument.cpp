@@ -72,7 +72,7 @@ namespace ugi {
         return ~0;
     }
 
-    void DescriptorBinder::_writeDescriptorResource( const ResourceDescriptor& resource ) {
+    void DescriptorBinder::_writeDescriptorResource( const res_descriptor_t& resource ) {
         DescriptorHandleImp h;
         h.handle = resource.descriptorHandle;
         //
@@ -146,11 +146,11 @@ namespace ugi {
         , _resourceMasks {}
         , _resources {}
         , _vecMixedDesciptorInfo( groupLayout->descriptorCountTotal() )
+        , _imageResources {}
         , _descriptorWrites( groupLayout->descriptorCountTotal() )
         , _dynamicOffsets( groupLayout->dynamicBufferCountTotal() )
         , _argumentBitMask( groupLayout->descriptorSetBitMask() )
         , _descriptorSets {}
-        , _imageResources {}
         , _reallocBitMask (0)
         , _bindPoint(bindPoint)
         , _descriptorSetAllocator(setAllocator)
@@ -162,7 +162,7 @@ namespace ugi {
         return _groupLayout->validateResourceIntegrility(_resourceMasks);
     }
 
-    void DescriptorBinder::updateDescriptor( const ResourceDescriptor& resource ) {
+    void DescriptorBinder::updateDescriptor( const res_descriptor_t& resource ) {
         DescriptorHandleImp h;
         h.handle = resource.descriptorHandle;
         uint32_t setIndex = h.setID;

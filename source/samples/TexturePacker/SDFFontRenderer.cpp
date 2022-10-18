@@ -389,7 +389,7 @@ namespace ugi {
         if( 0xffffffff == _texArrayHandle) {
             _texArrayHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArray", _pipelineDescription);
         }
-        ResourceDescriptor descriptor;
+        res_descriptor_t descriptor;
         descriptor.type = res_descriptor_type::Sampler;
         descriptor.sampler.mag = TextureFilter::Linear;
         descriptor.sampler.mip = TextureFilter::Linear;
@@ -435,7 +435,7 @@ namespace ugi {
 
         for( uint32_t i = 0; i<drawDataCount; ++i ) {
             auto drawData = drawDatas[i];
-            ResourceDescriptor descriptor;
+            res_descriptor_t descriptor;
             descriptor.descriptorHandle = _indicesHandle;
             descriptor.bufferRange = sizeof(IndexHandle) * 1024;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_indices);

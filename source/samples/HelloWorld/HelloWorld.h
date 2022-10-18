@@ -53,7 +53,7 @@ namespace ugi {
         ugi::Buffer*            _indexBuffer;
         ugi::Drawable*          _drawable;
 
-        ResourceDescriptor      _uniformDescriptor;
+        res_descriptor_t      _uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index
         //

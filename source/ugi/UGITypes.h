@@ -664,20 +664,20 @@ namespace ugi {
         uint32_t        size;
     };
 
-    struct resource_union_t {
+    struct res_union_t {
         union {
-            buffer_desc_t buffer;
-            uint64_t      imageView;
-            sampler_state_t  samplerState;
+            buffer_desc_t   buffer;
+            uint64_t        imageView;
+            sampler_state_t samplerState;
         };
     };
 
-    struct ResourceDescriptor {
+    struct res_descriptor_t {
         uint32_t                descriptorHandle;
         res_descriptor_type     type;                   // 资源类型
-        resource_union_t        res;
+        res_union_t        res;
         //
-        ResourceDescriptor()
+        res_descriptor_t()
             : descriptorHandle(~0)
             , type( res_descriptor_type::UniformBuffer )
             , res{}

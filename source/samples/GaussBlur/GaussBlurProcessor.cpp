@@ -54,7 +54,7 @@ namespace ugi {
         // update uniform buffer
         auto resEncoder = commandBuffer->resourceCommandEncoder();
         auto argGroup = item->argumentGroup();
-        ResourceDescriptor descriptor;
+        res_descriptor_t descriptor;
         descriptor.descriptorHandle = _parameterHandle;
         descriptor.bufferRange = sizeof(GaussBlurParameter);
         descriptor.type = res_descriptor_type::UniformBuffer;
@@ -90,7 +90,7 @@ namespace ugi {
             _parameterHandle = argGroup->GetDescriptorHandle("BlurParameter", _pipelineDescription);
             assert( _inputImageHandle!=~0 && _outputImageHandle!=~0 && _parameterHandle!=~0 );
         }
-        ResourceDescriptor resDesc;
+        res_descriptor_t resDesc;
         resDesc.texture = texture0;
         resDesc.descriptorHandle = _inputImageHandle;
         resDesc.type = res_descriptor_type::StorageImage;

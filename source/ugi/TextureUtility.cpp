@@ -88,7 +88,7 @@ namespace ugi {
 
     Texture* TextureUtility::createTextureKTX( const void* data, uint32_t length ) const {
         const uint8_t * ptr = (const uint8_t *)data;
-		const uint8_t * end = ptr + length;
+		// const uint8_t * end = ptr + length;
         tex_desc_t desc;
         // read file header
 		KtxHeader* header = (KtxHeader*)ptr;

@@ -173,7 +173,7 @@ namespace ugi {
         _uniformDescriptor.type = argDescInfo.type;
         _uniformDescriptor.bufferRange = argDescInfo.dataSize;
         // 
-        ResourceDescriptor res;
+        res_descriptor_t res;
         res.type = res_descriptor_type::Sampler;
         res.sampler = _samplerState;
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triSampler", pipelineDesc, &argDescInfo );

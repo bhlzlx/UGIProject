@@ -18,9 +18,9 @@ namespace ugi {
 
     DescriptorSetAllocator::DescriptorSetAllocator()
         : _device( nullptr )
-        , _descriptorPools {}
         , _activePool(0)
         , _flight(0)         
+        , _descriptorPools {}
         , _allocationFlights{}
     {}
 

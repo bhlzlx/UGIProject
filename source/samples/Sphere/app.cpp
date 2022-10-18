@@ -229,7 +229,7 @@ namespace ugi {
 
         _uploadQueue->waitIdle();
         //
-        ResourceDescriptor res;
+        res_descriptor_t res;
         m_uniformDescriptor.type = res_descriptor_type::UniformBuffer;
         m_uniformDescriptor.descriptorHandle = DescriptorBinder::GetDescriptorHandle("Argument", pipelineDesc );
         m_uniformDescriptor.bufferRange = 64 * 3;
