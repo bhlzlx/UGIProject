@@ -181,7 +181,7 @@ namespace ugi {
     private:
         Device*                     _device;
         GraphicsPipeline*                   _pipeline;
-        PipelineDescription         _pipelineDescription;
+        pipeline_desc_t         _pipelineDescription;
         hgl::assets::AssetsSource*  _assetsSource;
         SDFTextureTileManager*      _texTileManager;
         ResourceManager*            _resourceManager;

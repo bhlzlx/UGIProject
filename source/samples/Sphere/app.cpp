@@ -74,8 +74,8 @@ namespace ugi {
         
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
         pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
-        PipelineDescription& pipelineDesc = *(PipelineDescription*)pipelineBuffer;
-        pipelineBuffer += sizeof(PipelineDescription);
+        pipeline_desc_t& pipelineDesc = *(pipeline_desc_t*)pipelineBuffer;
+        pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : pipelineDesc.shaders ) {
             if( shader.spirvData) {
                 shader.spirvData = (uint64_t)pipelineBuffer;
@@ -83,8 +83,8 @@ namespace ugi {
             }
         }
 
-        pipelineDesc.pologonMode = PolygonMode::Fill;
-        pipelineDesc.topologyMode = TopologyMode::TriangleList;
+        pipelineDesc.pologonMode = polygon_mode_t::Fill;
+        pipelineDesc.topologyMode = topology_mode_t::TriangleList;
 
         // 因为我们buffer放同一块内存了，这里特殊处理一下
         uint32_t fullStride = 0;
@@ -168,7 +168,7 @@ namespace ugi {
         planeDrawable->setIndexBuffer( planeIdxBuffer, 0 );
 
         //
-        TextureDescription texDesc;
+        tex_desc_t texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
         texDesc.depth = 1;
         texDesc.width = 16;
@@ -230,16 +230,16 @@ namespace ugi {
         _uploadQueue->waitIdle();
         //
         ResourceDescriptor res;
-        m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
+        m_uniformDescriptor.type = res_descriptor_type::UniformBuffer;
         m_uniformDescriptor.descriptorHandle = DescriptorBinder::GetDescriptorHandle("Argument", pipelineDesc );
         m_uniformDescriptor.bufferRange = 64 * 3;
 
-        res.type = ArgumentDescriptorType::Sampler;
+        res.type = res_descriptor_type::Sampler;
         res.sampler = m_samplerState;
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triSampler", pipelineDesc );
         _argumentGroup->updateDescriptor(res);
         
-        res.type = ArgumentDescriptorType::Image;
+        res.type = res_descriptor_type::Image;
 
         image_view_param_t ivp;
         ivp.red = ChannelMapping::zero;
@@ -281,7 +281,7 @@ namespace ugi {
             resourceEncoder->prepareArgumentGroup(_argumentGroup);
             resourceEncoder->endEncode();
             //
-            RenderPassClearValues clearValues;
+            renderpass_clearvalue_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
             clearValues.stencil = 0xffffffff;

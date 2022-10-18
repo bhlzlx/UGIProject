@@ -30,8 +30,8 @@ namespace ugi {
         auto pipelineFileSize = pipelineFile->GetSize();
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
         pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
-        _pipelineDescription = *(PipelineDescription*)pipelineBuffer;
-        pipelineBuffer += sizeof(PipelineDescription);
+        _pipelineDescription = *(pipeline_desc_t*)pipelineBuffer;
+        pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : _pipelineDescription.shaders ) {
             if( shader.spirvData) {
                 shader.spirvData = (uint64_t)pipelineBuffer;
@@ -57,7 +57,7 @@ namespace ugi {
         ResourceDescriptor descriptor;
         descriptor.descriptorHandle = _parameterHandle;
         descriptor.bufferRange = sizeof(GaussBlurParameter);
-        descriptor.type = ArgumentDescriptorType::UniformBuffer;
+        descriptor.type = res_descriptor_type::UniformBuffer;
         uniformAllocator->allocateForDescriptor( descriptor, item->parameter());
 		argGroup->updateDescriptor(descriptor);
         // prepare for descriptor set
@@ -93,7 +93,7 @@ namespace ugi {
         ResourceDescriptor resDesc;
         resDesc.texture = texture0;
         resDesc.descriptorHandle = _inputImageHandle;
-        resDesc.type = ArgumentDescriptorType::StorageImage;
+        resDesc.type = res_descriptor_type::StorageImage;
         argGroup->updateDescriptor(resDesc);
         resDesc.texture = texture1;
         resDesc.descriptorHandle = _outputImageHandle;

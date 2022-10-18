@@ -56,8 +56,8 @@ namespace ugi {
         auto pipelineFileSize = pipelineFile->GetSize();
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
         pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
-        _pipelineDescription = *(PipelineDescription*)pipelineBuffer;
-        pipelineBuffer += sizeof(PipelineDescription);
+        _pipelineDescription = *(pipeline_desc_t*)pipelineBuffer;
+        pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : _pipelineDescription.shaders ) {
             if( shader.spirvData) {
                 shader.spirvData = (uint64_t)pipelineBuffer;
@@ -65,8 +65,8 @@ namespace ugi {
             }
         }
         //_pipelineDescription.vertexLayout.buffers[2].
-        _pipelineDescription.pologonMode = PolygonMode::Fill;
-        _pipelineDescription.topologyMode = TopologyMode::TriangleList;
+        _pipelineDescription.pologonMode = polygon_mode_t::Fill;
+        _pipelineDescription.topologyMode = topology_mode_t::TriangleList;
         _pipelineDescription.renderState.cullMode = CullMode::None;
         _pipelineDescription.renderState.blendState.enable = true;
         _pipeline = _device->createGraphicsPipeline(_pipelineDescription);
@@ -390,14 +390,14 @@ namespace ugi {
             _texArrayHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArray", _pipelineDescription);
         }
         ResourceDescriptor descriptor;
-        descriptor.type = ArgumentDescriptorType::Sampler;
+        descriptor.type = res_descriptor_type::Sampler;
         descriptor.sampler.mag = TextureFilter::Linear;
         descriptor.sampler.mip = TextureFilter::Linear;
         descriptor.sampler.min = TextureFilter::Linear;
         descriptor.descriptorHandle = _texArraySamplerHandle;
         drawData->_argumentGroup->updateDescriptor(descriptor);
         descriptor.descriptorHandle = _texArrayHandle;
-        descriptor.type = ArgumentDescriptorType::Image;
+        descriptor.type = res_descriptor_type::Image;
         descriptor.texture = _texTileManager->texture();
         drawData->_argumentGroup->updateDescriptor(descriptor);
         // Mesh数据

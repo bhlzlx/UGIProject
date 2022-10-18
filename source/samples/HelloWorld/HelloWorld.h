@@ -49,7 +49,7 @@ namespace ugi {
         ugi::Texture*           _texture;
         ugi::image_view_t          _imageView; 
         ugi::SamplerState       _samplerState;                                     //
-        ugi::Buffer*            _vertexBuffer;                                     //
+        ugi::sampler_state_t       _vertexBuffer;                                     //
         ugi::Buffer*            _indexBuffer;
         ugi::Drawable*          _drawable;
 

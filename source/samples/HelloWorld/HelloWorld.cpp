@@ -13,7 +13,7 @@
 #include <ugi/Drawable.h>
 #include <ugi/UniformBuffer.h>
 #include <ugi/Descriptor.h>
-#include <hgl/assets/AssetsSource.h>
+// #include <hgl/assets/AssetsSource.h>
 
 #include <cmath>
 
@@ -41,8 +41,8 @@ namespace ugi {
         
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
         pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
-        PipelineDescription& pipelineDesc = *(PipelineDescription*)pipelineBuffer;
-        pipelineBuffer += sizeof(PipelineDescription);
+        pipeline_desc_t& pipelineDesc = *(pipeline_desc_t*)pipelineBuffer;
+        pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : pipelineDesc.shaders ) {
             if( shader.spirvData) {
                 shader.spirvData = (uint64_t)pipelineBuffer;
@@ -50,9 +50,9 @@ namespace ugi {
             }
         }
         
-        pipelineDesc.pologonMode = PolygonMode::Fill;
+        pipelineDesc.pologonMode = polygon_mode_t::Fill;
         //
-        pipelineDesc.topologyMode = TopologyMode::TriangleList;
+        pipelineDesc.topologyMode = topology_mode_t::TriangleList;
 
         printf("initialize\n");
 
@@ -107,7 +107,7 @@ namespace ugi {
         _drawable->setVertexBuffer( _vertexBuffer, 1, 12 );
         _drawable->setIndexBuffer( _indexBuffer, 0 );
         //
-        TextureDescription texDesc;
+        tex_desc_t texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
         texDesc.depth = 1;
         texDesc.width = 16;
@@ -168,18 +168,18 @@ namespace ugi {
 
         _uploadQueue->waitIdle();
         //
-        ArgumentDescriptorInfo argDescInfo = {};
+        res_descriptor_info_t argDescInfo = {};
         _uniformDescriptor.descriptorHandle = DescriptorBinder::GetDescriptorHandle("Argument1", pipelineDesc, &argDescInfo);
         _uniformDescriptor.type = argDescInfo.type;
         _uniformDescriptor.bufferRange = argDescInfo.dataSize;
         // 
         ResourceDescriptor res;
-        res.type = ArgumentDescriptorType::Sampler;
+        res.type = res_descriptor_type::Sampler;
         res.sampler = _samplerState;
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triSampler", pipelineDesc, &argDescInfo );
         argGroup->updateDescriptor(res);
         
-        res.type = ArgumentDescriptorType::Image;
+        res.type = res_descriptor_type::Image;
         res.imageView = _imageView;
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triTexture", pipelineDesc, &argDescInfo );
         //
@@ -213,11 +213,11 @@ namespace ugi {
                 { sinVal,  cosVal, 0, 0 }
             };
 
-            static ugi::RasterizationState rasterizationState;
+            static ugi::raster_state_t rasterizationState;
             if( angle % 180 == 0 ) {
-                rasterizationState.polygonMode = PolygonMode::Fill;
+                rasterizationState.polygonMode = polygon_mode_t::Fill;
             } else if( angle % 90 == 0) {
-                rasterizationState.polygonMode = PolygonMode::Line;
+                rasterizationState.polygonMode = polygon_mode_t::Line;
             }
             auto ubo = _uniformAllocator->allocate(sizeof(col2));
             ubo.writeData(0, &col2, sizeof(col2));
@@ -230,7 +230,7 @@ namespace ugi {
             // resourceEncoder->prepareArgumentGroup(argGroup);
             // resourceEncoder->endEncode();
             //
-            RenderPassClearValues clearValues;
+            renderpass_clearvalue_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
             clearValues.stencil = 0xffffffff;

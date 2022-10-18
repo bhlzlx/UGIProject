@@ -187,7 +187,7 @@ namespace ugi {
             _fontRenderer->prepareResource( resourceEncoder, &_drawData, 1, _uniformAllocator );
             resourceEncoder->endEncode();
             //
-            RenderPassClearValues clearValues;
+            renderpass_clearvalue_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
             clearValues.stencil = 0xffffffff;

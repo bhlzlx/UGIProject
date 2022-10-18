@@ -70,7 +70,7 @@ namespace ugi {
         _graphicsQueue = _device->graphicsQueues()[0];
         _uploadQueue = _device->transferQueues()[0];
                 
-        TextureDescription texDesc;
+        tex_desc_t texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
         texDesc.depth = 1;
         texDesc.width = 16;
@@ -162,7 +162,7 @@ namespace ugi {
                 resEncoder->endEncode();
             }
             {   ///> render pass command encoder
-                RenderPassClearValues clearValues;
+                renderpass_clearvalue_t clearValues;
                 clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
                 clearValues.depth = 1.0f;
                 clearValues.stencil = 0xffffffff;

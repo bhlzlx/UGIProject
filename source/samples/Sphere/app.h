@@ -175,7 +175,7 @@ namespace ugi {
         ugi::DescriptorBinder*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
-        ugi::SamplerState       m_samplerState;                                     //
+        ugi::sampler_state_t       m_samplerState;                                     //
         ugi::Buffer*            m_vertexBuffer;                                     //
         ugi::Buffer*            m_indexBuffer;
         ugi::Drawable*          m_drawable;

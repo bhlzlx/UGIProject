@@ -47,7 +47,7 @@ namespace ugi {
         ugi::Device*                    _device;
         hgl::assets::AssetsSource*      _assetsSource;
         ugi::ComputePipeline*           _pipeline;
-        PipelineDescription             _pipelineDescription;
+        pipeline_desc_t             _pipelineDescription;
         //
         uint32_t                        _inputImageHandle;
         uint32_t                        _outputImageHandle;

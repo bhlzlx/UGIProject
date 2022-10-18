@@ -176,7 +176,7 @@ namespace ugi {
         m_drawable->setVertexBuffer( m_vertexBuffer, 0, 0 );
         m_drawable->setIndexBuffer( m_indexBuffer, 0 );
         //
-        TextureDescription texDesc;
+        tex_desc_t texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
         texDesc.depth = 1;
         texDesc.width = 16;
