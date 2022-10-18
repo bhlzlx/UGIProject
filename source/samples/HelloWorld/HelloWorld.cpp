@@ -65,7 +65,7 @@ namespace ugi {
         pipelineDesc.renderState.blendState.enable = false;
         _pipeline = _renderContext.device->createGraphicsPipeline(pipelineDesc);
         //
-        auto argGroup = _pipeline->argumentBinder();
+        auto resourceBinder = _pipeline->argumentBinder();
         _vertexBuffer = _renderContext.device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
         Buffer* vertexStagingBuffer = _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
         float vertexData[] = {
@@ -169,13 +169,13 @@ namespace ugi {
         res.type = res_descriptor_type::Sampler;
         res.res.samplerState = _samplerState;
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triSampler", pipelineDesc, &argDescInfo );
-        argGroup->updateDescriptor(res);
+        resourceBinder->updateDescriptor(res);
         
         res.type = res_descriptor_type::Image;
         res.res.imageView = _imageView.handle;;
         res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triTexture", pipelineDesc, &argDescInfo );
         //
-        argGroup->updateDescriptor(res);
+        resourceBinder->updateDescriptor(res);
         //
         _flightIndex = 0;
         return true;
@@ -186,7 +186,7 @@ namespace ugi {
         _renderContext.device->waitForFence( _renderContext.frameCompleteFences[_flightIndex] );
         _renderContext.descriptorSetAllocator->tick();
         _renderContext.uniformAllocator->tick();
-        auto argGroup = _pipeline->argumentBinder();
+        auto resourceBinder = _pipeline->argumentBinder();
         uint32_t imageIndex = _renderContext.swapchain->acquireNextImage(_renderContext.device, _flightIndex);
         //
         IRenderPass* mainRenderPass = _renderContext.swapchain->renderPass(imageIndex);
@@ -215,12 +215,8 @@ namespace ugi {
             ubo.writeData(0, &col2, sizeof(col2));
             _uniformDescriptor.res.buffer.offset = ubo.offset();
             _uniformDescriptor.res.buffer.buffer = (size_t)ubo.buffer()->buffer(); 
-            argGroup->updateDescriptor(_uniformDescriptor);
+            resourceBinder->updateDescriptor(_uniformDescriptor);
 
-            // auto resourceEncoder = cmdbuf->resourceCommandEncoder();
-            // // resourceEncoder->imageTransitionBarrier(_imageResources[i].texture(), ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
-            // resourceEncoder->prepareArgumentGroup(argGroup);
-            // resourceEncoder->endEncode();
             //
             renderpass_clearvalue_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
@@ -235,7 +231,7 @@ namespace ugi {
                 renderCommandEncoder->setViewport(0, 0, _width, _height, 0, 1.0f );
                 renderCommandEncoder->setScissor( 0, 0, _width, _height );
                 renderCommandEncoder->bindPipeline(_pipeline);
-                renderCommandEncoder->bindArgumentGroup(argGroup);
+                renderCommandEncoder->bindArgumentGroup(resourceBinder);
                 // renderCommandEncoder->drawIndexed( _drawable, 0, 3 );
                 renderCommandEncoder->draw( _drawable, 3, 0 );
             }

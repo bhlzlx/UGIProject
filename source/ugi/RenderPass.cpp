@@ -198,6 +198,7 @@ namespace ugi {
         }
         if (_desc.depthStencil.format != UGIFormat::InvalidFormat) {
             rst->_dsView = depth->createImageView(_device, depthView);
+            rst->_dsTexture = depth;
             if (_desc.depthStencil.loadAction == AttachmentLoadAction::Clear) {
                 ++clearCount;
             }
