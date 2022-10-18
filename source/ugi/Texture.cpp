@@ -33,7 +33,7 @@ namespace ugi {
         return info;
     }
 
-    Texture* Texture::CreateTexture( Device* _device, VkImage _image, const TextureDescription& _desc, ResourceAccessType _accessType  ) {
+    Texture* Texture::CreateTexture( Device* _device, VkImage _image, const tex_desc_t& _desc, ResourceAccessType _accessType  ) {
 
         VkFormat format = UGIFormatToVk(_desc.format);
         VkImageAspectFlags aspectMask = 0;

@@ -10,7 +10,7 @@
 
 namespace ugi {
 
-    VkSampler CreateSampler( Device* device, const SamplerState& samplerState );
+    VkSampler CreateSampler( Device* device, const sampler_state_t& samplerState );
     // 
     struct DescriptorHandleImp {
         union {
@@ -27,7 +27,7 @@ namespace ugi {
     };
     
     // vulkan 的 handle是 set/binding 组合
-    uint32_t DescriptorBinder::GetDescriptorHandle(const char* descriptorName, const PipelineDescription& pipelineDescription, ArgumentDescriptorInfo* descriptorInfo ) 
+    uint32_t DescriptorBinder::GetDescriptorHandle(const char* descriptorName, const pipeline_desc_t& pipelineDescription, res_descriptor_info_t* descriptorInfo ) 
     {
         DescriptorHandleImp handle;
         handle.descriptorIndex = 0;
@@ -89,7 +89,7 @@ namespace ugi {
         //
         switch (resource.type)
         {
-        case ArgumentDescriptorType::UniformBuffer: {
+        case res_descriptor_type::UniformBuffer: {
             VkDescriptorBufferInfo* pBufferInfo = (VkDescriptorBufferInfo*)&mixedDescriptor;
             if( pBufferInfo->buffer != (VkBuffer)resource.res.buffer.buffer) {
                 _reallocBitMask.set(h.setID);
@@ -101,7 +101,7 @@ namespace ugi {
             _dynamicOffsets[h.specifiedIndex] = resource.res.buffer.offset;
             break;
         }
-        case ArgumentDescriptorType::Image:{
+        case res_descriptor_type::Image:{
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
             VkImageView iv = (VkImageView)resource.res.imageView;
             if(pImageInfo->imageView != iv) {
@@ -112,7 +112,7 @@ namespace ugi {
             }
             break;
         }
-        case ArgumentDescriptorType::Sampler:{
+        case res_descriptor_type::Sampler:{
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
             pImageInfo->imageView = VK_NULL_HANDLE;
             pImageInfo->imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -124,7 +124,7 @@ namespace ugi {
             }            
             break;
         }
-        case ArgumentDescriptorType::StorageImage: {
+        case res_descriptor_type::StorageImage: {
             VkDescriptorImageInfo* pImageInfo = (VkDescriptorImageInfo*)&mixedDescriptor;
             VkImageView iv = (VkImageView)resource.res.imageView;
             if( pImageInfo->imageView != iv) {
@@ -168,7 +168,7 @@ namespace ugi {
         uint32_t setIndex = h.setID;
         uint32_t binding = h.binding;
 
-        if( resource.type == ArgumentDescriptorType::Image || resource.type == ArgumentDescriptorType::StorageImage) {
+        if( resource.type == res_descriptor_type::Image || resource.type == res_descriptor_type::StorageImage) {
             _imageResources[h.specifiedIndex] = resource.res.imageView;
         }
         //

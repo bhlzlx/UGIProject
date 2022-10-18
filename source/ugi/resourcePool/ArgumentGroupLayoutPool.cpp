@@ -10,7 +10,7 @@ namespace ugi {
     class ArgumentGroupHashMethod {
     private:
     public:
-        uint64_t operator()( const PipelineDescription& pipDesc ) {
+        uint64_t operator()( const pipeline_desc_t& pipDesc ) {
             UGIHash<APHash> hasher;
             // 先 hash descriptor sets
             for( uint32_t i = 0; i < pipDesc.argumentCount; ++i ) {
@@ -31,7 +31,7 @@ namespace ugi {
     class ArgumentGroupCreateMethod {
     private:
     public:
-        ArgumentGroupLayout* operator()( Device* device, const PipelineDescription& pipelineDescription ) {
+        ArgumentGroupLayout* operator()( Device* device, const pipeline_desc_t& pipelineDescription ) {
             // 实际上这个 ArgumentGroupLayout 也应该作为一个缓存资源，因为很多 argument groupt 会共享这个对象，所以也应该做一个哈希来存这个玩意
             // 目前会写到device的数据成员里（缓存
             ArgumentGroupLayout* layoutPtr = new ArgumentGroupLayout();
@@ -86,12 +86,12 @@ namespace ugi {
             }
             std::vector<VkPushConstantRange> ranges;
             VkShaderStageFlags rangeFlagBits = 0;
-            for( uint32_t i = (uint32_t)ugi::ShaderModuleType::VertexShader; i<(uint32_t)ugi::ShaderModuleType::ShaderTypeCount; ++i) {
+            for( uint32_t i = (uint32_t)ugi::shader_type_t::VertexShader; i<(uint32_t)ugi::shader_type_t::ShaderTypeCount; ++i) {
                 if( pipelineDescription.pipelineConstants[i].size ) {
                     VkPushConstantRange range;
                     range.size =  pipelineDescription.pipelineConstants[i].size;
                     range.offset = pipelineDescription.pipelineConstants[i].offset;
-                    range.stageFlags = shaderStageToVk( (ShaderModuleType)i );
+                    range.stageFlags = shaderStageToVk( (shader_type_t)i );
                     rangeFlagBits |= range.stageFlags;
                 }
             }
@@ -125,9 +125,9 @@ namespace ugi {
         }
     };
 
-    using ArgumentGroupLayoutPool = HashObjectPool< PipelineDescription, ArgumentGroupLayout*, Device*, ArgumentGroupHashMethod, ArgumentGroupCreateMethod, ArgumentGroupDestroyMethod>;
+    using ArgumentGroupLayoutPool = HashObjectPool< pipeline_desc_t, ArgumentGroupLayout*, Device*, ArgumentGroupHashMethod, ArgumentGroupCreateMethod, ArgumentGroupDestroyMethod>;
 
-    const ArgumentGroupLayout* Device::getArgumentGroupLayout( const PipelineDescription& pipelineDescription, uint64_t& hashVal ) {
+    const ArgumentGroupLayout* Device::getArgumentGroupLayout( const pipeline_desc_t& pipelineDescription, uint64_t& hashVal ) {
         auto argumentGroupLayout = ArgumentGroupLayoutPool::GetInstance()->getObject(pipelineDescription, this, hashVal);
         return argumentGroupLayout;
     }

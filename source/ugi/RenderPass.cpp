@@ -14,7 +14,7 @@
 
 namespace ugi {
 
-    uint64_t RenderPassObjectManager::CompatibleHashFunc( const RenderPassDescription& _subpassDesc, uint32_t _subpassIndex ) {
+    uint64_t RenderPassObjectManager::CompatibleHashFunc( const renderpass_desc_t& _subpassDesc, uint32_t _subpassIndex ) {
         UGIHash<APHash> hasher;
         if (_subpassDesc.colorAttachmentCount) {
             for (uint32_t i = 0; i < _subpassDesc.colorAttachmentCount; ++i) {
@@ -40,7 +40,7 @@ namespace ugi {
         return hasher;
     }
 
-    VkRenderPass RenderPassObjectManager::getRenderPass( Device* _device,  const RenderPassDescription& _desc, uint64_t& hash  ) {
+    VkRenderPass RenderPassObjectManager::getRenderPass( Device* _device,  const renderpass_desc_t& _desc, uint64_t& hash  ) {
         auto sampleCount = VK_SAMPLE_COUNT_1_BIT; // 暂时先写死，以后再改
         std::vector<VkAttachmentDescription> attacmentDescriptions; {
             for (uint32_t i = 0; i < _desc.colorAttachmentCount; ++i) {
@@ -155,12 +155,12 @@ namespace ugi {
         return renderPass;
     }
 
-    void RenderPassObjectManager::registRenderPass( const RenderPassDescription& _subpassDesc, VkRenderPass _renderPass, uint64_t& hash, uint32_t _subpassIndex  ) {
+    void RenderPassObjectManager::registRenderPass( const renderpass_desc_t& _subpassDesc, VkRenderPass _renderPass, uint64_t& hash, uint32_t _subpassIndex  ) {
         hash = CompatibleHashFunc(_subpassDesc, _subpassIndex);
         _compatibleTable[hash] = _renderPass;
     }
 
-    VkRenderPass RenderPassObjectManager::queryCompatibleRenderPass( const RenderPassDescription& _subpassDesc, uint32_t _subpassIndex ) {
+    VkRenderPass RenderPassObjectManager::queryCompatibleRenderPass( const renderpass_desc_t& _subpassDesc, uint32_t _subpassIndex ) {
         uint64_t hash = CompatibleHashFunc(_subpassDesc, _subpassIndex);
         auto iter = _compatibleTable.find(hash);
         if(iter!=_compatibleTable.end()){
@@ -169,7 +169,7 @@ namespace ugi {
         return VK_NULL_HANDLE;
     }
     
-    IRenderPass* RenderPass::CreateRenderPass( Device* _device, const RenderPassDescription& _desc, Texture** colors, Texture* depth, image_view_param_t const* colorView, image_view_param_t depthView) {
+    IRenderPass* RenderPass::CreateRenderPass( Device* _device, const renderpass_desc_t& _desc, Texture** colors, Texture* depth, image_view_param_t const* colorView, image_view_param_t depthView) {
         // 为什么要预先创建好纹理再传进来呢？其实是有原因的，因为RenderPass有一个自动转Layout的过程，所以它需要一个初始Layout一个最终Layout，我们需要告诉它，然后
         // 让它自动转，所以我们提供的纹理需要是指定的初始Layout，但是直接创建出来的纹理只能是通用或者未定义的布局，这个没办法和初始Layout完全对应
         // 所以需要我们传进来纹理布局是已经转换好的
@@ -257,7 +257,7 @@ namespace ugi {
         return rst;
     }
 
-    void RenderPass::setClearValues( const RenderPassClearValues& clearValues ) {
+    void RenderPass::setClearValues( const renderpass_clearvalue_t& clearValues ) {
         for( uint32_t i = 0; i< _colorTextureCount; ++i ) {
             _clearValues[i].color.float32[0] = clearValues.colors[i].r;
             _clearValues[i].color.float32[1] = clearValues.colors[i].g;

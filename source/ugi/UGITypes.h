@@ -160,7 +160,7 @@ namespace ugi {
         void*                       wnd;                    // surface window handle
     };
 
-    enum class ShaderModuleType : uint8_t {
+    enum class shader_type_t : uint8_t {
         VertexShader = 0,
         TessellationControlShader,
         TessellationEvaluationShader,
@@ -239,7 +239,7 @@ namespace ugi {
 		Invalid
 	};
 
-    enum class TopologyMode :uint8_t {
+    enum class topology_mode_t :uint8_t {
         Points = 0,
         LineStrip,
         LineList,
@@ -395,7 +395,7 @@ namespace ugi {
         DontCare,
     };
 
-    struct SamplerState {
+    struct sampler_state_t {
         AddressMode u : 8;
         AddressMode v : 8;
         AddressMode w : 8;
@@ -405,13 +405,13 @@ namespace ugi {
         //
         TextureCompareMode compareMode : 8;
         CompareFunction compareFunction : 8;
-        bool operator < (const SamplerState& _ss) const {
+        bool operator < (const sampler_state_t& _ss) const {
             return *(uint64_t*)this < *(uint64_t*)&_ss;
         }
     };
 
 	// 一个属性对应一个buffer,所以其stride不可能过大，这里255已经很大了
-    struct VertexBufferDescription {
+    struct vbo_desc_t {
         alignas(4) char			name[MaxNameLength] = {};
         alignas(1) VertexType	type = VertexType::Float;
         alignas(1) uint8_t      offset = 0;
@@ -419,25 +419,25 @@ namespace ugi {
 		alignas(1) uint8_t		instanceMode = 0;
     };
 
-    struct VertexLayout {
-        alignas(4) uint32_t                 bufferCount = 0;
-        alignas(4) VertexBufferDescription  buffers[MaxVertexAttribute];
+    struct vertex_layout_t {
+        alignas(4) uint32_t         bufferCount = 0;
+        alignas(4) vbo_desc_t       buffers[MaxVertexAttribute];
     };
 
-    struct DepthState {
+    struct depth_state_t {
         alignas(1) uint8_t             writable = 1;
         alignas(1) uint8_t             testable = 1;
         alignas(1) CompareFunction     cmpFunc = CompareFunction::LessEqual;
     };
 
-    struct BlendState {
+    struct blend_state_t {
         alignas(1) uint8_t             enable = 1;
         alignas(1) BlendFactor         srcFactor = BlendFactor::SourceAlpha;
         alignas(1) BlendFactor         dstFactor = BlendFactor::InvertSourceAlpha;
         alignas(1) BlendOperation      op = BlendOperation::Add;
     };
 
-    struct StencilState {
+    struct stencil_state_t {
         alignas(1) uint8_t             enable = 0;
         alignas(1) StencilOperation    opFail = StencilOperation::Keep;
         alignas(1) StencilOperation    opZFail = StencilOperation::Keep;
@@ -461,13 +461,13 @@ namespace ugi {
         Back = 2
     };
 
-    enum class PolygonMode : uint8_t {
+    enum class polygon_mode_t : uint8_t {
         Point = 0,
         Line = 1,
         Fill = 2,
     };
 
-    struct RasterizationState {
+    struct raster_state_t {
         uint8_t         depthBiasEnabled = 0;
         float           depthBiasConstantFactor = 0.0f;
         float           depthBiasSlopeFactor = 0.0f;
@@ -475,7 +475,7 @@ namespace ugi {
         //
         FrontFace       frontFace = FrontFace::ClockWise;
         CullMode        cullMode = CullMode::None;
-        PolygonMode     polygonMode = PolygonMode::Fill;
+        polygon_mode_t     polygonMode = polygon_mode_t::Fill;
     };
     //
     enum class ColorMask {
@@ -485,19 +485,19 @@ namespace ugi {
         MaskAlpha = 8
     };
 
-    struct PipelineState {
+    struct pipeline_state_t {
         alignas(1) uint8_t                  writeMask = 0xff;
         alignas(1) CullMode                 cullMode = CullMode::None;
         alignas(1) FrontFace                windingMode = FrontFace::ClockWise;
         alignas(1) uint8_t                  scissorEnable = 1;
-        alignas(4) DepthState               depthState;
-        alignas(4) BlendState               blendState;
-        alignas(4) StencilState             stencilState;
+        alignas(4) depth_state_t               depthState;
+        alignas(4) blend_state_t               blendState;
+        alignas(4) stencil_state_t             stencilState;
     };
 
     typedef uint8_t TextureUsageFlags;
 
-    struct TextureDescription {
+    struct tex_desc_t {
         TextureType     type;                   // texture types
         UGIFormat       format;                 // format
         uint32_t        mipmapLevel;            // mip map level count
@@ -511,7 +511,7 @@ namespace ugi {
     // RenderPassDescription describe the 
     // load action
 #pragma pack( push, 1 )
-    struct AttachmentDescription {
+    struct attachment_desc_t {
         UGIFormat                           format = UGIFormat::InvalidFormat;
         MultiSampleType                     multisample = MultiSampleType::MsaaNone;
         AttachmentLoadAction                loadAction = AttachmentLoadAction::DontCare;
@@ -521,27 +521,26 @@ namespace ugi {
         //
     };
     
-    struct RenderPassDescription {
+    struct renderpass_desc_t {
         // render pass behavior
         uint32_t                        colorAttachmentCount = 0;
         // framebuffer description
-        AttachmentDescription           colorAttachments[MaxRenderTarget];
-        AttachmentDescription           depthStencil;
+        attachment_desc_t           colorAttachments[MaxRenderTarget];
+        attachment_desc_t           depthStencil;
         uint32_t                        inputAttachmentCount = 0;
-        AttachmentDescription           inputAttachments[MaxRenderTarget];
-        AttachmentDescription           resolve;
+        attachment_desc_t           inputAttachments[MaxRenderTarget];
+        attachment_desc_t           resolve;
 
     };
 
-    struct OptimizableSequenceRenderPassDescription {
-        uint32_t                     subpassCount;
-        RenderPassDescription         subpasses[MaxSubpassCount];
+    struct optim_renderpass_desc_t {
+        uint32_t                  subpassCount;
+        renderpass_desc_t         subpasses[MaxSubpassCount];
     };
 
 #pragma pack (pop)
 
-
-    struct RenderPassClearValues {
+    struct renderpass_clearvalue_t {
         struct color4 {
             float r, g, b, a;
         } colors[MaxRenderTarget];
@@ -549,7 +548,7 @@ namespace ugi {
         int stencil;
     };
 
-    enum class ArgumentDescriptorType : uint8_t {
+    enum class res_descriptor_type : uint8_t {
         Sampler                 = 0,
         Image                   = 1,
         StorageImage            = 2,
@@ -559,22 +558,22 @@ namespace ugi {
         InputAttachment         = 6,
     };
 
-    struct ArgumentDescriptorInfo {
+    struct res_descriptor_info_t {
         alignas(4) char         name[MaxNameLength] = {};
         alignas(1) uint8_t      binding = 0xff;
         alignas(1) uint8_t      dataSize = 0;
-        alignas(1) ArgumentDescriptorType  type = ArgumentDescriptorType::InputAttachment;
-        alignas(1) ShaderModuleType        shaderStage = ShaderModuleType::ComputeShader;
+        alignas(1) res_descriptor_type  type = res_descriptor_type::InputAttachment;
+        alignas(1) shader_type_t        shaderStage = shader_type_t::ComputeShader;
     };
 
-    struct ArgumentInfo {
+    struct descriptor_set_info_t {
         alignas(4) uint8_t                          index = 0xff;
         alignas(4) uint8_t                          descriptorCount = 0;
-        alignas(4) ArgumentDescriptorInfo           descriptors[MaxDescriptorCount] = {};
+        alignas(4) res_descriptor_info_t            descriptors[MaxDescriptorCount] = {};
     };
 
-    struct ShaderDescription {
-        alignas(4) ShaderModuleType             type;
+    struct shader_desc_t {
+        alignas(4) shader_type_t                type;
         union {
             alignas(8) char                     name[64];
             struct {
@@ -582,33 +581,32 @@ namespace ugi {
                 alignas(8) uint32_t             spirvSize;
             };
         };
-        ShaderDescription()
-            : type(ShaderModuleType::ShaderTypeCount)
+        shader_desc_t()
+            : type(shader_type_t::ShaderTypeCount)
             , name {}
         {
-            
         }
     };
 
-    constexpr uint32_t ShaderDescriptionSize = sizeof( ShaderDescription );
+    constexpr uint32_t ShaderDescriptionSize = sizeof( shader_desc_t );
 
-    struct alignas(2) PipelineConstants {
+    struct alignas(2) pipeline_constants_t {
         alignas(1) uint8_t offset;
         alignas(1) uint8_t size;
     };
 
-    struct PipelineDescription {
+    struct pipeline_desc_t {
         // == 生成好的信息
-        alignas(8) ShaderDescription                shaders[(uint8_t)ShaderModuleType::ShaderTypeCount];
+        alignas(8) shader_desc_t                    shaders[(uint8_t)shader_type_t::ShaderTypeCount];
         alignas(4) uint32_t                         argumentCount = 0;
-        alignas(4) ArgumentInfo                     argumentLayouts[MaxArgumentCount];
-        alignas(4) VertexLayout                     vertexLayout;
-        alignas(4) PipelineConstants                pipelineConstants[(uint8_t)ShaderModuleType::ShaderTypeCount];
+        alignas(4) descriptor_set_info_t            argumentLayouts[MaxArgumentCount];
+        alignas(4) vertex_layout_t                  vertexLayout;
+        alignas(4) pipeline_constants_t             pipelineConstants[(uint8_t)shader_type_t::ShaderTypeCount];
         // ==
-        alignas(4) PipelineState                    renderState;
+        alignas(4) pipeline_state_t                 renderState;
         alignas(4) uint32_t                         tessPatchCount = 0;
-        alignas(1) TopologyMode                     topologyMode;
-        alignas(1) PolygonMode                      pologonMode;
+        alignas(1) topology_mode_t                  topologyMode;
+        alignas(1) polygon_mode_t                   pologonMode;
     };
 
     // 纹理具备的属性
@@ -654,7 +652,7 @@ namespace ugi {
         }
     };
 
-    constexpr uint32_t PipelineDescriptionSize = sizeof(PipelineDescription);
+    constexpr uint32_t PipelineDescriptionSize = sizeof(pipeline_desc_t);
 
     struct image_view_t {
         size_t handle;
@@ -670,18 +668,18 @@ namespace ugi {
         union {
             buffer_desc_t buffer;
             uint64_t      imageView;
-            SamplerState  samplerState;
+            sampler_state_t  samplerState;
         };
     };
 
     struct ResourceDescriptor {
         uint32_t                descriptorHandle;
-        ArgumentDescriptorType  type;                   // 资源类型
+        res_descriptor_type     type;                   // 资源类型
         resource_union_t        res;
         //
         ResourceDescriptor()
             : descriptorHandle(~0)
-            , type( ArgumentDescriptorType::UniformBuffer )
+            , type( res_descriptor_type::UniformBuffer )
             , res{}
         {
         }

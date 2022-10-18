@@ -10,5 +10,5 @@
 #include "Device.h"
 
 namespace ugi {
-    VkSampler CreateSampler( Device* device, const SamplerState& samplerState );
+    VkSampler CreateSampler( Device* device, const sampler_state_t& samplerState );
 }

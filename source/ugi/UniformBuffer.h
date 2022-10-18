@@ -67,7 +67,7 @@ namespace ugi {
 
         template< class T >
         void allocateForDescriptor( ResourceDescriptor& descriptor, const T& value ) {
-            assert( descriptor.type == ArgumentDescriptorType::UniformBuffer );
+            assert( descriptor.type == res_descriptor_type::UniformBuffer );
             auto ubo = allocate(sizeof(value));
             ubo.writeData(0, &value, sizeof(value) );
             descriptor.buffer = ubo.buffer();
@@ -76,7 +76,7 @@ namespace ugi {
 
         template< class T >
         void allocateForDescriptor( ResourceDescriptor& descriptor, const std::vector<T>& value ) {
-            assert( descriptor.type == ArgumentDescriptorType::UniformBuffer );
+            assert( descriptor.type == res_descriptor_type::UniformBuffer );
             uint32_t uboSize = (uint32_t)(value.size() * sizeof(T));
             auto ubo = allocate( uboSize );
             ubo.writeData(0, value.data(), uboSize );

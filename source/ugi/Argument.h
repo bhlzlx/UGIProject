@@ -61,7 +61,7 @@ namespace ugi {
         void bind(CommandBuffer* commandBuffer);
         ~DescriptorBinder();
     public:
-        static uint32_t GetDescriptorHandle( const char* descriptorName, const PipelineDescription& pipelineDescription, ArgumentDescriptorInfo* descriptorInfo = nullptr);
+        static uint32_t GetDescriptorHandle( const char* descriptorName, const pipeline_desc_t& pipelineDescription, res_descriptor_info_t* descriptorInfo = nullptr);
     };
 
 }

@@ -28,7 +28,7 @@ namespace ugi {
 
     class Texture : public Resource {
     private:
-        TextureDescription                              _description;           // descriptor
+        tex_desc_t                              _description;           // descriptor
         VkImage                                         _image;                 // image
         VmaAllocation                                   _allocation;            // memory allocation
         // == resource state flags ==
@@ -58,7 +58,7 @@ namespace ugi {
             _currentAccessType = _accessType;
         }
 
-        const TextureDescription& desc() const {
+        const tex_desc_t& desc() const {
             return _description;
         }
 
@@ -68,7 +68,7 @@ namespace ugi {
 
         virtual void release( Device* _device ) override;
         //
-        static Texture* CreateTexture( Device* _device, VkImage _image, const TextureDescription& _desc, ResourceAccessType _accessType );
+        static Texture* CreateTexture( Device* _device, VkImage _image, const tex_desc_t& _desc, ResourceAccessType _accessType );
     };
 
 }

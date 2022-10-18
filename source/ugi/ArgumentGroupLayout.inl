@@ -2,15 +2,15 @@
 
 namespace ugi {
 
-    static inline bool isDynamicBufferType( ArgumentDescriptorType type ) {
-        if( type == ArgumentDescriptorType::UniformBuffer ) {
+    static inline bool isDynamicBufferType( res_descriptor_type type ) {
+        if( type == res_descriptor_type::UniformBuffer ) {
             return true;
         }
         return false;
     }
 
-    static inline bool isImageType( ArgumentDescriptorType type ) {
-        if( type == ArgumentDescriptorType::Image || type == ArgumentDescriptorType::StorageImage ) {
+    static inline bool isImageType( res_descriptor_type type ) {
+        if( type == res_descriptor_type::Image || type == res_descriptor_type::StorageImage ) {
             return true;
         }
         return false;
@@ -38,7 +38,7 @@ namespace ugi {
         uint32_t                _dynamicOffsetBaseIndex[MaxArgumentCount];  ///> 把所有的dynamic offset存数组里，每个set的 起始 dynamic descriptor 对应的索引
         //
         uint32_t                _imageCountTotal;
-        ArgumentDescriptorType  _imageDescriptorType[MaxDescriptorCount];   ///> 这个量是随便写的，不过一个管线一般也不会超过8张纹理吧！
+        res_descriptor_type  _imageDescriptorType[MaxDescriptorCount];   ///> 这个量是随便写的，不过一个管线一般也不会超过8张纹理吧！
         //
         VkPipelineLayout        _pipelineLayout;
     public:
@@ -72,7 +72,7 @@ namespace ugi {
         uint32_t imageResourceTotal() const {
             return _imageCountTotal;
         }
-        ArgumentDescriptorType imageResourceType( uint32_t idx ) const {
+        res_descriptor_type imageResourceType( uint32_t idx ) const {
             return _imageDescriptorType[idx];
         }
         VkDescriptorSetLayout descriptorSetLayout( uint32_t setID ) const {

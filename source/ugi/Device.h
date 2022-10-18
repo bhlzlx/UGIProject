@@ -109,12 +109,12 @@ namespace ugi {
         Fence* createFence( bool _signaled = false );
         bool isSignaled( const Fence* _fence );
         Buffer* createBuffer( BufferType _type, size_t _size );
-        Texture* createTexture( const TextureDescription& _desc, ResourceAccessType _accessType = ResourceAccessType::ShaderReadWrite );
-        IRenderPass* createRenderPass( const RenderPassDescription& _renderPass, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView );
+        Texture* createTexture( const tex_desc_t& _desc, ResourceAccessType _accessType = ResourceAccessType::ShaderReadWrite );
+        IRenderPass* createRenderPass( const renderpass_desc_t& _renderPass, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView );
         Swapchain* createSwapchain( void* wnd, AttachmentLoadAction loadAction = AttachmentLoadAction::Clear );
-        GraphicsPipeline* createGraphicsPipeline( const PipelineDescription& pipelineDescription );
-        ComputePipeline* createComputePipeline( const PipelineDescription& pipelineDescription );
-        Drawable* createDrawable( const PipelineDescription& pipelineDescription );
+        GraphicsPipeline* createGraphicsPipeline( const pipeline_desc_t& pipelineDescription );
+        ComputePipeline* createComputePipeline( const pipeline_desc_t& pipelineDescription );
+        Drawable* createDrawable( const pipeline_desc_t& pipelineDescription );
         UniformAllocator* createUniformAllocator();
         // DescriptorSetAllocator* createDescriptorSetAllocator() const;
 
@@ -122,7 +122,7 @@ namespace ugi {
         void destroyTexture( Texture* texture );
         void destroyBuffer( Buffer* texture );
 
-        const ArgumentGroupLayout* getArgumentGroupLayout( const PipelineDescription& pipelineDescription, uint64_t& hashval );
+        const ArgumentGroupLayout* getArgumentGroupLayout( const pipeline_desc_t& pipelineDescription, uint64_t& hashval );
         const ArgumentGroupLayout* getArgumentGroupLayout( uint64_t hashval );
         DescriptorSetAllocator* descriptorSetAllocator() const {
             return _descriptorSetAllocator;

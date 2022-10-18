@@ -5,7 +5,7 @@ namespace ugi {
     class SamplerStateHashMethod {
     private:
     public:
-        uint64_t operator() ( const SamplerState& state ) {
+        uint64_t operator() ( const sampler_state_t& state ) {
             UGIHash<APHash> hasher;
             hasher.hashPOD(state);
             return hasher;
@@ -15,7 +15,7 @@ namespace ugi {
     class SamplerCreateMethod {
     private:
     public:
-        VkSampler operator()( Device* device, const SamplerState& samplerState ) {
+        VkSampler operator()( Device* device, const sampler_state_t& samplerState ) {
             VkSamplerCreateInfo info; {
                 info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
                 info.flags = 0;
@@ -50,9 +50,9 @@ namespace ugi {
         }
     };
 
-    using SamplerPool = HashObjectPool< SamplerState, VkSampler, Device*, SamplerStateHashMethod, SamplerCreateMethod, SamplerDestroyMethod>;
+    using SamplerPool = HashObjectPool< sampler_state_t, VkSampler, Device*, SamplerStateHashMethod, SamplerCreateMethod, SamplerDestroyMethod>;
 
-    VkSampler CreateSampler( Device* device, const SamplerState& samplerState ) {
+    VkSampler CreateSampler( Device* device, const sampler_state_t& samplerState ) {
         uint64_t hashVal = 0;
         VkSampler sampler = SamplerPool::GetInstance()->getObject( samplerState, device, hashVal );
         return sampler;

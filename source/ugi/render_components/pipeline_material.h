@@ -5,7 +5,7 @@ namespace ugi {
 
     struct MaterialDescriptor {
         char const*             name; // name of the descriptor - written in shader
-        ArgumentDescriptorType  type; // type of the descriptor
+        res_descriptor_type  type; // type of the descriptor
         ResourceDescriptor      descriptor; // the resouces descriptor
     };
 

@@ -63,12 +63,12 @@ namespace ugi {
 
     VkPipelineLayout GetPipelineLayout(const ArgumentGroupLayout* argGroupLayout);
 
-    GraphicsPipeline* GraphicsPipeline::CreatePipeline( Device* device, const PipelineDescription& pipelineDescription ) {
+    GraphicsPipeline* GraphicsPipeline::CreatePipeline( Device* device, const pipeline_desc_t& pipelineDescription ) {
         GraphicsPipeline* pipelinePtr = new GraphicsPipeline();
         GraphicsPipeline& pipeline = *pipelinePtr;
         // 1. shader stages
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		for (uint32_t i = 0; i < (uint32_t)ShaderModuleType::ShaderTypeCount; ++i) {
+		for (uint32_t i = 0; i < (uint32_t)shader_type_t::ShaderTypeCount; ++i) {
 			if ( pipelineDescription.shaders[i].spirvData) {
                 VkShaderStageFlagBits stage = shaderStageToVk(pipelineDescription.shaders[i].type);
 				VkPipelineShaderStageCreateInfo info = {};
@@ -89,7 +89,7 @@ namespace ugi {
         pipeline._IAStateCreateInfo.flags = 0;
         pipeline._IAStateCreateInfo.primitiveRestartEnable = false;
 
-		if ( pipelineDescription.shaders[(uint32_t)ShaderModuleType::TessellationControlShader].spirvData ) {
+		if ( pipelineDescription.shaders[(uint32_t)shader_type_t::TessellationControlShader].spirvData ) {
 			pipeline._IAStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
 		}
 		else {
@@ -242,7 +242,7 @@ namespace ugi {
         return pipeline;
     }
 
-    void GraphicsPipeline::setRasterizationState( const RasterizationState& _state ) {
+    void GraphicsPipeline::setRasterizationState( const raster_state_t& _state ) {
         _RSStateCreateInfo.polygonMode = polygonModeToVk(_state.polygonMode); 
         _RSStateCreateInfo.cullMode = cullModeToVk(_state.cullMode); 
         _RSStateCreateInfo.frontFace = frontFaceToVk(_state.frontFace); 
@@ -285,7 +285,7 @@ namespace ugi {
         return group;        
     }
 
-    ComputePipeline* ComputePipeline::CreatePipeline( Device* device, const PipelineDescription& pipelineDesc ) {
+    ComputePipeline* ComputePipeline::CreatePipeline( Device* device, const pipeline_desc_t& pipelineDesc ) {
         uint64_t pipelineLayoutHash;
         VkComputePipelineCreateInfo createInfo;
         createInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
@@ -298,8 +298,8 @@ namespace ugi {
         VkPipelineShaderStageCreateInfo stageInfo; {
             stageInfo.flags = 0;
             stageInfo.pName = "main";
-            uint32_t* spirvData = (uint32_t*)pipelineDesc.shaders[(uint32_t)ShaderModuleType::ComputeShader].spirvData;
-            uint32_t sprivDataLength = pipelineDesc.shaders[(uint32_t)ShaderModuleType::ComputeShader].spirvSize;
+            uint32_t* spirvData = (uint32_t*)pipelineDesc.shaders[(uint32_t)shader_type_t::ComputeShader].spirvData;
+            uint32_t sprivDataLength = pipelineDesc.shaders[(uint32_t)shader_type_t::ComputeShader].spirvSize;
             stageInfo.module = CreateShaderModule( device->device(), spirvData, sprivDataLength, (VkShaderStageFlagBits)VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT );
             stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;

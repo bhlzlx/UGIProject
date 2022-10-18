@@ -39,11 +39,11 @@ namespace ugi {
         void _hashRasterizationState(UGIHash<APHash>& hasher);
         DescriptorBinder* createArgumentGroup() const;
     public:
-        static GraphicsPipeline* CreatePipeline(Device* device, const PipelineDescription& pipelineDescription);
+        static GraphicsPipeline* CreatePipeline(Device* device, const pipeline_desc_t& pipelineDescription);
 
         GraphicsPipeline();
 
-        void setRasterizationState(const RasterizationState& _state);
+        void setRasterizationState(const raster_state_t& _state);
         void setDepthStencilState();
         void bind(RenderCommandEncoder* encoder);
         void bind(ComputeCommandEncoder* encoder);
@@ -63,7 +63,7 @@ namespace ugi {
     public:
         ComputePipeline() {
         }
-        static ComputePipeline* CreatePipeline( Device* device, const PipelineDescription& pipelineDesc );
+        static ComputePipeline* CreatePipeline( Device* device, const pipeline_desc_t& pipelineDesc );
         DescriptorBinder* createArgumentGroup() const ;
         VkPipeline pipeline() {
             return _pipeline;

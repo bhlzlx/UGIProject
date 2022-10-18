@@ -533,7 +533,7 @@ namespace ugi {
         return Buffer::CreateBuffer( this, _type, _size );
     }
 
-    Texture* Device::createTexture( const TextureDescription& _desc, ResourceAccessType _accessType ) {
+    Texture* Device::createTexture( const tex_desc_t& _desc, ResourceAccessType _accessType ) {
         return Texture::CreateTexture( this, 0, _desc, _accessType);
     }
 
@@ -555,21 +555,21 @@ namespace ugi {
         }
     }
 
-    GraphicsPipeline* Device::createGraphicsPipeline( const PipelineDescription& pipelineDescription ) {
+    GraphicsPipeline* Device::createGraphicsPipeline( const pipeline_desc_t& pipelineDescription ) {
         return GraphicsPipeline::CreatePipeline( this, pipelineDescription);
     }
 
-    ComputePipeline* Device::createComputePipeline( const PipelineDescription& pipelineDescription ) {
-        assert( pipelineDescription.shaders[(uint32_t)ShaderModuleType::ComputeShader].spirvData );
+    ComputePipeline* Device::createComputePipeline( const pipeline_desc_t& pipelineDescription ) {
+        assert( pipelineDescription.shaders[(uint32_t)shader_type_t::ComputeShader].spirvData );
         return ComputePipeline::CreatePipeline(this, pipelineDescription);
     }
 
-    Drawable* Device::createDrawable( const PipelineDescription& pipelineDescription ) {
+    Drawable* Device::createDrawable( const pipeline_desc_t& pipelineDescription ) {
         Drawable* drawable = new Drawable(pipelineDescription.vertexLayout.bufferCount);
         return drawable;
     }
 
-    IRenderPass* Device::createRenderPass( const RenderPassDescription& rpdesc, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView ) {
+    IRenderPass* Device::createRenderPass( const renderpass_desc_t& rpdesc, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView ) {
         return RenderPass::CreateRenderPass( this, rpdesc, colors, ds, colorViews, dsView);
     }
 

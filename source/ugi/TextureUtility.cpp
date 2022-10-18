@@ -89,7 +89,7 @@ namespace ugi {
     Texture* TextureUtility::createTextureKTX( const void* data, uint32_t length ) const {
         const uint8_t * ptr = (const uint8_t *)data;
 		const uint8_t * end = ptr + length;
-        TextureDescription desc;
+        tex_desc_t desc;
         // read file header
 		KtxHeader* header = (KtxHeader*)ptr;
 		ptr += sizeof(KtxHeader);
@@ -213,7 +213,7 @@ namespace ugi {
 	Texture* TextureUtility::createTexturePNG( const void* data, uint32_t length ) const {
         int x; int y; int channels;
         auto pixel = stbi_load_from_memory( (stbi_uc*)data, length,&x, &y, &channels, 4 );
-        TextureDescription textureDescription;
+        tex_desc_t textureDescription;
         textureDescription.format = ugi::UGIFormat::RGBA8888_UNORM;
         textureDescription.width = x;
         textureDescription.height = y;

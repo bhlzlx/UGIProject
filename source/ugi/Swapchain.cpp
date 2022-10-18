@@ -262,7 +262,7 @@ namespace ugi {
         rst = vkGetSwapchainImagesKHR(dvcVk, _swapchain, &_embedTextureCount, _images);
 
         for( uint32_t embedImageIndex = 0; embedImageIndex < _embedTextureCount; ++ embedImageIndex ) {
-            TextureDescription colorTexDesc;
+            tex_desc_t colorTexDesc;
             colorTexDesc.depth = 1;
             colorTexDesc.format = VkFormatToUGI(_createInfo.imageFormat);
             colorTexDesc.width = _createInfo.imageExtent.width;
@@ -275,14 +275,14 @@ namespace ugi {
             image_view_param_t vp;
             _embedColorViews[embedImageIndex] = _embedColors[embedImageIndex]->createImageView(device, vp);
             if(!_dsTexture) {
-                TextureDescription depthStencilTexDesc = colorTexDesc;
+                tex_desc_t depthStencilTexDesc = colorTexDesc;
                 depthStencilTexDesc.format = UGIFormat::Depth32F;
                 _dsTexture = Texture::CreateTexture( device, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
                 _dsv = _dsTexture->createImageView(device, vp);
             }
             //
             // auto renderPassObjManager = _device->renderPassObjectManager();
-            RenderPassDescription renderPassDesc;
+            renderpass_desc_t renderPassDesc;
             renderPassDesc.colorAttachmentCount = 1;
             renderPassDesc.colorAttachments[0].format = colorTexDesc.format;
             renderPassDesc.colorAttachments[0].loadAction = _loadAction;
