@@ -37,6 +37,7 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ResourceCommandEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ComputeCommandEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_components/pipeline_material.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/mesh_primitive.cpp
 )
 
 if( MSVC )
