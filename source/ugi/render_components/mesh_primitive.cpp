@@ -4,6 +4,7 @@
 #include <CommandBuffer.h>
 #include <Buffer.h>
 #include <Device.h>
+#include <CommandQueue.h>
 
 namespace ugi {
 
@@ -39,9 +40,38 @@ namespace ugi {
         polygon_mode_t polygonMode
     ) {
         Mesh* mesh = new Mesh();
+        mesh->vertexLayout_ = layout;
+        mesh->topologyMode_ = topologyMode;
+        mesh->polygonMode_ = polygonMode;
+        mesh->indexCount_ = indexCount;
+        mesh->attriCount_ = layout.bufferCount;
         for(auto i = 0; i<layout.bufferCount; ++i) {
             mesh->attriOffsets_[i] = layout.buffers[i].offset;
         }
+        CommandQueue* transferQueue = device->transferQueues()[0];
+        auto cb = transferQueue->createCommandBuffer(device);
+        //
+        auto ibSize = sizeof(uint16_t) * indexCount;
+        auto vbStagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, vbSize);
+        auto ibStagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, ibSize);
+        mesh->vertices_ = device->createBuffer(ugi::BufferType::VertexBuffer, vbSize);
+        mesh->indices_ = device->createBuffer(ugi::BufferType::IndexBuffer, ibSize);
+        auto vMapPtr = vbStagingBuffer->map(device);
+        auto iMapPtr = ibStagingBuffer->map(device);
+        memcpy(vMapPtr, vb, vbSize);
+        memcpy(iMapPtr, indice, ibSize);
+        vbStagingBuffer->unmap(device);
+        ibStagingBuffer->unmap(device);
+        //
+        cb->beginEncode();
+        auto encoder = cb->resourceCommandEncoder();
+        encoder->updateBuffer(mesh->vertices_, vbStagingBuffer, nullptr, nullptr, true);
+        encoder->updateBuffer(mesh->indices_, ibStagingBuffer, nullptr, nullptr, true);
+        cb->endEncode();
+        QueueSubmitInfo submitInfo(&cb, 1, nullptr, 0, nullptr, 0);
+        QueueSubmitBatchInfo submitBatch(&submitInfo, 1, nullptr);
+        submitBatch.fenceToSignal = nullptr;
+        transferQueue->submitCommandBuffers()
     }
 
 }
