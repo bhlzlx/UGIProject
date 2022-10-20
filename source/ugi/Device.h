@@ -34,11 +34,11 @@ namespace ugi {
         uint32_t                                queueFamilyIndices[MaxQueueCountSupport];
         //
         DeviceDescriptorVulkan()
-            : instance( nullptr )
-            , properties( {} )
-            , physicalDevice( nullptr )
-            , surface ( 0 )
-            , archive( nullptr ) {
+            : instance(nullptr)
+            , properties({})
+            , physicalDevice(nullptr)
+            , surface (0)
+            , archive(nullptr) {
         }
         
         DeviceDescriptorVulkan( const DeviceDescriptor& _baseDesc )
@@ -120,6 +120,7 @@ namespace ugi {
         void destroyRenderPass( IRenderPass* renderPass );
         void destroyTexture( Texture* texture );
         void destroyBuffer( Buffer* texture );
+        void destroyFence( Fence* fence );
 
         const ArgumentGroupLayout* getArgumentGroupLayout( const pipeline_desc_t& pipelineDescription, uint64_t& hashval );
         const ArgumentGroupLayout* getArgumentGroupLayout( uint64_t hashval );

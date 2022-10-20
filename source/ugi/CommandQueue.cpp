@@ -52,7 +52,7 @@ namespace ugi {
 		VkFence fence = VK_NULL_HANDLE;
 		if (batch.fenceToSignal) {
 			fence = (VkFence)(*batch.fenceToSignal);
-			batch.fenceToSignal->waitToBeSignal();
+			batch.fenceToSignal->markAsToBeSignal();
 		}
         VkResult rst = vkQueueSubmit( _queue, batch.submitInfoCount, submitInfo, fence );
         if( rst == VK_SUCCESS ) {

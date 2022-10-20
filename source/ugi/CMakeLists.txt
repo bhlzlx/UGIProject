@@ -5,9 +5,8 @@ add_library( UGI STATIC )
 target_include_directories( UGI
 PUBLIC
     ${SOLUTION_DIR}/thirdpart/include
+    ${SOLUTION_DIR}/thirdpart
     ${SOLUTION_DIR}/source
-    ${SOLUTION_DIR}/source/utility
-    ${SOLUTION_DIR}/source/thirdpart
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -28,7 +27,7 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Argument.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drawable.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/Drawable.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/UniformBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Sampler.cpp
@@ -38,6 +37,8 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ComputeCommandEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_components/pipeline_material.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_components/mesh_primitive.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/async_load/AsyncLoadManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/async_load/GPUAsyncLoadItem.cpp
 )
 
 if( MSVC )

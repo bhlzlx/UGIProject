@@ -589,4 +589,8 @@ namespace ugi {
     void Device::destroyBuffer( Buffer* buffer ) {
         buffer->release(this);
     }
+
+    void Device::destroyFence( Fence* fence ) {
+    }
+
 }

@@ -5,6 +5,9 @@
         "xstring": "cpp",
         "algorithm": "cpp",
         "functional": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "mutex": "cpp",
+        "shared_mutex": "cpp",
+        "condition_variable": "cpp"
     }
 }

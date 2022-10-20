@@ -6,6 +6,7 @@
 namespace ugi {
 
     class Mesh {
+        friend class GPUMeshAsyncLoadItem;
     private:
         Buffer*         vertices_;
         Buffer*         indices_;
@@ -17,6 +18,7 @@ namespace ugi {
         vertex_layout_t vertexLayout_;
         topology_mode_t topologyMode_;
         polygon_mode_t  polygonMode_;
+        uint8_t         prepared_:1;
     public:
         Mesh()
             : vertices_(nullptr)
@@ -27,6 +29,7 @@ namespace ugi {
             , indexCount_(0)
             , topologyMode_(topology_mode_t::TriangleList)
             , polygonMode_(polygon_mode_t::Line)
+            , prepared_(0)
         {}
 
         Buffer* vertexBuffer() const {
@@ -53,6 +56,7 @@ namespace ugi {
 
         static Mesh* CreateMesh(
             Device* device,
+            GPUAsyncLoadManager* asyncLoadManager,
             uint8_t const* vb, uint64_t vbSize, 
             uint16_t const* indice, uint64_t indexCount,
             vertex_layout_t layout,

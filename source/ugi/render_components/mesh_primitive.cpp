@@ -5,6 +5,8 @@
 #include <Buffer.h>
 #include <Device.h>
 #include <CommandQueue.h>
+#include <async_load/AsyncLoadManager.h>
+#include <async_load/GPUAsyncLoadItem.h>
 
 namespace ugi {
 
@@ -33,7 +35,8 @@ namespace ugi {
      */
     Mesh* Mesh::CreateMesh(
         Device* device, // device
-        uint8_t const* vb, uint64_t vbSize, 
+        GPUAsyncLoadManager* asyncLoadManager,
+        uint8_t const* vb, uint64_t vbSize,
         uint16_t const* indice, uint64_t indexCount,
         vertex_layout_t layout,
         topology_mode_t topologyMode,
@@ -62,16 +65,23 @@ namespace ugi {
         memcpy(iMapPtr, indice, ibSize);
         vbStagingBuffer->unmap(device);
         ibStagingBuffer->unmap(device);
-        //
-        cb->beginEncode();
-        auto encoder = cb->resourceCommandEncoder();
-        encoder->updateBuffer(mesh->vertices_, vbStagingBuffer, nullptr, nullptr, true);
-        encoder->updateBuffer(mesh->indices_, ibStagingBuffer, nullptr, nullptr, true);
+        // encode command buffer
+        cb->beginEncode(); {
+            auto encoder = cb->resourceCommandEncoder();
+            encoder->updateBuffer(mesh->vertices_, vbStagingBuffer, nullptr, nullptr, true);
+            encoder->updateBuffer(mesh->indices_, ibStagingBuffer, nullptr, nullptr, true);
+            encoder->endEncode();
+        }
         cb->endEncode();
-        QueueSubmitInfo submitInfo(&cb, 1, nullptr, 0, nullptr, 0);
-        QueueSubmitBatchInfo submitBatch(&submitInfo, 1, nullptr);
-        submitBatch.fenceToSignal = nullptr;
-        transferQueue->submitCommandBuffers()
+        // submit command buffer to transfer queue
+        auto fence = device->createFence(); {
+            QueueSubmitInfo submitInfo(&cb, 1, nullptr, 0, nullptr, 0);
+            QueueSubmitBatchInfo submitBatch(&submitInfo, 1, fence);
+            transferQueue->submitCommandBuffers(submitBatch);
+        }
+        IGPUAsyncLoadItem* asyncLoadItem = new GPUMeshAsyncLoadItem(device, fence, mesh, {vbStagingBuffer, ibStagingBuffer});
+        asyncLoadManager->registerAsyncLoad(asyncLoadItem);
+        return mesh;
     }
 
 }

@@ -32,6 +32,7 @@ namespace ugi {
         operator VkSemaphore*() {
             return &_semaphore;
         }
+        void release(Device* device);
     };
 
     class Fence {
@@ -50,9 +51,10 @@ namespace ugi {
         operator VkFence() {
             return _fence;
         }
-        void waitToBeSignal() {
+        void markAsToBeSignal() {
             m_waitToSignaled = true;
         }
+        void release(Device* device);
     };
 
 }

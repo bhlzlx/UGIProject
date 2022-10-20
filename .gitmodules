@@ -7,3 +7,6 @@
 [submodule "thirdpart/glm"]
 	path = thirdpart/glm
 	url = https://github.com/g-truc/glm
+[submodule "thirdpart/concurrentqueue"]
+	path = thirdpart/concurrentqueue
+	url = https://github.com/cameron314/concurrentqueue.git

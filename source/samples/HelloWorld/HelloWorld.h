@@ -24,6 +24,7 @@ namespace ugi {
         ugi::CommandQueue*              uploadQueue;                                      // upload queue
         ugi::UniformAllocator*          uniformAllocator;
         ugi::DescriptorSetAllocator*    descriptorSetAllocator;
+        ugi::GPUAsyncLoadManager*       asyncLoadManager;
 
         RenderContext() {
         }
