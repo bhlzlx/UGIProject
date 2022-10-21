@@ -68,7 +68,7 @@ namespace ugi {
         GraphicsPipeline& pipeline = *pipelinePtr;
         // 1. shader stages
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		for (uint32_t i = 0; i < (uint32_t)shader_type_t::ShaderTypeCount; ++i) {
+		for (uint32_t i = 0; i < (uint32_t)shader_stage_t::ShaderStageCount; ++i) {
 			if ( pipelineDescription.shaders[i].spirvData) {
                 VkShaderStageFlagBits stage = shaderStageToVk(pipelineDescription.shaders[i].type);
 				VkPipelineShaderStageCreateInfo info = {};
@@ -89,7 +89,7 @@ namespace ugi {
         pipeline._IAStateCreateInfo.flags = 0;
         pipeline._IAStateCreateInfo.primitiveRestartEnable = false;
 
-		if ( pipelineDescription.shaders[(uint32_t)shader_type_t::TessellationControlShader].spirvData ) {
+		if ( pipelineDescription.shaders[(uint32_t)shader_stage_t::TessellationControlShader].spirvData ) {
 			pipeline._IAStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
 		}
 		else {
@@ -298,8 +298,8 @@ namespace ugi {
         VkPipelineShaderStageCreateInfo stageInfo; {
             stageInfo.flags = 0;
             stageInfo.pName = "main";
-            uint32_t* spirvData = (uint32_t*)pipelineDesc.shaders[(uint32_t)shader_type_t::ComputeShader].spirvData;
-            uint32_t sprivDataLength = pipelineDesc.shaders[(uint32_t)shader_type_t::ComputeShader].spirvSize;
+            uint32_t* spirvData = (uint32_t*)pipelineDesc.shaders[(uint32_t)shader_stage_t::ComputeShader].spirvData;
+            uint32_t sprivDataLength = pipelineDesc.shaders[(uint32_t)shader_stage_t::ComputeShader].spirvSize;
             stageInfo.module = CreateShaderModule( device->device(), spirvData, sprivDataLength, (VkShaderStageFlagBits)VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT );
             stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;

@@ -160,14 +160,14 @@ namespace ugi {
         void*                       wnd;                    // surface window handle
     };
 
-    enum class shader_type_t : uint8_t {
+    enum class shader_stage_t : uint8_t {
         VertexShader = 0,
         TessellationControlShader,
         TessellationEvaluationShader,
         GeometryShader,
         FragmentShader,
         ComputeShader,
-        ShaderTypeCount,
+        ShaderStageCount,
     };
 
     enum class PipelineStages {
@@ -563,7 +563,7 @@ namespace ugi {
         alignas(1) uint8_t      binding = 0xff;
         alignas(1) uint8_t      dataSize = 0;
         alignas(1) res_descriptor_type  type = res_descriptor_type::InputAttachment;
-        alignas(1) shader_type_t        shaderStage = shader_type_t::ComputeShader;
+        alignas(1) shader_stage_t        shaderStage = shader_stage_t::ComputeShader;
     };
 
     struct descriptor_set_info_t {
@@ -573,7 +573,7 @@ namespace ugi {
     };
 
     struct shader_desc_t {
-        alignas(4) shader_type_t                type;
+        alignas(4) shader_stage_t               type;
         union {
             alignas(8) char                     name[64];
             struct {
@@ -582,7 +582,7 @@ namespace ugi {
             };
         };
         shader_desc_t()
-            : type(shader_type_t::ShaderTypeCount)
+            : type(shader_stage_t::ShaderStageCount)
             , name {}
         {
         }
@@ -597,11 +597,11 @@ namespace ugi {
 
     struct pipeline_desc_t {
         // == 生成好的信息
-        alignas(8) shader_desc_t                    shaders[(uint8_t)shader_type_t::ShaderTypeCount];
+        alignas(8) shader_desc_t                    shaders[(uint8_t)shader_stage_t::ShaderStageCount];
         alignas(4) uint32_t                         argumentCount = 0;
         alignas(4) descriptor_set_info_t            argumentLayouts[MaxArgumentCount];
         alignas(4) vertex_layout_t                  vertexLayout;
-        alignas(4) pipeline_constants_t             pipelineConstants[(uint8_t)shader_type_t::ShaderTypeCount];
+        alignas(4) pipeline_constants_t             pipelineConstants[(uint8_t)shader_stage_t::ShaderStageCount];
         // ==
         alignas(4) pipeline_state_t                 renderState;
         alignas(4) uint32_t                         tessPatchCount = 0;

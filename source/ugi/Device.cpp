@@ -560,7 +560,7 @@ namespace ugi {
     }
 
     ComputePipeline* Device::createComputePipeline( const pipeline_desc_t& pipelineDescription ) {
-        assert( pipelineDescription.shaders[(uint32_t)shader_type_t::ComputeShader].spirvData );
+        assert( pipelineDescription.shaders[(uint32_t)shader_stage_t::ComputeShader].spirvData );
         return ComputePipeline::CreatePipeline(this, pipelineDescription);
     }
 

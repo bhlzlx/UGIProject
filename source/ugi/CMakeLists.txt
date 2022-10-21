@@ -37,6 +37,7 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ComputeCommandEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_components/pipeline_material.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_components/mesh_primitive.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/Renderable.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/async_load/AsyncLoadManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/async_load/GPUAsyncLoadItem.cpp
 )

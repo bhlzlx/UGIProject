@@ -343,15 +343,15 @@ namespace ugi {
 		return VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	}
 
-    static inline VkShaderStageFlagBits shaderStageToVk( ugi::shader_type_t type ) {
+    static inline VkShaderStageFlagBits shaderStageToVk( ugi::shader_stage_t type ) {
         switch ( type )
         {
-        case shader_type_t::VertexShader : return VK_SHADER_STAGE_VERTEX_BIT;
-        case shader_type_t::TessellationControlShader : return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-        case shader_type_t::TessellationEvaluationShader : return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-        case shader_type_t::GeometryShader : return VK_SHADER_STAGE_GEOMETRY_BIT;
-        case shader_type_t::FragmentShader : return VK_SHADER_STAGE_FRAGMENT_BIT;
-        case shader_type_t::ComputeShader : return VK_SHADER_STAGE_VERTEX_BIT;;
+        case shader_stage_t::VertexShader : return VK_SHADER_STAGE_VERTEX_BIT;
+        case shader_stage_t::TessellationControlShader : return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        case shader_stage_t::TessellationEvaluationShader : return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        case shader_stage_t::GeometryShader : return VK_SHADER_STAGE_GEOMETRY_BIT;
+        case shader_stage_t::FragmentShader : return VK_SHADER_STAGE_FRAGMENT_BIT;
+        case shader_stage_t::ComputeShader : return VK_SHADER_STAGE_VERTEX_BIT;;
             break;
         default:
             break;
@@ -475,31 +475,31 @@ namespace ugi {
         return VK_CULL_MODE_NONE;
     }
 
-     static inline VkShaderStageFlags stageFlagsToVk( shader_type_t shaderStage ) {
+     static inline VkShaderStageFlags stageFlagsToVk( shader_stage_t shaderStage ) {
         VkShaderStageFlags stageFlags = 0;
         switch (shaderStage)
         {
-        case shader_type_t::VertexShader: {
+        case shader_stage_t::VertexShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
             break;
         }
-        case shader_type_t::FragmentShader: {
+        case shader_stage_t::FragmentShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
             break;
         }
-        case shader_type_t::ComputeShader: {
+        case shader_stage_t::ComputeShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
             break;
         }
-        case shader_type_t::TessellationControlShader: {
+        case shader_stage_t::TessellationControlShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
             break;
         }
-        case shader_type_t::TessellationEvaluationShader: {
+        case shader_stage_t::TessellationEvaluationShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
             break;
         }
-        case shader_type_t::GeometryShader: {
+        case shader_stage_t::GeometryShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT;
             break;
         }        
