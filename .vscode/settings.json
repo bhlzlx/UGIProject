@@ -8,6 +8,16 @@
         "streambuf": "cpp",
         "mutex": "cpp",
         "shared_mutex": "cpp",
-        "condition_variable": "cpp"
+        "condition_variable": "cpp",
+        "atomic": "cpp",
+        "cstdio": "cpp",
+        "filesystem": "cpp",
+        "limits": "cpp",
+        "memory": "cpp",
+        "numeric": "cpp",
+        "random": "cpp",
+        "thread": "cpp",
+        "vector": "cpp",
+        "xlocmon": "cpp"
     }
 }

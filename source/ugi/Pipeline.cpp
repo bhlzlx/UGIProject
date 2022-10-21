@@ -285,6 +285,11 @@ namespace ugi {
         return group;        
     }
 
+
+    Material* GraphicsPipeline::createMaterial(std::vector<std::string> const& parameters) {
+        Material* material = new Material();
+    }
+
     ComputePipeline* ComputePipeline::CreatePipeline( Device* device, const pipeline_desc_t& pipelineDesc ) {
         uint64_t pipelineLayoutHash;
         VkComputePipelineCreateInfo createInfo;

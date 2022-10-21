@@ -21,7 +21,6 @@ set( GDI_SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/widget/widget.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/widget/component.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/widget/GdiSystem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/widget/name.cpp
 )
 
 add_library( GDI STATIC

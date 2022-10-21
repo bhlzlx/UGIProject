@@ -47,6 +47,7 @@ namespace ugi {
         void setDepthStencilState();
         void bind(RenderCommandEncoder* encoder);
         void bind(ComputeCommandEncoder* encoder);
+        Material* createMaterial(std::vector<std::string> const& parameters);
         //
         DescriptorBinder* argumentBinder() const {
             return _argumentBinder;

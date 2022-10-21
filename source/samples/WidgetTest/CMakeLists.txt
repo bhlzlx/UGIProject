@@ -1,5 +1,4 @@
-add_executable(WidgetTest WIN32
-)
+add_executable(WidgetTest WIN32)
 
 target_sources(WidgetTest
 PRIVATE

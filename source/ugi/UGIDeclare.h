@@ -26,4 +26,5 @@ namespace ugi {
     class ArgumentGroupLayout;
     class ComputePipeline;
     class GPUAsyncLoadManager;
+    class Material;
 }

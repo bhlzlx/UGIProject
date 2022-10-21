@@ -12,8 +12,9 @@ namespace ugi {
 
     class Renderable {
     private:
-        pipeline_desc_t
+        GraphicsPipeline*             pipeline_;
     public:
+        Renderable();
     };
 
 }
