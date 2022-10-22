@@ -1,7 +1,7 @@
 #include "GPUAsyncLoadItem.h"
 #include <Device.h>
 #include <Semaphore.h>
-#include <render_components/mesh_primitive.h>
+#include <render_components/MeshPrimitive.h>
 
 namespace ugi {
 

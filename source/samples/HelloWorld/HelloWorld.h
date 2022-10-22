@@ -9,10 +9,6 @@
 
 namespace ugi {
 
-    struct Material {
-        
-    };
-
     struct RenderContext {
         ugi::RenderSystem*              renderSystem;                                     //
         ugi::Device*                    device;                                           //
@@ -29,7 +25,7 @@ namespace ugi {
         RenderContext() {
         }
 
-        bool initialize(void* _wnd, ugi::DeviceDescriptor deviceDesc, common::IArchive* archive);
+        bool initialize(void* _wnd, ugi::DeviceDescriptor deviceDesc, comm::IArchive* archive);
     };
 
     class Render {
@@ -55,6 +51,7 @@ namespace ugi {
         ugi::Buffer*            _vertexBuffer;                                     //
         ugi::Buffer*            _indexBuffer;
         ugi::Drawable*          _drawable;
+        ugi::Material*          _material;
 
         res_descriptor_t        _uniformDescriptor;
         //
@@ -63,7 +60,7 @@ namespace ugi {
         float                   _width;
         float                   _height;
     public:
-        virtual bool initialize(void* _wnd, common::IArchive* arch);
+        virtual bool initialize(void* _wnd, comm::IArchive* arch);
         virtual void resize( uint32_t _width, uint32_t _height );
         virtual void release();
         virtual void tick();

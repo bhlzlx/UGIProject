@@ -55,7 +55,7 @@ namespace ugi {
         auto resEncoder = commandBuffer->resourceCommandEncoder();
         auto argGroup = item->argumentGroup();
         res_descriptor_t descriptor;
-        descriptor.descriptorHandle = _parameterHandle;
+        descriptor.handle = _parameterHandle;
         descriptor.bufferRange = sizeof(GaussBlurParameter);
         descriptor.type = res_descriptor_type::UniformBuffer;
         uniformAllocator->allocateForDescriptor( descriptor, item->parameter());
@@ -92,11 +92,11 @@ namespace ugi {
         }
         res_descriptor_t resDesc;
         resDesc.texture = texture0;
-        resDesc.descriptorHandle = _inputImageHandle;
+        resDesc.handle = _inputImageHandle;
         resDesc.type = res_descriptor_type::StorageImage;
         argGroup->updateDescriptor(resDesc);
         resDesc.texture = texture1;
-        resDesc.descriptorHandle = _outputImageHandle;
+        resDesc.handle = _outputImageHandle;
         argGroup->updateDescriptor(resDesc);
         //
         GaussBlurItem* item = new GaussBlurItem(argGroup, texture0, texture1 );

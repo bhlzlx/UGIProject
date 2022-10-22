@@ -168,17 +168,17 @@ namespace ugi {
         //
         res_descriptor_t res;
         m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
-        m_uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
+        m_uniformDescriptor.handle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
         m_uniformDescriptor.bufferRange = 64;
 
         res.type = ArgumentDescriptorType::Sampler;
         res.sampler = m_samplerState;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
+        res.handle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
         _argumentGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
         res.texture = _texture;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
+        res.handle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
         //
         _argumentGroup->updateDescriptor(res);
         //

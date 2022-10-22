@@ -14,6 +14,7 @@ namespace ugi {
     static const uint32_t MaxFlightCount            = 2;
     static const uint32_t MaxDescriptorCount        = 8;
     static const uint32_t MaxArgumentCount          = 4;
+    static const uint32_t MaxMaterialDescriptorCount= MaxArgumentCount * MaxDescriptorCount;
     static const uint32_t MaxNameLength             = 32;
     static const uint32_t MaxMipLevelCount          = 12;
     static const uint32_t MaxSubpassCount           = 8;
@@ -486,13 +487,13 @@ namespace ugi {
     };
 
     struct pipeline_state_t {
-        alignas(1) uint8_t                  writeMask = 0xff;
-        alignas(1) CullMode                 cullMode = CullMode::None;
-        alignas(1) FrontFace                windingMode = FrontFace::ClockWise;
-        alignas(1) uint8_t                  scissorEnable = 1;
-        alignas(4) depth_state_t               depthState;
-        alignas(4) blend_state_t               blendState;
-        alignas(4) stencil_state_t             stencilState;
+        alignas(1) uint8_t                      writeMask = 0xff;
+        alignas(1) CullMode                     cullMode = CullMode::None;
+        alignas(1) FrontFace                    windingMode = FrontFace::ClockWise;
+        alignas(1) uint8_t                      scissorEnable = 1;
+        alignas(4) depth_state_t                depthState;
+        alignas(4) blend_state_t                blendState;
+        alignas(4) stencil_state_t              stencilState;
     };
 
     typedef uint8_t TextureUsageFlags;
@@ -602,7 +603,7 @@ namespace ugi {
         alignas(4) descriptor_set_info_t            argumentLayouts[MaxArgumentCount];
         alignas(4) vertex_layout_t                  vertexLayout;
         alignas(4) pipeline_constants_t             pipelineConstants[(uint8_t)shader_stage_t::ShaderStageCount];
-        // ==
+        // == 动态pipeline信息，并不是最终绑定的pipeine信息，只是默认的pipeline信息
         alignas(4) pipeline_state_t                 renderState;
         alignas(4) uint32_t                         tessPatchCount = 0;
         alignas(1) topology_mode_t                  topologyMode;
@@ -673,12 +674,12 @@ namespace ugi {
     };
 
     struct res_descriptor_t {
-        uint32_t                descriptorHandle;
+        uint32_t                handle;
         res_descriptor_type     type;                   // 资源类型
-        res_union_t        res;
+        res_union_t             res;
         //
         res_descriptor_t()
-            : descriptorHandle(~0)
+            : handle(~0)
             , type( res_descriptor_type::UniformBuffer )
             , res{}
         {

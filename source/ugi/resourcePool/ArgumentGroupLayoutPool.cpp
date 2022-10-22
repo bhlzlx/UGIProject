@@ -31,11 +31,11 @@ namespace ugi {
     class ArgumentGroupCreateMethod {
     private:
     public:
-        ArgumentGroupLayout* operator()( Device* device, const pipeline_desc_t& pipelineDescription ) {
-            // 实际上这个 ArgumentGroupLayout 也应该作为一个缓存资源，因为很多 argument groupt 会共享这个对象，所以也应该做一个哈希来存这个玩意
+        MaterialLayout* operator()( Device* device, const pipeline_desc_t& pipelineDescription ) {
+            // 实际上这个 MaterialLayout 也应该作为一个缓存资源，因为很多 argument groupt 会共享这个对象，所以也应该做一个哈希来存这个玩意
             // 目前会写到device的数据成员里（缓存
-            ArgumentGroupLayout* layoutPtr = new ArgumentGroupLayout();
-            ArgumentGroupLayout& groupLayout = *layoutPtr;
+            MaterialLayout* layoutPtr = new MaterialLayout();
+            MaterialLayout& groupLayout = *layoutPtr;
             groupLayout._device = device;
             groupLayout._descriptorSetCount = pipelineDescription.argumentCount;
             //
@@ -113,7 +113,7 @@ namespace ugi {
     class ArgumentGroupDestroyMethod {
     private:
     public:
-        void operator()( Device* device, ArgumentGroupLayout* layout ) {
+        void operator()( Device* device, MaterialLayout* layout ) {
             for( auto& setLayout : layout->_descriptorSetLayouts ) {
                 if( setLayout ) {
                     vkDestroyDescriptorSetLayout( device->device(), setLayout, nullptr );
@@ -125,15 +125,15 @@ namespace ugi {
         }
     };
 
-    using ArgumentGroupLayoutPool = HashObjectPool< pipeline_desc_t, ArgumentGroupLayout*, Device*, ArgumentGroupHashMethod, ArgumentGroupCreateMethod, ArgumentGroupDestroyMethod>;
+    using MaterialLayoutPool = HashObjectPool< pipeline_desc_t, MaterialLayout*, Device*, ArgumentGroupHashMethod, ArgumentGroupCreateMethod, ArgumentGroupDestroyMethod>;
 
-    const ArgumentGroupLayout* Device::getArgumentGroupLayout( const pipeline_desc_t& pipelineDescription, uint64_t& hashVal ) {
-        auto argumentGroupLayout = ArgumentGroupLayoutPool::GetInstance()->getObject(pipelineDescription, this, hashVal);
+    const MaterialLayout* Device::getPipelineMaterialLayout( const pipeline_desc_t& pipelineDescription, uint64_t& hashVal ) {
+        auto argumentGroupLayout = MaterialLayoutPool::GetInstance()->getObject(pipelineDescription, this, hashVal);
         return argumentGroupLayout;
     }
 
-    const ArgumentGroupLayout* Device::getArgumentGroupLayout( uint64_t hashVal ) {
-        auto argumentGroupLayout = ArgumentGroupLayoutPool::GetInstance()->getObject(hashVal);
+    const MaterialLayout* Device::getPipelineMaterialLayout( uint64_t hashVal ) {
+        auto argumentGroupLayout = MaterialLayoutPool::GetInstance()->getObject(hashVal);
         return argumentGroupLayout;
     }
 

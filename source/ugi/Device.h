@@ -9,16 +9,11 @@
 
 #include "UGIDeclare.h"
 #include "UGITypes.h"
-
-namespace common {
-
-    class IArchive;
-
-}
+#include <LightWeightCommon/io/archive.h>
 
 namespace ugi {
 
-    class ArgumentGroupLayout;
+    class MaterialLayout;
     struct DeviceDescriptorVulkan : public DeviceDescriptor {
         //
         constexpr static uint32_t MaxQueueCountSupport = 8;
@@ -27,7 +22,7 @@ namespace ugi {
         VkPhysicalDeviceProperties              properties;
         VkPhysicalDevice                        physicalDevice;
         VkSurfaceKHR                            surface;
-        common::IArchive*                       archive;
+        comm::IArchive*                         archive;
         //
         //
         uint32_t                                queueFamilyCount;
@@ -122,8 +117,8 @@ namespace ugi {
         void destroyBuffer( Buffer* texture );
         void destroyFence( Fence* fence );
 
-        const ArgumentGroupLayout* getArgumentGroupLayout( const pipeline_desc_t& pipelineDescription, uint64_t& hashval );
-        const ArgumentGroupLayout* getArgumentGroupLayout( uint64_t hashval );
+        const MaterialLayout* getPipelineMaterialLayout( const pipeline_desc_t& pipelineDescription, uint64_t& hashval );
+        const MaterialLayout* getPipelineMaterialLayout( uint64_t hashval );
         DescriptorSetAllocator* descriptorSetAllocator() const {
             return _descriptorSetAllocator;
         }
@@ -167,7 +162,7 @@ namespace ugi {
     public:
         RenderSystem() {
         }
-        Device* createDevice( const DeviceDescriptor& _descriptor, common::IArchive* archive);
+        Device* createDevice( const DeviceDescriptor& _descriptor, comm::IArchive* archive);
         //
         const DeviceDescriptorVulkan* getVulkanDeviceDescriptor() const {
             return &m_deviceDescriptorVk;

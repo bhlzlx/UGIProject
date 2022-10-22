@@ -205,7 +205,7 @@ namespace ugi {
         _uploadQueue->waitIdle();
         //
         m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
-        m_uniformDescriptor.descriptorHandle = DescriptorBinder::GetDescriptorHandle("Argument", pipelineDesc );
+        m_uniformDescriptor.handle = DescriptorBinder::GetDescriptorHandle("Argument", pipelineDesc );
         m_uniformDescriptor.bufferRange = 64 * 4;
         //
         _flightIndex = 0;

@@ -262,14 +262,14 @@ namespace ugi {
                 transformDescriptor.type = res_descriptor_type::UniformBuffer;
                 transformDescriptor.bufferOffset = 0;
                 transformDescriptor.bufferRange = sizeof(GeometryTransformArgument) * _maxArgPerDraw;
-                transformDescriptor.descriptorHandle = drawData->_argGroups[0]->GetDescriptorHandle("ElementInformation", pipelineDesc);
+                transformDescriptor.handle = drawData->_argGroups[0]->GetDescriptorHandle("ElementInformation", pipelineDesc);
                 transformDescriptor.buffer = nullptr;
             }
             res_descriptor_t globalInfoDescriptor; {
                 globalInfoDescriptor.type = res_descriptor_type::UniformBuffer;
                 globalInfoDescriptor.bufferOffset = 0;
                 globalInfoDescriptor.bufferRange = sizeof(ContextInformation);
-                globalInfoDescriptor.descriptorHandle = drawData->_argGroups[0]->GetDescriptorHandle("GlobalInformation", pipelineDesc);
+                globalInfoDescriptor.handle = drawData->_argGroups[0]->GetDescriptorHandle("GlobalInformation", pipelineDesc);
                 globalInfoDescriptor.buffer = nullptr;
             }
             drawData->_elementInformationDescriptor = transformDescriptor;

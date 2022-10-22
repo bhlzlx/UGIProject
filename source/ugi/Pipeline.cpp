@@ -1,12 +1,14 @@
 #include "Pipeline.h"
-#include "CommandBuffer.h"
-#include "VulkanFunctionDeclare.h"
-#include "UGITypes.h"
-#include "RenderPass.h"
-#include "UGITypeMapping.h"
-#include "Device.h"
-#include "Argument.h"
-#include "UGIUtility.h"
+#include <VulkanFunctionDeclare.h>
+#include <UGITypes.h>
+#include <UGITypeMapping.h>
+#include <UGIUtility.h>
+#include <RenderPass.h>
+#include <Device.h>
+#include <Argument.h>
+#include <CommandBuffer.h>
+#include <render_components/PipelineMaterial.h>
+#include <ArgumentGroupLayout.inl>
 
 namespace ugi {
 
@@ -61,10 +63,11 @@ namespace ugi {
         _RSStateCreateInfo.lineWidth = 1.0f;
     }
 
-    VkPipelineLayout GetPipelineLayout(const ArgumentGroupLayout* argGroupLayout);
+    VkPipelineLayout GetPipelineLayout(const MaterialLayout* argGroupLayout);
 
     GraphicsPipeline* GraphicsPipeline::CreatePipeline( Device* device, const pipeline_desc_t& pipelineDescription ) {
         GraphicsPipeline* pipelinePtr = new GraphicsPipeline();
+        pipelinePtr->_pipelineDesc = pipelineDescription;
         GraphicsPipeline& pipeline = *pipelinePtr;
         // 1. shader stages
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
@@ -201,7 +204,7 @@ namespace ugi {
 		pipeline._pipelineCreateInfo.pDepthStencilState = &depthStencilState;
 		pipeline._pipelineCreateInfo.pTessellationState = pipelineDescription.tessPatchCount ? &tessellationState : nullptr;
 		pipeline._pipelineCreateInfo.pDynamicState = &dynamicState;
-        const ArgumentGroupLayout* argumentGroupLayout = device->getArgumentGroupLayout( pipelineDescription, pipeline._pipelineLayoutHash);
+        const MaterialLayout* argumentGroupLayout = device->getPipelineMaterialLayout(pipelineDescription, pipeline._pipelineLayoutHash);
         pipeline._pipelineCreateInfo.layout = ugi::GetPipelineLayout(argumentGroupLayout);
         // 动态的，先置空
         pipeline._pipelineCreateInfo.pRasterizationState = &pipeline._RSStateCreateInfo;
@@ -211,7 +214,7 @@ namespace ugi {
         pipeline._device = device;
         // pipeline create info 准备好了
         auto argGroup = pipelinePtr->createArgumentGroup();
-        pipelinePtr->_argumentBinder = argGroup;
+        pipelinePtr->_descriptorBinder = argGroup;
         return pipelinePtr;
     }
 
@@ -268,15 +271,15 @@ namespace ugi {
         }
     }
 
-    void GraphicsPipeline::bind( RenderCommandEncoder* encoder ) {
+    void GraphicsPipeline::bind(RenderCommandEncoder* encoder) {
         UGIHash<APHash> hasher;
         _hashRasterizationState( hasher );
         VkPipeline pipeline = preparePipelineStateObject( hasher,  encoder );
-        vkCmdBindPipeline( *encoder->commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+        vkCmdBindPipeline(*encoder->commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     }
 
     DescriptorBinder* GraphicsPipeline::createArgumentGroup() const {
-        const auto argumentLayout = this->_device->getArgumentGroupLayout(_pipelineLayoutHash);
+        const auto argumentLayout = this->_device->getPipelineMaterialLayout(_pipelineLayoutHash);
         assert(argumentLayout);
         if( !argumentLayout) {
             return nullptr;
@@ -285,9 +288,84 @@ namespace ugi {
         return group;        
     }
 
+    uint32_t GraphicsPipeline::getDescriptorHandle(char const* descriptorName, res_descriptor_info_t* descriptorInfo) const {
+        DescriptorHandleImp handle;
+        handle.descriptorIndex = 0;
+        handle.specifiedIndex = 0;
+        handle.binding = 0;
+        handle.handle = 0;
+        //
+        uint32_t dynamicBufferIndex = 0;
+        uint32_t imageIndex = 0;
 
-    Material* GraphicsPipeline::createMaterial(std::vector<std::string> const& parameters) {
-        Material* material = new Material();
+        for( uint32_t argIndex = 0; argIndex< _pipelineDesc.argumentCount; ++argIndex) {
+            auto setIndex = _pipelineDesc.argumentLayouts[argIndex].index;
+            handle.setID = setIndex;
+            for( uint32_t descriptorIndex = 0; descriptorIndex < _pipelineDesc.argumentLayouts[argIndex].descriptorCount; ++descriptorIndex) {
+                const auto& descriptor = _pipelineDesc.argumentLayouts[argIndex].descriptors[descriptorIndex];
+                auto binding = descriptor.binding;
+                assert(handle.binding <= binding);
+                handle.binding = binding;
+                if( strcmp(descriptor.name, descriptorName) == 0 ) {
+                    handle.bindingIndex = descriptorIndex;                    
+                    handle.setIndex = argIndex;
+                    if(isDynamicBufferType( descriptor.type)) {
+                        handle.specifiedIndex = dynamicBufferIndex;
+                    } else if( isImageType( descriptor.type) ) {
+                        handle.specifiedIndex = imageIndex;
+                    }
+                    assert( handle.specifiedIndex < 16 );
+                    if(descriptorInfo) {
+                        *descriptorInfo = descriptor;
+                    }
+                    return handle.handle;
+                }
+                ++handle.descriptorIndex;
+                // 处理动态绑定（buffer）
+                if(isDynamicBufferType( descriptor.type)) {
+                    ++dynamicBufferIndex;
+                } else if( isImageType( descriptor.type) ) {
+                    ++imageIndex;
+                }
+            }
+        }
+        return ~0;
+    }
+
+    Material* GraphicsPipeline::createMaterial(std::vector<std::string> const& parameters, std::vector<res_union_t> const& resources) {
+        if(resources.size()) {
+            if(resources.size()!=parameters.size()) {
+                return nullptr;
+            }
+        }
+        Material* mtl = new Material();
+        for(size_t i = 0; i<parameters.size(); ++i) {
+            auto const& name = parameters[i];
+            res_descriptor_info_t descInfo;
+            auto handle = this->getDescriptorHandle(name.c_str(), &descInfo);
+            if(handle != ~0) {
+                res_descriptor_t descriptor;
+                descriptor.handle = handle;
+                descriptor.type = descInfo.type;
+                if(resources.size()) {
+                    descriptor.res = resources[i];
+                } else {
+                    memset(&descriptor.res, 0xff, sizeof(descriptor.res));
+                }
+                mtl->descriptors_.push_back(descriptor);
+            }
+        }
+        return mtl;
+    }
+
+    void GraphicsPipeline::applyMaterial(Material const* material) {
+        for(auto const& item: material->descriptors()) {
+            _descriptorBinder->updateDescriptor(item);
+        }
+    }
+
+    void GraphicsPipeline::flushMaterials(CommandBuffer* cmd) {
+        this->_descriptorBinder->bind(cmd);
     }
 
     ComputePipeline* ComputePipeline::CreatePipeline( Device* device, const pipeline_desc_t& pipelineDesc ) {
@@ -298,7 +376,7 @@ namespace ugi {
         createInfo.flags = 0;
         createInfo.basePipelineHandle = VK_NULL_HANDLE;
         createInfo.basePipelineIndex = 0;
-        auto pipelineLayout = device->getArgumentGroupLayout(pipelineDesc, pipelineLayoutHash);
+        auto pipelineLayout = device->getPipelineMaterialLayout(pipelineDesc, pipelineLayoutHash);
         createInfo.layout = ugi::GetPipelineLayout(pipelineLayout);
         VkPipelineShaderStageCreateInfo stageInfo; {
             stageInfo.flags = 0;
@@ -326,7 +404,7 @@ namespace ugi {
     }
 
     DescriptorBinder* ComputePipeline::createArgumentGroup() const  {
-        const auto argumentLayout = _device->getArgumentGroupLayout(_pipelineLayoutHash);
+        const auto argumentLayout = _device->getPipelineMaterialLayout(_pipelineLayoutHash);
         assert(argumentLayout);
         if( !argumentLayout) {
             return nullptr;

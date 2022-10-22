@@ -99,8 +99,7 @@ namespace ugi {
 
     DebugReporterVk debugReporter;
 
-    Device*
-    RenderSystem::createDevice( const DeviceDescriptor& _descriptor, common::IArchive* archive) {
+    Device* RenderSystem::createDevice( const DeviceDescriptor& _descriptor, comm::IArchive* archive) {
         m_deviceDescriptorVk = _descriptor;
         auto library = OpenLibrary(VULKAN_LIBRARY_NAME);
         if (library == NULL) {

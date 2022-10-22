@@ -14,6 +14,7 @@ namespace ugi {
     class GraphicsPipeline {
     private:
         Device*                                             _device;
+        pipeline_desc_t                                     _pipelineDesc;
         std::unordered_map<uint64_t, VkPipeline>            _pipelineTable;
         //
         std::vector<VkPipelineShaderStageCreateInfo>        _shaderStages;
@@ -27,13 +28,14 @@ namespace ugi {
         VkPipelineDynamicStateCreateInfo                    _dynamicStateCreateInfo;
         VkPipelineVertexInputStateCreateInfo                _vertexInputStateCreateInfo;
         //
-        std::array< VkVertexInputBindingDescription, 16 >   _vertexInputBindings;
-		std::array<VkVertexInputAttributeDescription, 16 >  _vertexInputAttributs;
+        std::array<VkVertexInputBindingDescription, 16>     _vertexInputBindings;
+		std::array<VkVertexInputAttributeDescription, 16>   _vertexInputAttributs;
         // 因为在逻辑里我们会经常改变pipeline的这个属性，所以我们将处理成动态，通过hash得到不同的pipeline object
         VkPipelineRasterizationStateCreateInfo              _RSStateCreateInfo;                     ///> 这个不会用到的，只是放着给参考一下
         VkGraphicsPipelineCreateInfo                        _pipelineCreateInfo;
         uint64_t                                            _pipelineLayoutHash;                    ///> pipeline layout 的 hash
-        DescriptorBinder*                                   _argumentBinder;
+        MaterialLayout*                                     _materialLayout;
+        DescriptorBinder*                                   _descriptorBinder;
     private:
         VkPipeline preparePipelineStateObject(UGIHash<APHash>& hasher, const RenderCommandEncoder* encoder);
         void _hashRasterizationState(UGIHash<APHash>& hasher);
@@ -47,11 +49,15 @@ namespace ugi {
         void setDepthStencilState();
         void bind(RenderCommandEncoder* encoder);
         void bind(ComputeCommandEncoder* encoder);
-        Material* createMaterial(std::vector<std::string> const& parameters);
+        void applyMaterial(Material const* material);
+        void flushMaterials(CommandBuffer* cmd);
+        void resetMaterials();
+        Material* createMaterial(std::vector<std::string> const& parameters, std::vector<res_union_t> const& resources);
+        uint32_t getDescriptorHandle(char const* descriptorName, res_descriptor_info_t* descriptorInfo = nullptr) const;
         //
-        DescriptorBinder* argumentBinder() const {
-            return _argumentBinder;
-        }
+        // DescriptorBinder* argumentBinder() const {
+        //     return _descriptorBinder;
+        // }
     };
 
 

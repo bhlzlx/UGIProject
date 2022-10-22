@@ -13,13 +13,14 @@
 #include <ugi/Drawable.h>
 #include <ugi/UniformBuffer.h>
 #include <ugi/Descriptor.h>
+#include <ugi/render_components/PipelineMaterial.h>
 // #include <hgl/assets/AssetsSource.h>
 
 #include <cmath>
 
 namespace ugi {
 
-    bool RenderContext::initialize(void* wnd, ugi::DeviceDescriptor deviceDesc, common::IArchive* archive) {
+    bool RenderContext::initialize(void* wnd, ugi::DeviceDescriptor deviceDesc, comm::IArchive* archive) {
         renderSystem = new RenderSystem();
         device = renderSystem->createDevice(deviceDesc, archive);
         uniformAllocator = device->createUniformAllocator();
@@ -35,8 +36,8 @@ namespace ugi {
         return true;
     }
 
-    bool HelloWorld::initialize( void* _wnd, common::IArchive* arch) {
-        auto pipelineFile = arch->openIStream("/shaders/triangle/pipeline.bin", {common::ReadFlag::binary});
+    bool HelloWorld::initialize( void* _wnd, comm::IArchive* arch) {
+        auto pipelineFile = arch->openIStream("/shaders/triangle/pipeline.bin", {comm::ReadFlag::binary});
         auto pipelineFileSize = pipelineFile->size();
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
         pipelineFile->read(pipelineBuffer,pipelineFile->size());
@@ -65,7 +66,7 @@ namespace ugi {
         pipelineDesc.renderState.blendState.enable = false;
         _pipeline = _renderContext.device->createGraphicsPipeline(pipelineDesc);
         //
-        auto resourceBinder = _pipeline->argumentBinder();
+        _material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
         _vertexBuffer = _renderContext.device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
         Buffer* vertexStagingBuffer = _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
         float vertexData[] = {
@@ -95,9 +96,9 @@ namespace ugi {
             resourceEncoder->updateBuffer( _indexBuffer, indexStagingBuffer, &subRes, &subRes );
 
             _drawable = _renderContext.device->createDrawable(pipelineDesc);
-            _drawable->setVertexBuffer( _vertexBuffer, 0, 0 );
-            _drawable->setVertexBuffer( _vertexBuffer, 1, 12 );
-            _drawable->setIndexBuffer( _indexBuffer, 0 );
+            _drawable->setVertexBuffer(_vertexBuffer, 0, 0);
+            _drawable->setVertexBuffer(_vertexBuffer, 1, 12);
+            _drawable->setIndexBuffer(_indexBuffer, 0);
             //
             tex_desc_t texDesc;
             texDesc.format = UGIFormat::RGBA8888_UNORM;
@@ -161,21 +162,22 @@ namespace ugi {
         _renderContext.uploadQueue->waitIdle();
         //
         res_descriptor_info_t argDescInfo = {};
-        _uniformDescriptor.descriptorHandle = DescriptorBinder::GetDescriptorHandle("Argument1", pipelineDesc, &argDescInfo);
+        _pipeline->getDescriptorHandle("Argument1", &argDescInfo);
+        auto const& descriptors = this->_material->descriptors();
+        _uniformDescriptor.handle = descriptors[0].handle;
         _uniformDescriptor.type = argDescInfo.type;
         _uniformDescriptor.res.buffer.size = argDescInfo.dataSize;
         // 
         res_descriptor_t res;
+        res.handle = descriptors[1].handle;
         res.type = res_descriptor_type::Sampler;
         res.res.samplerState = _samplerState;
-        res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triSampler", pipelineDesc, &argDescInfo );
-        resourceBinder->updateDescriptor(res);
+        _material->updateDescriptor(res);
         
         res.type = res_descriptor_type::Image;
         res.res.imageView = _imageView.handle;;
-        res.descriptorHandle = DescriptorBinder::GetDescriptorHandle("triTexture", pipelineDesc, &argDescInfo );
-        //
-        resourceBinder->updateDescriptor(res);
+        res.handle = descriptors[2].handle;
+        _material->updateDescriptor(res);
         //
         _flightIndex = 0;
         return true;
@@ -186,7 +188,7 @@ namespace ugi {
         _renderContext.device->waitForFence( _renderContext.frameCompleteFences[_flightIndex] );
         _renderContext.descriptorSetAllocator->tick();
         _renderContext.uniformAllocator->tick();
-        auto resourceBinder = _pipeline->argumentBinder();
+        _pipeline->resetMaterials();
         uint32_t imageIndex = _renderContext.swapchain->acquireNextImage(_renderContext.device, _flightIndex);
         //
         IRenderPass* mainRenderPass = _renderContext.swapchain->renderPass(imageIndex);
@@ -215,8 +217,7 @@ namespace ugi {
             ubo.writeData(0, &col2, sizeof(col2));
             _uniformDescriptor.res.buffer.offset = ubo.offset();
             _uniformDescriptor.res.buffer.buffer = (size_t)ubo.buffer()->buffer(); 
-            resourceBinder->updateDescriptor(_uniformDescriptor);
-
+            _material->updateDescriptor(_uniformDescriptor);
             //
             renderpass_clearvalue_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
@@ -231,8 +232,8 @@ namespace ugi {
                 renderCommandEncoder->setViewport(0, 0, _width, _height, 0, 1.0f );
                 renderCommandEncoder->setScissor( 0, 0, _width, _height );
                 renderCommandEncoder->bindPipeline(_pipeline);
-                renderCommandEncoder->bindArgumentGroup(resourceBinder);
-                // renderCommandEncoder->drawIndexed( _drawable, 0, 3 );
+                _pipeline->applyMaterial(_material);
+                _pipeline->flushMaterials(cmdbuf);
                 renderCommandEncoder->draw( _drawable, 3, 0 );
             }
             renderCommandEncoder->endEncode();

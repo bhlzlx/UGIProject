@@ -394,9 +394,9 @@ namespace ugi {
         descriptor.sampler.mag = TextureFilter::Linear;
         descriptor.sampler.mip = TextureFilter::Linear;
         descriptor.sampler.min = TextureFilter::Linear;
-        descriptor.descriptorHandle = _texArraySamplerHandle;
+        descriptor.handle = _texArraySamplerHandle;
         drawData->_argumentGroup->updateDescriptor(descriptor);
-        descriptor.descriptorHandle = _texArrayHandle;
+        descriptor.handle = _texArrayHandle;
         descriptor.type = res_descriptor_type::Image;
         descriptor.texture = _texTileManager->texture();
         drawData->_argumentGroup->updateDescriptor(descriptor);
@@ -436,18 +436,18 @@ namespace ugi {
         for( uint32_t i = 0; i<drawDataCount; ++i ) {
             auto drawData = drawDatas[i];
             res_descriptor_t descriptor;
-            descriptor.descriptorHandle = _indicesHandle;
+            descriptor.handle = _indicesHandle;
             descriptor.bufferRange = sizeof(IndexHandle) * 1024;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_indices);
             drawData->_argumentGroup->updateDescriptor(descriptor);
 
-            descriptor.descriptorHandle = _effectsHandle;
+            descriptor.handle = _effectsHandle;
             descriptor.bufferRange = sizeof(Style) * 256;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_styles);
             drawData->_argumentGroup->updateDescriptor(descriptor);
             drawData->_argumentGroup->prepairResource(resourceEncoder);
 
-            descriptor.descriptorHandle = _transformsHandle;
+            descriptor.handle = _transformsHandle;
             descriptor.bufferRange = sizeof(Transform) * 256;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_transforms);
             drawData->_argumentGroup->updateDescriptor(descriptor);
@@ -456,7 +456,7 @@ namespace ugi {
             struct {
                 float width, height;
             } contextSize = {(float)_width, (float)_height };
-            descriptor.descriptorHandle = _contextHandle;
+            descriptor.handle = _contextHandle;
             descriptor.bufferRange = sizeof(contextSize);
             uniformAllocator->allocateForDescriptor(descriptor, contextSize);
             drawData->_argumentGroup->updateDescriptor(descriptor);

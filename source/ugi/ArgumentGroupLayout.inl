@@ -19,7 +19,7 @@ namespace ugi {
     *   Argument Group Layout
     *   只存参数的Layout信息
     * ==============================================================================================================*/
-    class ArgumentGroupLayout
+    class MaterialLayout
     {
     public:
         Device*                 _device;
@@ -29,8 +29,10 @@ namespace ugi {
         VkDescriptorSetLayout   _descriptorSetLayouts[MaxArgumentCount];
         // descriptors
         uint32_t                _descriptorCountTotal;                      ///> 所有的 descriptor 数量
-        uint32_t                _descriptorBindingMasks[MaxArgumentCount];  ///> descriptor 全部绑定好的情况
-        uint32_t                _descriptorCount[MaxArgumentCount];         ///> 每个 set 有几个 descriptor ?
+        // 32bit mask per descriptor set
+        uint32_t                _descriptorBindingMasks[MaxArgumentCount]; 
+        // descriptor count per descriptor set
+        uint32_t                _descriptorCount[MaxArgumentCount];       ///> 每个 set 有几个 descriptor ?
         uint32_t                _descriptorSetWriteBaseIndex[MaxArgumentCount]; ///> argument里有很多 VkWriteDescriptorSet对象，每个set占用若干个，这里记录set对应的起始index
         // 特殊用途
         uint32_t                _dynamicBufferCountTotal;                   ///> 比如说 uniform buffer 这种动态偏移绑定的
@@ -38,13 +40,13 @@ namespace ugi {
         uint32_t                _dynamicOffsetBaseIndex[MaxArgumentCount];  ///> 把所有的dynamic offset存数组里，每个set的 起始 dynamic descriptor 对应的索引
         //
         uint32_t                _imageCountTotal;
-        res_descriptor_type  _imageDescriptorType[MaxDescriptorCount];   ///> 这个量是随便写的，不过一个管线一般也不会超过8张纹理吧！
+        res_descriptor_type     _imageDescriptorType[MaxDescriptorCount];   ///> 这个量是随便写的，不过一个管线一般也不会超过8张纹理吧！
         //
         VkPipelineLayout        _pipelineLayout;
     public:
-        ArgumentGroupLayout();
+        MaterialLayout();
         // ===============================================================================================================
-        ArgumentGroupLayout( ArgumentGroupLayout&& groupLayout );
+        MaterialLayout( MaterialLayout&& materialLayout);
         //
         bool validateResourceIntegrility( uint32_t _mask[] ) const;
         //
@@ -85,6 +87,20 @@ namespace ugi {
             return _device;
         }
         // ===============================================================================================================
-        // static ArgumentGroupLayout* CreateArgumentGroupLayout( Device* device, const PipelineDescription& pipelineDescription );
+        // static MaterialLayout* CreateArgumentGroupLayout( Device* device, const PipelineDescription& pipelineDescription );
+    };
+
+    struct DescriptorHandleImp {
+        union {
+            struct {
+                uint32_t setID          : 2;        // set id 最多4个
+                uint32_t setIndex       : 2;        // set index 最多4个
+                uint32_t binding        : 5;        // descriptor 最多支持32个，够了吧！
+                uint32_t bindingIndex   : 5;        // desctiptor 有时候不是按binding顺序排列的 用来标记这个排列的位置
+                uint32_t descriptorIndex: 8;        // 整个 argument group 里的 索引
+                uint32_t specifiedIndex : 4;        // 支持16个，够了吧！16 个 dynamic buffer / image / or other specified type
+            };
+            uint32_t handle;
+        };
     };
 }

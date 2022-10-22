@@ -146,7 +146,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         assetRoot = result[1];
     }
     assetRoot.append("/../");
-    auto archive = common::CreateFSArchive(assetRoot);
+    auto archive = comm::CreateFSArchive(assetRoot);
     // auto archieve = kwheel::CreateStdArchieve( assetRoot );
     if (!object->initialize(hWnd, archive)) {
         return FALSE;

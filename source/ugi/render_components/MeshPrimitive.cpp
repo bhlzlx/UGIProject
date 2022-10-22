@@ -1,4 +1,4 @@
-#include "mesh_primitive.h"
+#include "MeshPrimitive.h"
 #include <VulkanDeclare.h>
 #include <VulkanFunctionDeclare.h>
 #include <CommandBuffer.h>

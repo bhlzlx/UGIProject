@@ -35,11 +35,16 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/RenderCommandEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ResourceCommandEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ComputeCommandEncoder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/pipeline_material.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/mesh_primitive.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/PipelineMaterial.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/MeshPrimitive.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_components/Renderable.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/async_load/AsyncLoadManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/async_load/GPUAsyncLoadItem.cpp
+)
+
+target_link_libraries(UGI
+PUBLIC
+    LightWeightCommon
 )
 
 if( MSVC )

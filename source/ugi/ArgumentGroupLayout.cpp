@@ -7,7 +7,7 @@
 
 namespace ugi {
 
-    ArgumentGroupLayout::ArgumentGroupLayout()
+    MaterialLayout::MaterialLayout()
         : _device( nullptr )
         , _descriptorSetCount(0)
         , _descriptorSetBitMask {}
@@ -24,7 +24,7 @@ namespace ugi {
     {
     }
 
-    bool ArgumentGroupLayout::validateResourceIntegrility( uint32_t _mask[] ) const {
+    bool MaterialLayout::validateResourceIntegrility( uint32_t _mask[] ) const {
         int rst = memcmp( _descriptorBindingMasks, _mask, sizeof(_descriptorBindingMasks));
         if( rst == 0 ) {
             return true;

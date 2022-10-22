@@ -23,7 +23,7 @@ namespace ugi {
     class Drawable;
     class UniformAllocator;
     class ResourceManager;
-    class ArgumentGroupLayout;
+    class MaterialLayout;
     class ComputePipeline;
     class GPUAsyncLoadManager;
     class Material;

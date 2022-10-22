@@ -12,69 +12,55 @@ namespace ugi {
 
     VkSampler CreateSampler( Device* device, const sampler_state_t& samplerState );
     // 
-    struct DescriptorHandleImp {
-        union {
-            struct {
-                uint32_t setID          : 2;        // set id 最多4个
-                uint32_t setIndex       : 2;        // set index 最多4个
-                uint32_t binding        : 5;        // descriptor 最多支持32个，够了吧！
-                uint32_t bindingIndex   : 5;        // desctiptor 有时候不是按binding顺序排列的 用来标记这个排列的位置
-                uint32_t descriptorIndex: 8;        // 整个 argument group 里的 索引
-                uint32_t specifiedIndex : 4;        // 支持16个，够了吧！16 个 dynamic buffer / image / or other specified type
-            };
-            uint32_t handle;
-        };
-    };
-    
     // vulkan 的 handle是 set/binding 组合
-    uint32_t DescriptorBinder::GetDescriptorHandle(const char* descriptorName, const pipeline_desc_t& pipelineDescription, res_descriptor_info_t* descriptorInfo ) 
-    {
-        DescriptorHandleImp handle;
-        handle.descriptorIndex = 0;
-        handle.specifiedIndex = 0;
-        handle.binding = 0;
-        handle.handle = 0;
-        //
-        uint32_t dynamicBufferIndex = 0;
-        uint32_t imageIndex = 0;
+    // uint32_t DescriptorBinder::GetDescriptorHandle(const char* descriptorName, const pipeline_desc_t& pipelineDescription, res_descriptor_info_t* descriptorInfo ) 
+    // {
+    //     DescriptorHandleImp handle;
+    //     handle.descriptorIndex = 0;
+    //     handle.specifiedIndex = 0;
+    //     handle.binding = 0;
+    //     handle.handle = 0;
+    //     //
+    //     uint32_t dynamicBufferIndex = 0;
+    //     uint32_t imageIndex = 0;
 
-        for( uint32_t argIndex = 0; argIndex< pipelineDescription.argumentCount; ++argIndex) {
-            auto setIndex = pipelineDescription.argumentLayouts[argIndex].index;
-            handle.setID = setIndex;
-            for( uint32_t descriptorIndex = 0; descriptorIndex < pipelineDescription.argumentLayouts[argIndex].descriptorCount; ++descriptorIndex) {
-                const auto& descriptor = pipelineDescription.argumentLayouts[argIndex].descriptors[descriptorIndex];
-                auto binding = descriptor.binding;
-                assert(handle.binding <= binding);
-                handle.binding = binding;
-                if( strcmp(descriptor.name, descriptorName) == 0 ) {
-                    handle.bindingIndex = descriptorIndex;                    
-                    handle.setIndex = argIndex;
-                    if(isDynamicBufferType( descriptor.type)) {
-                        handle.specifiedIndex = dynamicBufferIndex;
-                    } else if( isImageType( descriptor.type) ) {
-                        handle.specifiedIndex = imageIndex;
-                    }
-                    assert( handle.specifiedIndex < 16 );
-                    if(descriptorInfo) {
-                        *descriptorInfo = descriptor;
-                    }
-                    return handle.handle;
-                }
-                ++handle.descriptorIndex;
-                // 处理动态绑定（buffer）
-                if(isDynamicBufferType( descriptor.type)) {
-                    ++dynamicBufferIndex;
-                } else if( isImageType( descriptor.type) ) {
-                    ++imageIndex;
-                }
-            }
-        }
-        return ~0;
-    }
+    //     for( uint32_t argIndex = 0; argIndex< pipelineDescription.argumentCount; ++argIndex) {
+    //         auto setIndex = pipelineDescription.argumentLayouts[argIndex].index;
+    //         handle.setID = setIndex;
+    //         for( uint32_t descriptorIndex = 0; descriptorIndex < pipelineDescription.argumentLayouts[argIndex].descriptorCount; ++descriptorIndex) {
+    //             const auto& descriptor = pipelineDescription.argumentLayouts[argIndex].descriptors[descriptorIndex];
+    //             auto binding = descriptor.binding;
+    //             assert(handle.binding <= binding);
+    //             handle.binding = binding;
+    //             if( strcmp(descriptor.name, descriptorName) == 0 ) {
+    //                 handle.bindingIndex = descriptorIndex;                    
+    //                 handle.setIndex = argIndex;
+    //                 if(isDynamicBufferType( descriptor.type)) {
+    //                     handle.specifiedIndex = dynamicBufferIndex;
+    //                 } else if( isImageType( descriptor.type) ) {
+    //                     handle.specifiedIndex = imageIndex;
+    //                 }
+    //                 assert( handle.specifiedIndex < 16 );
+    //                 if(descriptorInfo) {
+    //                     *descriptorInfo = descriptor;
+    //                 }
+    //                 return handle.handle;
+    //             }
+    //             ++handle.descriptorIndex;
+    //             // 处理动态绑定（buffer）
+    //             if(isDynamicBufferType( descriptor.type)) {
+    //                 ++dynamicBufferIndex;
+    //             } else if( isImageType( descriptor.type) ) {
+    //                 ++imageIndex;
+    //             }
+    //         }
+    //     }
+    //     return ~0;
+    // }
 
     void DescriptorBinder::_writeDescriptorResource( const res_descriptor_t& resource ) {
         DescriptorHandleImp h;
-        h.handle = resource.descriptorHandle;
+        h.handle = resource.handle;
         //
         auto& write = _descriptorWrites[h.descriptorIndex];
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -141,7 +127,7 @@ namespace ugi {
         }
     }
 
-    DescriptorBinder::DescriptorBinder( const ArgumentGroupLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint )
+    DescriptorBinder::DescriptorBinder( const MaterialLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint )
         : _groupLayout( groupLayout )
         , _resourceMasks {}
         , _resources {}
@@ -164,7 +150,7 @@ namespace ugi {
 
     void DescriptorBinder::updateDescriptor( const res_descriptor_t& resource ) {
         DescriptorHandleImp h;
-        h.handle = resource.descriptorHandle;
+        h.handle = resource.handle;
         uint32_t setIndex = h.setID;
         uint32_t binding = h.binding;
 
@@ -229,7 +215,7 @@ namespace ugi {
         }
     }
 
-    VkPipelineLayout GetPipelineLayout( const ArgumentGroupLayout* argGroupLayout ) {
+    VkPipelineLayout GetPipelineLayout( const MaterialLayout* argGroupLayout ) {
         return argGroupLayout->pipelineLayout();
     }
 
@@ -249,7 +235,7 @@ namespace ugi {
     //     return true;
     // }
 
-    void DescriptorBinder::tick() {
+    void DescriptorBinder::reset() {
         _reallocBitMask.reset();
         _reallocBitMask.flip();
     }
