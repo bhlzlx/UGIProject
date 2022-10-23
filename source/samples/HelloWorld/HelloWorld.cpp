@@ -66,7 +66,6 @@ namespace ugi {
         pipelineDesc.renderState.blendState.enable = false;
         _pipeline = _renderContext.device->createGraphicsPipeline(pipelineDesc);
         //
-        _material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
         _vertexBuffer = _renderContext.device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
         Buffer* vertexStagingBuffer = _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
         float vertexData[] = {
@@ -161,24 +160,19 @@ namespace ugi {
         _renderContext.uploadQueue->submitCommandBuffers(submitBatch);
         _renderContext.uploadQueue->waitIdle();
         //
-        res_descriptor_info_t argDescInfo = {};
-        _pipeline->getDescriptorHandle("Argument1", &argDescInfo);
+        _material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
         auto const& descriptors = this->_material->descriptors();
-        _uniformDescriptor.handle = descriptors[0].handle;
-        _uniformDescriptor.type = argDescInfo.type;
-        _uniformDescriptor.res.buffer.size = argDescInfo.dataSize;
+
+        _uboptor = descriptors[0]; // update later in render loop
         // 
-        res_descriptor_t res;
-        res.handle = descriptors[1].handle;
-        res.type = res_descriptor_type::Sampler;
-        res.res.samplerState = _samplerState;
-        _material->updateDescriptor(res);
+        res_descriptor_t res = descriptors[1]; // sampler
+        res.res.samplerState = _samplerState; // assign sampler state
+        _material->updateDescriptor(res); // update to material
         
-        res.type = res_descriptor_type::Image;
-        res.res.imageView = _imageView.handle;;
-        res.handle = descriptors[2].handle;
-        _material->updateDescriptor(res);
-        //
+        res = descriptors[2]; // image
+        res.res.imageView = _imageView.handle; // assign image view 
+        _material->updateDescriptor(res); // update to material
+
         _flightIndex = 0;
         return true;
     }
@@ -215,11 +209,11 @@ namespace ugi {
             }
             auto ubo = _renderContext.uniformAllocator->allocate(sizeof(col2));
             ubo.writeData(0, &col2, sizeof(col2));
-            _uniformDescriptor.res.buffer.offset = ubo.offset();
-            _uniformDescriptor.res.buffer.buffer = (size_t)ubo.buffer()->buffer(); 
-            _material->updateDescriptor(_uniformDescriptor);
+            _uboptor.res.buffer.offset = ubo.offset();
+            _uboptor.res.buffer.buffer = (size_t)ubo.buffer()->buffer(); 
+            _material->updateDescriptor(_uboptor);
             //
-            renderpass_clearvalue_t clearValues;
+            renderpass_clearval_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
             clearValues.stencil = 0xffffffff;

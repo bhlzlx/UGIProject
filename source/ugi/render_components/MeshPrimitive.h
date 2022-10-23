@@ -52,7 +52,11 @@ namespace ugi {
             return polygonMode_;
         }
 
-        void bind( const CommandBuffer* cb) const;
+        bool prepared() const {
+            return prepared_;
+        }
+
+        void bind(const RenderCommandEncoder* encoder) const;
 
         static Mesh* CreateMesh(
             Device* device,

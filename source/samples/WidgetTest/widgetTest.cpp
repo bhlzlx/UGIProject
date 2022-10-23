@@ -162,7 +162,7 @@ namespace ugi {
                 resEncoder->endEncode();
             }
             {   ///> render pass command encoder
-                renderpass_clearvalue_t clearValues;
+                renderpass_clearval_t clearValues;
                 clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
                 clearValues.depth = 1.0f;
                 clearValues.stencil = 0xffffffff;

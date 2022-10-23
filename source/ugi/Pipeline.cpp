@@ -349,6 +349,9 @@ namespace ugi {
                 descriptor.type = descInfo.type;
                 if(resources.size()) {
                     descriptor.res = resources[i];
+                    if(descriptor.type == res_descriptor_type::UniformBuffer) {
+                        descriptor.res.buffer.size = descInfo.dataSize;
+                    }
                 } else {
                     memset(&descriptor.res, 0xff, sizeof(descriptor.res));
                 }

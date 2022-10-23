@@ -27,4 +27,5 @@ namespace ugi {
     class ComputePipeline;
     class GPUAsyncLoadManager;
     class Material;
+    class Mesh;
 }

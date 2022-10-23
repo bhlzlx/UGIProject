@@ -53,7 +53,7 @@ namespace ugi {
         ugi::Drawable*          _drawable;
         ugi::Material*          _material;
 
-        res_descriptor_t        _uniformDescriptor;
+        res_descriptor_t        _uboptor;                                           // matrices
         //
         uint32_t                _flightIndex;                                      // flight index
         //

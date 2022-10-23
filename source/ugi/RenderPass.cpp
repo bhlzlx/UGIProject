@@ -259,7 +259,7 @@ namespace ugi {
         return rst;
     }
 
-    void RenderPass::setClearValues( const renderpass_clearvalue_t& clearValues ) {
+    void RenderPass::setClearValues( const renderpass_clearval_t& clearValues ) {
         for( uint32_t i = 0; i< _colorTextureCount; ++i ) {
             _clearValues[i].color.float32[0] = clearValues.colors[i].r;
             _clearValues[i].color.float32[1] = clearValues.colors[i].g;

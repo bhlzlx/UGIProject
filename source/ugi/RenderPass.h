@@ -44,7 +44,7 @@ namespace ugi {
 
     class IRenderPass {
     public:
-        virtual void setClearValues( const renderpass_clearvalue_t& clearValues ) = 0;
+        virtual void setClearValues( const renderpass_clearval_t& clearValues ) = 0;
         virtual uint32_t subpassCount() const = 0;
         virtual uint32_t subpassColorAttachmentCount( uint32_t subpassIndex ) const = 0;
         virtual uint64_t subpassHash( uint32_t subpassIndex ) const = 0;
@@ -80,7 +80,7 @@ namespace ugi {
                 //
         Size<uint32_t>                              _size; // 宽高
     public:
-        virtual void setClearValues( const renderpass_clearvalue_t& clearValues ) override;
+        virtual void setClearValues( const renderpass_clearval_t& clearValues ) override;
         //== 
         virtual uint32_t subpassCount() const override {
             return 1;

@@ -476,7 +476,7 @@ namespace ugi {
         //
         FrontFace       frontFace = FrontFace::ClockWise;
         CullMode        cullMode = CullMode::None;
-        polygon_mode_t     polygonMode = polygon_mode_t::Fill;
+        polygon_mode_t  polygonMode = polygon_mode_t::Fill;
     };
     //
     enum class ColorMask {
@@ -541,7 +541,7 @@ namespace ugi {
 
 #pragma pack (pop)
 
-    struct renderpass_clearvalue_t {
+    struct renderpass_clearval_t {
         struct color4 {
             float r, g, b, a;
         } colors[MaxRenderTarget];
@@ -603,11 +603,9 @@ namespace ugi {
         alignas(4) descriptor_set_info_t            argumentLayouts[MaxArgumentCount];
         alignas(4) vertex_layout_t                  vertexLayout;
         alignas(4) pipeline_constants_t             pipelineConstants[(uint8_t)shader_stage_t::ShaderStageCount];
-        // == 动态pipeline信息，并不是最终绑定的pipeine信息，只是默认的pipeline信息
         alignas(4) pipeline_state_t                 renderState;
-        alignas(4) uint32_t                         tessPatchCount = 0;
         alignas(1) topology_mode_t                  topologyMode;
-        alignas(1) polygon_mode_t                   pologonMode;
+        alignas(4) uint32_t                         tessPatchCount = 0;
     };
 
     // 纹理具备的属性

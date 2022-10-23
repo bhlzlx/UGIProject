@@ -12,13 +12,13 @@ namespace ugi {
 
     static_assert(sizeof(uint64_t) == sizeof(VkDeviceSize),"must be same");
 
-    void Mesh::bind(const CommandBuffer* cb) const {
+    void Mesh::bind(const RenderCommandEncoder* encoder) const {
         VkBuffer vbuf[MaxVertexBufferBinding];
         for( uint32_t i = 0; i<this->attriCount_; ++i) {
             vbuf[i] = this->vertices_->buffer();
         }
-        vkCmdBindVertexBuffers(*cb, 0, attriCount_, vbuf, (VkDeviceSize*)attriOffsets_);
-        vkCmdBindIndexBuffer( *cb, indices_->buffer(), indexOffset_, VkIndexType::VK_INDEX_TYPE_UINT16);
+        vkCmdBindVertexBuffers(*encoder->commandBuffer(), 0, attriCount_, vbuf, (VkDeviceSize*)attriOffsets_);
+        vkCmdBindIndexBuffer(*encoder->commandBuffer(), indices_->buffer(), indexOffset_, VkIndexType::VK_INDEX_TYPE_UINT16);
     }
 
     /**
