@@ -38,7 +38,6 @@ namespace ugi {
 // 
     // }
 
-
     class Buffer : public Resource {
     private:
         BufferType              _bufferType;            // high level buffer 类型

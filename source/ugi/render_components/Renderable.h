@@ -15,7 +15,7 @@ namespace ugi {
         Mesh*                           mesh_;                  // mesh : vertices & vertex layout info & polygon & topology
         Material*                       material_;              // material : pipeline parameters
         GraphicsPipeline*               pipeline_;              // pipeline : the graphics pipeline that can render this mesh
-        raster_state_t                  rasterState_;           // render state ： pipeline dynamic render state : depth/stencil/blend/cullmode/etc..
+        raster_state_t                  rasterState_;           // depth bias/front face/ cull mode/ polygon mode ...
     public:
         Renderable();
         bool prepared() const;

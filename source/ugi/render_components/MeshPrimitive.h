@@ -44,6 +44,10 @@ namespace ugi {
             return attriCount_;
         }
 
+        uint32_t indexCount() const {
+            return indexCount_;
+        }
+
         topology_mode_t topologyMode() const {
             return topologyMode_;
         }
