@@ -12,18 +12,11 @@ namespace ugi {
         VkBuffer buffer;
         uint32_t offset;
         uint32_t length;
+        uint32_t blockIndex;
     };
 
-    struct mesh_buffer_handle_t {
-        union {
-            uint32_t id; 
-            struct {
-                uint16_t block;
-                uint16_t index;
-            };
-        };
-        static constexpr uint32_t INVALID_HANDLE = 0xffffffff;
-    };
+    using mesh_buffer_handle_t = uint32_t;
+    constexpr uint32_t mesh_buffer_handle_invalid = 0xffffffff;
 
     struct buffer_block_t {
         VkBuffer                buffer;         // vk buffer
@@ -48,23 +41,26 @@ namespace ugi {
     class MeshBufferAllocator {
     private:
         std::vector<buffer_block_t>                     bufferBlocks_;     // buffer pools 
-        std::vector<std::vector<mesh_buffer_alloc_t>>   bufferAllocs_;     // buffer allocations
-        std::vector<std::vector<uint16_t>>              freeIndices_;      // free allocation locations
+        std::vector<mesh_buffer_alloc_t>                bufferAllocs_;
+        std::vector<uint32_t>                           freeIDs_;
         size_t                                          allocationCount_;  // 
         Device*                                         device_;
         uint32_t                                        poolSize_;
         uint32_t                                        totalSize_;
+        //
+        bool                                            rearrangeState_;
     private:
         bool createNewBufferBlock(uint32_t size);
-        uint16_t allocLoc(size_t blockIndex);
+        uint32_t allocID();
         mesh_buffer_alloc_t deref(mesh_buffer_handle_t handle) const;
     public:
         MeshBufferAllocator()
             : bufferBlocks_{}
             , bufferAllocs_{}
-            , freeIndices_{}
+            , freeIDs_{}
             , allocationCount_(0)
             , device_(nullptr)
+            , rearrangeState_(false)
         {}
         bool initialize(Device* device, uint32_t poolSize);
         mesh_buffer_handle_t alloc(uint32_t size);
@@ -75,7 +71,7 @@ namespace ugi {
          * @param encoder 录制指令
          * @param allocations 必须得保证所有的分配记录都在里面
          */
-        void reorganizeAllocations(ResourceCommandEncoder* encoder, std::vector<mesh_buffer_alloc_t*> const& allocations);
+        void rearrangeBufferAlloc(ResourceCommandEncoder* encoder, std::vector<mesh_buffer_alloc_t*> const& allocations);
         void onFrameTick();
     };
 
