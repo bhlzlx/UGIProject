@@ -15,7 +15,7 @@ namespace ugi {
         pipeline_->applyMaterial(material_);
         pipeline_->setRasterizationState(rasterState_);
         pipeline_->bind(encoder);
-        vkCmdDrawIndexed(*encoder->commandBuffer(), mesh_->indexCount(), 1, 0, )
+        // vkCmdDrawIndexed(*encoder->commandBuffer(), mesh_->indexCount(), 1, 0, )
     }
 
 }

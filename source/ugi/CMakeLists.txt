@@ -31,7 +31,7 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/UniformBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Sampler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/GPUBufferAlloc.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MeshBufferAllocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/resourcePool/ArgumentGroupLayoutPool.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/RenderCommandEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ResourceCommandEncoder.cpp
