@@ -37,7 +37,6 @@ namespace ugi {
         if(rst == VK_SUCCESS){
             bufferBlocks_.emplace_back(buffer, allocation, size);
             totalSize_ += size;
-            bufferAllocs_.emplace_back();
             return true;
         }
         assert(false);
@@ -67,56 +66,59 @@ namespace ugi {
                 alloc.buffer = bufferBlocks_[blockIndex].buffer;
                 alloc.length = size;
                 alloc.offset = offset;
+                alloc.blockIndex = blockIndex;
                 break;
             }
         }
         if(!alloc.buffer) { // alloc failed, need a new pool
             bool rst = createNewBufferBlock(size);
             if(!rst) {
-                return mesh_buffer_handle_t{ mesh_buffer_handle_t::INVALID_HANDLE };
+                return mesh_buffer_handle_invalid;
             }
             auto offset = bufferBlocks_.back().scheduler.alloc(size);
             alloc =  {bufferBlocks_.back().buffer, offset, size};
             blockIndex = bufferBlocks_.size() - 1;
         }
-        auto freeLoc = allocLoc(blockIndex);
-        bufferAllocs_[blockIndex][freeLoc] = alloc;
-        mesh_buffer_handle_t handle = {}; 
-        handle.block = blockIndex;
-        handle.index = freeLoc;
-        return handle;
+        mesh_buffer_handle_t id = allocID();
+        bufferAllocs_[id] = alloc;
+        return id;
     }
 
-    uint16_t MeshBufferAllocator::allocLoc(size_t blockIndex) {
-        assert(bufferBlocks_.size() > blockIndex);
-        if(freeIndices_[blockIndex].size()) {
-            auto rst = freeIndices_[blockIndex].back();
-            freeIndices_.pop_back();
+    uint32_t MeshBufferAllocator::allocID() {
+        if(freeIDs_.size()) {
+            auto rst = freeIDs_.back();
+            freeIDs_.pop_back();
             return rst;
         } else {
-            bufferAllocs_[blockIndex].emplace_back();
-            return bufferAllocs_[blockIndex].size() - 1;
+            bufferAllocs_.emplace_back();
+            return bufferAllocs_.size() - 1;
         }
     }
 
-    mesh_buffer_alloc_t MeshBufferAllocator::deref(mesh_buffer_handle_t buf) const {
-        assert(buf.block < bufferBlocks_.size());
-        assert(buf.index < bufferAllocs_[buf.block].size());
-        if(bufferAllocs_.size() <= buf.block || bufferAllocs_[buf.block].size() <= buf.index) {
-            return {};
+    mesh_buffer_alloc_t MeshBufferAllocator::deref(mesh_buffer_handle_t id) const {
+        if(id < bufferAllocs_.size()) {
+            return bufferAllocs_[id];
         }
-        mesh_buffer_alloc_t rst = bufferAllocs_[buf.block][buf.index];
-        return rst;
+        return {};
     }
 
-    bool MeshBufferAllocator::free(mesh_buffer_handle_t buf) {
-        auto alloc = deref(buf);
-        if(bufferBlocks_[buf.block].scheduler.free(alloc.offset)) {
-            freeIndices_[buf.block].push_back(buf.index);
+    bool MeshBufferAllocator::free(mesh_buffer_handle_t id) {
+        auto alloc = deref(id);
+        if(alloc.buffer && bufferBlocks_[alloc.blockIndex].scheduler.free(alloc.offset)) {
+            freeIDs_.push_back(id);
+            bufferAllocs_[id] = {};
             return true;
         } else {
-            return false;
+            return false; // alloc is invalid
         }
+    }
+
+    void MeshBufferAllocator::rearrangeBufferAlloc(ResourceCommandEncoder* encoder, std::vector<mesh_buffer_alloc_t*> const& allocations) {
+
+    }
+
+    void MeshBufferAllocator::onFrameTick() {
+
     }
 
 }
