@@ -56,9 +56,30 @@ namespace ugi {
       //  AllCommands             = 1<<16,
 
     
+    void ResourceCommandEncoder::bufferBarrier(VkBuffer buff, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const BufferSubResource& res) {
+        VkBufferMemoryBarrier barrier; {
+            barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            barrier.pNext = nullptr;
+            barrier.buffer = buff;
+            barrier.srcAccessMask = GetBarrierAccessMask( srcStage, srcStageMask );
+            barrier.dstAccessMask = GetBarrierAccessMask( dstStage, dstStageMask );
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.offset = res.offset;
+            barrier.size = res.size;
+        }        
+        vkCmdPipelineBarrier(
+            *_commandBuffer,
+            (VkPipelineStageFlagBits)srcStage,      // 生产阶段
+            (VkPipelineStageFlagBits)dstStage,      // 消费阶段
+            VK_DEPENDENCY_BY_REGION_BIT,            // 利用阶段关系来优化消费等待，除非你十分确定GPU执行此命令的时候资源已经完全准备好了就不用填这个了，所以我们就填这个吧
+            0, nullptr,                             // 不作 transition， 用来改变memory的可访问性
+            1, &barrier,                            // buffer barrier
+            0, nullptr                              // 不作 transition， 用来改变image layout
+        );
+    }
 
     void ResourceCommandEncoder::bufferTransitionBarrier( Buffer* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const BufferSubResource* subResource ) {
-
         if( buffer->accessType() == dstAccessType ) {
             return;
         }

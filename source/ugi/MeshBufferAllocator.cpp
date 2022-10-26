@@ -54,6 +54,7 @@ namespace ugi {
     }
 
     mesh_buffer_handle_t MeshBufferAllocator::alloc(uint32_t size) {
+        std::unique_lock<std::mutex> lock;
         mesh_buffer_alloc_t alloc = {};
         uint16_t blockIndex = 0;
         for(blockIndex = 0; blockIndex<bufferBlocks_.size(); ++blockIndex) {
@@ -103,6 +104,7 @@ namespace ugi {
     }
 
     bool MeshBufferAllocator::free(mesh_buffer_handle_t id) {
+        std::unique_lock<std::mutex> lock;
         auto alloc = deref(id);
         if(alloc.buffer && bufferBlocks_[alloc.blockIndex].scheduler.free(alloc.offset)) {
             freeIDs_.push_back(id);
@@ -114,7 +116,9 @@ namespace ugi {
     }
 
     void MeshBufferAllocator::rearrangeBufferAlloc(ResourceCommandEncoder* encoder, std::vector<mesh_buffer_alloc_t*> const& allocations) {
-
+        std::unique_lock<std::mutex> lock;
+        rearrangingBlocks_ = std::move(bufferBlocks_); // move blocks to temp vector
+        )
     }
 
     void MeshBufferAllocator::onFrameTick() {
