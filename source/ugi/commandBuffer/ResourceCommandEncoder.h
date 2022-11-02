@@ -33,7 +33,7 @@ namespace ugi {
         // update texture region for specified regions( transfer queue )
         void replaceImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount );
 
-        void copyBuffer(VkBuffer dst, VkBuffer src, BufferSubResource dstRange, BufferSub);
+        void copyBuffer(VkBuffer dst, VkBuffer src, BufferSubResource dstRange, BufferSubResource srcRange);
         //
         void endEncode();
     };

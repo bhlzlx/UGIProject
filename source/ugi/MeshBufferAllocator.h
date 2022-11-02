@@ -27,8 +27,8 @@ namespace ugi {
         VkBuffer buffer;
         uint32_t offset;
         uint32_t length;
-        uint32_t blockIndex;
-        uint8_t  uploaded:1;
+        uint32_t blockIndex:16;
+        uint32_t uploaded:1;
     };
 
     using mesh_buffer_handle_t = uint32_t;
@@ -55,6 +55,9 @@ namespace ugi {
         {}
     };
 
+    // 查找过程如下
+    // handle -> alloc -> block
+
     // allocator 可以以主线程里用，也可以在子线程里用，都不影响GPU数据上传的状态在渲染线程同步
     class MeshBufferAllocator {
     private:
@@ -66,15 +69,16 @@ namespace ugi {
         uint32_t                                        poolSize_;
         uint32_t                                        totalSize_;
         //
-        std::atomic<bool>                               rearrangeState_;
+        std::atomic<uint8_t>                            rearrangeCounter_;
         std::mutex                                      mutex_;
         // rearrange old buffer blocks
         std::vector<buffer_block_t>                     rearrangingBlocks_;
-        std::vector<buffer_block_t>                     rearrangedBlocks_;
+        std::vector<mesh_buffer_alloc_t>                rearrangingAllocs_;
+        std::vector<mesh_buffer_handle_t>               destroyRecords_;
     private:
-        bool createNewBufferBlock(uint32_t size);
-        uint32_t allocID();
-        mesh_buffer_alloc_t deref(mesh_buffer_handle_t handle) const;
+        bool createNewBufferBlock_(uint32_t size);
+        uint32_t allocID_();
+        mesh_buffer_alloc_t deref_(mesh_buffer_handle_t handle) const;
     public:
         MeshBufferAllocator()
             : bufferBlocks_{}
@@ -82,18 +86,12 @@ namespace ugi {
             , freeIDs_{}
             , allocationCount_(0)
             , device_(nullptr)
-            , rearrangeState_(false)
+            , rearrangeCounter_(false)
         {}
         bool initialize(Device* device, uint32_t poolSize);
         mesh_buffer_handle_t alloc(uint32_t size);
         bool free(mesh_buffer_handle_t buf);
-        /**
-         * @brief 
-         * 
-         * @param encoder 录制指令
-         * @param allocations 必须得保证所有的分配记录都在里面
-         */
-        void rearrangeBufferAlloc(ResourceCommandEncoder* encoder, std::vector<mesh_buffer_alloc_t*> const& allocations);
+        void rearrangeBufferAlloc(ResourceCommandEncoder* encoder);
         void onFrameTick();
     };
 

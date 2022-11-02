@@ -253,4 +253,13 @@ namespace ugi {
         vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)copies.size(), copies.data() );
     }
 
+    void ResourceCommandEncoder::copyBuffer(VkBuffer dst, VkBuffer src, BufferSubResource dstRange, BufferSubResource srcRange) {
+        assert(dstRange.size == srcRange.size);
+        VkBufferCopy copy;
+        copy.dstOffset = dstRange.offset;
+        copy.srcOffset = srcRange.offset;
+        copy.size = dstRange.size;
+        vkCmdCopyBuffer(*_commandBuffer, src, dst, 1, &copy);
+    }
+
 }
