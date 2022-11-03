@@ -7,19 +7,20 @@
 #include <CommandQueue.h>
 #include <async_load/AsyncLoadManager.h>
 #include <async_load/GPUAsyncLoadItem.h>
+#include <MeshBufferAllocator.h>
 
 namespace ugi {
 
     static_assert(sizeof(uint64_t) == sizeof(VkDeviceSize),"must be same");
 
-    void Mesh::bind(const RenderCommandEncoder* encoder) const {
-        VkBuffer vbuf[MaxVertexBufferBinding];
-        for( uint32_t i = 0; i<this->attriCount_; ++i) {
-            vbuf[i] = this->vertices_->buffer();
-        }
-        vkCmdBindVertexBuffers(*encoder->commandBuffer(), 0, attriCount_, vbuf, (VkDeviceSize*)attriOffsets_);
-        vkCmdBindIndexBuffer(*encoder->commandBuffer(), indices_->buffer(), indexOffset_, VkIndexType::VK_INDEX_TYPE_UINT16);
-    }
+    // void Mesh::bind(const RenderCommandEncoder* encoder) const {
+    //     VkBuffer vbuf[MaxVertexBufferBinding];
+    //     for( uint32_t i = 0; i<this->attriCount_; ++i) {
+    //         vbuf[i] = this->vertices_->buffer();
+    //     }
+    //     vkCmdBindVertexBuffers(*encoder->commandBuffer(), 0, attriCount_, vbuf, (VkDeviceSize*)attriOffsets_);
+    //     vkCmdBindIndexBuffer(*encoder->commandBuffer(), , indexOffset_, VkIndexType::VK_INDEX_TYPE_UINT16);
+    // }
 
     /**
      * @brief 
@@ -35,9 +36,10 @@ namespace ugi {
      */
     Mesh* Mesh::CreateMesh(
         Device* device, // device
+        MeshBufferAllocator* allocator,
         GPUAsyncLoadManager* asyncLoadManager,
-        uint8_t const* vb, uint64_t vbSize,
-        uint16_t const* indice, uint64_t indexCount,
+        uint8_t const* vb, uint32_t vbSize,
+        uint16_t const* indice, uint32_t indexCount,
         vertex_layout_t layout,
         topology_mode_t topologyMode,
         polygon_mode_t polygonMode
@@ -48,6 +50,7 @@ namespace ugi {
         mesh->polygonMode_ = polygonMode;
         mesh->indexCount_ = indexCount;
         mesh->attriCount_ = layout.bufferCount;
+        mesh->iboffset_ = vbSize;
         for(auto i = 0; i<layout.bufferCount; ++i) {
             mesh->attriOffsets_[i] = layout.buffers[i].offset;
         }
@@ -55,21 +58,20 @@ namespace ugi {
         auto cb = transferQueue->createCommandBuffer(device);
         //
         auto ibSize = sizeof(uint16_t) * indexCount;
-        auto vbStagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, vbSize);
-        auto ibStagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, ibSize);
-        mesh->vertices_ = device->createBuffer(ugi::BufferType::VertexBuffer, vbSize);
-        mesh->indices_ = device->createBuffer(ugi::BufferType::IndexBuffer, ibSize);
-        auto vMapPtr = vbStagingBuffer->map(device);
-        auto iMapPtr = ibStagingBuffer->map(device);
-        memcpy(vMapPtr, vb, vbSize);
-        memcpy(iMapPtr, indice, ibSize);
-        vbStagingBuffer->unmap(device);
-        ibStagingBuffer->unmap(device);
+        Buffer* stagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, vbSize + ibSize);
+        auto alloc = allocator->alloc(vbSize+ibSize);
+        auto mapPtr = (uint8_t*)stagingBuffer->map(device);
+        memcpy(mapPtr, vb, vbSize);
+        memcpy(mapPtr + vbSize, indice, ibSize);
+        stagingBuffer->unmap(device);
         // encode command buffer
         cb->beginEncode(); {
             auto encoder = cb->resourceCommandEncoder();
-            encoder->updateBuffer(mesh->vertices_, vbStagingBuffer, nullptr, nullptr, true);
-            encoder->updateBuffer(mesh->indices_, ibStagingBuffer, nullptr, nullptr, true);
+            encoder->copyBuffer(
+                alloc.second.buffer, stagingBuffer->buffer(),  // dst, src buffer
+                { alloc.second.offset, alloc.second.length }, // dst range
+                { 0, vbSize + (uint32_t)ibSize } // src range
+            );
             encoder->endEncode();
         }
         cb->endEncode();
@@ -79,7 +81,7 @@ namespace ugi {
             QueueSubmitBatchInfo submitBatch(&submitInfo, 1, fence);
             transferQueue->submitCommandBuffers(submitBatch);
         }
-        IGPUAsyncLoadItem* asyncLoadItem = new GPUMeshAsyncLoadItem(device, fence, mesh, {vbStagingBuffer, ibStagingBuffer});
+        IGPUAsyncLoadItem* asyncLoadItem = new GPUMeshAsyncLoadItem(device, fence, mesh, stagingBuffer);
         asyncLoadManager->registerAsyncLoad(asyncLoadItem);
         return mesh;
     }

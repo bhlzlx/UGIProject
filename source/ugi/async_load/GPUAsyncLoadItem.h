@@ -20,12 +20,12 @@ namespace ugi {
     class GPUMeshAsyncLoadItem : public IGPUAsyncLoadItem {
     private:
         Mesh* mesh_;
-        std::vector<Buffer*> stagingBuffers_;
+        Buffer* stagingBuffer_;
     public:
-        GPUMeshAsyncLoadItem(Device* device, Fence* fence, Mesh* mesh, std::vector<Buffer*>&& stagingBuffers)
+        GPUMeshAsyncLoadItem(Device* device, Fence* fence, Mesh* mesh, Buffer* stagingBuffer)
             : IGPUAsyncLoadItem(device, fence)
             , mesh_(mesh)
-            , stagingBuffers_(std::move(stagingBuffers))
+            , stagingBuffer_(stagingBuffer)
         {}
         virtual void onLoadComplete() override;
     };

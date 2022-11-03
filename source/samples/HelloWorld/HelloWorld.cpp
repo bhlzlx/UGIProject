@@ -10,7 +10,6 @@
 #include <ugi/Pipeline.h>
 #include <ugi/Argument.h>
 #include <ugi/Texture.h>
-#include <ugi/Drawable.h>
 #include <ugi/UniformBuffer.h>
 #include <ugi/Descriptor.h>
 #include <ugi/render_components/PipelineMaterial.h>
@@ -49,7 +48,6 @@ namespace ugi {
                 pipelineBuffer += shader.spirvSize;
             }
         }
-        pipelineDesc.pologonMode = polygon_mode_t::Fill;
         pipelineDesc.topologyMode = topology_mode_t::TriangleList;
         printf("initialize\n");
 

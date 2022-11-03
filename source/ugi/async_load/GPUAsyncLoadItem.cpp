@@ -18,11 +18,8 @@ namespace ugi {
     }
 
     void GPUMeshAsyncLoadItem::onLoadComplete() {
-        for(auto stagingBuffer : stagingBuffers_) {
-            device_->destroyBuffer(stagingBuffer);
-        }
-        stagingBuffers_.clear();
-        mesh_->prepared_ = true;
+        device_->destroyBuffer(stagingBuffer_);
+        mesh_->uploaded_ = true;
     }
 
 }

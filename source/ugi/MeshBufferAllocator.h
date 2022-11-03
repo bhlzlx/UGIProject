@@ -78,7 +78,6 @@ namespace ugi {
     private:
         bool createNewBufferBlock_(uint32_t size);
         uint32_t allocID_();
-        mesh_buffer_alloc_t deref_(mesh_buffer_handle_t handle) const;
     public:
         MeshBufferAllocator()
             : bufferBlocks_{}
@@ -90,8 +89,9 @@ namespace ugi {
         {}
         bool initialize(Device* device, uint32_t poolSize);
         void rearrangeBufferAlloc(ResourceCommandEncoder* encoder); // 应该在每帧结束，要提交之前执行
-        mesh_buffer_handle_t alloc(uint32_t size);
+        std::pair<mesh_buffer_handle_t, mesh_buffer_alloc_t> alloc(uint32_t size);
         bool free(mesh_buffer_handle_t buf);
+        mesh_buffer_alloc_t deref(mesh_buffer_handle_t handle) const;
         void onFrameTick(); // 应该在每帧开始时调用
     };
 

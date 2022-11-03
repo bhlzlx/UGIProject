@@ -9,18 +9,34 @@
 #include "../Drawable.h"
 #include "../UGITypeMapping.h"
 #include "../Argument.h"
+#include <render_components/MeshPrimitive.h>
 #include <vector>
 
 namespace ugi {
 
-    void RenderCommandEncoder::drawIndexed( Drawable* drawable, uint32_t indexOffset, uint32_t indexCount, uint32_t vertexOffset, uint32_t instanceCount) {
-        drawable->bind(_commandBuffer);
-        vkCmdDrawIndexed( *_commandBuffer, indexCount, instanceCount, indexOffset, vertexOffset, 0);
+    // void RenderCommandEncoder::drawIndexed( Drawable* drawable, uint32_t indexOffset, uint32_t indexCount, uint32_t vertexOffset, uint32_t instanceCount) {
+    //     drawable->bind(_commandBuffer);
+    //     vkCmdDrawIndexed( *_commandBuffer, indexCount, instanceCount, indexOffset, vertexOffset, 0);
+    // }
+
+    // void RenderCommandEncoder::draw( Drawable* drawable, uint32_t vertexCount, uint32_t baseVertexIndex) {
+    //     drawable->bind(_commandBuffer);
+    //     vkCmdDraw( *_commandBuffer, vertexCount, 1, baseVertexIndex, 0 );
+    // }
+
+
+    void RenderCommandEncoder::draw(Mesh const* mesh, uint32_t instanceCount) {
+        VkCommandBuffer cmd = *_commandBuffer;
+        auto alloc = mesh->buffer();
+        VkDeviceSize offset = alloc.offset;
+        vkCmdBindVertexBuffers(cmd, 0, 1, &alloc.buffer, &offset); // one vtx buffer only
+        vkCmdBindIndexBuffer(cmd, alloc.buffer, offset + mesh->iboffset(), VkIndexType::VK_INDEX_TYPE_UINT16);
+        vkCmdDrawIndexed(cmd, mesh->indexCount(), instanceCount, 0, 0, 0);
     }
 
-    void RenderCommandEncoder::draw( Drawable* drawable, uint32_t vertexCount, uint32_t baseVertexIndex) {
-        drawable->bind(_commandBuffer);
-        vkCmdDraw( *_commandBuffer, vertexCount, 1, baseVertexIndex, 0 );
+    void RenderCommandEncoder::drawIndirect(Mesh const* meshes, uint32_t count) {
+        VkCommandBuffer cmd = *_commandBuffer;
+        vkCmdDrawIndexedIndirect(cmd, )
     }
 
     void RenderCommandEncoder::bindPipeline( GraphicsPipeline* pipeline ) {

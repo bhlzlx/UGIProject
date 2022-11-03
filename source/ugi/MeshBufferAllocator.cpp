@@ -25,7 +25,7 @@ namespace ugi {
                 bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
             }
             bufferInfo.size = size;
-            bufferInfo.usage = getVkBufferUsageFlags(BufferType::VertexBuffer);
+            bufferInfo.usage = getVkBufferUsageFlags(BufferType::VertexBuffer) | getVkBufferUsageFlags(BufferType::IndexBuffer);
         }
         VmaAllocationCreateInfo allocationCreateInfo = {}; {
             allocationCreateInfo.usage = getVmaAllocationUsage(BufferType::VertexBuffer);
@@ -55,12 +55,12 @@ namespace ugi {
         return rst;
     }
 
-    mesh_buffer_handle_t MeshBufferAllocator::alloc(uint32_t size) {
+    std::pair<mesh_buffer_handle_t, mesh_buffer_alloc_t> MeshBufferAllocator::alloc(uint32_t size) {
         // TODO: 添加处理重排时的逻辑
         std::unique_lock<std::mutex> lock(mutex_);
         uint16_t blockIndex = 0;
         if(rearrangeCounter_) {
-            blockIndex = 1; // skip the first block
+            blockIndex = 1; // 跳过第一个block，因这重排之后，第一个block就是重排之后的，它现在还不能立即使用。
         }
         mesh_buffer_alloc_t alloc = {};
         for(blockIndex = 0; blockIndex<bufferBlocks_.size(); ++blockIndex) {
@@ -80,7 +80,7 @@ namespace ugi {
         if(!alloc.buffer) { // alloc failed, need a new pool
             bool rst = createNewBufferBlock_(size);
             if(!rst) {
-                return mesh_buffer_handle_invalid;
+                return { mesh_buffer_handle_invalid, {} };
             }
             auto offset = bufferBlocks_.back().scheduler.alloc(size);
             alloc =  {bufferBlocks_.back().buffer, offset, size};
@@ -88,7 +88,7 @@ namespace ugi {
         }
         mesh_buffer_handle_t id = allocID_();
         bufferAllocs_[id] = alloc;
-        return id;
+        return { id, alloc };
     }
 
     uint32_t MeshBufferAllocator::allocID_() {
@@ -102,7 +102,7 @@ namespace ugi {
         }
     }
 
-    mesh_buffer_alloc_t MeshBufferAllocator::deref_(mesh_buffer_handle_t id) const {
+    mesh_buffer_alloc_t MeshBufferAllocator::deref(mesh_buffer_handle_t id) const {
         if(id < bufferAllocs_.size()) {
             return bufferAllocs_[id];
         }
@@ -112,7 +112,7 @@ namespace ugi {
     bool MeshBufferAllocator::free(mesh_buffer_handle_t id) {
         if(0 == rearrangeCounter_) {
             std::unique_lock<std::mutex> lock(mutex_);
-            auto alloc = deref_(id);
+            auto alloc = deref(id);
             if(alloc.buffer && bufferBlocks_[alloc.blockIndex].scheduler.free(alloc.offset)) {
                 freeIDs_.push_back(id);
                 bufferAllocs_[id] = {};
@@ -123,6 +123,7 @@ namespace ugi {
             }
         } else { // 重分配状态下不能立即回收，需要等待整理完再回收
             destroyRecords_.push_back(id);
+            return true;
         }
     }
 
@@ -132,6 +133,7 @@ namespace ugi {
         BufferSubResource dstRes;
         BufferSubResource srcRes;
     };
+    static_assert(std::is_pod_v<buffer_cpy_t>, "");
 
     void MeshBufferAllocator::rearrangeBufferAlloc(ResourceCommandEncoder* encoder) {
         if(rearrangeCounter_) {
@@ -146,15 +148,17 @@ namespace ugi {
         std::unique_lock<std::mutex> lock(mutex_);
         assert(rearrangingBlocks_.empty() && "must be empty");
         assert(rearrangingAllocs_.empty() && "must be empty");
-        rearrangeCounter_ = true;
+        rearrangeCounter_ = MaxFlightCount;
         rearrangingBlocks_ = std::move(bufferBlocks_); // move blocks to temp vector
         std::vector<buffer_cpy_t> copies;
         uint32_t totalSize = 0;
         for(auto& alloc_t: bufferAllocs_) { // 原来的alloc保持不变
             if(alloc_t.buffer) {
-                copies.emplace_back(VK_NULL_HANDLE, alloc_t.buffer, BufferSubResource{totalSize, alloc_t.length}, BufferSubResource{alloc_t.offset, alloc_t.length}); // buffer 后续再更新
+                buffer_cpy_t cpy = { VK_NULL_HANDLE,alloc_t.buffer, BufferSubResource{totalSize, alloc_t.length}, BufferSubResource{alloc_t.offset, alloc_t.length} };
+                copies.push_back(cpy); // buffer 后续再更新
                 totalSize += alloc_t.length;
-                rearrangingAllocs_.emplace_back(VK_NULL_HANDLE, totalSize, alloc_t.length, 0, 1); // buffer 后续更新
+                mesh_buffer_alloc_t alloc = {VK_NULL_HANDLE, totalSize, alloc_t.length, 0, 1};
+                rearrangingAllocs_.push_back(alloc); // buffer 后续更新
                 totalSize = (totalSize+15)&(~15);
             } else {
                 rearrangingAllocs_.emplace_back(); // 这里的alloc是空的
@@ -180,6 +184,7 @@ namespace ugi {
                 alloc.buffer = newBlock.buffer;
             }
         }
+        // 写入复制指令等待送到队列执行
         for(auto& copy: copies) { // copy operation info
             copy.dst = newBlock.buffer;
             encoder->copyBuffer(copy.dst, copy.src, copy.dstRes, copy.srcRes);
@@ -207,11 +212,12 @@ namespace ugi {
                 rearrangingAllocs_.clear();
                 // 销毁所有 被排列过的 buffer
                 for(auto const& block: rearrangingBlocks_) {
-                    // destroy them
+                    vkDestroyBuffer(device_->device(), block.buffer, nullptr); // destroy them
                 }
+                rearrangingBlocks_.clear();
                 // 回收所有期间删除的buffer
                 for(auto const& handle: destroyRecords_) {
-                    // destroy them
+                    this->free(handle);// destroy them
                 }
             }
         }

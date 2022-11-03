@@ -20,7 +20,7 @@ namespace ugi {
     class GraphicsPipeline;
     class DescriptorBinder;
     class DescriptorSetAllocator;
-    class Drawable;
+    // class Drawable;
     class UniformAllocator;
     class ResourceManager;
     class MaterialLayout;
