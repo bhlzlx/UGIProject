@@ -57,9 +57,12 @@ namespace ugi {
 
     mesh_buffer_handle_t MeshBufferAllocator::alloc(uint32_t size) {
         // TODO: 添加处理重排时的逻辑
-        std::unique_lock<std::mutex> lock;
-        mesh_buffer_alloc_t alloc = {};
+        std::unique_lock<std::mutex> lock(mutex_);
         uint16_t blockIndex = 0;
+        if(rearrangeCounter_) {
+            blockIndex = 1; // skip the first block
+        }
+        mesh_buffer_alloc_t alloc = {};
         for(blockIndex = 0; blockIndex<bufferBlocks_.size(); ++blockIndex) {
             auto& block = bufferBlocks_[blockIndex];
             auto offset = block.scheduler.alloc(size);
@@ -89,7 +92,7 @@ namespace ugi {
     }
 
     uint32_t MeshBufferAllocator::allocID_() {
-        if(freeIDs_.size()) {
+        if (0 == rearrangeCounter_ && freeIDs_.size()) {
             auto rst = freeIDs_.back();
             freeIDs_.pop_back();
             return rst;
@@ -108,7 +111,7 @@ namespace ugi {
 
     bool MeshBufferAllocator::free(mesh_buffer_handle_t id) {
         if(0 == rearrangeCounter_) {
-            std::unique_lock<std::mutex> lock;
+            std::unique_lock<std::mutex> lock(mutex_);
             auto alloc = deref_(id);
             if(alloc.buffer && bufferBlocks_[alloc.blockIndex].scheduler.free(alloc.offset)) {
                 freeIDs_.push_back(id);
@@ -140,7 +143,7 @@ namespace ugi {
          * 因为buffer更新在多队列里搞的话，需要非常严格的同步，所以这件事我们还是放渲染线程的queue里去做。
          * 这里会产生一些多重缓冲数据同步/有效性问题，所以这里的逻辑需要特别注意。
          */
-        std::unique_lock<std::mutex> lock;
+        std::unique_lock<std::mutex> lock(mutex_);
         assert(rearrangingBlocks_.empty() && "must be empty");
         assert(rearrangingAllocs_.empty() && "must be empty");
         rearrangeCounter_ = true;

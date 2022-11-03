@@ -70,7 +70,7 @@ namespace ugi {
         uint32_t                                        totalSize_;
         //
         std::atomic<uint8_t>                            rearrangeCounter_;
-        std::mutex                                      mutex_;
+        std::mutex                                      mutex_; // 这个allocator应用场景应该也只限于单线程，所以这里没啥用
         // rearrange old buffer blocks
         std::vector<buffer_block_t>                     rearrangingBlocks_;
         std::vector<mesh_buffer_alloc_t>                rearrangingAllocs_;
@@ -89,10 +89,10 @@ namespace ugi {
             , rearrangeCounter_(false)
         {}
         bool initialize(Device* device, uint32_t poolSize);
+        void rearrangeBufferAlloc(ResourceCommandEncoder* encoder); // 应该在每帧结束，要提交之前执行
         mesh_buffer_handle_t alloc(uint32_t size);
         bool free(mesh_buffer_handle_t buf);
-        void rearrangeBufferAlloc(ResourceCommandEncoder* encoder);
-        void onFrameTick();
+        void onFrameTick(); // 应该在每帧开始时调用
     };
 
 
