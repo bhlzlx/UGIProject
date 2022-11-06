@@ -6,7 +6,6 @@
 #include "../Buffer.h"
 #include "../Texture.h"
 #include "../Pipeline.h"
-#include "../Drawable.h"
 #include "../UGITypeMapping.h"
 #include "../Argument.h"
 #include <vector>
@@ -17,10 +16,6 @@ namespace ugi {
 
     void ResourceCommandEncoder::endEncode() {
         _commandBuffer = nullptr;
-    }
-
-    void ResourceCommandEncoder::prepareArgumentGroup( DescriptorBinder* argumentGroup ) {
-        // argumentGroup->prepairResource(this);
     }
 
     void ResourceCommandEncoder::executionBarrier( PipelineStages _srcStage, PipelineStages _dstStage ) {

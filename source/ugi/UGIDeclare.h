@@ -28,4 +28,6 @@ namespace ugi {
     class GPUAsyncLoadManager;
     class Material;
     class Mesh;
+    class MeshBufferAllocator;
+    class Renderable;
 }

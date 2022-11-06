@@ -93,8 +93,6 @@ namespace ugi {
         bool free(mesh_buffer_handle_t buf);
         mesh_buffer_alloc_t deref(mesh_buffer_handle_t handle) const;
         void onFrameTick(); // 应该在每帧开始时调用
-    };
-
-
+    }; // end class MeshBufferAllocator
 
 }

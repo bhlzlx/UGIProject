@@ -5,9 +5,34 @@
 #include <VulkanFunctionDeclare.h>
 
 namespace ugi {
+    
+
+    Renderable::Renderable(Mesh* mesh, Material* mtr, GraphicsPipeline* pipeline, raster_state_t const& rss)
+        : mesh_(mesh)
+        , material_(mtr)
+        , pipeline_(pipeline)
+        , rasterState_(rss)
+    {
+    }
 
     bool Renderable::prepared() const {
         return mesh_->prepared();
+    }
+
+    Mesh const* Renderable::mesh() const {
+        return mesh_;
+    }
+
+    Material* Renderable::material() const {
+        return material_;
+    }
+
+    raster_state_t Renderable::rasterState() const {
+        return rasterState_;
+   }
+
+    GraphicsPipeline const* Renderable::pipeline() const {
+        return pipeline_;
     }
 
     void Renderable::draw(RenderCommandEncoder* encoder) {

@@ -108,7 +108,6 @@ namespace ugi {
         Swapchain* createSwapchain( void* wnd, AttachmentLoadAction loadAction = AttachmentLoadAction::Clear );
         GraphicsPipeline* createGraphicsPipeline( const pipeline_desc_t& pipelineDescription );
         ComputePipeline* createComputePipeline( const pipeline_desc_t& pipelineDescription );
-        Drawable* createDrawable( const pipeline_desc_t& pipelineDescription );
         UniformAllocator* createUniformAllocator();
         // DescriptorSetAllocator* createDescriptorSetAllocator() const;
 

@@ -5,7 +5,6 @@
 #include "Buffer.h"
 #include "Texture.h"
 #include "Pipeline.h"
-#include "Drawable.h"
 #include "UGITypeMapping.h"
 #include "Argument.h"
 #include <vector>

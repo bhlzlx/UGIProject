@@ -201,12 +201,12 @@ namespace ugi {
         VkPipelineLayout pipelineLayout = _groupLayout->pipelineLayout();
         VkDescriptorSet desciprotSets[MaxArgumentCount];
         uint32_t descriptorSetCount = 0;
-        for( uint32_t i = 0; i< MaxArgumentCount; ++i) {
+        for(uint32_t i = 0; i< MaxArgumentCount; ++i) {
             if(_descriptorSets[i]) {
                 desciprotSets[descriptorSetCount++] = _descriptorSets[i];
             }
         }
-        if( descriptorSetCount ) {
+        if(descriptorSetCount ) {
             if( _dynamicOffsets.size() ) {
                 vkCmdBindDescriptorSets( cmdbuf, _bindPoint, pipelineLayout, 0, descriptorSetCount, desciprotSets, (uint32_t)_dynamicOffsets.size(), _dynamicOffsets.data() );
             } else {

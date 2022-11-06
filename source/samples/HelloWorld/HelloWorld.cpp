@@ -12,6 +12,10 @@
 #include <ugi/Texture.h>
 #include <ugi/UniformBuffer.h>
 #include <ugi/Descriptor.h>
+#include <ugi/MeshBufferAllocator.h>
+#include <ugi/render_components/MeshPrimitive.h>
+#include <ugi/async_load/AsyncLoadManager.h>
+#include <ugi/render_components/Renderable.h>
 #include <ugi/render_components/PipelineMaterial.h>
 // #include <hgl/assets/AssetsSource.h>
 
@@ -27,6 +31,7 @@ namespace ugi {
         swapchain = device->createSwapchain(wnd);
         graphicsQueue = device->graphicsQueues()[0];
         uploadQueue = device->transferQueues()[0];
+        asyncLoadManager = new ugi::GPUAsyncLoadManager();
         for( size_t i = 0; i<MaxFlightCount; ++i) {
             frameCompleteFences[i] = device->createFence();
             renderCompleteSemaphores[i] = device->createSemaphore();
@@ -62,35 +67,28 @@ namespace ugi {
         _renderContext.initialize(_wnd, descriptor, arch);
         pipelineDesc.renderState.cullMode = CullMode::None;
         pipelineDesc.renderState.blendState.enable = false;
-        _pipeline = _renderContext.device->createGraphicsPipeline(pipelineDesc);
+        auto pipeline = _renderContext.device->createGraphicsPipeline(pipelineDesc);
+        auto bufferAllocator = new MeshBufferAllocator();
+        bufferAllocator->initialize(_renderContext.device, 1024);
+        _render = new Render(pipeline, bufferAllocator);
         //
-        _vertexBuffer = _renderContext.device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
-        Buffer* vertexStagingBuffer = _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
         float vertexData[] = {
             -0.5, -0.5, 0, 0, 0,
             0, 0.5, 0, 0.5, 1.0,
             0.5, -0.5, 0, 1.0, 0
         };
-        void* ptr = vertexStagingBuffer->map( _renderContext.device );
-        memcpy(ptr, vertexData, sizeof(vertexData));
-        vertexStagingBuffer->unmap(_renderContext.device);
-
         uint16_t indexData[] = {
             0, 1, 2
         };
-        _indexBuffer = _renderContext.device->createBuffer( BufferType::IndexBuffer, sizeof(indexData));
-        Buffer* indexStagingBuffer = _renderContext.device->createBuffer( BufferType::StagingBuffer, sizeof(indexData) );
-        ptr = indexStagingBuffer->map( _renderContext.device );
-        memcpy(ptr, indexData, sizeof(indexData));
-        indexStagingBuffer->unmap(_renderContext.device);
-        auto updateCmd = _renderContext.uploadQueue->createCommandBuffer( _renderContext.device ); {
-            updateCmd->beginEncode();
-            auto resourceEncoder = updateCmd->resourceCommandEncoder();
-            BufferSubResource subRes;
-            subRes.offset = 0; subRes.size = _vertexBuffer->size();
-            resourceEncoder->updateBuffer( _vertexBuffer, vertexStagingBuffer, &subRes, &subRes );
-            subRes.size = sizeof(indexData);
-            resourceEncoder->updateBuffer( _indexBuffer, indexStagingBuffer, &subRes, &subRes );
+        this->_mesh = Mesh::CreateMesh(
+            _renderContext.device, bufferAllocator, _renderContext.asyncLoadManager,
+            (uint8_t const*)vertexData, sizeof(vertexData),
+            indexData, sizeof(indexData),
+            pipelineDesc.vertexLayout,
+            pipelineDesc.topologyMode,
+            ugi::polygon_mode_t::Fill
+        );
+        _renderable = new ugi::Renderable()
 
             _drawable = _renderContext.device->createDrawable(pipelineDesc);
             _drawable->setVertexBuffer(_vertexBuffer, 0, 0);

@@ -23,7 +23,6 @@
 #include "Argument.h"
 #include "Pipeline.h"
 #include "Descriptor.h"
-#include "Drawable.h"
 #include "UniformBuffer.h"
 
 #ifdef _WIN32
@@ -561,11 +560,6 @@ namespace ugi {
     ComputePipeline* Device::createComputePipeline( const pipeline_desc_t& pipelineDescription ) {
         assert( pipelineDescription.shaders[(uint32_t)shader_stage_t::ComputeShader].spirvData );
         return ComputePipeline::CreatePipeline(this, pipelineDescription);
-    }
-
-    Drawable* Device::createDrawable( const pipeline_desc_t& pipelineDescription ) {
-        Drawable* drawable = new Drawable(pipelineDescription.vertexLayout.bufferCount);
-        return drawable;
     }
 
     IRenderPass* Device::createRenderPass( const renderpass_desc_t& rpdesc, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView ) {

@@ -6,7 +6,6 @@
 #include "../Buffer.h"
 #include "../Texture.h"
 #include "../Pipeline.h"
-#include "../Drawable.h"
 #include "../UGITypeMapping.h"
 #include "../Argument.h"
 #include <render_components/MeshPrimitive.h>
@@ -36,7 +35,8 @@ namespace ugi {
 
     void RenderCommandEncoder::drawIndirect(Mesh const* meshes, uint32_t count) {
         VkCommandBuffer cmd = *_commandBuffer;
-        vkCmdDrawIndexedIndirect(cmd, )
+        // vkCmdDrawIndexedIndirect(cmd, )
+        // vkCmdDrawIndirect()
     }
 
     void RenderCommandEncoder::bindPipeline( GraphicsPipeline* pipeline ) {
