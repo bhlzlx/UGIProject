@@ -80,7 +80,7 @@ namespace ugi {
         uint16_t indexData[] = {
             0, 1, 2
         };
-        this->_mesh = Mesh::CreateMesh(
+        _mesh = Mesh::CreateMesh(
             _renderContext.device, bufferAllocator, _renderContext.asyncLoadManager,
             (uint8_t const*)vertexData, sizeof(vertexData),
             indexData, sizeof(indexData),
@@ -88,12 +88,8 @@ namespace ugi {
             pipelineDesc.topologyMode,
             ugi::polygon_mode_t::Fill
         );
-        _renderable = new ugi::Renderable()
-
-            _drawable = _renderContext.device->createDrawable(pipelineDesc);
-            _drawable->setVertexBuffer(_vertexBuffer, 0, 0);
-            _drawable->setVertexBuffer(_vertexBuffer, 1, 12);
-            _drawable->setIndexBuffer(_indexBuffer, 0);
+        _material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
+        _renderable = new ugi::Renderable(_mesh, _material, pipeline, raster_state_t());
             //
             tex_desc_t texDesc;
             texDesc.format = UGIFormat::RGBA8888_UNORM;
