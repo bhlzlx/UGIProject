@@ -32,6 +32,7 @@ namespace ugi {
             descriptorPoolInfo.poolSizeCount = (uint32_t) sizeof(DescriptorPoolSizeTemplate)/sizeof(VkDescriptorPoolSize);
             descriptorPoolInfo.pPoolSizes = DescriptorPoolSizeTemplate;
             descriptorPoolInfo.maxSets = 2048;
+            descriptorPoolInfo.flags = VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         }
         VkDescriptorPool pool;
         VkResult rst = vkCreateDescriptorPool( _device, &descriptorPoolInfo, nullptr, &pool);
@@ -43,6 +44,7 @@ namespace ugi {
 
     VkDescriptorSet DescriptorSetAllocator::allocate(VkDescriptorSetLayout setLayout) 
     {
+        auto& allocationFlight = _allocationFlights[_flight];
         VkDescriptorSetAllocateInfo inf = {}; {
             inf.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
             inf.pNext = nullptr;
@@ -58,20 +60,20 @@ namespace ugi {
             auto rst = vkAllocateDescriptorSets(_device, &inf, &descriptorSet);
             if(rst == VK_SUCCESS) {
                 _activePool = realIndex;
-                return descriptorSet;
             }
         }
-        // pool 不够了，新pool!
-        auto pool = _createDescriporPool();
-        _descriptorPools.push_back(pool);
-        inf.descriptorPool = pool;
-        _activePool = _descriptorPools.size() - 1;
-        auto rst = vkAllocateDescriptorSets(_device, &inf, &descriptorSet);
-        assert(rst == VK_SUCCESS);
-        if( VK_SUCCESS != rst ) {
-            return VK_NULL_HANDLE;
+        if(!descriptorSet) { // pool 不够了，新pool!
+            auto pool = _createDescriporPool();
+            _descriptorPools.push_back(pool);
+            inf.descriptorPool = pool;
+            _activePool = _descriptorPools.size() - 1;
+            auto rst = vkAllocateDescriptorSets(_device, &inf, &descriptorSet);
+            assert(rst == VK_SUCCESS);
+            if( VK_SUCCESS != rst ) {
+                return VK_NULL_HANDLE;
+            }
         }
-        //
+        // locate or create AllocationInfo for this descriptor set
         AllocationInfo* info = nullptr;
         if(_allocationFlights[_flight].size()) {
             if(_allocationFlights[_flight].back().pool == _descriptorPools[_activePool]) {
@@ -79,7 +81,7 @@ namespace ugi {
             }
         }
         if(!info) {
-            _descriptorPools.emplace_back();
+            _allocationFlights[_flight].emplace_back();
             info = &_allocationFlights[_flight].back();
             info->pool = _descriptorPools[_activePool];
         }

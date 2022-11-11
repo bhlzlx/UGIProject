@@ -257,4 +257,41 @@ namespace ugi {
         vkCmdCopyBuffer(*_commandBuffer, src, dst, 1, &copy);
     }
 
+    /**
+     * @brief 把 buffer 里的数据更新到 image 上
+     * 
+     * @param dst VkImage
+     * @param aspectFlags VkImage aspect type
+     * @param src VkBuffer, usually a staging buffer
+     * @param regions image regions to be update
+     * @param offsets offsets in buffer
+     * @param regionCount image region count
+     */
+    void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount) {
+        //imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
+        // 一个 region 只能传输一个 mip level
+        std::vector<VkBufferImageCopy> copies;
+        for( uint32_t i = 0; i<regionCount; ++i) {
+            const ImageRegion& region = regions[i];
+            VkBufferImageCopy copy;
+            copy.imageExtent.height = region.extent.height;
+            copy.imageExtent.width = region.extent.width;
+            copy.imageExtent.depth = region.extent.depth;
+            copy.imageOffset.x = region.offset.x;
+            copy.imageOffset.y = region.offset.y;
+            copy.imageOffset.z = region.offset.z;
+            //
+            copy.imageSubresource.baseArrayLayer = region.arrayIndex;
+            copy.imageSubresource.layerCount = 1;
+            copy.imageSubresource.aspectMask = aspectFlags;
+            copy.imageSubresource.mipLevel = region.mipLevel;
+            copy.bufferOffset = offsets[i];
+            copy.bufferRowLength = 0;
+            copy.bufferImageHeight = 0;
+            copies.push_back(copy);
+        }
+        VkCommandBuffer cmdbuf = *_commandBuffer;
+        vkCmdCopyBufferToImage(cmdbuf, src, dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)copies.size(), copies.data());
+    }
+
 }

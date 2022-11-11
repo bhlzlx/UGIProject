@@ -3,6 +3,7 @@
 #include <UGITypes.h>
 #include <vector>
 #include <MeshBufferAllocator.h>
+#include <functional>
 
 namespace ugi {
 
@@ -73,7 +74,8 @@ namespace ugi {
             uint16_t const* indice, uint32_t indexCount,
             vertex_layout_t layout,
             topology_mode_t topologyMode,
-            polygon_mode_t polygonMode
+            polygon_mode_t polygonMode,
+            std::function<void(CommandBuffer*)> onComplete
         );
 
     };

@@ -2,6 +2,7 @@
 #include <VulkanDeclare.h>
 #include <VulkanFunctionDeclare.h>
 #include <CommandBuffer.h>
+#include <CommandQueue.h>
 #include <Buffer.h>
 #include <Device.h>
 #include <CommandQueue.h>
@@ -13,14 +14,16 @@ namespace ugi {
 
     static_assert(sizeof(uint64_t) == sizeof(VkDeviceSize),"must be same");
 
-    // void Mesh::bind(const RenderCommandEncoder* encoder) const {
-    //     VkBuffer vbuf[MaxVertexBufferBinding];
-    //     for( uint32_t i = 0; i<this->attriCount_; ++i) {
-    //         vbuf[i] = this->vertices_->buffer();
-    //     }
-    //     vkCmdBindVertexBuffers(*encoder->commandBuffer(), 0, attriCount_, vbuf, (VkDeviceSize*)attriOffsets_);
-    //     vkCmdBindIndexBuffer(*encoder->commandBuffer(), , indexOffset_, VkIndexType::VK_INDEX_TYPE_UINT16);
-    // }
+    void Mesh::bind(const RenderCommandEncoder* encoder) const {
+        auto alloc = meshbufferAllocator->deref(buffer_);
+        VkBuffer vbuf[MaxVertexBufferBinding];
+        for( uint32_t i = 0; i<this->attriCount_; ++i) {
+            vbuf[i] = alloc.buffer;
+        }
+        VkCommandBuffer cmd = *encoder->commandBuffer();
+        vkCmdBindVertexBuffers(cmd, 0, attriCount_, vbuf, attriOffsets_);
+        vkCmdBindIndexBuffer(cmd, alloc.buffer, iboffset_, VkIndexType::VK_INDEX_TYPE_UINT16);
+    }
 
     /**
      * @brief 
@@ -42,9 +45,11 @@ namespace ugi {
         uint16_t const* indice, uint32_t indexCount,
         vertex_layout_t layout,
         topology_mode_t topologyMode,
-        polygon_mode_t polygonMode
+        polygon_mode_t polygonMode,
+        std::function<void(CommandBuffer*)> callback
     ) {
         Mesh* mesh = new Mesh();
+        mesh->meshbufferAllocator = allocator;
         mesh->vertexLayout_ = layout;
         mesh->topologyMode_ = topologyMode;
         mesh->polygonMode_ = polygonMode;
@@ -60,6 +65,7 @@ namespace ugi {
         auto ibSize = sizeof(uint16_t) * indexCount;
         Buffer* stagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, vbSize + ibSize);
         auto alloc = allocator->alloc(vbSize+ibSize);
+        mesh->buffer_ = alloc.first;
         auto mapPtr = (uint8_t*)stagingBuffer->map(device);
         memcpy(mapPtr, vb, vbSize);
         memcpy(mapPtr + vbSize, indice, ibSize);
@@ -76,13 +82,21 @@ namespace ugi {
         }
         cb->endEncode();
         // submit command buffer to transfer queue
-        auto fence = device->createFence(); {
+        auto fence = device->createFence(); { 
             QueueSubmitInfo submitInfo(&cb, 1, nullptr, 0, nullptr, 0);
             QueueSubmitBatchInfo submitBatch(&submitInfo, 1, fence);
             transferQueue->submitCommandBuffers(submitBatch);
         }
-        IGPUAsyncLoadItem* asyncLoadItem = new GPUMeshAsyncLoadItem(device, fence, mesh, stagingBuffer);
-        asyncLoadManager->registerAsyncLoad(asyncLoadItem);
+        auto onComplete = [](Mesh* mesh, Device* device, Buffer* buffer, CommandBuffer* cb, CommandQueue* queue, std::function<void(CommandBuffer*)> callback, CommandBuffer* logicCB)->void{
+            queue->destroyCommandBuffer(device, cb);
+            device->destroyBuffer(buffer);
+            mesh->uploaded_ = 1;
+            callback(logicCB);
+        };
+        using namespace std::placeholders;
+        auto binder = std::bind(onComplete, mesh, device, stagingBuffer, cb, transferQueue, callback, _1) ;
+        GPUAsyncLoadItem asyncLoadItem(device, fence, binder);
+        asyncLoadManager->registerAsyncLoad(std::move(asyncLoadItem));
         return mesh;
     }
 

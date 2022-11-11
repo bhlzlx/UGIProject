@@ -6,6 +6,7 @@ namespace ugi {
         for(auto& item: descriptors_) {
             if(item.handle == descriptor.handle) {
                 item.res = descriptor.res;
+                break;
             }
         }
     }

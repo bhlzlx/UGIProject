@@ -192,7 +192,7 @@ namespace ugi {
         return true;
     }
 
-    void DescriptorBinder::bind( CommandBuffer* commandBuffer ) {
+    void DescriptorBinder::bind( CommandBuffer const* commandBuffer ) {
         if(!validateDescriptorSets()) { // update descriptor set binding
             assert(false);
             return;

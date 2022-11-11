@@ -6,6 +6,11 @@
 #include "UGIUtility.h"
 #include <vector>
 #include "resourcePool/HashObjectPool.h"
+#include <CommandQueue.h>
+#include <CommandBuffer.h>
+#include <commandBuffer/ResourceCommandEncoder.h>
+#include <async_load/AsyncLoadManager.h>
+#include <Buffer.h>
 
 namespace ugi {
 
@@ -178,6 +183,42 @@ namespace ugi {
     void Texture::destroyImageView(Device* device, image_view_t const& view) const {
         InternalImageView internalView(view);
         vkDestroyImageView(device->device(), internalView.view(), nullptr);
+    }
+
+    void Texture::updateRegions(Device* device, const ImageRegion* regions, uint32_t count, uint8_t const* data, uint32_t size, uint32_t const* offsets, GPUAsyncLoadManager* asyncLoadManager, std::function<void(CommandBuffer*)>&& callback) { 
+        // dealing staging buffer
+        Buffer* staging = device->createBuffer(BufferType::StagingBuffer, size);
+        auto ptr = staging->map(device);
+        memcpy(ptr, data, size);
+        staging->unmap(device);
+        // record command buffer
+        auto &transferQueues = device->transferQueues();
+        assert(transferQueues.size());
+        auto queue = transferQueues[0];
+        // create staging buffer
+        auto cb = queue->createCommandBuffer(device);
+        cb->beginEncode(); {
+            auto resEnc = cb->resourceCommandEncoder();
+            resEnc->imageTransitionBarrier(this, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, nullptr);
+            resEnc->copyBufferToImage(this->_image, this->_aspectFlags, staging->buffer(), regions, offsets, count);
+            resEnc->endEncode();
+        }
+        cb->endEncode();
+        //
+        auto fence = device->createFence(); {
+            QueueSubmitInfo submitInfo(&cb, 1, nullptr, 0, nullptr, 0);
+            QueueSubmitBatchInfo submitBatch(&submitInfo, 1, fence);
+            queue->submitCommandBuffers(submitBatch);
+        }
+        auto onComplete = [](Texture* tex, Device* device, Buffer* stgbuf, CommandBuffer* transferCmd, CommandQueue* queue, std::function<void(CommandBuffer*)> callback, CommandBuffer* exeBuf)->void{
+            queue->destroyCommandBuffer(device, transferCmd);
+            device->destroyBuffer(stgbuf);
+            callback(exeBuf);
+        };
+        using namespace std::placeholders;
+        auto binder = std::bind(onComplete, this, device, staging, cb, queue, callback, _1);
+        GPUAsyncLoadItem asyncLoadItem = GPUAsyncLoadItem(device, fence, binder);
+        asyncLoadManager->registerAsyncLoad(std::move(asyncLoadItem));
     }
 
 }

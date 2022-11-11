@@ -5,6 +5,8 @@
 #include <vk_mem_alloc.h>
 #include "Resource.h"
 #include <map>
+#include <functional>
+
 
 namespace ugi {
 
@@ -28,7 +30,7 @@ namespace ugi {
 
     class Texture : public Resource {
     private:
-        tex_desc_t                              _description;           // descriptor
+        tex_desc_t                                      _description;           // descriptor
         VkImage                                         _image;                 // image
         VmaAllocation                                   _allocation;            // memory allocation
         // == resource state flags ==
@@ -37,9 +39,18 @@ namespace ugi {
         ResourceAccessType                              _currentAccessType;     //
         VkImageAspectFlags                              _aspectFlags;           // color / depth /stencil / 
         bool                                            _ownsImage;
+        bool                                            _uploaded;
     public:
         VkImage image() const {
             return _image;
+        }
+
+        bool uploaded() const {
+            return _uploaded;
+        }
+
+        void markAsUploaded() {
+            _uploaded = true;
         }
 
         image_view_t createImageView(Device* device, const image_view_param_t& param) const;
@@ -65,6 +76,15 @@ namespace ugi {
         VkImageAspectFlags aspectFlags() const {
             return _aspectFlags;
         }
+
+        //void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount) {
+        void updateRegions(
+            Device* device, 
+            const ImageRegion* regions, uint32_t count, 
+            uint8_t const* data, uint32_t dataSize, uint32_t const* offsets,
+            GPUAsyncLoadManager* asnycLoadManager, 
+            std::function<void(CommandBuffer*)> &&callback
+        );
 
         virtual void release( Device* _device ) override;
         //

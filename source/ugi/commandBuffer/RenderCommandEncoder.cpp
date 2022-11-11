@@ -26,10 +26,9 @@ namespace ugi {
 
     void RenderCommandEncoder::draw(Mesh const* mesh, uint32_t instanceCount) {
         VkCommandBuffer cmd = *_commandBuffer;
-        auto alloc = mesh->buffer();
-        VkDeviceSize offset = alloc.offset;
-        vkCmdBindVertexBuffers(cmd, 0, 1, &alloc.buffer, &offset); // one vtx buffer only
-        vkCmdBindIndexBuffer(cmd, alloc.buffer, offset + mesh->iboffset(), VkIndexType::VK_INDEX_TYPE_UINT16);
+        // auto alloc = mesh->buffer();
+        // VkDeviceSize offset = alloc.offset;
+        mesh->bind(this);
         vkCmdDrawIndexed(cmd, mesh->indexCount(), instanceCount, 0, 0, 0);
     }
 
@@ -39,7 +38,7 @@ namespace ugi {
         // vkCmdDrawIndirect()
     }
 
-    void RenderCommandEncoder::bindPipeline( GraphicsPipeline* pipeline ) {
+    void RenderCommandEncoder::bindPipeline(GraphicsPipeline* pipeline) {
         pipeline->bind(this);
     }
 

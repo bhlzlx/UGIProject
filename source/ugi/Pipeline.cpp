@@ -254,7 +254,6 @@ namespace ugi {
         _RSStateCreateInfo.depthBiasConstantFactor = _state.depthBiasConstantFactor;
         _RSStateCreateInfo.depthBiasClamp = _state.depthBiasClamp;
         _RSStateCreateInfo.depthBiasSlopeFactor = _state.depthBiasSlopeFactor;
-        //
     }
 
     void GraphicsPipeline::_hashRasterizationState( UGIHash<APHash>& hasher ) {
@@ -273,7 +272,7 @@ namespace ugi {
 
     void GraphicsPipeline::bind(RenderCommandEncoder* encoder) {
         UGIHash<APHash> hasher;
-        _hashRasterizationState( hasher );
+        _hashRasterizationState(hasher);
         VkPipeline pipeline = preparePipelineStateObject( hasher,  encoder );
         vkCmdBindPipeline(*encoder->commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     }
@@ -347,13 +346,17 @@ namespace ugi {
                 res_descriptor_t descriptor;
                 descriptor.handle = handle;
                 descriptor.type = descInfo.type;
+                if(descriptor.type == res_descriptor_type::UniformBuffer) {
+                    descriptor.res.buffer.size = descInfo.dataSize;
+                    descriptor.res.buffer.size = descInfo.dataSize;
+                }
                 if(resources.size()) {
-                    descriptor.res = resources[i];
                     if(descriptor.type == res_descriptor_type::UniformBuffer) {
-                        descriptor.res.buffer.size = descInfo.dataSize;
+                        descriptor.res.buffer.buffer = resources[i].buffer.buffer;
+                        descriptor.res.buffer.offset = resources[i].buffer.offset;
+                    } else {
+                        descriptor.res = resources[i];
                     }
-                } else {
-                    memset(&descriptor.res, 0xff, sizeof(descriptor.res));
                 }
                 mtl->descriptors_.push_back(descriptor);
             }
@@ -367,8 +370,12 @@ namespace ugi {
         }
     }
 
-    void GraphicsPipeline::flushMaterials(CommandBuffer* cmd) {
+    void GraphicsPipeline::flushMaterials(CommandBuffer const* cmd) {
         this->_descriptorBinder->bind(cmd);
+    }
+
+    void GraphicsPipeline::resetMaterials() {
+        _descriptorBinder->reset();
     }
 
     ComputePipeline* ComputePipeline::CreatePipeline( Device* device, const pipeline_desc_t& pipelineDesc ) {

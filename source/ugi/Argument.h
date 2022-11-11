@@ -58,7 +58,7 @@ namespace ugi {
         //* 更新绑定的 API
         void updateDescriptor(const res_descriptor_t& resource);
         // bool prepairResource(ResourceCommandEncoder* encoder);
-        void bind(CommandBuffer* commandBuffer);
+        void bind(CommandBuffer const* commandBuffer);
         ~DescriptorBinder();
     public:
         // static uint32_t GetDescriptorHandle(const char* descriptorName, const pipeline_desc_t& pipelineDescription, res_descriptor_info_t* descriptorInfo = nullptr);

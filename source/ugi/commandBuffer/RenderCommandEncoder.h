@@ -13,7 +13,7 @@ namespace ugi {
         uint32_t                                        _subpass;            ///> subpass 的索引
         VkViewport                                      _viewport;
         VkRect2D                                        _scissor;
-
+        GraphicsPipeline*                               _pipeline;
     public:
         RenderCommandEncoder( CommandBuffer* commandBuffer = nullptr, IRenderPass* renderPass  = nullptr ) 
             : _commandBuffer( commandBuffer )

@@ -50,10 +50,13 @@ namespace ugi {
         void bind(RenderCommandEncoder* encoder);
         void bind(ComputeCommandEncoder* encoder);
         void applyMaterial(Material const* material);
-        void flushMaterials(CommandBuffer* cmd);
+        void flushMaterials(CommandBuffer const* cmd);
         void resetMaterials();
         Material* createMaterial(std::vector<std::string> const& parameters, std::vector<res_union_t> const& resources);
         uint32_t getDescriptorHandle(char const* descriptorName, res_descriptor_info_t* descriptorInfo = nullptr) const;
+        pipeline_desc_t const& desc() const {
+            return _pipelineDesc;
+        }
         //
         // DescriptorBinder* argumentBinder() const {
         //     return _descriptorBinder;
