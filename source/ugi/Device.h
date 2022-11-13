@@ -10,6 +10,7 @@
 #include "UGIDeclare.h"
 #include "UGITypes.h"
 #include <LightWeightCommon/io/archive.h>
+#include <ResourceManager.h>
 
 namespace ugi {
 
@@ -54,6 +55,7 @@ namespace ugi {
         
         RenderPassObjectManager*            _renderPassObjectManager;
         DescriptorSetAllocator*             _descriptorSetAllocator;
+        FlightCycleInvoker                  _cycleInvoker;
         //
         Device() {
         }
@@ -80,23 +82,27 @@ namespace ugi {
         VkInstance instance() {
             return _descriptor.instance;
         }
-        VmaAllocator vmaAllocator() {
+        VmaAllocator vmaAllocator() const {
             return _vmaAllocator;
         }
-        const DeviceDescriptorVulkan& descriptor() {
+        const DeviceDescriptorVulkan& descriptor() const {
             return _descriptor;
         }
 
-        RenderPassObjectManager* renderPassObjectManager() {
+        RenderPassObjectManager* renderPassObjectManager() const {
             return _renderPassObjectManager;
         }
 
-        const std::vector<CommandQueue*>& graphicsQueues() {
+        const std::vector<CommandQueue*>& graphicsQueues() const {
             return _graphicsCommandQueues;
         }
 
-        const std::vector<CommandQueue*>& transferQueues() {
+        const std::vector<CommandQueue*>& transferQueues() const {
             return _transferCommandQueues;
+        }
+
+        FlightCycleInvoker& cycleInvoker() {
+            return _cycleInvoker;
         }
 
         Semaphore* createSemaphore( uint32_t _semaphoreFlags = 0);

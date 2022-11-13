@@ -41,6 +41,7 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/render_components/Renderable.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/async_load/AsyncLoadManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/async_load/GPUAsyncLoadItem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/RenderContext.cpp
 )
 
 target_link_libraries(UGI

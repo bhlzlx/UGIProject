@@ -196,7 +196,7 @@ namespace ugi {
         assert(transferQueues.size());
         auto queue = transferQueues[0];
         // create staging buffer
-        auto cb = queue->createCommandBuffer(device);
+        auto cb = queue->createCommandBuffer(device, CmdbufType::Resetable);
         cb->beginEncode(); {
             auto resEnc = cb->resourceCommandEncoder();
             resEnc->imageTransitionBarrier(this, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, nullptr);

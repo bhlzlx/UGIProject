@@ -60,7 +60,7 @@ namespace ugi {
             mesh->attriOffsets_[i] = layout.buffers[i].offset;
         }
         CommandQueue* transferQueue = device->transferQueues()[0];
-        auto cb = transferQueue->createCommandBuffer(device);
+        auto cb = transferQueue->createCommandBuffer(device, CmdbufType::Transient);
         //
         auto ibSize = sizeof(uint16_t) * indexCount;
         Buffer* stagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, vbSize + ibSize);

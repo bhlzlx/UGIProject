@@ -65,24 +65,42 @@ namespace ugi {
         vkQueueWaitIdle( _queue );
     }
 
-    CommandBuffer* CommandQueue::createCommandBuffer( Device* device ) {
-        if( VK_NULL_HANDLE == _commandPool) {
-            VkCommandPoolCreateInfo commandPoolInfo = {};{
-                commandPoolInfo.pNext = nullptr;
-                commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-                commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-                commandPoolInfo.queueFamilyIndex =  _queueFamilyIndex;
+    CommandBuffer* CommandQueue::createCommandBuffer( Device* device, CmdbufType type) {
+        VkCommandPool pool = VK_NULL_HANDLE;
+        if(type == CmdbufType::Resetable) {
+            if( VK_NULL_HANDLE == _resetablePool) {
+                VkCommandPoolCreateInfo commandPoolInfo = {};{
+                    commandPoolInfo.pNext = nullptr;
+                    commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+                    commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+                    commandPoolInfo.queueFamilyIndex =  _queueFamilyIndex;
+                }
+                VkResult rst = vkCreateCommandPool( device->device(), &commandPoolInfo, nullptr, &_resetablePool );
+                if( VK_SUCCESS!=rst) {
+                    return nullptr;
+                }
             }
-            VkResult rst = vkCreateCommandPool( device->device(), &commandPoolInfo, nullptr, &_commandPool );
-            if( VK_SUCCESS!=rst) {
-                return nullptr;
+            pool = _resetablePool;
+        } else {
+            if( VK_NULL_HANDLE == _transientPool) {
+                VkCommandPoolCreateInfo commandPoolInfo = {};{
+                    commandPoolInfo.pNext = nullptr;
+                    commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+                    commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+                    commandPoolInfo.queueFamilyIndex =  _queueFamilyIndex;
+                }
+                VkResult rst = vkCreateCommandPool( device->device(), &commandPoolInfo, nullptr, &_transientPool );
+                if( VK_SUCCESS!=rst) {
+                    return nullptr;
+                }
             }
+            pool = _transientPool;
         }
         VkCommandBufferAllocateInfo cmdbuffAllocateInfo = {};{
             cmdbuffAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
             cmdbuffAllocateInfo.pNext = nullptr;
             cmdbuffAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-            cmdbuffAllocateInfo.commandPool = _commandPool;
+            cmdbuffAllocateInfo.commandPool = pool;
             cmdbuffAllocateInfo.commandBufferCount = 1;
         }
         VkCommandBuffer cmdbuff;
@@ -90,13 +108,17 @@ namespace ugi {
         if( VK_SUCCESS != rst ) {
             return nullptr;
         }
-        CommandBuffer* cb = new CommandBuffer( device->device(), cmdbuff );
+        CommandBuffer* cb = new CommandBuffer(device->device(), cmdbuff, type);
         return cb;
     }
 
     void CommandQueue::destroyCommandBuffer( Device* device, CommandBuffer* commandBuffer ) {
         VkCommandBuffer cmd = *commandBuffer;
-        vkFreeCommandBuffers( device->device(), _commandPool, 1, &cmd);
+        if(commandBuffer->type() == CmdbufType::Resetable) {
+            vkFreeCommandBuffers(device->device(), _resetablePool, 1, &cmd);
+        } else {
+            // vkFreeCommandBuffers(device->device(), _transientPool, 1, &cmd);
+        }
         delete commandBuffer;
     }
 

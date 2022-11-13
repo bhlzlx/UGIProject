@@ -33,7 +33,7 @@ namespace ugi {
     }
 
     void RenderCommandEncoder::drawIndirect(Mesh const* meshes, uint32_t count) {
-        VkCommandBuffer cmd = *_commandBuffer;
+        // VkCommandBuffer cmd = *_commandBuffer;
         // vkCmdDrawIndexedIndirect(cmd, )
         // vkCmdDrawIndirect()
     }

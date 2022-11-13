@@ -3,6 +3,7 @@
 namespace ugi {
 
     class RenderSystem;
+    class StandardRenderContext;
     class Device;
     class Buffer;
     class CommandBuffer;

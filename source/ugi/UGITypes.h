@@ -160,6 +160,11 @@ namespace ugi {
         OTHER = 3
     };
 
+    enum CmdbufType {
+        Transient,
+        Resetable,
+    };
+
     struct DeviceDescriptor {
         GRAPHICS_API_TYPE apiType;
         GRAPHICS_DEVICE_TYPE deviceType;

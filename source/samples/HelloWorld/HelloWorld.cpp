@@ -17,12 +17,10 @@
 #include <ugi/async_load/AsyncLoadManager.h>
 #include <ugi/render_components/Renderable.h>
 #include <ugi/render_components/PipelineMaterial.h>
-// #include <hgl/assets/AssetsSource.h>
-
+#include <ugi/RenderContext.h>
 #include <cmath>
 
 namespace ugi {
-
 
     bool Render::initialize() {
         auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
@@ -88,23 +86,6 @@ namespace ugi {
         return renderable;
     }
 
-    bool RenderContext::initialize(void* wnd, ugi::DeviceDescriptor deviceDesc, comm::IArchive* archive) {
-        renderSystem = new RenderSystem();
-        device = renderSystem->createDevice(deviceDesc, archive);
-        uniformAllocator = device->createUniformAllocator();
-        descriptorSetAllocator = device->descriptorSetAllocator();
-        swapchain = device->createSwapchain(wnd);
-        graphicsQueue = device->graphicsQueues()[0];
-        uploadQueue = device->transferQueues()[0];
-        asyncLoadManager = new ugi::GPUAsyncLoadManager();
-        for( size_t i = 0; i<MaxFlightCount; ++i) {
-            frameCompleteFences[i] = device->createFence();
-            renderCompleteSemaphores[i] = device->createSemaphore();
-            commandBuffers[i] = graphicsQueue->createCommandBuffer(device);
-        }
-        return true;
-    }
-
     bool HelloWorld::initialize( void* _wnd, comm::IArchive* arch) {
         auto pipelineFile = arch->openIStream("/shaders/triangle/pipeline.bin", {comm::ReadFlag::binary});
         auto pipelineFileSize = pipelineFile->size();
@@ -129,14 +110,16 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         }
-        _renderContext.initialize(_wnd, descriptor, arch);
+        _renderContext = new StandardRenderContext();
+        _renderContext->initialize(_wnd, descriptor, arch);
         pipelineDesc.renderState.cullMode = CullMode::None;
         pipelineDesc.renderState.blendState.enable = false;
-        auto pipeline = _renderContext.device->createGraphicsPipeline(pipelineDesc);
+        auto pipeline = _renderContext->device()->createGraphicsPipeline(pipelineDesc);
         auto bufferAllocator = new MeshBufferAllocator();
-        bufferAllocator->initialize(_renderContext.device, 1024);
+        bufferAllocator->initialize(_renderContext->device(), 1024);
 
-        _render = new Render(_renderContext.device, pipeline, bufferAllocator, _renderContext.uniformAllocator);
+        auto device = _renderContext->device();
+        _render = new Render(device, pipeline, bufferAllocator, _renderContext->uniformAllocator());
         _render->initialize();
 
         float vertexData[] = {
@@ -147,7 +130,7 @@ namespace ugi {
         uint16_t indexData[] = {
             0, 1, 2
         };
-        _renderable = _render->createRenderable((uint8_t const*)vertexData, sizeof(vertexData), indexData, 3, _renderContext.asyncLoadManager);
+        _renderable = _render->createRenderable((uint8_t const*)vertexData, sizeof(vertexData), indexData, 3, _renderContext->asyncLoadManager());
         tex_desc_t texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
         texDesc.depth = 1;
@@ -156,7 +139,7 @@ namespace ugi {
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
-        _texture = _renderContext.device->createTexture(texDesc, ResourceAccessType::ShaderRead );
+        _texture = device->createTexture(texDesc, ResourceAccessType::ShaderRead );
         uint32_t texData[] = {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
             0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
@@ -184,15 +167,15 @@ namespace ugi {
         region.offset.x = 8; region.offset.y = 8;
         regions.push_back(region);
         _texture->updateRegions(
-            _renderContext.device, 
+            device, 
             regions.data(), regions.size(), 
             (uint8_t const*)texData, sizeof(texData), offsets.data(), 
-            _renderContext.asyncLoadManager,
+            _renderContext->asyncLoadManager(),
             [this](CommandBuffer* cb) {
                 auto resEnc = cb->resourceCommandEncoder();
                 resEnc->imageTransitionBarrier(
                     _texture, ResourceAccessType::ShaderRead, 
-                    PipelineStages::FragmentShading, StageAccess::Read,
+                    PipelineStages::Bottom, StageAccess::Write,
                     PipelineStages::FragmentShading, StageAccess::Read,
                     nullptr
                 );
@@ -201,7 +184,7 @@ namespace ugi {
             }
         );
         image_view_param_t ivp;
-        _imageView = _texture->createImageView(_renderContext.device, ivp);
+        _imageView = _texture->createImageView(device, ivp);
         _render->setSampler(_renderable, _samplerState);
         _render->setTexture(_renderable, _imageView);
         _flightIndex = 0;
@@ -209,19 +192,16 @@ namespace ugi {
     }
 
     void HelloWorld::tick() {
-        _renderContext.device->waitForFence( _renderContext.frameCompleteFences[_flightIndex] );
-        _renderContext.descriptorSetAllocator->tick();
-        _renderContext.uniformAllocator->tick();
+        _renderContext->onPreTick();
         _render->tick();
-        uint32_t imageIndex = _renderContext.swapchain->acquireNextImage(_renderContext.device, _flightIndex);
         //
-        IRenderPass* mainRenderPass = _renderContext.swapchain->renderPass(imageIndex);
-        auto cmdbuf = _renderContext.commandBuffers[_flightIndex];
+        Device* device = _renderContext->device();
+        IRenderPass* mainRenderPass = _renderContext->mainFramebuffer();
+        auto cmdbuf = _renderContext->primaryQueue()->createCommandBuffer(device, CmdbufType::Transient);
+        device->cycleInvoker().postCallable([this, cmdbuf](){
+            _renderContext->primaryQueue()->destroyCommandBuffer(cmdbuf);
+        });
         cmdbuf->beginEncode(); {
-            _renderContext.asyncLoadManager->tick(cmdbuf);
-            auto resourceEncoder = cmdbuf->resourceCommandEncoder();
-            resourceEncoder->imageTransitionBarrier(_texture, ugi::ResourceAccessType::ShaderRead, ugi::PipelineStages::Transfer, ugi::StageAccess::Write, ugi::PipelineStages::FragmentShading, ugi::StageAccess::Read);
-            resourceEncoder->endEncode();
             static uint64_t angle = 0;
             ++angle;
             float sinVal = sin( ((float)angle)/180.0f * 3.1415926f );
@@ -261,26 +241,15 @@ namespace ugi {
         }
         cmdbuf->endEncode();
 
-		Semaphore* imageAvailSemaphore = _renderContext.swapchain->imageAvailSemaphore();
-		QueueSubmitInfo submitInfo {
-			&cmdbuf,
-			1,
-			&imageAvailSemaphore,// submitInfo.semaphoresToWait
-			1,
-			&_renderContext.renderCompleteSemaphores[_flightIndex], // submitInfo.semaphoresToSignal
-			1
-		};
-		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _renderContext.frameCompleteFences[_flightIndex]);
+		Semaphore* imageAvailSemaphore = _renderContext->mainFramebufferAvailSemaphore();
+		Semaphore* renderCompleteSemaphore = _renderContext->renderCompleteSemephore();
+        _renderContext->submitCommand({{cmdbuf}, {imageAvailSemaphore}, {renderCompleteSemaphore}});
 
-        bool submitRst = _renderContext.graphicsQueue->submitCommandBuffers(submitBatch);
-        assert(submitRst);
-        _renderContext.swapchain->present( _renderContext.device, _renderContext.graphicsQueue, _renderContext.renderCompleteSemaphores[_flightIndex] );
-
+        _renderContext->onPostTick();
     }
         
     void HelloWorld::resize(uint32_t width, uint32_t height) {
-        _renderContext.swapchain->resize( _renderContext.device, width, height );
-        //
+        _renderContext->onResize(width, height);
         _width = width;
         _height = height;
     }

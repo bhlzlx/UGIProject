@@ -15,7 +15,7 @@ namespace ugi {
         VkRect2D                                        _scissor;
         GraphicsPipeline*                               _pipeline;
     public:
-        RenderCommandEncoder( CommandBuffer* commandBuffer = nullptr, IRenderPass* renderPass  = nullptr ) 
+        RenderCommandEncoder(CommandBuffer* commandBuffer = nullptr, IRenderPass* renderPass  = nullptr ) 
             : _commandBuffer( commandBuffer )
             , _renderPass( renderPass )
             , _subpass( 0 )

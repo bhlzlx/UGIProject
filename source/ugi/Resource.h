@@ -6,7 +6,7 @@ namespace ugi {
 
     class Resource {
     public:
-        virtual void release( Device* _device ) = 0;
+        virtual void release(Device* _device) = 0;
         virtual ~Resource() = default;
     };
 

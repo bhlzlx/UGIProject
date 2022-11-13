@@ -4,29 +4,9 @@
 #include <ugi/UGIDeclare.h>
 #include <ugi/UGITypes.h>
 #include <ugi/Argument.h>
-
 #include <io/archive.h>
 
 namespace ugi {
-
-    struct RenderContext {
-        ugi::RenderSystem*              renderSystem;                                     //
-        ugi::Device*                    device;                                           //
-        ugi::Swapchain*                 swapchain;                                        //
-        ugi::Fence*                     frameCompleteFences[MaxFlightCount];              // command buffer 被GPU消化完会给 fence 一个 signal, 用于双缓冲或者多缓冲逻辑隔帧等待
-        ugi::Semaphore*                 renderCompleteSemaphores[MaxFlightCount];         // 用于GPU内部等待
-        ugi::CommandBuffer*             commandBuffers[MaxFlightCount];                   // command buffer for each frame
-        ugi::CommandQueue*              graphicsQueue;                                    // graphics queue
-        ugi::CommandQueue*              uploadQueue;                                      // upload queue
-        ugi::UniformAllocator*          uniformAllocator;
-        ugi::DescriptorSetAllocator*    descriptorSetAllocator;
-        ugi::GPUAsyncLoadManager*       asyncLoadManager;
-
-        RenderContext() {
-        }
-
-        bool initialize(void* _wnd, ugi::DeviceDescriptor deviceDesc, comm::IArchive* archive);
-    };
 
     class Render {
     private:
@@ -65,7 +45,7 @@ namespace ugi {
     class HelloWorld : public UGIApplication {
     private:
         void*                           _hwnd;                                             //
-        RenderContext                   _renderContext; //
+        StandardRenderContext*          _renderContext; //
         Render*                         _render;
         // sample resources
         ugi::Texture*                   _texture;
