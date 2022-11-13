@@ -1,0 +1,14 @@
+{
+	"shaderModule" : { 
+		"vert":"sphere.vert", 
+		"frag":"sphere.frag"
+	},
+	"vertexLayout" : {
+		"buffers" : [
+			{ "stride" : 24, "instance" : 0 }
+		],
+		"attributes" :[
+			{ "buffer" : 0, "offset" : 0, "type" : "Float3" }
+		]
+	}
+}

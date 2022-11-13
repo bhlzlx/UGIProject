@@ -47,7 +47,7 @@ namespace ugi {
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
         ugi::GraphicsPipeline*          _pipeline;
         ///> ===========================================================================
-        ugi::ArgumentGroup*     _argumentGroup;                                    // 
+        ugi::DescriptorBinder*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
         ugi::Texture*           _texture;
         ugi::Texture*           _bluredTexture;
@@ -58,7 +58,7 @@ namespace ugi {
         ugi::GaussBlurItem*         _blurItem2;
 
         ugi::UniformAllocator*  _uniformAllocator;
-        ResourceDescriptor      _uniformDescriptor;
+        res_descriptor_t      _uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index
         //

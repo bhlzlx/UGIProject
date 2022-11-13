@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "UGITypes.h"
 #include "UGIDeclare.h"
+#include "UGIVulkanPrivate.h"
 #include "VulkanDeclare.h"
 #include <array>
 #include <unordered_map>
@@ -15,7 +16,7 @@ namespace ugi {
      */
     class RenderPassObjectManager {
     private:
-        uint64_t CompatibleHashFunc( const RenderPassDescription& _subpassDesc, uint32_t _subpassIndex );
+        uint64_t CompatibleHashFunc( const renderpass_desc_t& _subpassDesc, uint32_t _subpassIndex );
     private:        
         /*-------------------------------------------------------
         |  hash( attachment & subpass index ) <-> render pass   |
@@ -26,15 +27,15 @@ namespace ugi {
         // 配的 renderpass
         std::set<VkRenderPass> _renderPasses; ///< 所有已经分配的`render pass`
         //
-        void registRenderPass( const RenderPassDescription& _subpassDesc, VkRenderPass _renderPass, uint64_t& hash, uint32_t _subpassIndex = 0);
+        void registRenderPass( const renderpass_desc_t& _subpassDesc, VkRenderPass _renderPass, uint64_t& hash, uint32_t _subpassIndex = 0);
     public:
         RenderPassObjectManager()
             : _compatibleTable {}
         {
         }
 
-        VkRenderPass getRenderPass( Device* _device,  const RenderPassDescription& _subpassDesc, uint64_t& hash );
-        VkRenderPass queryCompatibleRenderPass( const RenderPassDescription& _subpassDesc, uint32_t _subpassIndex = 0);
+        VkRenderPass getRenderPass( Device* _device,  const renderpass_desc_t& _subpassDesc, uint64_t& hash );
+        VkRenderPass queryCompatibleRenderPass( const renderpass_desc_t& _subpassDesc, uint32_t _subpassIndex = 0);
     };
 
     // 
@@ -43,7 +44,7 @@ namespace ugi {
 
     class IRenderPass {
     public:
-        virtual void setClearValues( const RenderPassClearValues& clearValues ) = 0;
+        virtual void setClearValues( const renderpass_clearval_t& clearValues ) = 0;
         virtual uint32_t subpassCount() const = 0;
         virtual uint32_t subpassColorAttachmentCount( uint32_t subpassIndex ) const = 0;
         virtual uint64_t subpassHash( uint32_t subpassIndex ) const = 0;
@@ -51,21 +52,23 @@ namespace ugi {
         virtual void begin( RenderCommandEncoder* encoder ) const = 0;
         virtual void end( RenderCommandEncoder* encoder ) const = 0;
         virtual void release( Device* device ) = 0;
-        virtual Texture* color( uint32_t index ) = 0;
+        virtual image_view_t color( uint32_t index ) = 0;
     };
 
     class RenderPass : IRenderPass {
         friend class CommandBuffer;
     private:
-        RenderPassDescription                       _decription;
+        renderpass_desc_t                       _decription;
         uint64_t                                    _subpassHash;                              ///> render pass's hash value
         //
         VkFramebuffer                               _framebuffer;                              ///> framebuffer 对象
         VkRenderPass                                _renderPass;                               // renderpass - 含一个subpass
         //
-        Texture*                                    _colorTextures[MaxRenderTarget];           // RT所使用的纹理对象
         uint32_t                                    _colorTextureCount;                        // RT数量
-        Texture*                                    _depthStencilTexture;                      // 深度和模板所使用的纹理对象
+        Texture*                                    _colorTexture[MaxRenderTarget];
+        image_view_t                                _colorViews[MaxRenderTarget];           // RT所使用的纹理对象
+        Texture*                                    _dsTexture;
+        image_view_t                                _dsView;;                                   // 深度和模板所使用的纹理对象
 
         VkImageLayout                               _colorImageLayouts[MaxRenderTarget];
         VkImageLayout                               _depthStencilImageLayout;
@@ -77,7 +80,7 @@ namespace ugi {
                 //
         Size<uint32_t>                              _size; // 宽高
     public:
-        virtual void setClearValues( const RenderPassClearValues& clearValues ) override;
+        virtual void setClearValues( const renderpass_clearval_t& clearValues ) override;
         //== 
         virtual uint32_t subpassCount() const override {
             return 1;
@@ -91,21 +94,18 @@ namespace ugi {
         virtual VkRenderPass renderPass() const override {
             return _renderPass;
         }
-        virtual Texture* color( uint32_t index ) {
+        virtual image_view_t color( uint32_t index ) override {
             if(index<_colorTextureCount) {
-                return _colorTextures[index];
+                return _colorViews[index];
             }
-            return nullptr;
+            return image_view_t();
         }
+        virtual ~RenderPass() {};
         virtual void begin( RenderCommandEncoder* encoder ) const override;
         virtual void end( RenderCommandEncoder* encoder ) const override;
         virtual void release( Device* device ) override;
         //
-        static IRenderPass* CreateRenderPass( Device* _device, const RenderPassDescription& _renderPass, Texture** _colors, Texture* _depthStencil );
-    };
-
-    class OptimizedRenderPass {
-
+        static IRenderPass* CreateRenderPass( Device* _device, const renderpass_desc_t& _desc, Texture** colors, Texture* depth, image_view_param_t const* colorView, image_view_param_t depthView);
     };
 
 }

@@ -6,24 +6,39 @@
 #include "../Buffer.h"
 #include "../Texture.h"
 #include "../Pipeline.h"
-#include "../Drawable.h"
 #include "../UGITypeMapping.h"
 #include "../Argument.h"
+#include <render_components/MeshPrimitive.h>
 #include <vector>
 
 namespace ugi {
 
-    void RenderCommandEncoder::drawIndexed( Drawable* drawable, uint32_t indexOffset, uint32_t indexCount, uint32_t vertexOffset ) {
-        drawable->bind(_commandBuffer);
-        vkCmdDrawIndexed( *_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0 );
+    // void RenderCommandEncoder::drawIndexed( Drawable* drawable, uint32_t indexOffset, uint32_t indexCount, uint32_t vertexOffset, uint32_t instanceCount) {
+    //     drawable->bind(_commandBuffer);
+    //     vkCmdDrawIndexed( *_commandBuffer, indexCount, instanceCount, indexOffset, vertexOffset, 0);
+    // }
+
+    // void RenderCommandEncoder::draw( Drawable* drawable, uint32_t vertexCount, uint32_t baseVertexIndex) {
+    //     drawable->bind(_commandBuffer);
+    //     vkCmdDraw( *_commandBuffer, vertexCount, 1, baseVertexIndex, 0 );
+    // }
+
+
+    void RenderCommandEncoder::draw(Mesh const* mesh, uint32_t instanceCount) {
+        VkCommandBuffer cmd = *_commandBuffer;
+        // auto alloc = mesh->buffer();
+        // VkDeviceSize offset = alloc.offset;
+        mesh->bind(this);
+        vkCmdDrawIndexed(cmd, mesh->indexCount(), instanceCount, 0, 0, 0);
     }
 
-    void RenderCommandEncoder::draw( Drawable* drawable, uint32_t vertexCount, uint32_t baseVertexIndex) {
-        drawable->bind(_commandBuffer);
-        vkCmdDraw( *_commandBuffer, vertexCount, 1, baseVertexIndex, 0 );
+    void RenderCommandEncoder::drawIndirect(Mesh const* meshes, uint32_t count) {
+        // VkCommandBuffer cmd = *_commandBuffer;
+        // vkCmdDrawIndexedIndirect(cmd, )
+        // vkCmdDrawIndirect()
     }
 
-    void RenderCommandEncoder::bindPipeline( GraphicsPipeline* pipeline ) {
+    void RenderCommandEncoder::bindPipeline(GraphicsPipeline* pipeline) {
         pipeline->bind(this);
     }
 
@@ -44,7 +59,7 @@ namespace ugi {
         vkCmdSetScissor( *_commandBuffer, 0, 1, &scissor );
     }
 
-    void RenderCommandEncoder::bindArgumentGroup( ArgumentGroup* argGroup ) {
+    void RenderCommandEncoder::bindArgumentGroup( DescriptorBinder* argGroup ) {
         argGroup->bind(_commandBuffer );
     }
 

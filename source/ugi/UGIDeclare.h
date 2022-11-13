@@ -3,6 +3,7 @@
 namespace ugi {
 
     class RenderSystem;
+    class StandardRenderContext;
     class Device;
     class Buffer;
     class CommandBuffer;
@@ -18,11 +19,16 @@ namespace ugi {
     class RenderPass;
     class RenderPassObjectManager;
     class GraphicsPipeline;
-    class ArgumentGroup;
+    class DescriptorBinder;
     class DescriptorSetAllocator;
-    class Drawable;
+    // class Drawable;
     class UniformAllocator;
     class ResourceManager;
-    class ArgumentGroupLayout;
+    class MaterialLayout;
     class ComputePipeline;
+    class GPUAsyncLoadManager;
+    class Material;
+    class Mesh;
+    class MeshBufferAllocator;
+    class Renderable;
 }

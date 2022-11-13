@@ -107,7 +107,7 @@ namespace ugi {
         m_drawable->setVertexBuffer( m_vertexBuffer, 0, 0 );
         m_drawable->setIndexBuffer( m_indexBuffer, 0 );
         //
-        TextureDescription texDesc;
+        tex_desc_t texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
         texDesc.depth = 1;
         texDesc.width = 16;
@@ -115,7 +115,7 @@ namespace ugi {
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
-        m_texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
+        _texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
 
         uint32_t texData[] = {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
@@ -132,7 +132,7 @@ namespace ugi {
         memcpy(ptr, texData, sizeof(texData));
         texStagingBuffer->unmap(_device);
 
-        TextureSubResource texSubRes;
+        ImageSubResource texSubRes;
         texSubRes.baseLayer = 0;
         texSubRes.offset = { 0, 0, 0 };
         texSubRes.size.depth = 1;
@@ -142,13 +142,13 @@ namespace ugi {
         texSubRes.layerCount = 1;
         subRes.size = sizeof(texData);
 
-        resourceEncoder->updateImage( m_texture, texStagingBuffer, &texSubRes, &subRes );
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
         texSubRes.offset.x = 8;
-        resourceEncoder->updateImage( m_texture, texStagingBuffer, &texSubRes, &subRes );
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
         texSubRes.offset.y = 8; texSubRes.offset.x = 0;
-        resourceEncoder->updateImage( m_texture, texStagingBuffer, &texSubRes, &subRes );
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
         texSubRes.offset.y = 8; texSubRes.offset.x = 8;
-        resourceEncoder->updateImage( m_texture, texStagingBuffer, &texSubRes, &subRes );
+        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
 
         resourceEncoder->endEncode();
 
@@ -166,19 +166,19 @@ namespace ugi {
 
         _uploadQueue->waitIdle();
         //
-        ResourceDescriptor res;
+        res_descriptor_t res;
         m_uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
-        m_uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
+        m_uniformDescriptor.handle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
         m_uniformDescriptor.bufferRange = 64;
 
         res.type = ArgumentDescriptorType::Sampler;
         res.sampler = m_samplerState;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
+        res.handle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
         _argumentGroup->updateDescriptor(res);
         
         res.type = ArgumentDescriptorType::Image;
-        res.texture = m_texture;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
+        res.texture = _texture;
+        res.handle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
         //
         _argumentGroup->updateDescriptor(res);
         //

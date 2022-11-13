@@ -10,37 +10,97 @@
 #include <ugi/Pipeline.h>
 #include <ugi/Argument.h>
 #include <ugi/Texture.h>
-#include <ugi/Drawable.h>
 #include <ugi/UniformBuffer.h>
-#include <hgl/assets/AssetsSource.h>
-
+#include <ugi/Descriptor.h>
+#include <ugi/MeshBufferAllocator.h>
+#include <ugi/render_components/MeshPrimitive.h>
+#include <ugi/async_load/AsyncLoadManager.h>
+#include <ugi/render_components/Renderable.h>
+#include <ugi/render_components/PipelineMaterial.h>
+#include <ugi/RenderContext.h>
 #include <cmath>
 
 namespace ugi {
 
-        bool HelloWorld::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
+    bool Render::initialize() {
+        auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
+        _uboptor = material->descriptors()[0];
+        _samptor = material->descriptors()[1];
+        _texptor = material->descriptors()[2];
+        _bufferAllocator = new MeshBufferAllocator();
+        auto rst = _bufferAllocator->initialize(_device, 4096);
+        return rst;
+    }
 
-        hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/triangle/pipeline.bin"));
-        auto pipelineFileSize = pipelineFile->GetSize();
-        
+    void Render::setRasterization(raster_state_t rasterState) {
+        _pipeline->setRasterizationState(rasterState);
+    }
+
+    void Render::tick() {
+        _pipeline->resetMaterials();
+    }
+
+    void Render::bind(RenderCommandEncoder* encoder) {
+        encoder->bindPipeline(_pipeline);
+    }
+
+    void Render::draw(RenderCommandEncoder* enc, Renderable* renderable) {
+        _pipeline->applyMaterial(renderable->material());
+        _pipeline->flushMaterials(enc->commandBuffer());
+        enc->draw(renderable->mesh(), renderable->mesh()->indexCount());
+    }
+
+    void Render::setUBO(Renderable* renderable, uint8_t* data) {
+        auto mtl = renderable->material();
+        auto ubo = _uniformAllocator->allocate(_uboptor.res.buffer.size);
+        ubo.writeData(0, data, _uboptor.res.buffer.size);
+        _uboptor.res.buffer.buffer = (size_t)ubo.buffer()->buffer();
+        _uboptor.res.buffer.offset = ubo.offset();
+        mtl->updateDescriptor(_uboptor);
+    }
+
+    void Render::setSampler(Renderable* renderable, sampler_state_t sampler) {
+        auto mtl = renderable->material();
+        _samptor.res.samplerState = sampler;
+        mtl->updateDescriptor(_samptor);
+    }
+
+    void Render::setTexture(Renderable* renderable, image_view_t imageView) {
+        auto mtl = renderable->material();
+        _texptor.res.imageView = imageView.handle;
+        mtl->updateDescriptor(_texptor);
+    }
+
+    Renderable* Render::createRenderable(uint8_t const* vd, uint32_t vdsize, uint16_t const* id, uint32_t indexCount, GPUAsyncLoadManager* asyncLoadManager) {
+        auto mesh = Mesh::CreateMesh(
+            _device, _bufferAllocator, asyncLoadManager,
+            (uint8_t const*)vd, vdsize,
+            id, indexCount,
+            _pipeline->desc().vertexLayout,
+            _pipeline->desc().topologyMode,
+            ugi::polygon_mode_t::Fill,
+            [](CommandBuffer* cb){}
+        );
+        auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
+        auto renderable = new Renderable(mesh, material, _pipeline, raster_state_t());
+        return renderable;
+    }
+
+    bool HelloWorld::initialize( void* _wnd, comm::IArchive* arch) {
+        auto pipelineFile = arch->openIStream("/shaders/triangle/pipeline.bin", {comm::ReadFlag::binary});
+        auto pipelineFileSize = pipelineFile->size();
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
-        pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
-        PipelineDescription& pipelineDesc = *(PipelineDescription*)pipelineBuffer;
-        pipelineBuffer += sizeof(PipelineDescription);
+        pipelineFile->read(pipelineBuffer,pipelineFile->size());
+        pipeline_desc_t& pipelineDesc = *(pipeline_desc_t*)pipelineBuffer;
+        pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : pipelineDesc.shaders ) {
             if( shader.spirvData) {
                 shader.spirvData = (uint64_t)pipelineBuffer;
                 pipelineBuffer += shader.spirvSize;
             }
         }
-        
-        pipelineDesc.pologonMode = PolygonMode::Fill;
-        //
-        pipelineDesc.topologyMode = TopologyMode::TriangleList;
-
+        pipelineDesc.topologyMode = topology_mode_t::TriangleList;
         printf("initialize\n");
-
-        _renderSystem = new ugi::RenderSystem();
 
         ugi::DeviceDescriptor descriptor; {
             descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
@@ -50,62 +110,28 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         }
-        _device = _renderSystem->createDevice(descriptor, assetsSource);
-        _uniformAllocator = _device->createUniformAllocator();
-        _swapchain = _device->createSwapchain( _wnd );
-        // command queues
-        _graphicsQueue = _device->graphicsQueues()[0];
-        _uploadQueue = _device->transferQueues()[0];
-        //
-        for( size_t i = 0; i<MaxFlightCount; ++i) {
-            _frameCompleteFences[i] = _device->createFence();
-            _renderCompleteSemaphores[i] = _device->createSemaphore();
-            _commandBuffers[i] = _graphicsQueue->createCommandBuffer( _device );
-        }
+        _renderContext = new StandardRenderContext();
+        _renderContext->initialize(_wnd, descriptor, arch);
         pipelineDesc.renderState.cullMode = CullMode::None;
         pipelineDesc.renderState.blendState.enable = false;
-        _pipeline = _device->createGraphicsPipeline(pipelineDesc);
-        //
-        _argumentGroup = _pipeline->createArgumentGroup();
+        auto pipeline = _renderContext->device()->createGraphicsPipeline(pipelineDesc);
+        auto bufferAllocator = new MeshBufferAllocator();
+        bufferAllocator->initialize(_renderContext->device(), 1024);
 
-        _vertexBuffer = _device->createBuffer( BufferType::VertexBuffer, sizeof(float) * 5 * 3 );
-        Buffer* vertexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, sizeof(float) * 5 * 3 );
+        auto device = _renderContext->device();
+        _render = new Render(device, pipeline, bufferAllocator, _renderContext->uniformAllocator());
+        _render->initialize();
+
         float vertexData[] = {
             -0.5, -0.5, 0, 0, 0,
             0, 0.5, 0, 0.5, 1.0,
             0.5, -0.5, 0, 1.0, 0
         };
-        void* ptr = vertexStagingBuffer->map( _device );
-        memcpy(ptr, vertexData, sizeof(vertexData));
-        vertexStagingBuffer->unmap(_device);
-
         uint16_t indexData[] = {
             0, 1, 2
         };
-        _indexBuffer = _device->createBuffer( BufferType::IndexBuffer, sizeof(indexData));
-        Buffer* indexStagingBuffer = _device->createBuffer( BufferType::StagingBuffer, sizeof(indexData) );
-        ptr = indexStagingBuffer->map( _device );
-        memcpy(ptr, indexData, sizeof(indexData));
-        indexStagingBuffer->unmap(_device);
-
-        auto updateCmd = _uploadQueue->createCommandBuffer( _device );
-
-        updateCmd->beginEncode();
-
-        auto resourceEncoder = updateCmd->resourceCommandEncoder();
-
-        BufferSubResource subRes;
-        subRes.offset = 0; subRes.size = _vertexBuffer->size();
-        resourceEncoder->updateBuffer( _vertexBuffer, vertexStagingBuffer, &subRes, &subRes );
-        subRes.size = sizeof(indexData);
-        resourceEncoder->updateBuffer( _indexBuffer, indexStagingBuffer, &subRes, &subRes );
-
-        _drawable = _device->createDrawable(pipelineDesc);
-        _drawable->setVertexBuffer( _vertexBuffer, 0, 0 );
-        _drawable->setVertexBuffer( _vertexBuffer, 1, 12 );
-        _drawable->setIndexBuffer( _indexBuffer, 0 );
-        //
-        TextureDescription texDesc;
+        _renderable = _render->createRenderable((uint8_t const*)vertexData, sizeof(vertexData), indexData, 3, _renderContext->asyncLoadManager());
+        tex_desc_t texDesc;
         texDesc.format = UGIFormat::RGBA8888_UNORM;
         texDesc.depth = 1;
         texDesc.width = 16;
@@ -113,8 +139,7 @@ namespace ugi {
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
         texDesc.arrayLayers = 1;
-        _texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
-
+        _texture = device->createTexture(texDesc, ResourceAccessType::ShaderRead );
         uint32_t texData[] = {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
             0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
@@ -125,79 +150,58 @@ namespace ugi {
             0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
             0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
         };
-        auto texStagingBuffer =  _device->createBuffer( BufferType::StagingBuffer, sizeof(texData) );
-        ptr = texStagingBuffer->map(_device);
-        memcpy(ptr, texData, sizeof(texData));
-        texStagingBuffer->unmap(_device);
-
-        TextureSubResource texSubRes;
-        texSubRes.baseLayer = 0;
-        texSubRes.offset = { 0, 0, 0 };
-        texSubRes.size.depth = 1;
-        texSubRes.size.width = texSubRes.size.height = 8;
-        texSubRes.mipLevelCount = 1;
-        texSubRes.baseMipLevel = 0;
-        texSubRes.layerCount = 1;
-        subRes.size = sizeof(texData);
-
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
-        texSubRes.offset.x = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
-        texSubRes.offset.y = 8; texSubRes.offset.x = 0;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
-        texSubRes.offset.y = 8; texSubRes.offset.x = 8;
-        resourceEncoder->updateImage( _texture, texStagingBuffer, &texSubRes, &subRes );
-
-        resourceEncoder->endEncode();
-
-        updateCmd->endEncode();
-        //
-		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
-		QueueSubmitInfo submitInfo {
-			&updateCmd,
-			1,
-			nullptr,// submitInfo.semaphoresToWait
-			0,
-			nullptr, // submitInfo.semaphoresToSignal
-			0
-		};
-		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
-        _uploadQueue->submitCommandBuffers(submitBatch);
-
-        _uploadQueue->waitIdle();
-        //
-        ResourceDescriptor res;
-        _uniformDescriptor.type = ArgumentDescriptorType::UniformBuffer;
-        _uniformDescriptor.descriptorHandle = ArgumentGroup::GetDescriptorHandle("Argument1", pipelineDesc );
-        _uniformDescriptor.bufferRange = 64;
-
-        res.type = ArgumentDescriptorType::Sampler;
-        res.sampler = _samplerState;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triSampler", pipelineDesc );
-        _argumentGroup->updateDescriptor(res);
-        
-        res.type = ArgumentDescriptorType::Image;
-        res.texture = _texture;
-        res.descriptorHandle = ArgumentGroup::GetDescriptorHandle("triTexture", pipelineDesc );
-        //
-        _argumentGroup->updateDescriptor(res);
-        //
+        std::vector<ImageRegion> regions;
+        std::vector<uint32_t> offsets = {0, 0, 0, 0};
+        ImageRegion region;
+        region.offset = {};
+        region.mipLevel = 0;
+        region.arrayIndex = 0;
+        region.arrayCount = 1;
+        region.extent.height = region.extent.width = 8;
+        region.extent.depth = 1;
+        regions.push_back(region);
+        region.offset.x = 8;
+        regions.push_back(region);
+        region.offset.x = 0; region.offset.y = 8;
+        regions.push_back(region);
+        region.offset.x = 8; region.offset.y = 8;
+        regions.push_back(region);
+        _texture->updateRegions(
+            device, 
+            regions.data(), regions.size(), 
+            (uint8_t const*)texData, sizeof(texData), offsets.data(), 
+            _renderContext->asyncLoadManager(),
+            [this](CommandBuffer* cb) {
+                auto resEnc = cb->resourceCommandEncoder();
+                resEnc->imageTransitionBarrier(
+                    _texture, ResourceAccessType::ShaderRead, 
+                    PipelineStages::Bottom, StageAccess::Write,
+                    PipelineStages::FragmentShading, StageAccess::Read,
+                    nullptr
+                );
+                resEnc->endEncode();
+                _texture->markAsUploaded();
+            }
+        );
+        image_view_param_t ivp;
+        _imageView = _texture->createImageView(device, ivp);
+        _render->setSampler(_renderable, _samplerState);
+        _render->setTexture(_renderable, _imageView);
         _flightIndex = 0;
         return true;
     }
 
     void HelloWorld::tick() {
-        
-        _device->waitForFence( _frameCompleteFences[_flightIndex] );
-        _uniformAllocator->tick();
-        uint32_t imageIndex = _swapchain->acquireNextImage( _device, _flightIndex );
-        // _frameCompleteFences[_flightIndex]->
-        IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
-        
-        auto cmdbuf = _commandBuffers[_flightIndex];
-
+        _renderContext->onPreTick();
+        _render->tick();
+        //
+        Device* device = _renderContext->device();
+        IRenderPass* mainRenderPass = _renderContext->mainFramebuffer();
+        auto cmdbuf = _renderContext->primaryQueue()->createCommandBuffer(device, CmdbufType::Transient);
+        device->cycleInvoker().postCallable([this, cmdbuf](){
+            _renderContext->primaryQueue()->destroyCommandBuffer(cmdbuf);
+        });
         cmdbuf->beginEncode(); {
-
             static uint64_t angle = 0;
             ++angle;
             float sinVal = sin( ((float)angle)/180.0f * 3.1415926f );
@@ -208,63 +212,44 @@ namespace ugi {
                 { sinVal,  cosVal, 0, 0 }
             };
 
-            static ugi::RasterizationState rasterizationState;
+            static ugi::raster_state_t rasterizationState;
             if( angle % 180 == 0 ) {
-                rasterizationState.polygonMode = PolygonMode::Fill;
+                rasterizationState.polygonMode = polygon_mode_t::Fill;
             } else if( angle % 90 == 0) {
-                rasterizationState.polygonMode = PolygonMode::Line;
+                rasterizationState.polygonMode = polygon_mode_t::Line;
             }
-            auto ubo = _uniformAllocator->allocate(sizeof(col2));
-            ubo.writeData(0, &col2, sizeof(col2));
-            _uniformDescriptor.bufferOffset = ubo.offset();
-            _uniformDescriptor.buffer = ubo.buffer(); 
-            _argumentGroup->updateDescriptor(_uniformDescriptor);
-
-            auto resourceEncoder = cmdbuf->resourceCommandEncoder();
-            resourceEncoder->prepareArgumentGroup(_argumentGroup);
-            resourceEncoder->endEncode();
+            _render->setUBO(_renderable, (uint8_t*)col2);
             //
-            RenderPassClearValues clearValues;
+            renderpass_clearval_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
             clearValues.stencil = 0xffffffff;
 
             mainRenderPass->setClearValues(clearValues);
 
-            auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
-                renderCommandEncoder->setLineWidth(1.0f);
-                _pipeline->setRasterizationState(rasterizationState);
-                renderCommandEncoder->setViewport(0, 0, _width, _height, 0, 1.0f );
-                renderCommandEncoder->setScissor( 0, 0, _width, _height );
-                renderCommandEncoder->bindPipeline(_pipeline);
-                renderCommandEncoder->bindArgumentGroup(_argumentGroup);
-                // renderCommandEncoder->drawIndexed( _drawable, 0, 3 );
-                renderCommandEncoder->draw( _drawable, 3, 0 );
+            auto renderEnc = cmdbuf->renderCommandEncoder(mainRenderPass); {
+                if(_texture->uploaded() && _renderable->mesh()->prepared()) {
+                    renderEnc->setLineWidth(1.0f);
+                    renderEnc->setViewport(0, 0, _width, _height, 0, 1.0f );
+                    renderEnc->setScissor( 0, 0, _width, _height );
+                    _render->setRasterization(rasterizationState);
+                    _render->bind(renderEnc);
+                    _render->draw(renderEnc, _renderable);
+                }
             }
-            renderCommandEncoder->endEncode();
+            renderEnc->endEncode();
         }
         cmdbuf->endEncode();
 
-		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
-		QueueSubmitInfo submitInfo {
-			&cmdbuf,
-			1,
-			&imageAvailSemaphore,// submitInfo.semaphoresToWait
-			1,
-			&_renderCompleteSemaphores[_flightIndex], // submitInfo.semaphoresToSignal
-			1
-		};
-		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
+		Semaphore* imageAvailSemaphore = _renderContext->mainFramebufferAvailSemaphore();
+		Semaphore* renderCompleteSemaphore = _renderContext->renderCompleteSemephore();
+        _renderContext->submitCommand({{cmdbuf}, {imageAvailSemaphore}, {renderCompleteSemaphore}});
 
-        bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
-        assert(submitRst);
-        _swapchain->present( _device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
-
+        _renderContext->onPostTick();
     }
         
     void HelloWorld::resize(uint32_t width, uint32_t height) {
-        _swapchain->resize( _device, width, height );
-        //
+        _renderContext->onResize(width, height);
         _width = width;
         _height = height;
     }

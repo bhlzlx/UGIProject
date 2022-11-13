@@ -172,16 +172,16 @@ namespace ugi {
         ugi::CommandQueue*      _uploadQueue;                                      // upload queue
         ugi::GraphicsPipeline*          _pipeline;
         ///> ===========================================================================
-        ugi::ArgumentGroup*     _argumentGroup;                                    // 
+        ugi::DescriptorBinder*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
-        ugi::Texture*           m_texture;
-        ugi::SamplerState       m_samplerState;                                     //
+        ugi::Texture*           _texture;
+        ugi::sampler_state_t       m_samplerState;                                     //
         ugi::Buffer*            m_vertexBuffer;                                     //
         ugi::Buffer*            m_indexBuffer;
         ugi::Drawable*          m_drawable;
 
         ugi::UniformAllocator*  _uniformAllocator;
-        ResourceDescriptor      m_uniformDescriptor;
+        res_descriptor_t      m_uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index
         //

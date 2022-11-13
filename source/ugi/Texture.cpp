@@ -6,66 +6,39 @@
 #include "UGIUtility.h"
 #include <vector>
 #include "resourcePool/HashObjectPool.h"
+#include <CommandQueue.h>
+#include <CommandBuffer.h>
+#include <commandBuffer/ResourceCommandEncoder.h>
+#include <async_load/AsyncLoadManager.h>
+#include <Buffer.h>
 
 namespace ugi {
 
-    class SamplerStateHashMethod {
-    private:
-    public:
-        uint64_t operator() ( const SamplerState& state ) {
-            UGIHash<APHash> hasher;
-            hasher.hashPOD(state);
-            return hasher;
-        }
-    };
-
-    class SamplerCreateMethod {
-    private:
-    public:
-        VkSampler operator()( Device* device, const SamplerState& samplerState ) {
-            VkSamplerCreateInfo info; {
-                info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-                info.flags = 0;
-                info.pNext = nullptr;
-                info.addressModeU = samplerAddressModeToVk(samplerState.u);
-                info.addressModeV = samplerAddressModeToVk(samplerState.v);
-                info.addressModeW = samplerAddressModeToVk(samplerState.w);
-                info.compareOp = compareOpToVk(samplerState.compareFunction);
-                info.compareEnable = samplerState.compareMode != TextureCompareMode::RefNone;
-                info.magFilter = filterToVk(samplerState.mag);
-                info.minFilter = filterToVk(samplerState.min);
-                info.mipmapMode = mipmapFilterToVk(samplerState.mip);
-                info.borderColor = VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
-                info.anisotropyEnable = VK_FALSE;
-                info.mipLodBias = 0;
-                info.maxAnisotropy = 0;
-                info.minLod = 0;
-                info.maxLod = 0;
-                info.unnormalizedCoordinates = 0;
-            }
-            VkSampler sampler;
-            vkCreateSampler( device->device(), &info, nullptr, &sampler);
-            return sampler;
-        }
-    };
-
-    class SamplerDestroyMethod {
-    private:
-    public:
-        void operator()( Device* device, VkSampler sampler) {
-            vkDestroySampler(device->device(), sampler, nullptr);
-        }
-    };
-
-    using SamplerPool = HashObjectPool< SamplerState, VkSampler, Device*, SamplerStateHashMethod, SamplerCreateMethod, SamplerDestroyMethod>;
-
-    VkSampler CreateSampler( Device* device, const SamplerState& samplerState ) {
-        uint64_t hashVal = 0;
-        VkSampler sampler = SamplerPool::GetInstance()->getObject( samplerState, device, hashVal );
-        return sampler;
+    static VkImageViewCreateInfo imageViewCreateInfo( Texture const* texture, const image_view_param_t& param ) {
+        VkImageViewCreateInfo info;
+        //
+        info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        info.flags = 0;
+        info.format = UGIFormatToVk(texture->desc().format);
+        info.pNext = nullptr;
+        // components
+        info.components.a = (VkComponentSwizzle)param.alpha;
+        info.components.r = (VkComponentSwizzle)param.red;
+        info.components.g = (VkComponentSwizzle)param.green;
+        info.components.b = (VkComponentSwizzle)param.blue;
+        // view type
+        info.viewType = imageViewType(param.viewType);
+        // sub resource
+        info.subresourceRange.aspectMask = texture->aspectFlags();
+        info.subresourceRange.baseArrayLayer = param.baseArrayLayer;
+        info.subresourceRange.layerCount = param.layerCount;
+        info.subresourceRange.levelCount = param.levelCount;
+        info.subresourceRange.baseMipLevel = param.baseMipLevel;
+        info.image = texture->image();
+        return info;
     }
 
-    Texture* Texture::CreateTexture( Device* _device, VkImage _image, VkImageView _imageView, const TextureDescription& _desc, ResourceAccessType _accessType  ) {
+    Texture* Texture::CreateTexture( Device* _device, VkImage _image, const tex_desc_t& _desc, ResourceAccessType _accessType  ) {
 
         VkFormat format = UGIFormatToVk(_desc.format);
         VkImageAspectFlags aspectMask = 0;
@@ -139,7 +112,7 @@ namespace ugi {
                 info.usage = usageFlags;
                 if( _device->descriptor().queueFamilyCount>1 ) {
                     info.sharingMode = VK_SHARING_MODE_CONCURRENT;
-                }else {
+                } else {
                     info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
                 }
                 info.queueFamilyIndexCount = _device->descriptor().queueFamilyCount;
@@ -170,60 +143,13 @@ namespace ugi {
         if (!aspectMask){
             aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         }
-        bool ownImageView = false;
-        if (!_imageView) {
-            ownImageView = true;
-            // create image view
-            VkImageViewCreateInfo createInfo = {};
-            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createInfo.image = _image;
-            createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            //
-            createInfo.subresourceRange.aspectMask = aspectMask;
-
-            createInfo.subresourceRange.baseMipLevel = 0;
-            createInfo.subresourceRange.levelCount = _desc.mipmapLevel;
-            createInfo.subresourceRange.baseArrayLayer = 0;
-            createInfo.subresourceRange.layerCount = _desc.depth;
-
-            createInfo.pNext = nullptr;
-            switch (_desc.type)
-            {
-            case TextureType::Texture2D:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; break;
-            case TextureType::Texture2DArray:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY; break;
-            case TextureType::TextureCube:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE; break;
-            case TextureType::TextureCubeArray:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY; break;
-            case TextureType::Texture3D:
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_3D; break;
-            case TextureType::Texture1D:
-            default:
-                assert(false);
-            }
-            createInfo.format = format;
-            createInfo.flags = 0;
-            // texture aspect should have all aspect information
-            // but the image view should not have the stencil aspect
-            createInfo.subresourceRange.aspectMask &= ~VK_IMAGE_ASPECT_STENCIL_BIT;
-            VkDevice device = _device->device();
-            VkResult rst = vkCreateImageView(device, &createInfo, nullptr, &_imageView);
-            assert(VK_SUCCESS == rst);
-        }
         //
         Texture* texture = new Texture();{
             texture->_description = _desc;
             texture->_image = _image;
-            texture->_imageView = _imageView;
             texture->_allocation = allocation;
             texture->_aspectFlags = aspectMask;
             texture->_ownsImage = ownImage;
-            texture->_ownsImageView = ownImageView;
             // texture->m_accessFlags = 0;
             texture->_pipelineStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
             texture->_currentAccessType = ResourceAccessType::None;
@@ -239,13 +165,60 @@ namespace ugi {
             _ownsImage = false;
             _allocation = nullptr;
         }
-        if( _ownsImageView && _imageView ) {
-            vkDestroyImageView( _device->device(), _imageView, nullptr);
-            _imageView = VK_NULL_HANDLE;
-        }
         delete this;
     }
 
-    std::unordered_map<uint64_t, VkSampler> SamplerCache;
+    image_view_t Texture::createImageView(Device* device, const image_view_param_t& param) const {
+        auto imageViewInfo = imageViewCreateInfo(this, param );
+        VkImageView imageView = VK_NULL_HANDLE;
+        auto rst = vkCreateImageView( device->device(), &imageViewInfo, nullptr, &imageView );
+        if( rst == VK_SUCCESS) {
+            InternalImageView view(imageView, this);
+            return view.externalImageView();
+        } else {
+            return {};
+        }
+    }
+
+    void Texture::destroyImageView(Device* device, image_view_t const& view) const {
+        InternalImageView internalView(view);
+        vkDestroyImageView(device->device(), internalView.view(), nullptr);
+    }
+
+    void Texture::updateRegions(Device* device, const ImageRegion* regions, uint32_t count, uint8_t const* data, uint32_t size, uint32_t const* offsets, GPUAsyncLoadManager* asyncLoadManager, std::function<void(CommandBuffer*)>&& callback) { 
+        // dealing staging buffer
+        Buffer* staging = device->createBuffer(BufferType::StagingBuffer, size);
+        auto ptr = staging->map(device);
+        memcpy(ptr, data, size);
+        staging->unmap(device);
+        // record command buffer
+        auto &transferQueues = device->transferQueues();
+        assert(transferQueues.size());
+        auto queue = transferQueues[0];
+        // create staging buffer
+        auto cb = queue->createCommandBuffer(device, CmdbufType::Resetable);
+        cb->beginEncode(); {
+            auto resEnc = cb->resourceCommandEncoder();
+            resEnc->imageTransitionBarrier(this, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, nullptr);
+            resEnc->copyBufferToImage(this->_image, this->_aspectFlags, staging->buffer(), regions, offsets, count);
+            resEnc->endEncode();
+        }
+        cb->endEncode();
+        //
+        auto fence = device->createFence(); {
+            QueueSubmitInfo submitInfo(&cb, 1, nullptr, 0, nullptr, 0);
+            QueueSubmitBatchInfo submitBatch(&submitInfo, 1, fence);
+            queue->submitCommandBuffers(submitBatch);
+        }
+        auto onComplete = [](Texture* tex, Device* device, Buffer* stgbuf, CommandBuffer* transferCmd, CommandQueue* queue, std::function<void(CommandBuffer*)> callback, CommandBuffer* exeBuf)->void{
+            queue->destroyCommandBuffer(device, transferCmd);
+            device->destroyBuffer(stgbuf);
+            callback(exeBuf);
+        };
+        using namespace std::placeholders;
+        auto binder = std::bind(onComplete, this, device, staging, cb, queue, callback, _1);
+        GPUAsyncLoadItem asyncLoadItem = GPUAsyncLoadItem(device, fence, binder);
+        asyncLoadManager->registerAsyncLoad(std::move(asyncLoadItem));
+    }
 
 }

@@ -9,17 +9,12 @@
 
 #include "UGIDeclare.h"
 #include "UGITypes.h"
-
-namespace hgl {
-    namespace assets {
-        class AssetsSource;
-    }
-}
+#include <LightWeightCommon/io/archive.h>
+#include <ResourceManager.h>
 
 namespace ugi {
 
-
-    class ArgumentGroupLayout;
+    class MaterialLayout;
     struct DeviceDescriptorVulkan : public DeviceDescriptor {
         //
         constexpr static uint32_t MaxQueueCountSupport = 8;
@@ -28,18 +23,18 @@ namespace ugi {
         VkPhysicalDeviceProperties              properties;
         VkPhysicalDevice                        physicalDevice;
         VkSurfaceKHR                            surface;
-        hgl::assets::AssetsSource*              assetSource;
+        comm::IArchive*                         archive;
         //
         //
         uint32_t                                queueFamilyCount;
         uint32_t                                queueFamilyIndices[MaxQueueCountSupport];
         //
         DeviceDescriptorVulkan()
-            : instance( nullptr )
-            , properties( {} )
-            , physicalDevice( nullptr )
-            , surface ( 0 )
-            , assetSource( nullptr ) {
+            : instance(nullptr)
+            , properties({})
+            , physicalDevice(nullptr)
+            , surface (0)
+            , archive(nullptr) {
         }
         
         DeviceDescriptorVulkan( const DeviceDescriptor& _baseDesc )
@@ -53,9 +48,6 @@ namespace ugi {
     private:
         DeviceDescriptorVulkan              _descriptor;
         VkDevice                            _device;
-        // std::vector<VkQueue>    _graphicsQueues;
-        // std::vector<VkQueue>    m_transferQueues;
-        //      
         std::vector<CommandQueue*>          _graphicsCommandQueues;
         std::vector<CommandQueue*>          _transferCommandQueues;
         //      
@@ -63,6 +55,7 @@ namespace ugi {
         
         RenderPassObjectManager*            _renderPassObjectManager;
         DescriptorSetAllocator*             _descriptorSetAllocator;
+        FlightCycleInvoker                  _cycleInvoker;
         //
         Device() {
         }
@@ -89,43 +82,51 @@ namespace ugi {
         VkInstance instance() {
             return _descriptor.instance;
         }
-        VmaAllocator vmaAllocator() {
+        VmaAllocator vmaAllocator() const {
             return _vmaAllocator;
         }
-        const DeviceDescriptorVulkan& descriptor() {
+        const DeviceDescriptorVulkan& descriptor() const {
             return _descriptor;
         }
 
-        RenderPassObjectManager* renderPassObjectManager() {
+        RenderPassObjectManager* renderPassObjectManager() const {
             return _renderPassObjectManager;
         }
 
-        const std::vector<CommandQueue*>& graphicsQueues() {
+        const std::vector<CommandQueue*>& graphicsQueues() const {
             return _graphicsCommandQueues;
         }
 
-        const std::vector<CommandQueue*>& transferQueues() {
+        const std::vector<CommandQueue*>& transferQueues() const {
             return _transferCommandQueues;
+        }
+
+        FlightCycleInvoker& cycleInvoker() {
+            return _cycleInvoker;
         }
 
         Semaphore* createSemaphore( uint32_t _semaphoreFlags = 0);
         Fence* createFence( bool _signaled = false );
         bool isSignaled( const Fence* _fence );
         Buffer* createBuffer( BufferType _type, size_t _size );
-        Texture* createTexture( const TextureDescription& _desc, ResourceAccessType _accessType = ResourceAccessType::ShaderReadWrite );
-        IRenderPass* createRenderPass( const RenderPassDescription& _renderPass, Texture** _colors, Texture* _depthStencil );
+        Texture* createTexture( const tex_desc_t& _desc, ResourceAccessType _accessType = ResourceAccessType::ShaderReadWrite );
+        IRenderPass* createRenderPass( const renderpass_desc_t& _renderPass, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView );
         Swapchain* createSwapchain( void* wnd, AttachmentLoadAction loadAction = AttachmentLoadAction::Clear );
-        GraphicsPipeline* createGraphicsPipeline( const PipelineDescription& pipelineDescription );
-        ComputePipeline* createComputePipeline( const PipelineDescription& pipelineDescription );
-        Drawable* createDrawable( const PipelineDescription& pipelineDescription );
+        GraphicsPipeline* createGraphicsPipeline( const pipeline_desc_t& pipelineDescription );
+        ComputePipeline* createComputePipeline( const pipeline_desc_t& pipelineDescription );
         UniformAllocator* createUniformAllocator();
+        // DescriptorSetAllocator* createDescriptorSetAllocator() const;
 
         void destroyRenderPass( IRenderPass* renderPass );
         void destroyTexture( Texture* texture );
         void destroyBuffer( Buffer* texture );
+        void destroyFence( Fence* fence );
 
-        const ArgumentGroupLayout* getArgumentGroupLayout( const PipelineDescription& pipelineDescription, uint64_t& hashval );
-        const ArgumentGroupLayout* getArgumentGroupLayout( uint64_t hashval );
+        const MaterialLayout* getPipelineMaterialLayout( const pipeline_desc_t& pipelineDescription, uint64_t& hashval );
+        const MaterialLayout* getPipelineMaterialLayout( uint64_t hashval );
+        DescriptorSetAllocator* descriptorSetAllocator() const {
+            return _descriptorSetAllocator;
+        }
         ///> --------------- Hash Function For Graphics Objects ------------------
         template< class T >
         uint64_t hashObject();
@@ -166,8 +167,7 @@ namespace ugi {
     public:
         RenderSystem() {
         }
-        Device*
-        createDevice( const DeviceDescriptor& _descriptor, hgl::assets::AssetsSource* assetSource );
+        Device* createDevice( const DeviceDescriptor& _descriptor, comm::IArchive* archive);
         //
         const DeviceDescriptorVulkan* getVulkanDeviceDescriptor() const {
             return &m_deviceDescriptorVk;

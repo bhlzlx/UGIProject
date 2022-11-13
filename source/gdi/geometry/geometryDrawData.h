@@ -55,10 +55,10 @@ namespace ugi {
             ugi::Drawable*                      _drawable;
             //
             std::vector<GeometryBatch>          _batches;
-            std::vector<ugi::ArgumentGroup*>    _argGroups;
+            std::vector<ugi::DescriptorBinder*>    _argGroups;
             //
-            ugi::ResourceDescriptor             _elementInformationDescriptor;
-            ugi::ResourceDescriptor             _globalInformationDescriptor;
+            ugi::res_descriptor_t             _elementInformationDescriptor;
+            ugi::res_descriptor_t             _globalInformationDescriptor;
 
             ContextInformation                  _contextInformation;
             GeometryTransformArgument           _transform;

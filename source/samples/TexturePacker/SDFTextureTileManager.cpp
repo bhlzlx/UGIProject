@@ -113,7 +113,7 @@ namespace ugi {
         if(_texArray) {
             return true; // 重复初始化？
         }
-        TextureDescription texDesc;
+        tex_desc_t texDesc;
         texDesc.type = TextureType::Texture2DArray;
         texDesc.arrayLayers = arrayLayer;
         texDesc.format = UGIFormat::R8_UNORM;

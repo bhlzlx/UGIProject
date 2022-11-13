@@ -1,5 +1,3 @@
-project( HelloWorld )
-
 include_directories( ${CMAKE_SOURCE_DIR}/source )
 
 if(MINGW)
@@ -7,24 +5,16 @@ if(MINGW)
     set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -municode")
 endif()
 
-set( PROJECT_SOURCE
+add_executable(HelloWorld WIN32)
+
+target_sources(HelloWorld
+PRIVATE
     ${PLATFORM_SOURCE}
     ${CMAKE_CURRENT_SOURCE_DIR}/HelloWorld.cpp
 )
 
-set ( PROJECT_HEADER 
-    ${CMAKE_CURRENT_SOURCE_DIR}/HelloWorld.h
-)
-
-add_executable( HelloWorld WIN32
-    ${PROJECT_SOURCE}
-    ${PROJECT_HEADER}
-)
-
 target_link_libraries(
     HelloWorld
-    CMCore
-    CMAssetsManage
-    CMPlatform
     UGI
+    LightWeightCommon
 )

@@ -5,10 +5,10 @@
 #include "Buffer.h"
 #include "Texture.h"
 #include "Pipeline.h"
-#include "Drawable.h"
 #include "UGITypeMapping.h"
 #include "Argument.h"
 #include <vector>
+#include "Device.h"
 
 namespace ugi {
 
@@ -74,8 +74,9 @@ namespace ugi {
         return 0;
     }
 
-    CommandBuffer::CommandBuffer( VkDevice device, VkCommandBuffer cb ) 
+    CommandBuffer::CommandBuffer( VkDevice device, VkCommandBuffer cb, CmdbufType type) 
         : _cmdbuff( cb )
+        , _type(type)
         , _device(device)
         , _encodeState(0)
     {

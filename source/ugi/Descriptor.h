@@ -6,6 +6,7 @@
 #include <vector>
 #include <list>
 #include <cassert>
+#include <array>
 
 namespace ugi {
 
@@ -22,22 +23,25 @@ namespace ugi {
     *  所以 m_vecDescriptorPool 的内容只会增加不会减少，这一点务必注意
     *******************************************************************************************************************/
     class DescriptorSetAllocator {
+        struct AllocationInfo { // 记录一个pool里有多个set，分别是什么，方便以后回收
+            VkDescriptorPool                pool;
+            uint32_t                        count;
+            std::vector<VkDescriptorSet>    sets;
+        };
     private:
         VkDevice                                                        _device;
-        std::map<VkDescriptorSetLayout, std::list<VkDescriptorSet>>     _freeTable;
-        std::map<VkDescriptorSet, VkDescriptorSetLayout>                _allocatedTable;
-        std::vector<VkDescriptorPool>                                   _vecDescriptorPool;
-        //
-        static DescriptorSetAllocator* global_singleton_ptr;
+        uint32_t                                                        _activePool;
+        uint32_t                                                        _flight;         
+        std::vector<VkDescriptorPool>                                   _descriptorPools;
+        std::array<std::vector<AllocationInfo>, MaxFlightCount>         _allocationFlights;
     private:
         VkDescriptorPool _createDescriporPool();
-        DescriptorSetAllocator();
     public:        
+        DescriptorSetAllocator();
         bool initialize( VkDevice device );
-        VkDescriptorSet allocate( VkDescriptorSetLayout setLayout );
-        void free( VkDescriptorSet descriptorSet );
-        //
-        static DescriptorSetAllocator* Instance();
+        void tick();
+        VkDescriptorSet allocate(VkDescriptorSetLayout setLayout);
+        void destroy();
     };
 
 }

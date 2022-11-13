@@ -1,57 +1,54 @@
-set( UGI_FILES )
+project( UGI )
 
-function( UGI_STATIC_LIBRARY NAME )
-    project ( ${NAME} )
-    set ( file_list )
-    foreach( file ${ARGN} )
-        set( file_list ${file_list} ${CMAKE_CURRENT_SOURCE_DIR}/${file} )
-    endforeach()
-    # message( ${file_list} )
-    add_library( ${NAME} STATIC ${file_list} )
-endfunction()
+add_library( UGI STATIC )
 
-include_directories(
+target_include_directories( UGI
+PUBLIC
     ${SOLUTION_DIR}/thirdpart/include
-    ${SOLUTION_DIR}/thirdpart/CMCore/inc
-    ${SOLUTION_DIR}/thirdpart/CMPlatform/inc
-    ${SOLUTION_DIR}/thirdpart/CMUtil/inc
-    ${SOLUTION_DIR}/thirdpart/CMAssetsManage/inc
-    ${SOLUTION_DIR}/source/utility
-    ${SOLUTION_DIR}/source/thirdpart
-    ${SOLUTION_DIR}/source/thirdpart/CMCore/inc
-    ${SOLUTION_DIR}/source/thirdpart/CMUtil/inc
-    ${SOLUTION_DIR}/source/thirdpart/CMPlatform/inc
+    ${SOLUTION_DIR}/thirdpart
+    ${SOLUTION_DIR}/source
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_sources( UGI 
+PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/VulkanFunctionDefine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/VulkanDebugConfigurator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Device.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentGroupLayout.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Texture.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextureUtility.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/RenderPass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Swapchain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Semaphore.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ResourceManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Argument.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Pipeline.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/Drawable.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/UniformBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sampler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MeshBufferAllocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/resourcePool/ArgumentGroupLayoutPool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/RenderCommandEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ResourceCommandEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ComputeCommandEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/PipelineMaterial.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/MeshPrimitive.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/Renderable.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/async_load/AsyncLoadManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/async_load/GPUAsyncLoadItem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/RenderContext.cpp
+)
+
+target_link_libraries(UGI
+PUBLIC
+    LightWeightCommon
 )
 
 if( MSVC )
     add_definitions( -DWIN32_LEAN_AND_MEAN )
 endif()
-
-
-include_directories( ${CMAKE_SOURCE_DIR}/source/thirdpart )
-include_directories( ${CMAKE_SOURCE_DIR}/source )
-
-UGI_STATIC_LIBRARY( UGI
-    VulkanFunctionDefine.cpp
-    VulkanDebugConfigurator.cpp
-    Device.cpp
-    CommandQueue.cpp
-    ArgumentGroupLayout.cpp
-    Texture.cpp
-    TextureUtility.cpp
-    Buffer.cpp
-    RenderPass.cpp
-    Swapchain.cpp
-    Semaphore.cpp
-    ResourceManager.cpp
-    Descriptor.cpp
-    Argument.cpp
-    Pipeline.cpp
-    Drawable.cpp
-    UniformBuffer.cpp
-    CommandBuffer.cpp
-    ./resourcePool/ArgumentGroupLayoutPool.cpp
-    ./commandBuffer/RenderCommandEncoder.cpp
-    ./commandBuffer/ResourceCommandEncoder.cpp
-    ./commandBuffer/ComputeCommandEncoder.cpp
-)

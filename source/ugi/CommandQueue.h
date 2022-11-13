@@ -46,7 +46,8 @@ namespace ugi {
         uint32_t        _queueFamilyIndex;
         uint32_t        _queueIndex;
         //
-        VkCommandPool   _commandPool;
+        VkCommandPool   _resetablePool;
+        VkCommandPool   _transientPool;
         //
     public:
         /* ============================================
@@ -59,11 +60,12 @@ namespace ugi {
             : _queue( queue )
             , _queueFamilyIndex( queueFamilyIndex )
             , _queueIndex( queueIndex )
-            , _commandPool(VK_NULL_HANDLE)
+            , _resetablePool(VK_NULL_HANDLE)
+            , _transientPool(VK_NULL_HANDLE)
         {
         }
         //
-        CommandBuffer* createCommandBuffer( Device* device );
+        CommandBuffer* createCommandBuffer(Device* device, CmdbufType type = CmdbufType::Resetable);
         void destroyCommandBuffer( Device* device, CommandBuffer* commandBuffer );
         //
         operator VkQueue() const {

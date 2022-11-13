@@ -81,7 +81,7 @@ namespace ugi {
         char debugInfo[2048];
         sprintf(debugInfo, "code : %d\n layer : %s\n message : %s\n", msgCode, pLayerPrefix, pMsg);
         //
-        printf(debugInfo);
+        printf("%s", debugInfo);
         //
         return 0;
     }

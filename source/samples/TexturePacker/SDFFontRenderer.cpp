@@ -56,8 +56,8 @@ namespace ugi {
         auto pipelineFileSize = pipelineFile->GetSize();
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
         pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
-        _pipelineDescription = *(PipelineDescription*)pipelineBuffer;
-        pipelineBuffer += sizeof(PipelineDescription);
+        _pipelineDescription = *(pipeline_desc_t*)pipelineBuffer;
+        pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : _pipelineDescription.shaders ) {
             if( shader.spirvData) {
                 shader.spirvData = (uint64_t)pipelineBuffer;
@@ -65,8 +65,8 @@ namespace ugi {
             }
         }
         //_pipelineDescription.vertexLayout.buffers[2].
-        _pipelineDescription.pologonMode = PolygonMode::Fill;
-        _pipelineDescription.topologyMode = TopologyMode::TriangleList;
+        _pipelineDescription.pologonMode = polygon_mode_t::Fill;
+        _pipelineDescription.topologyMode = topology_mode_t::TriangleList;
         _pipelineDescription.renderState.cullMode = CullMode::None;
         _pipelineDescription.renderState.blendState.enable = true;
         _pipeline = _device->createGraphicsPipeline(_pipelineDescription);
@@ -389,15 +389,15 @@ namespace ugi {
         if( 0xffffffff == _texArrayHandle) {
             _texArrayHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArray", _pipelineDescription);
         }
-        ResourceDescriptor descriptor;
-        descriptor.type = ArgumentDescriptorType::Sampler;
+        res_descriptor_t descriptor;
+        descriptor.type = res_descriptor_type::Sampler;
         descriptor.sampler.mag = TextureFilter::Linear;
         descriptor.sampler.mip = TextureFilter::Linear;
         descriptor.sampler.min = TextureFilter::Linear;
-        descriptor.descriptorHandle = _texArraySamplerHandle;
+        descriptor.handle = _texArraySamplerHandle;
         drawData->_argumentGroup->updateDescriptor(descriptor);
-        descriptor.descriptorHandle = _texArrayHandle;
-        descriptor.type = ArgumentDescriptorType::Image;
+        descriptor.handle = _texArrayHandle;
+        descriptor.type = res_descriptor_type::Image;
         descriptor.texture = _texTileManager->texture();
         drawData->_argumentGroup->updateDescriptor(descriptor);
         // Mesh数据
@@ -435,19 +435,19 @@ namespace ugi {
 
         for( uint32_t i = 0; i<drawDataCount; ++i ) {
             auto drawData = drawDatas[i];
-            ResourceDescriptor descriptor;
-            descriptor.descriptorHandle = _indicesHandle;
+            res_descriptor_t descriptor;
+            descriptor.handle = _indicesHandle;
             descriptor.bufferRange = sizeof(IndexHandle) * 1024;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_indices);
             drawData->_argumentGroup->updateDescriptor(descriptor);
 
-            descriptor.descriptorHandle = _effectsHandle;
+            descriptor.handle = _effectsHandle;
             descriptor.bufferRange = sizeof(Style) * 256;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_styles);
             drawData->_argumentGroup->updateDescriptor(descriptor);
             drawData->_argumentGroup->prepairResource(resourceEncoder);
 
-            descriptor.descriptorHandle = _transformsHandle;
+            descriptor.handle = _transformsHandle;
             descriptor.bufferRange = sizeof(Transform) * 256;
             uniformAllocator->allocateForDescriptor(descriptor, drawData->_transforms);
             drawData->_argumentGroup->updateDescriptor(descriptor);
@@ -456,7 +456,7 @@ namespace ugi {
             struct {
                 float width, height;
             } contextSize = {(float)_width, (float)_height };
-            descriptor.descriptorHandle = _contextHandle;
+            descriptor.handle = _contextHandle;
             descriptor.bufferRange = sizeof(contextSize);
             uniformAllocator->allocateForDescriptor(descriptor, contextSize);
             drawData->_argumentGroup->updateDescriptor(descriptor);

@@ -173,7 +173,7 @@ namespace ugi {
         ///> ===========================================================================
         ugi::ArgumentGroup*     _argumentGroup;                                    // 
         // ugi::Buffer*            m_uniformBuffer;
-        ugi::Texture*           m_texture;
+        ugi::Texture*           _texture;
         ugi::SamplerState       m_samplerState;                                     //
         ugi::Buffer*            m_vertexBuffer;                                     //
         ugi::Buffer*            m_indexBuffer;
@@ -185,7 +185,7 @@ namespace ugi {
         ugi::Texture*           m_gbufferNormal;
 
         ugi::UniformAllocator*  _uniformAllocator;
-        ResourceDescriptor      m_uniformDescriptor;
+        res_descriptor_t      m_uniformDescriptor;
         //
         uint32_t                _flightIndex;                                      // flight index
         //

@@ -16,7 +16,7 @@ namespace ugi {
         }
 
         void bindPipeline( ComputePipeline* computePipeline );
-        void bindArgumentGroup( ArgumentGroup* argumentGroup );
+        void bindArgumentGroup( DescriptorBinder* argumentGroup );
         
         void dispatch( uint32_t groupX, uint32_t groupY, uint32_t groupZ ) const;
         //

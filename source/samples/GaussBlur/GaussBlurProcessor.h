@@ -20,17 +20,17 @@ namespace ugi {
 
     class GaussBlurItem {
     private:
-        ArgumentGroup*      _argGroup;
+        DescriptorBinder*      _argGroup;
         Texture*            _texture0;
         Texture*            _texture1;
         GaussBlurParameter  _parameter;
     public:
-        GaussBlurItem( ArgumentGroup* group, Texture* texture0, Texture* texture1 );
+        GaussBlurItem( DescriptorBinder* group, Texture* texture0, Texture* texture1 );
         void setParameter( const GaussBlurParameter& parameter );
         const GaussBlurParameter& parameter() const {
             return _parameter;
         }
-        ArgumentGroup* argumentGroup() const {
+        DescriptorBinder* argumentGroup() const {
             return _argGroup;
         }
         Texture* source() const {
@@ -47,7 +47,7 @@ namespace ugi {
         ugi::Device*                    _device;
         hgl::assets::AssetsSource*      _assetsSource;
         ugi::ComputePipeline*           _pipeline;
-        PipelineDescription             _pipelineDescription;
+        pipeline_desc_t             _pipelineDescription;
         //
         uint32_t                        _inputImageHandle;
         uint32_t                        _outputImageHandle;

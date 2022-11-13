@@ -262,7 +262,7 @@ namespace ugi {
         rst = vkGetSwapchainImagesKHR(dvcVk, _swapchain, &_embedTextureCount, _images);
 
         for( uint32_t embedImageIndex = 0; embedImageIndex < _embedTextureCount; ++ embedImageIndex ) {
-            TextureDescription colorTexDesc;
+            tex_desc_t colorTexDesc;
             colorTexDesc.depth = 1;
             colorTexDesc.format = VkFormatToUGI(_createInfo.imageFormat);
             colorTexDesc.width = _createInfo.imageExtent.width;
@@ -270,15 +270,19 @@ namespace ugi {
             colorTexDesc.mipmapLevel = 1;
             colorTexDesc.arrayLayers = 1;
             colorTexDesc.type = TextureType::Texture2D;
-            _embedTextures[embedImageIndex] = Texture::CreateTexture( device, _images[embedImageIndex], VK_NULL_HANDLE, colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
-            if(!_depthStencilTexture) {
-                TextureDescription depthStencilTexDesc = colorTexDesc;
+            _embedColors[embedImageIndex] = Texture::CreateTexture( device, _images[embedImageIndex], colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
+            //
+            image_view_param_t vp;
+            _embedColorViews[embedImageIndex] = _embedColors[embedImageIndex]->createImageView(device, vp);
+            if(!_dsTexture) {
+                tex_desc_t depthStencilTexDesc = colorTexDesc;
                 depthStencilTexDesc.format = UGIFormat::Depth32F;
-                _depthStencilTexture = Texture::CreateTexture( device, VK_NULL_HANDLE, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
+                _dsTexture = Texture::CreateTexture( device, VK_NULL_HANDLE, depthStencilTexDesc, ugi::ResourceAccessType::DepthStencilReadWrite );
+                _dsv = _dsTexture->createImageView(device, vp);
             }
             //
             // auto renderPassObjManager = _device->renderPassObjectManager();
-            RenderPassDescription renderPassDesc;
+            renderpass_desc_t renderPassDesc;
             renderPassDesc.colorAttachmentCount = 1;
             renderPassDesc.colorAttachments[0].format = colorTexDesc.format;
             renderPassDesc.colorAttachments[0].loadAction = _loadAction;
@@ -291,8 +295,10 @@ namespace ugi {
             renderPassDesc.depthStencil.initialAccessType = ResourceAccessType::DepthStencilReadWrite; ///>
             renderPassDesc.depthStencil.finalAccessType = ResourceAccessType::DepthStencilReadWrite;
             renderPassDesc.inputAttachmentCount = 0;
-            //
-            _renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( device, renderPassDesc, &_embedTextures[embedImageIndex], _depthStencilTexture );
+            image_view_param_t ivps[] = {
+                image_view_param_t(),
+            };
+            _renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( device, renderPassDesc, &_embedColors[embedImageIndex], _dsTexture, ivps, ivps[0]);
         }
         return true;
     }
@@ -304,17 +310,20 @@ namespace ugi {
                 rp = nullptr;
             }
         }
-        for( auto& colorTex : _embedTextures ) {
+        for(uint32_t i = 0; i<4; ++i) {
+            auto& colorTex = _embedColors[i];
             if(colorTex) {
+                colorTex->destroyImageView(device, _embedColorViews[i]);
                 device->destroyTexture(colorTex);
                 colorTex = nullptr;
-            }else {
+            } else {
                 break;
             }
         }
-        if( _depthStencilTexture) {
-            device->destroyTexture(_depthStencilTexture);
-            _depthStencilTexture = nullptr;
+        if(_dsTexture) {
+            _dsTexture->destroyImageView(device, _dsv);
+            device->destroyTexture(_dsTexture);
+            _dsTexture = nullptr;
         }        
     }
 

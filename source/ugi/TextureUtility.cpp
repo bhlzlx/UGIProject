@@ -89,8 +89,8 @@ namespace ugi {
 
     Texture* TextureUtility::createTextureKTX( const void* data, uint32_t length ) const {
         const uint8_t * ptr = (const uint8_t *)data;
-		const uint8_t * end = ptr + length;
-        TextureDescription desc;
+		// const uint8_t * end = ptr + length;
+        tex_desc_t desc;
         // read file header
 		KtxHeader* header = (KtxHeader*)ptr;
 		ptr += sizeof(KtxHeader);
@@ -169,7 +169,7 @@ namespace ugi {
         Texture* texture = _device->createTexture( desc, ugi::ResourceAccessType::ShaderRead );
 		ptr += header->bytesOfKeyValueData;
 		uint32_t bpp = 8;
-		uint32_t pixelsize = bpp / 8;
+		// uint32_t pixelsize = bpp / 8;
 		// should care about the alignment of the cube slice & mip slice
 		// but reference to the ETC2 & EAC & `KTX format reference`, for 4x4 block compression type, the alignment should be zero
 		// so we can ignore the alignment
@@ -214,6 +214,7 @@ namespace ugi {
 	Texture* TextureUtility::createTexturePNG( const void* data, uint32_t length ) const {
         int x; int y; int channels;
         auto pixel = stbi_load_from_memory( (stbi_uc*)data, length,&x, &y, &channels, 4 );
+        tex_desc_t textureDescription;
 		//
 		uint32_t mipmapLevel = 1; {
 			int mipmapRefSize = x > y ? x : y;
@@ -222,8 +223,6 @@ namespace ugi {
 				mipmapRefSize = mipmapRefSize >> 1;
 			}
 		}
-
-        TextureDescription textureDescription;
         textureDescription.format = ugi::UGIFormat::RGBA8888_UNORM;
         textureDescription.width = x;
         textureDescription.height = y;

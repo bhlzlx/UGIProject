@@ -1,11 +1,10 @@
 ﻿#include <windows.h>
 #include "Resource.h"
 #include <UGIApplication.h>
-#include <hgl/assets/AssetsSource.h>
-#include <hgl/CodePage.h>
 #include <string>
 #include <regex>
 #include <cmath>
+#include <io/archive.h>
 
 #define MAX_LOADSTRING 100
 
@@ -147,9 +146,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         assetRoot = result[1];
     }
     assetRoot.append("/../");
-    auto assetsSource = hgl::assets::CreateSourceByFilesystem( "achive", hgl::ToOSString(assetRoot.c_str()), true );
+    auto archive = comm::CreateFSArchive(assetRoot);
     // auto archieve = kwheel::CreateStdArchieve( assetRoot );
-    if (!object->initialize(hWnd, assetsSource)) {
+    if (!object->initialize(hWnd, archive)) {
         return FALSE;
     }
     //

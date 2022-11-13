@@ -16,7 +16,7 @@ namespace ugi {
         vkCmdBindPipeline( cmdbuf, VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline->pipeline() );
     }
 
-    void ComputeCommandEncoder::bindArgumentGroup( ArgumentGroup* argumentGroup ) {
+    void ComputeCommandEncoder::bindArgumentGroup( DescriptorBinder* argumentGroup ) {
         argumentGroup->bind(_commandBuffer );
     }
 

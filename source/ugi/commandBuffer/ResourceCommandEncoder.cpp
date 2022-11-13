@@ -6,7 +6,6 @@
 #include "../Buffer.h"
 #include "../Texture.h"
 #include "../Pipeline.h"
-#include "../Drawable.h"
 #include "../UGITypeMapping.h"
 #include "../Argument.h"
 #include <vector>
@@ -17,10 +16,6 @@ namespace ugi {
 
     void ResourceCommandEncoder::endEncode() {
         _commandBuffer = nullptr;
-    }
-
-    void ResourceCommandEncoder::prepareArgumentGroup( ArgumentGroup* argumentGroup ) {
-        argumentGroup->prepairResource(this);
     }
 
     void ResourceCommandEncoder::executionBarrier( PipelineStages _srcStage, PipelineStages _dstStage ) {
@@ -56,9 +51,30 @@ namespace ugi {
       //  AllCommands             = 1<<16,
 
     
+    void ResourceCommandEncoder::bufferBarrier(VkBuffer buff, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const BufferSubResource& res) {
+        VkBufferMemoryBarrier barrier; {
+            barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            barrier.pNext = nullptr;
+            barrier.buffer = buff;
+            barrier.srcAccessMask = GetBarrierAccessMask( srcStage, srcStageMask );
+            barrier.dstAccessMask = GetBarrierAccessMask( dstStage, dstStageMask );
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.offset = res.offset;
+            barrier.size = res.size;
+        }        
+        vkCmdPipelineBarrier(
+            *_commandBuffer,
+            (VkPipelineStageFlagBits)srcStage,      // 生产阶段
+            (VkPipelineStageFlagBits)dstStage,      // 消费阶段
+            VK_DEPENDENCY_BY_REGION_BIT,            // 利用阶段关系来优化消费等待，除非你十分确定GPU执行此命令的时候资源已经完全准备好了就不用填这个了，所以我们就填这个吧
+            0, nullptr,                             // 不作 transition， 用来改变memory的可访问性
+            1, &barrier,                            // buffer barrier
+            0, nullptr                              // 不作 transition， 用来改变image layout
+        );
+    }
 
     void ResourceCommandEncoder::bufferTransitionBarrier( Buffer* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const BufferSubResource* subResource ) {
-
         if( buffer->accessType() == dstAccessType ) {
             return;
         }
@@ -86,7 +102,7 @@ namespace ugi {
         buffer->updateAccessType(dstAccessType);
     }
 
-    void ResourceCommandEncoder::imageTransitionBarrier( Texture* texture, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const TextureSubResource* subResource) {
+    void ResourceCommandEncoder::imageTransitionBarrier( Texture* texture, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const ImageSubResource* subResource) {
         if( texture->accessType() == dstAccessType ) {
             return;
         }
@@ -122,7 +138,6 @@ namespace ugi {
 
 
     void ResourceCommandEncoder::updateBuffer( Buffer* _dst, Buffer* _src, BufferSubResource* _dstSubRes, BufferSubResource* _srcSubRes, bool uploadMode ) {
-
         VkBufferCopy region;
 
         VkDeviceSize dstOffset = _dstSubRes ? _dstSubRes->offset : 0;
@@ -231,6 +246,52 @@ namespace ugi {
         }
         VkCommandBuffer cmdbuf = *_commandBuffer;
         vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)copies.size(), copies.data() );
+    }
+
+    void ResourceCommandEncoder::copyBuffer(VkBuffer dst, VkBuffer src, BufferSubResource dstRange, BufferSubResource srcRange) {
+        assert(dstRange.size == srcRange.size);
+        VkBufferCopy copy;
+        copy.dstOffset = dstRange.offset;
+        copy.srcOffset = srcRange.offset;
+        copy.size = dstRange.size;
+        vkCmdCopyBuffer(*_commandBuffer, src, dst, 1, &copy);
+    }
+
+    /**
+     * @brief 把 buffer 里的数据更新到 image 上
+     * 
+     * @param dst VkImage
+     * @param aspectFlags VkImage aspect type
+     * @param src VkBuffer, usually a staging buffer
+     * @param regions image regions to be update
+     * @param offsets offsets in buffer
+     * @param regionCount image region count
+     */
+    void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount) {
+        //imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
+        // 一个 region 只能传输一个 mip level
+        std::vector<VkBufferImageCopy> copies;
+        for( uint32_t i = 0; i<regionCount; ++i) {
+            const ImageRegion& region = regions[i];
+            VkBufferImageCopy copy;
+            copy.imageExtent.height = region.extent.height;
+            copy.imageExtent.width = region.extent.width;
+            copy.imageExtent.depth = region.extent.depth;
+            copy.imageOffset.x = region.offset.x;
+            copy.imageOffset.y = region.offset.y;
+            copy.imageOffset.z = region.offset.z;
+            //
+            copy.imageSubresource.baseArrayLayer = region.arrayIndex;
+            copy.imageSubresource.layerCount = 1;
+            copy.imageSubresource.aspectMask = aspectFlags;
+            copy.imageSubresource.mipLevel = region.mipLevel;
+            copy.bufferOffset = offsets[i];
+            copy.bufferRowLength = 0;
+            copy.bufferImageHeight = 0;
+            copies.push_back(copy);
+        }
+        VkCommandBuffer cmdbuf = *_commandBuffer;
+        vkCmdCopyBufferToImage(cmdbuf, src, dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)copies.size(), copies.data());
     }
 
 }

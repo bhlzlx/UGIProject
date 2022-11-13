@@ -13,21 +13,22 @@ namespace ugi {
         uint32_t                                        _subpass;            ///> subpass 的索引
         VkViewport                                      _viewport;
         VkRect2D                                        _scissor;
-
+        GraphicsPipeline*                               _pipeline;
     public:
-        RenderCommandEncoder( CommandBuffer* commandBuffer = nullptr, IRenderPass* renderPass  = nullptr ) 
+        RenderCommandEncoder(CommandBuffer* commandBuffer = nullptr, IRenderPass* renderPass  = nullptr ) 
             : _commandBuffer( commandBuffer )
             , _renderPass( renderPass )
             , _subpass( 0 )
         {
         }
         void bindPipeline( GraphicsPipeline* pipeline );
-        void bindArgumentGroup( ArgumentGroup* argumentGroup );
+        void bindArgumentGroup( DescriptorBinder* argumentGroup );
         void setViewport( float x, float y, float width ,float height, float minDepth, float maxDepth );
         void setScissor( int x, int y, int width, int height );
         void setLineWidth( float lineWidth );
-        void draw( Drawable* drawable, uint32_t vertexCount, uint32_t baseVertexIndex);
-        void drawIndexed( Drawable* drawable, uint32_t offset, uint32_t indexCount, uint32_t vertexOffset = 0 );
+        void draw(Mesh const* mesh, uint32_t instanceCount);
+        void drawIndirect(Mesh const* meshes, uint32_t count);
+        // void drawIndexed( Drawable* drawable, uint32_t offset, uint32_t indexCount, uint32_t vertexOffset = 0, uint32_t instanceCount = 1);
         void nextSubpass();
         void endEncode();
         //

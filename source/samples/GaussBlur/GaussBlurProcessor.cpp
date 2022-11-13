@@ -30,8 +30,8 @@ namespace ugi {
         auto pipelineFileSize = pipelineFile->GetSize();
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
         pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
-        _pipelineDescription = *(PipelineDescription*)pipelineBuffer;
-        pipelineBuffer += sizeof(PipelineDescription);
+        _pipelineDescription = *(pipeline_desc_t*)pipelineBuffer;
+        pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : _pipelineDescription.shaders ) {
             if( shader.spirvData) {
                 shader.spirvData = (uint64_t)pipelineBuffer;
@@ -54,10 +54,10 @@ namespace ugi {
         // update uniform buffer
         auto resEncoder = commandBuffer->resourceCommandEncoder();
         auto argGroup = item->argumentGroup();
-        ResourceDescriptor descriptor;
-        descriptor.descriptorHandle = _parameterHandle;
+        res_descriptor_t descriptor;
+        descriptor.handle = _parameterHandle;
         descriptor.bufferRange = sizeof(GaussBlurParameter);
-        descriptor.type = ArgumentDescriptorType::UniformBuffer;
+        descriptor.type = res_descriptor_type::UniformBuffer;
         uniformAllocator->allocateForDescriptor( descriptor, item->parameter());
 		argGroup->updateDescriptor(descriptor);
         // prepare for descriptor set
@@ -75,7 +75,7 @@ namespace ugi {
         computeEncoder->endEncode();
     }
 
-    GaussBlurItem::GaussBlurItem( ArgumentGroup* group, Texture* texture0, Texture* texture1 )
+    GaussBlurItem::GaussBlurItem( DescriptorBinder* group, Texture* texture0, Texture* texture1 )
         : _argGroup( group )
         , _texture0( texture0 )
         , _texture1( texture1 )
@@ -90,13 +90,13 @@ namespace ugi {
             _parameterHandle = argGroup->GetDescriptorHandle("BlurParameter", _pipelineDescription);
             assert( _inputImageHandle!=~0 && _outputImageHandle!=~0 && _parameterHandle!=~0 );
         }
-        ResourceDescriptor resDesc;
+        res_descriptor_t resDesc;
         resDesc.texture = texture0;
-        resDesc.descriptorHandle = _inputImageHandle;
-        resDesc.type = ArgumentDescriptorType::StorageImage;
+        resDesc.handle = _inputImageHandle;
+        resDesc.type = res_descriptor_type::StorageImage;
         argGroup->updateDescriptor(resDesc);
         resDesc.texture = texture1;
-        resDesc.descriptorHandle = _outputImageHandle;
+        resDesc.handle = _outputImageHandle;
         argGroup->updateDescriptor(resDesc);
         //
         GaussBlurItem* item = new GaussBlurItem(argGroup, texture0, texture1 );

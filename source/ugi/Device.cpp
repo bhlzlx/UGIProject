@@ -23,14 +23,8 @@
 #include "Argument.h"
 #include "Pipeline.h"
 #include "Descriptor.h"
-#include "Drawable.h"
 #include "UniformBuffer.h"
-
-
-#include <hgl/filesystem/FileSystem.h>
-#include <hgl/assets/AssetsSource.h>
-
-// * VULKAN
+#include "ResourceManager.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -105,8 +99,7 @@ namespace ugi {
 
     DebugReporterVk debugReporter;
 
-    Device*
-    RenderSystem::createDevice( const DeviceDescriptor& _descriptor, hgl::assets::AssetsSource* assetSource ) {
+    Device* RenderSystem::createDevice( const DeviceDescriptor& _descriptor, comm::IArchive* archive) {
         m_deviceDescriptorVk = _descriptor;
         auto library = OpenLibrary(VULKAN_LIBRARY_NAME);
         if (library == NULL) {
@@ -136,7 +129,7 @@ namespace ugi {
 //          };
 // #endif
         createVulkanInstance( _descriptor.debugLayer );
-        m_deviceDescriptorVk.assetSource = assetSource;
+        m_deviceDescriptorVk.archive = archive;
         // setup debug
         if (_descriptor.debugLayer) {
             debugReporter.setupDebugReport( m_deviceDescriptorVk.instance );
@@ -425,16 +418,14 @@ namespace ugi {
                 return nullptr;
             }
             auto device = new Device( m_deviceDescriptorVk, deviceVK, vmaAllocator );
-            
-            // device->_graphicsQueues = graphicsQueue;
-            // device->m_transferQueues = transferQueue;
-            
             device->_graphicsCommandQueues = std::move(graphicsCommandQueues);
             device->_transferCommandQueues = std::move(transferCommandQueues);
-            //
+            // create render pass object manager
             device->_renderPassObjectManager = new RenderPassObjectManager();
-            device->_descriptorSetAllocator = DescriptorSetAllocator::Instance();
-            device->_descriptorSetAllocator->initialize(device->device());
+            // create descriptor set allocator
+            auto descriptorSetAllocator = new DescriptorSetAllocator();
+            descriptorSetAllocator->initialize(deviceVK);
+            device->_descriptorSetAllocator = descriptorSetAllocator;
             return device;
         }
         throw DeviceCreationException( DeviceCreationException::EXCEPTION_CREATE_DEVICE_FAILED);
@@ -541,8 +532,8 @@ namespace ugi {
         return Buffer::CreateBuffer( this, _type, _size );
     }
 
-    Texture* Device::createTexture( const TextureDescription& _desc, ResourceAccessType _accessType ) {
-        return Texture::CreateTexture( this, 0, 0, _desc, _accessType);
+    Texture* Device::createTexture( const tex_desc_t& _desc, ResourceAccessType _accessType ) {
+        return Texture::CreateTexture( this, 0, _desc, _accessType);
     }
 
     Swapchain* Device::createSwapchain( void* _wnd, AttachmentLoadAction loadAction ) {
@@ -556,31 +547,25 @@ namespace ugi {
     }
 
     void Device::waitForFence( Fence* _fence ) {
-        if( _fence->m_waitToSignaled ) {
+        if(_fence->m_waitToSignaled) {
             vkWaitForFences( device(), 1, &_fence->_fence, VK_TRUE, ~0 );
             _fence->m_waitToSignaled = false;
-            vkResetFences( device(), 1, &_fence->_fence );
+            vkResetFences(device(), 1, &_fence->_fence);
         }
     }
 
-    GraphicsPipeline* Device::createGraphicsPipeline( const PipelineDescription& pipelineDescription ) {
+    GraphicsPipeline* Device::createGraphicsPipeline( const pipeline_desc_t& pipelineDescription ) {
         return GraphicsPipeline::CreatePipeline( this, pipelineDescription);
     }
 
-    ComputePipeline* Device::createComputePipeline( const PipelineDescription& pipelineDescription ) {
-        assert( pipelineDescription.shaders[(uint32_t)ShaderModuleType::ComputeShader].spirvData );
+    ComputePipeline* Device::createComputePipeline( const pipeline_desc_t& pipelineDescription ) {
+        assert( pipelineDescription.shaders[(uint32_t)shader_stage_t::ComputeShader].spirvData );
         return ComputePipeline::CreatePipeline(this, pipelineDescription);
     }
 
-    Drawable* Device::createDrawable( const PipelineDescription& pipelineDescription ) {
-        Drawable* drawable = new Drawable(pipelineDescription.vertexLayout.bufferCount);
-        return drawable;
+    IRenderPass* Device::createRenderPass( const renderpass_desc_t& rpdesc, Texture** colors, Texture* ds, image_view_param_t const* colorViews, image_view_param_t dsView ) {
+        return RenderPass::CreateRenderPass( this, rpdesc, colors, ds, colorViews, dsView);
     }
-
-    IRenderPass* Device::createRenderPass( const RenderPassDescription& rpdesc, Texture** colors, Texture* depthStencil ) {
-        return RenderPass::CreateRenderPass( this, rpdesc, colors, depthStencil);
-    }
-
 
     UniformAllocator* Device::createUniformAllocator() {
         auto allocator = UniformAllocator::createUniformAllocator(this);
@@ -598,4 +583,8 @@ namespace ugi {
     void Device::destroyBuffer( Buffer* buffer ) {
         buffer->release(this);
     }
+
+    void Device::destroyFence( Fence* fence ) {
+    }
+
 }

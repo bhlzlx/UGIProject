@@ -21,20 +21,20 @@ namespace ugi {
             auto mem = malloc(pipelineFileSize);
             char* pipelineBuffer = (char*)mem;
             pipelineFile->ReadFully(pipelineBuffer, pipelineFileSize);
-            PipelineDescription& pipelineDesc = *(PipelineDescription*)pipelineBuffer;
-            pipelineBuffer += sizeof(PipelineDescription);
+            pipeline_desc_t& pipelineDesc = *(pipeline_desc_t*)pipelineBuffer;
+            pipelineBuffer += sizeof(pipeline_desc_t);
             for (auto& shader : pipelineDesc.shaders) {
                 if (shader.spirvData) {
                     shader.spirvData = (uint64_t)pipelineBuffer;
                     pipelineBuffer += shader.spirvSize;
                 }
             }
-            pipelineDesc.pologonMode = PolygonMode::Fill;
-            pipelineDesc.topologyMode = TopologyMode::TriangleList;
+            pipelineDesc.pologonMode = polygon_mode_t::Fill;
+            pipelineDesc.topologyMode = topology_mode_t::TriangleList;
             pipelineDesc.renderState.cullMode = CullMode::None;
             pipelineDesc.renderState.blendState.enable = true;
             _pipeline = _device->createGraphicsPipeline(pipelineDesc);
-            _pipelineDesc = *(ugi::PipelineDescription*)mem;
+            _pipelineDesc = *(ugi::pipeline_desc_t*)mem;
             free(mem);
             if (!_pipeline) {
                 return false;
@@ -48,7 +48,7 @@ namespace ugi {
             return _pipeline;
         }
 
-        const ugi::PipelineDescription& GDIContext::pipelineDescription() const {
+        const ugi::pipeline_desc_t& GDIContext::pipelineDescription() const {
             return _pipelineDesc;
         }
 

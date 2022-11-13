@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "VulkanDeclare.h"
-#include "UGITypes.h"
+#include "UGIVulkanPrivate.h"
 #include "UGIDeclare.h"
 #include <Windows.h>
 
@@ -22,8 +22,10 @@ namespace ugi {
         //
         uint32_t                            _embedTextureCount;
         VkImage                             _images[4];
-        Texture*                            _embedTextures[4];
-        Texture*                            _depthStencilTexture;
+        Texture*                            _embedColors[4];
+        image_view_t                        _embedColorViews[4];
+        Texture*                            _dsTexture;
+        image_view_t                        _dsv;
         IRenderPass*                        _renderPasses[4];
         // state description
         uint32_t                            _imageIndex;
@@ -36,17 +38,19 @@ namespace ugi {
     public:
         Swapchain()
             : _swapchain(VK_NULL_HANDLE)
-            , _createInfo {}
-            , _imageAvailSemaphores {}
+            , _createInfo{}
+            , _imageAvailSemaphores{}
             , _embedTextureCount(4)
-            , _images { VK_NULL_HANDLE }
-            , _embedTextures{ nullptr }
-            , _depthStencilTexture(nullptr)
-            , _renderPasses {}
+            , _images{ VK_NULL_HANDLE }
+            , _embedColors{}
+            , _embedColorViews{}
+            , _dsTexture(nullptr)
+            , _dsv{}
+            , _renderPasses{}
             , _imageIndex(0)
             , _flightIndex(0)
             , _available(0)
-            , _size { 64, 64 }
+            , _size{ 64, 64 }
         {
         }
 

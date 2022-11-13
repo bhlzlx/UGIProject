@@ -1,5 +1,3 @@
-project( Sphere )
-
 include_directories( ${CMAKE_SOURCE_DIR}/source )
 
 if(MINGW)

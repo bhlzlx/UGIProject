@@ -131,7 +131,7 @@ namespace ugi {
     class SDFFontDrawData {
         friend class SDFFontRenderer;
     private:
-        ArgumentGroup*      _argumentGroup;
+        DescriptorBinder*      _argumentGroup;
         //
         Buffer*             _vertexBuffer;
         Buffer*             _indexBuffer;
@@ -181,7 +181,7 @@ namespace ugi {
     private:
         Device*                     _device;
         GraphicsPipeline*                   _pipeline;
-        PipelineDescription         _pipelineDescription;
+        pipeline_desc_t         _pipelineDescription;
         hgl::assets::AssetsSource*  _assetsSource;
         SDFTextureTileManager*      _texTileManager;
         ResourceManager*            _resourceManager;

@@ -343,15 +343,15 @@ namespace ugi {
 		return VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	}
 
-    static inline VkShaderStageFlagBits shaderStageToVk( ugi::ShaderModuleType type ) {
+    static inline VkShaderStageFlagBits shaderStageToVk( ugi::shader_stage_t type ) {
         switch ( type )
         {
-        case ShaderModuleType::VertexShader : return VK_SHADER_STAGE_VERTEX_BIT;
-        case ShaderModuleType::TessellationControlShader : return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-        case ShaderModuleType::TessellationEvaluationShader : return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-        case ShaderModuleType::GeometryShader : return VK_SHADER_STAGE_GEOMETRY_BIT;
-        case ShaderModuleType::FragmentShader : return VK_SHADER_STAGE_FRAGMENT_BIT;
-        case ShaderModuleType::ComputeShader : return VK_SHADER_STAGE_VERTEX_BIT;;
+        case shader_stage_t::VertexShader : return VK_SHADER_STAGE_VERTEX_BIT;
+        case shader_stage_t::TessellationControlShader : return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        case shader_stage_t::TessellationEvaluationShader : return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        case shader_stage_t::GeometryShader : return VK_SHADER_STAGE_GEOMETRY_BIT;
+        case shader_stage_t::FragmentShader : return VK_SHADER_STAGE_FRAGMENT_BIT;
+        case shader_stage_t::ComputeShader : return VK_SHADER_STAGE_VERTEX_BIT;;
             break;
         default:
             break;
@@ -359,15 +359,15 @@ namespace ugi {
         return VK_SHADER_STAGE_VERTEX_BIT;
     }
 
-    static inline VkPrimitiveTopology topolotyToVk(  ugi::TopologyMode topoloty ) {
+    static inline VkPrimitiveTopology topolotyToVk(  ugi::topology_mode_t topoloty ) {
         switch (topoloty)
 		{
-		case TopologyMode::Points: return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-		case TopologyMode::LineStrip: return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-		case TopologyMode::LineList: return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-		case TopologyMode::TriangleStrip: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-		case TopologyMode::TriangleList: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		case TopologyMode::TriangleFan: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+		case topology_mode_t::Points: return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+		case topology_mode_t::LineStrip: return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+		case topology_mode_t::LineList: return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+		case topology_mode_t::TriangleStrip: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+		case topology_mode_t::TriangleList: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		case topology_mode_t::TriangleFan: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
 			break;
 		}
 		return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
@@ -446,12 +446,12 @@ namespace ugi {
 		return VK_FORMAT_UNDEFINED;
     }
 
-    static inline VkPolygonMode polygonModeToVk( PolygonMode mode ) {
+    static inline VkPolygonMode polygonModeToVk( polygon_mode_t mode ) {
         switch (mode)   
         {
-        case PolygonMode::Fill : return VK_POLYGON_MODE_FILL;
-        case PolygonMode::Point: return VK_POLYGON_MODE_POINT;
-        case PolygonMode::Line: return VK_POLYGON_MODE_LINE;
+        case polygon_mode_t::Fill : return VK_POLYGON_MODE_FILL;
+        case polygon_mode_t::Point: return VK_POLYGON_MODE_POINT;
+        case polygon_mode_t::Line: return VK_POLYGON_MODE_LINE;
         default:
             break;
         }
@@ -475,31 +475,31 @@ namespace ugi {
         return VK_CULL_MODE_NONE;
     }
 
-     static inline VkShaderStageFlags stageFlagsToVk( ShaderModuleType shaderStage ) {
+     static inline VkShaderStageFlags stageFlagsToVk( shader_stage_t shaderStage ) {
         VkShaderStageFlags stageFlags = 0;
         switch (shaderStage)
         {
-        case ShaderModuleType::VertexShader: {
+        case shader_stage_t::VertexShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
             break;
         }
-        case ShaderModuleType::FragmentShader: {
+        case shader_stage_t::FragmentShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
             break;
         }
-        case ShaderModuleType::ComputeShader: {
+        case shader_stage_t::ComputeShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
             break;
         }
-        case ShaderModuleType::TessellationControlShader: {
+        case shader_stage_t::TessellationControlShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
             break;
         }
-        case ShaderModuleType::TessellationEvaluationShader: {
+        case shader_stage_t::TessellationEvaluationShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
             break;
         }
-        case ShaderModuleType::GeometryShader: {
+        case shader_stage_t::GeometryShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT;
             break;
         }        
@@ -509,29 +509,29 @@ namespace ugi {
         return stageFlags;
     }
 
-    static inline VkDescriptorType descriptorTypeToVk( ArgumentDescriptorType type ) {
+    static inline VkDescriptorType descriptorTypeToVk( res_descriptor_type type ) {
         VkDescriptorType vkType = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         switch (type)
         {
-        case ArgumentDescriptorType::Image:
+        case res_descriptor_type::Image:
             vkType = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             break;
-        case ArgumentDescriptorType::UniformBuffer:
+        case res_descriptor_type::UniformBuffer:
             vkType = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
             break;
-        case ArgumentDescriptorType::UniformTexelBuffer:
+        case res_descriptor_type::UniformTexelBuffer:
             vkType = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
             break;
-        case ArgumentDescriptorType::Sampler :
+        case res_descriptor_type::Sampler :
             vkType = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER;
             break;
-        case ArgumentDescriptorType::StorageBuffer :
+        case res_descriptor_type::StorageBuffer :
             vkType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             break;
-        case ArgumentDescriptorType::StorageImage:
+        case res_descriptor_type::StorageImage:
             vkType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
             break;
-        case ArgumentDescriptorType::InputAttachment:
+        case res_descriptor_type::InputAttachment:
             vkType = VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
             break;
         default:

@@ -13,16 +13,6 @@ if( MSVC )
     add_definitions( -DWIN32_LEAN_AND_MEAN )
 endif()
 
-
-include_directories(
-    ${SOLUTION_DIR}/thirdpart/include
-    ${SOLUTION_DIR}/thirdpart/CMCore/inc
-    ${SOLUTION_DIR}/thirdpart/CMPlatform/inc
-    ${SOLUTION_DIR}/thirdpart/CMUtil/inc
-    ${SOLUTION_DIR}/thirdpart/CMAssetsManage/inc    
-    ${SOLUTION_DIR}/thirdpart/MathGeoLib/src
-)
-
 set( EXECUTABLE_TYPE )
 
 if( WIN32 )
@@ -31,18 +21,11 @@ if( WIN32 )
             ${SOLUTION_DIR}/source/platform/Windows/SDL2/SDL2Main.cpp
         )
     elseif( ${WINDOW_SYSTEM} STREQUAL Win32 )
-        if( MINGW )
-            set( PLATFORM_SOURCE 
-                ${SOLUTION_DIR}/source/platform/Windows/WinMain/WinMain.cpp
-                ${SOLUTION_DIR}/source/platform/Windows/WinMain/UGI-MINGW.rc
-            )
-        else()
-            set( PLATFORM_SOURCE 
-                ${SOLUTION_DIR}/source/platform/Windows/WinMain/WinMain.cpp
-                ${SOLUTION_DIR}/source/platform/Windows/WinMain/UGI-MSVC.rc
-            )
-        endif()
-        
+        set(PLATFORM_SOURCE
+            $<$<CXX_COMPILER_ID:Clang,GNU>: ${SOLUTION_DIR}/source/platform/Windows/WinMain/UGI-MINGW.rc>
+            $<$<CXX_COMPILER_ID:MSVC>: ${SOLUTION_DIR}/source/platform/Windows/WinMain/UGI-MSVC.rc>
+            ${SOLUTION_DIR}/source/platform/Windows/WinMain/WinMain.cpp
+        )
     endif()
     set( EXECUTABLE_TYPE WIN32 )
 endif()
@@ -61,6 +44,7 @@ else()
         add_definitions(-DUNICODE -D_UNICODE)
         add_subdirectory( HelloWorld )
         add_subdirectory( Sphere )
+        # add_subdirectory( OcclusionCulling )
         add_subdirectory( GDI )
         add_subdirectory( WidgetTest )
         add_subdirectory( TexturePacker )
