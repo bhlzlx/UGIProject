@@ -1,16 +1,16 @@
 ﻿#include "Texture.h"
 #include "Device.h"
-#include "UGITypeMapping.h"
-#include <cassert>
-#include <unordered_map>
 #include "UGIUtility.h"
-#include <vector>
+#include "UGITypeMapping.h"
 #include "resourcePool/HashObjectPool.h"
 #include <CommandQueue.h>
 #include <CommandBuffer.h>
+#include <Buffer.h>
 #include <commandBuffer/ResourceCommandEncoder.h>
 #include <async_load/AsyncLoadManager.h>
-#include <Buffer.h>
+#include <unordered_map>
+#include <vector>
+#include <cassert>
 
 namespace ugi {
 
@@ -185,7 +185,7 @@ namespace ugi {
         vkDestroyImageView(device->device(), internalView.view(), nullptr);
     }
 
-    void Texture::updateRegions(Device* device, const ImageRegion* regions, uint32_t count, uint8_t const* data, uint32_t size, uint32_t const* offsets, GPUAsyncLoadManager* asyncLoadManager, std::function<void(CommandBuffer*)>&& callback) { 
+    void Texture::updateRegions(Device* device, const ImageRegion* regions, uint32_t count, uint8_t const* data, uint32_t size, uint64_t const* offsets, GPUAsyncLoadManager* asyncLoadManager, std::function<void(CommandBuffer*)>&& callback) { 
         // dealing staging buffer
         Buffer* staging = device->createBuffer(BufferType::StagingBuffer, size);
         auto ptr = staging->map(device);
@@ -220,5 +220,9 @@ namespace ugi {
         GPUAsyncLoadItem asyncLoadItem = GPUAsyncLoadItem(device, fence, binder);
         asyncLoadManager->registerAsyncLoad(std::move(asyncLoadItem));
     }
+
+    Texture* Texture::CreateTextureDDS(Device* device, char const* data, uint32_t dataLen) {
+    }
+
 
 }

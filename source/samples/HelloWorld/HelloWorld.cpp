@@ -122,10 +122,12 @@ namespace ugi {
         _render = new Render(device, pipeline, bufferAllocator, _renderContext->uniformAllocator());
         _render->initialize();
 
+        float centerH = 1.0f / std::sqrt(3.0f);
+        float edge = 0.5f;
         float vertexData[] = {
-            -0.5, -0.5, 0, 0, 0,
-            0, 0.5, 0, 0.5, 1.0,
-            0.5, -0.5, 0, 1.0, 0
+            -edge, -centerH * edge, 0, 0,
+            0, edge * (sqrt(3.0f) - centerH), 0.5, 1.0,
+            edge, -centerH * edge, 1.0, 0
         };
         uint16_t indexData[] = {
             0, 1, 2
@@ -151,7 +153,7 @@ namespace ugi {
             0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
         };
         std::vector<ImageRegion> regions;
-        std::vector<uint32_t> offsets = {0, 0, 0, 0};
+        std::vector<uint64_t> offsets = {0, 0, 0, 0};
         ImageRegion region;
         region.offset = {};
         region.mipLevel = 0;
@@ -198,8 +200,8 @@ namespace ugi {
         Device* device = _renderContext->device();
         IRenderPass* mainRenderPass = _renderContext->mainFramebuffer();
         auto cmdbuf = _renderContext->primaryQueue()->createCommandBuffer(device, CmdbufType::Transient);
-        device->cycleInvoker().postCallable([this, cmdbuf](){
-            _renderContext->primaryQueue()->destroyCommandBuffer(cmdbuf);
+        device->cycleInvoker().postCallable([this, device, cmdbuf](){
+            _renderContext->primaryQueue()->destroyCommandBuffer(device, cmdbuf);
         });
         cmdbuf->beginEncode(); {
             static uint64_t angle = 0;
@@ -230,8 +232,8 @@ namespace ugi {
             auto renderEnc = cmdbuf->renderCommandEncoder(mainRenderPass); {
                 if(_texture->uploaded() && _renderable->mesh()->prepared()) {
                     renderEnc->setLineWidth(1.0f);
-                    renderEnc->setViewport(0, 0, _width, _height, 0, 1.0f );
-                    renderEnc->setScissor( 0, 0, _width, _height );
+                    renderEnc->setViewport(0, 0, _width, _height, 0, 1.0f);
+                    renderEnc->setScissor(0, 0, _width, _height);
                     _render->setRasterization(rasterizationState);
                     _render->bind(renderEnc);
                     _render->draw(renderEnc, _renderable);

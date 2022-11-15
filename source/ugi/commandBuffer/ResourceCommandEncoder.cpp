@@ -267,7 +267,7 @@ namespace ugi {
      * @param offsets offsets in buffer
      * @param regionCount image region count
      */
-    void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount) {
+    void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint64_t* offsets, uint32_t regionCount) {
         //imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
         // 一个 region 只能传输一个 mip level
         std::vector<VkBufferImageCopy> copies;
