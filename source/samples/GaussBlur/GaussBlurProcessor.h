@@ -1,13 +1,6 @@
 #pragma once
-
 #include <ugi/UGIDeclare.h>
 #include <ugi/UGITypes.h>
-
-namespace hgl {
-    namespace assets {
-        class AssetsSource;
-    }
-}
 
 namespace ugi {
 

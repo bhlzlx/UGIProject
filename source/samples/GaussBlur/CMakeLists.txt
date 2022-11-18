@@ -26,8 +26,5 @@ add_executable( GaussBlurTest WIN32
 
 target_link_libraries(
     GaussBlurTest
-    CMCore
-    CMAssetsManage
-    CMPlatform
     UGI
 )

@@ -31,24 +31,11 @@ namespace ugi {
 
     class GaussBlurProcessor;
     class GaussBlurItem;
-    
 
     class GaussBlurTest : public UGIApplication {
     private:
-        void*                   _hwnd;                                             //
-        ugi::RenderSystem*      _renderSystem;                                     //
-        ugi::Device*            _device;                                           //
-        ugi::Swapchain*         _swapchain;                                        //
-        //
-        ugi::Fence*             _frameCompleteFences[MaxFlightCount];              // command buffer 被GPU消化完会给 fence 一个 signal, 用于双缓冲或者多缓冲逻辑隔帧等待
-        ugi::Semaphore*         _renderCompleteSemaphores[MaxFlightCount];         // 用于GPU内部等待
-        ugi::CommandBuffer*     _commandBuffers[MaxFlightCount];                   // command buffer for each frame
-        ugi::CommandQueue*      _graphicsQueue;                                    // graphics queue
-        ugi::CommandQueue*      _uploadQueue;                                      // upload queue
-        ugi::GraphicsPipeline*          _pipeline;
-        ///> ===========================================================================
-        ugi::DescriptorBinder*     _argumentGroup;                                    // 
-        // ugi::Buffer*            m_uniformBuffer;
+        void*                   hwnd_;                                             //
+        StandardRenderContext   renderContext_;
         ugi::Texture*           _texture;
         ugi::Texture*           _bluredTexture;
         ugi::Texture*           _bluredTextureFinal;
@@ -65,7 +52,7 @@ namespace ugi {
         float                   _width;
         float                   _height;
     public:
-        virtual bool initialize( void* _wnd,  hgl::assets::AssetsSource* assetsSource );
+        virtual bool initialize( void* _wnd, comm::IArchive* archive);
         virtual void resize( uint32_t _width, uint32_t _height );
         virtual void release();
         virtual void tick();
