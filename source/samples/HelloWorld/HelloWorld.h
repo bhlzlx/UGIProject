@@ -48,8 +48,8 @@ namespace ugi {
         StandardRenderContext*          _renderContext; //
         Render*                         _render;
         // sample resources
-        ugi::Texture*                   _texture;
-        ugi::image_view_t               _imageView; 
+        ugi::Texture*                   _textures[2];
+        ugi::image_view_t               _imageViews[2];
         ugi::sampler_state_t            _samplerState;                                     //
         // a renderable object
         ugi::Renderable*                _renderable; 

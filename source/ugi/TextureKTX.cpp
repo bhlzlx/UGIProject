@@ -1,14 +1,19 @@
 #include "TextureKTX.h"
+#ifdef _WIN32
+#include <Windows.h>
+#define GL_APIENTRY APIENTRY
+#endif
 #include <ugi/Device.h>
-#include <opengl_registry/api/GLES2/gl2ext.h>
 #include <opengl_registry/api/GLES3/gl32.h>
+#include <opengl_registry/api/GLES2/gl2ext.h>
 #include <ugi/UGITypeMapping.h>
+#include <ugi/Texture.h>
 
 namespace ugi {
 
-    Texture* CreateTextureKTX(Device* device, uint8_t const* data, uint32_t dataLen, GPUAsyncLoadManager* asyncLoadMgr, std::function<void(CommandBuffer*)>&& callback) {
+    Texture* CreateTextureKTX(Device* device, uint8_t const* data, uint32_t dataLen, GPUAsyncLoadManager* asyncLoadMgr, std::function<void(void* res, CommandBuffer*)>&& callback) {
         const uint8_t * ptr = (const uint8_t *)data;
-		const uint8_t * end = ptr + dataLen;
+		// const uint8_t * end = ptr + dataLen;
 		//
 		KtxHeader* header = (KtxHeader*)ptr;
 		ptr += sizeof(KtxHeader);
@@ -56,40 +61,41 @@ namespace ugi {
 			// unsupported texture format
 			return nullptr;
 		}
+		desc.arrayLayers = 1;
+		desc.depth = 1;
 		desc.mipmapLevel = header->mipLevelCount;
 		if (header->faceCount == 6) {
 			if (header->arraySize >= 1) {
 				desc.type = TextureType::TextureCubeArray;
-				desc.depth = header->faceCount * header->arraySize;
+				desc.arrayLayers = header->faceCount * header->arraySize;
 			}
 			else {
 				desc.type = TextureType::TextureCube;
-				desc.depth = 6;
+				desc.arrayLayers = 6;
 			}
 		}
 		else if( header->pixelDepth >=1 ) {
 			desc.type = TextureType::Texture3D;
+			desc.depth = header->pixelDepth;
 		}
 		else {
 			if (header->arraySize >= 1) {
 				desc.type = TextureType::Texture2DArray;
-				desc.depth = header->arraySize;
+				desc.arrayLayers = header->arraySize;
 			}
 			else
 			{
 				desc.type = TextureType::Texture2D;
-				desc.depth = 1;
 			}
 			
 		}
 		desc.width = header->pixelWidth;
 		desc.height = header->pixelHeight;
-		TextureVk* texture = TextureVk::createTexture(_context, VK_NULL_HANDLE, VK_NULL_HANDLE, desc, TextureUsageSampled | TextureUsageTransferDestination);
-		//
+		auto texture = device->createTexture(desc, ResourceAccessType::ShaderRead);
 		ptr += header->bytesOfKeyValueData;
 		//
-		uint32_t bpp = 8;
-		uint32_t pixelsize = bpp / 8;
+		// uint32_t bpp = 8;
+		// uint32_t pixelsize = bpp / 8;
 
 		// should care about the alignment of the cube slice & mip slice
 		// but reference to the ETC2 & EAC & `KTX format reference`, for 4x4 block compression type, the alignment should be zero
@@ -111,36 +117,23 @@ namespace ugi {
 		for (uint32_t mipLevel = 0; mipLevel < header->mipLevelCount; ++mipLevel) {
 			uint32_t mipBytes = *(uint32_t*)(ptr);
 			ptr += sizeof(mipBytes);
-
-
 			memcpy(contentR, ptr, mipBytes);
 			ptr += mipBytes;
 			contentR += mipBytes;
-
-			/*for (uint32_t arrayIndex = 0; arrayIndex < desc.depth; ++arrayIndex) {
-				
-			}*/
 		}
-		TextureRegion region;
-		region.baseLayer = 0;
-		region.mipLevel = 0;
-		region.offset.x = region.offset.y = region.offset.z = 0;
-		region.size.width = desc.width;
-		region.size.height = desc.height;
-		region.size.depth = desc.depth;
-
-		BufferImageUpload upload;
-		upload.baseMipRegion = region;
-		upload.data = content;
-		upload.length = pixelContentSize;
-		upload.mipCount = (uint32_t)offsets.size();
-		for (size_t i = 0; i < offsets.size(); ++i) {
-			upload.mipDataOffsets[i] = offsets[i];
+		std::vector<ImageRegion> regions;
+		for(uint32_t i = 0; i<header->mipLevelCount; ++i) {
+			ImageRegion region;
+			region.arrayIndex = 0;
+			region.arrayCount = header->arraySize;
+			region.mipLevel = i;
+			region.offset = {};
+			region.extent = { desc.width >> i, desc.height >> i, desc.depth};
+			regions.push_back(region);
 		}
-		_context->getUploadQueue()->uploadTexture(texture, upload);
+		texture->updateRegions(device, regions.data(), regions.size(), (uint8_t const*)content, pixelContentSize, offsets.data(), asyncLoadMgr, std::move(callback));
 		delete[]content;
 		return texture;
-	}
     }
 
 }

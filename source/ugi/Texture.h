@@ -82,7 +82,7 @@ namespace ugi {
             const ImageRegion* regions, uint32_t count, 
             uint8_t const* data, uint32_t dataSize, uint64_t const* offsets,
             GPUAsyncLoadManager* asnycLoadManager, 
-            std::function<void(CommandBuffer*)> &&callback
+            std::function<void(void* res, CommandBuffer*)> &&callback
         );
 
         virtual void release( Device* _device ) override;

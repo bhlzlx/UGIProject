@@ -5,7 +5,7 @@
 
 namespace ugi {
 
-    Texture* CreateTextureDDS(Device* device, uint8_t const* data, uint32_t dataLen, GPUAsyncLoadManager* asyncLoadMgr, std::function<void(CommandBuffer*)> &&onComplete) {
+    Texture* CreateTextureDDS(Device* device, uint8_t const* data, uint32_t dataLen, GPUAsyncLoadManager* asyncLoadMgr, std::function<void(void*, CommandBuffer*)> &&onComplete) {
         tinyddsloader::DDSFile file;
         auto result = file.Load((const uint8_t*)data, dataLen);
         if (result != tinyddsloader::Success) {

@@ -24,23 +24,6 @@ namespace ugi {
 		uint32_t	bytesOfKeyValueData;
 	};
 #pragma pack( pop )
-
-	struct KtxLoader {
-	private:
-        uint32_t m_format;
-		// VkFormat m_format;
-		uint32_t m_width;
-		uint32_t m_heigth;
-		uint32_t m_depth;
-		uint32_t m_mipLevelCount;
-		uint32_t m_arrayLength;
-		//
-		Texture* m_texture;
-	public:
-        static Texture* CreateTexture(Device* device, uint8_t const* data, uint32_t dataLen, GPUAsyncLoadManager* asyncLoadMgr, std::function<void(CommandBuffer*)> &&callback);
-	};
-
-
-    Texture* CreateTextureKTX(Device* device, uint8_t const* data, uint32_t dataLen);
+    Texture* CreateTextureKTX(Device* device, uint8_t const* data, uint32_t dataLen, GPUAsyncLoadManager* asyncLoadMgr, std::function<void(void* res, CommandBuffer*)>&& callback);
 
 }

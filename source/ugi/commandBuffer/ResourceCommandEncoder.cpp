@@ -1,13 +1,13 @@
 ﻿#include "ResourceCommandEncoder.h"
-#include "../VulkanFunctionDeclare.h"
-#include "../CommandBuffer.h"
-#include "../UGIDeclare.h"
-#include "../RenderPass.h"
-#include "../Buffer.h"
-#include "../Texture.h"
-#include "../Pipeline.h"
-#include "../UGITypeMapping.h"
-#include "../Argument.h"
+#include <ugi/VulkanFunctionDeclare.h>
+#include <ugi/CommandBuffer.h>
+#include <ugi/UGIDeclare.h>
+#include <ugi/RenderPass.h>
+#include <ugi/Buffer.h>
+#include <ugi/Texture.h>
+#include <ugi/Pipeline.h>
+#include <ugi/UGITypeMapping.h>
+#include <ugi/Argument.h>
 #include <vector>
 
 namespace ugi {
@@ -267,7 +267,7 @@ namespace ugi {
      * @param offsets offsets in buffer
      * @param regionCount image region count
      */
-    void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint64_t* offsets, uint32_t regionCount) {
+    void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, uint64_t const* offsets, uint32_t regionCount) {
         //imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
         // 一个 region 只能传输一个 mip level
         std::vector<VkBufferImageCopy> copies;

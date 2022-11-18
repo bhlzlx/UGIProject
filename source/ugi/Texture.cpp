@@ -1,8 +1,9 @@
-﻿#include "Texture.h"
-#include "Device.h"
-#include "UGIUtility.h"
-#include "UGITypeMapping.h"
-#include "resourcePool/HashObjectPool.h"
+﻿#include <ugi/Texture.h>
+#include <ugi/Device.h>
+#include <ugi/UGIUtility.h>
+#include <ugi/UGITypeMapping.h>
+#include <ugi/resourcePool/HashObjectPool.h>
+#include <ugi/helper/helper.h>
 #include <CommandQueue.h>
 #include <CommandBuffer.h>
 #include <Buffer.h>
@@ -50,8 +51,13 @@ namespace ugi {
             case ResourceAccessType::ShaderRead:
             case ResourceAccessType::ShaderWrite:
             case ResourceAccessType::ShaderReadWrite:
+
                 aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; 
-                usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+                if(isCompressedFormat(format)) {
+                    usageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+                } else {
+                    usageFlags = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+                }
                 break;
             case ResourceAccessType::ColorAttachmentRead:
             case ResourceAccessType::ColorAttachmentWrite:
@@ -185,7 +191,7 @@ namespace ugi {
         vkDestroyImageView(device->device(), internalView.view(), nullptr);
     }
 
-    void Texture::updateRegions(Device* device, const ImageRegion* regions, uint32_t count, uint8_t const* data, uint32_t size, uint64_t const* offsets, GPUAsyncLoadManager* asyncLoadManager, std::function<void(CommandBuffer*)>&& callback) { 
+    void Texture::updateRegions(Device* device, const ImageRegion* regions, uint32_t count, uint8_t const* data, uint32_t size, uint64_t const* offsets, GPUAsyncLoadManager* asyncLoadManager, std::function<void(void*, CommandBuffer*)>&& callback) { 
         // dealing staging buffer
         Buffer* staging = device->createBuffer(BufferType::StagingBuffer, size);
         auto ptr = staging->map(device);
@@ -210,18 +216,19 @@ namespace ugi {
             QueueSubmitBatchInfo submitBatch(&submitInfo, 1, fence);
             queue->submitCommandBuffers(submitBatch);
         }
-        auto onComplete = [](Texture* tex, Device* device, Buffer* stgbuf, CommandBuffer* transferCmd, CommandQueue* queue, std::function<void(CommandBuffer*)> callback, CommandBuffer* exeBuf)->void{
+        auto onComplete = [](Texture* tex, Device* device, Buffer* stgbuf, CommandBuffer* transferCmd, CommandQueue* queue, std::function<void(void*,CommandBuffer*)> callback, CommandBuffer* exeBuf)->void{
             queue->destroyCommandBuffer(device, transferCmd);
             device->destroyBuffer(stgbuf);
-            callback(exeBuf);
+            callback(tex, exeBuf);
         };
         using namespace std::placeholders;
         auto binder = std::bind(onComplete, this, device, staging, cb, queue, callback, _1);
-        GPUAsyncLoadItem asyncLoadItem = GPUAsyncLoadItem(device, fence, binder);
+        GPUAsyncLoadItem asyncLoadItem = GPUAsyncLoadItem(device, fence, std::move(binder));
         asyncLoadManager->registerAsyncLoad(std::move(asyncLoadItem));
     }
 
     Texture* Texture::CreateTextureDDS(Device* device, char const* data, uint32_t dataLen) {
+        return nullptr;
     }
 
 
