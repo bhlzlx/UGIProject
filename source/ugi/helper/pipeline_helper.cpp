@@ -5,11 +5,10 @@ namespace ugi {
 
     PipelineHelper PipelineHelper::FromIStream(comm::IStream* stream) {
         PipelineHelper rst;
-        rst.data_.resize(stream->size());
-        auto pipelineFileSize = stream->size();
-        auto pipelineBuffer = (uint8_t*)rst.data_.data();
-        stream->read(rst.data_.data(),stream->size());
-        pipeline_desc_t& pipelineDesc = *(pipeline_desc_t*)rst.data_.data();
+        rst.data_ = (uint8_t*)malloc(stream->size());
+        auto pipelineBuffer = rst.data_;
+        stream->read(rst.data_,stream->size());
+        pipeline_desc_t& pipelineDesc = *(pipeline_desc_t*)rst.data_;
         pipelineBuffer += sizeof(pipeline_desc_t);
         for( auto& shader : pipelineDesc.shaders ) {
             if( shader.spirvData) {
@@ -17,6 +16,7 @@ namespace ugi {
                 pipelineBuffer += shader.spirvSize;
             }
         }
+        rst.desc_ = pipelineDesc;
         return rst;
     }
 

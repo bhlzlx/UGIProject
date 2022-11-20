@@ -1,5 +1,5 @@
 #pragma once
-
+#include <functional>
 namespace ugi {
 
     class RenderSystem;
@@ -31,4 +31,6 @@ namespace ugi {
     class Mesh;
     class MeshBufferAllocator;
     class Renderable;
+
+    using AsyncLoadCallback = std::function<void(void* res, CommandBuffer*)>;
 }

@@ -19,6 +19,7 @@
 #include <ugi/render_components/PipelineMaterial.h>
 #include <ugi/RenderContext.h>
 #include <ugi/TextureKTX.h>
+#include <ugi/helper/pipeline_helper.h>
 #include <cmath>
 
 namespace ugi {
@@ -89,20 +90,11 @@ namespace ugi {
 
     bool HelloWorld::initialize( void* _wnd, comm::IArchive* arch) {
         auto pipelineFile = arch->openIStream("/shaders/triangle/pipeline.bin", {comm::ReadFlag::binary});
-        auto pipelineFileSize = pipelineFile->size();
-        char* pipelineBuffer = (char*)malloc(pipelineFileSize);
-        pipelineFile->read(pipelineBuffer,pipelineFile->size());
-        pipeline_desc_t& pipelineDesc = *(pipeline_desc_t*)pipelineBuffer;
-        pipelineBuffer += sizeof(pipeline_desc_t);
-        for( auto& shader : pipelineDesc.shaders ) {
-            if( shader.spirvData) {
-                shader.spirvData = (uint64_t)pipelineBuffer;
-                pipelineBuffer += shader.spirvSize;
-            }
-        }
-        pipelineDesc.topologyMode = topology_mode_t::TriangleList;
+        PipelineHelper ppl = PipelineHelper::FromIStream(pipelineFile);
+        pipelineFile->close();
+        auto ppldesc = ppl.desc();
+        ppldesc.topologyMode = topology_mode_t::TriangleList;
         printf("initialize\n");
-
         ugi::DeviceDescriptor descriptor; {
             descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
             descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
@@ -113,9 +105,9 @@ namespace ugi {
         }
         _renderContext = new StandardRenderContext();
         _renderContext->initialize(_wnd, descriptor, arch);
-        pipelineDesc.renderState.cullMode = CullMode::None;
-        pipelineDesc.renderState.blendState.enable = false;
-        auto pipeline = _renderContext->device()->createGraphicsPipeline(pipelineDesc);
+        ppldesc.renderState.cullMode = CullMode::None;
+        ppldesc.renderState.blendState.enable = false;
+        auto pipeline = _renderContext->device()->createGraphicsPipeline(ppldesc);
         auto bufferAllocator = new MeshBufferAllocator();
         bufferAllocator->initialize(_renderContext->device(), 1024);
 
