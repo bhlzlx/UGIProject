@@ -25,16 +25,4 @@ namespace ugi {
         onComplete_(cb);
     }
 
-    // void GPUMeshAsyncLoadItem::onLoadComplete(CommandBuffer* cb) {
-    //     device_->destroyBuffer(stagingBuffer_);
-    //     mesh_->uploaded_ = true;
-    //     queue_->destroyCommandBuffer(device_, cb_);
-    // }
-
-    // void GPUBufferToImageItem::onLoadComplete(CommandBuffer* cb) {
-    //     device_->destroyBuffer(stagingBuffer_);
-    //     mesh_->uploaded_ = true;
-    //     queue_->destroyCommandBuffer(device_, cb_);
-    // }
-
 }

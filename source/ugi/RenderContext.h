@@ -20,6 +20,7 @@ namespace ugi {
 
     class StandardRenderContext {
     protected:
+        comm::IArchive*                 _archive;
         ugi::RenderSystem*              _renderSystem;                                     //
         ugi::Device*                    _device;                                           //
         ugi::Swapchain*                 _swapchain;                                        //
@@ -53,6 +54,7 @@ namespace ugi {
         Device* device() const;
         RenderSystem* renderSystem() const;
         IRenderPass* mainFramebuffer() const;
+        comm::IArchive* archive() const;
         //
         void submitCommand(queue_submit_t&& submit);
     };

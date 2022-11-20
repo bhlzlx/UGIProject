@@ -75,7 +75,7 @@ namespace ugi {
             vertex_layout_t layout,
             topology_mode_t topologyMode,
             polygon_mode_t polygonMode,
-            std::function<void(CommandBuffer*)> onComplete
+            std::function<void(void*,CommandBuffer*)> onComplete
         );
 
     };

@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "../UGIDeclare.h"
-#include "../VulkanDeclare.h"
-#include "../UGITypes.h"
+#include <ugi/UGIDeclare.h>
+#include <ugi/VulkanDeclare.h>
+#include <ugi/UGITypes.h>
 
 namespace ugi {
 
@@ -33,7 +33,7 @@ namespace ugi {
 
         // latest interface
         void copyBuffer(VkBuffer dst, VkBuffer src, BufferSubResource dstRange, BufferSubResource srcRange);
-        void copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount);
+        void copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint64_t* offsets, uint32_t regionCount);
         //
         void endEncode();
     };

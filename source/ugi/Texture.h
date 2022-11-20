@@ -77,18 +77,18 @@ namespace ugi {
             return _aspectFlags;
         }
 
-        //void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount) {
         void updateRegions(
             Device* device, 
             const ImageRegion* regions, uint32_t count, 
-            uint8_t const* data, uint32_t dataSize, uint32_t const* offsets,
+            uint8_t const* data, uint32_t dataSize, uint64_t const* offsets,
             GPUAsyncLoadManager* asnycLoadManager, 
-            std::function<void(CommandBuffer*)> &&callback
+            std::function<void(void* res, CommandBuffer*)> &&callback
         );
 
         virtual void release( Device* _device ) override;
         //
-        static Texture* CreateTexture( Device* _device, VkImage _image, const tex_desc_t& _desc, ResourceAccessType _accessType );
+        static Texture* CreateTexture(Device* device, VkImage image, const tex_desc_t& desc, ResourceAccessType accessType );
+        static Texture* CreateTextureDDS(Device* device, char const* data, uint32_t dataLen);
     };
 
 }

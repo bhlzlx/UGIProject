@@ -10,11 +10,10 @@
 #include <ugi/Pipeline.h>
 #include <ugi/Argument.h>
 #include <ugi/Texture.h>
-#include <ugi/Drawable.h>
+#include <ugi/render_components/Renderable.h>
 #include <ugi/UniformBuffer.h>
-#include <hgl/assets/AssetsSource.h>
-
 #include <ugi/TextureUtility.h>
+#include <ugi/RenderContext.h>
 #include "GaussBlurProcessor.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -24,31 +23,9 @@
 
 namespace ugi {
 
-    bool GaussBlurTest::initialize( void* _wnd, hgl::assets::AssetsSource* assetsSource ) {
-
+    bool GaussBlurTest::initialize(void* _wnd, comm::IArchive* archive) {
         printf("initialize\n");
-        _renderSystem = new ugi::RenderSystem();
-        ugi::DeviceDescriptor descriptor; {
-            descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
-            descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
-            descriptor.debugLayer = 1;
-            descriptor.graphicsQueueCount = 1;
-            descriptor.transferQueueCount = 1;
-            descriptor.wnd = _wnd;
-        }
-        _device = _renderSystem->createDevice(descriptor, assetsSource);
-        _uniformAllocator = _device->createUniformAllocator();
-        _swapchain = _device->createSwapchain( _wnd, AttachmentLoadAction::Keep );
-        // command queues
-        _graphicsQueue = _device->graphicsQueues()[0];
-        _uploadQueue = _device->transferQueues()[0];
-        //
-        for( size_t i = 0; i<MaxFlightCount; ++i) {
-            _frameCompleteFences[i] = _device->createFence();
-            _renderCompleteSemaphores[i] = _device->createSemaphore();
-            _commandBuffers[i] = _graphicsQueue->createCommandBuffer( _device );
-        }
-        //
+        this->renderContext_ = new StandardRenderContext()
         _flightIndex = 0;
         //
         TextureUtility texUtil(_device, _uploadQueue);

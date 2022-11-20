@@ -10,7 +10,8 @@
 namespace ugi {
 
     StandardRenderContext::StandardRenderContext()
-        : _renderSystem(nullptr)
+        : _archive(nullptr)
+        , _renderSystem(nullptr)
         , _device(nullptr)
         , _swapchain(nullptr)
         , _frameCompleteFences{}
@@ -26,6 +27,7 @@ namespace ugi {
     }
 
     bool StandardRenderContext::initialize(void* wnd, ugi::DeviceDescriptor deviceDesc, comm::IArchive* archive) {
+        _archive = archive;
         _renderSystem = new RenderSystem();
         _device = _renderSystem->createDevice(deviceDesc, archive);
         _uniformAllocator = _device->createUniformAllocator();
@@ -144,4 +146,7 @@ namespace ugi {
         return _mainRenderPass;
     }
 
+    comm::IArchive* StandardRenderContext::archive() const {
+        return _archive;
+    }
 }

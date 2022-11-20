@@ -46,7 +46,7 @@ namespace ugi {
         vertex_layout_t layout,
         topology_mode_t topologyMode,
         polygon_mode_t polygonMode,
-        std::function<void(CommandBuffer*)> callback
+        std::function<void(void*,CommandBuffer*)> callback
     ) {
         Mesh* mesh = new Mesh();
         mesh->meshbufferAllocator = allocator;
@@ -87,11 +87,11 @@ namespace ugi {
             QueueSubmitBatchInfo submitBatch(&submitInfo, 1, fence);
             transferQueue->submitCommandBuffers(submitBatch);
         }
-        auto onComplete = [](Mesh* mesh, Device* device, Buffer* buffer, CommandBuffer* cb, CommandQueue* queue, std::function<void(CommandBuffer*)> callback, CommandBuffer* logicCB)->void{
+        auto onComplete = [](Mesh* mesh, Device* device, Buffer* buffer, CommandBuffer* cb, CommandQueue* queue, std::function<void(void*, CommandBuffer*)> callback, CommandBuffer* logicCB)->void{
             queue->destroyCommandBuffer(device, cb);
             device->destroyBuffer(buffer);
             mesh->uploaded_ = 1;
-            callback(logicCB);
+            callback(mesh, logicCB);
         };
         using namespace std::placeholders;
         auto binder = std::bind(onComplete, mesh, device, stagingBuffer, cb, transferQueue, callback, _1) ;

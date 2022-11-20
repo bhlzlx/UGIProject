@@ -501,7 +501,7 @@ namespace ugi {
             createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
         }
         VkSemaphore sem;
-        VkResult rst = vkCreateSemaphore( _device, &createInfo, nullptr, &sem);
+        VkResult rst = vkCreateSemaphore(_device, &createInfo, nullptr, &sem);
         if( rst == VK_SUCCESS){
             Semaphore* semaphore = new Semaphore(sem);
             return semaphore;

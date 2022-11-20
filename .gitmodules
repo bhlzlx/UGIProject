@@ -10,3 +10,9 @@
 [submodule "thirdpart/concurrentqueue"]
 	path = thirdpart/concurrentqueue
 	url = https://github.com/cameron314/concurrentqueue.git
+[submodule "thirdpart/tinyddsloader"]
+	path = thirdpart/tinyddsloader
+	url = https://github.com/benikabocha/tinyddsloader
+[submodule "thirdpart/opengl_registry"]
+	path = thirdpart/opengl_registry
+	url = https://github.com/KhronosGroup/OpenGL-Registry/
