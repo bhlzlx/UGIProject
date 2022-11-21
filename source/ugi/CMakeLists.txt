@@ -18,7 +18,6 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentGroupLayout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Texture.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TextureUtility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/RenderPass.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Swapchain.cpp
@@ -42,8 +41,8 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/async_load/AsyncLoadManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/async_load/GPUAsyncLoadItem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/RenderContext.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TextureDDS.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TextureKTX.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/TextureDDS.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextureUtil.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/helper/helper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/helper/pipeline_helper.cpp
 )

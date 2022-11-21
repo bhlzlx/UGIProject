@@ -16,3 +16,6 @@
 [submodule "thirdpart/opengl_registry"]
 	path = thirdpart/opengl_registry
 	url = https://github.com/KhronosGroup/OpenGL-Registry/
+[submodule "thirdpart/stb"]
+	path = thirdpart/stb
+	url = https://github.com/nothings/stb

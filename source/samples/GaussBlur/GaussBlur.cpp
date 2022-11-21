@@ -29,18 +29,29 @@ namespace ugi {
     bool GaussBlurTest::initialize(void* _wnd, comm::IArchive* archive) {
         printf("initialize\n");
         renderContext_ = new StandardRenderContext();
-        auto file = archive->openIStream("image/island.png", {comm::ReadFlag::binary});
+        auto device = renderContext_->device();
+        auto asyncLoadManager = renderContext_->asyncLoadManager();
+        auto file = archive->openIStream("image/island.ktx", {comm::ReadFlag::binary});
         size_t fileSize = file->size();
         uint8_t* fileBuff = (uint8_t*)malloc(fileSize);
         file->read(fileBuff, fileSize);
         file->close();
-        CreateTextureKTX
-        _texture = texUtil.createTexturePNG(fileBuff, fileSize);
-        free(fileBuff);
-        delete fileStream;
-
-        _bluredTexture = _device->createTexture(_texture->desc(), ResourceAccessType::ShaderReadWrite );
-        _bluredTextureFinal = _device->createTexture(_texture->desc(), ResourceAccessType::ShaderReadWrite);
+        texture_ = CreateTextureKTX(device, fileBuff, fileSize, asyncLoadManager, 
+            [](void* res, CommandBuffer* cmd) {
+                Texture* texture = (Texture*)res;
+                auto resEnc = cmd->resourceCommandEncoder();
+                resEnc->imageTransitionBarrier(
+                    texture, ResourceAccessType::ShaderRead, 
+                    PipelineStages::Bottom, StageAccess::Write,
+                    PipelineStages::FragmentShading, StageAccess::Read,
+                    nullptr
+                );
+                resEnc->endEncode();
+                texture->markAsUploaded();
+            }
+        );
+        bluredTexture_ = device->createTexture(texture_->desc(), ResourceAccessType::ShaderReadWrite);
+        bluredTextureFinal_ = device->createTexture(texture_->desc(), ResourceAccessType::ShaderReadWrite);
 
         // fileStream = assetsSource->Open(u8"image/island.ktx");
         // if(fileStream) {

@@ -227,9 +227,35 @@ namespace ugi {
         asyncLoadManager->registerAsyncLoad(std::move(asyncLoadItem));
     }
 
-    Texture* Texture::CreateTextureDDS(Device* device, char const* data, uint32_t dataLen) {
-        return nullptr;
-    }
-
+    void Texture::generateMipmap(CommandBuffer* cmdbuf) {
+		auto resEncoder = cmdbuf->resourceCommandEncoder();
+		// 转换为LayoutGeneral
+		resEncoder->imageTransitionBarrier(this, ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
+		VkCommandBuffer cmdbufVk = *cmdbuf;
+		VkImage image = this->image();
+		std::vector<VkImageBlit> mipmapBlits;
+		for( uint32_t i = 1; i<this->desc().mipmapLevel; ++i ) {
+			VkImageBlit blit;
+			blit.srcOffsets[0] = {};
+			blit.srcOffsets[1] = { (int32_t)this->desc().width, (int32_t)this->desc().height, (int32_t)this->desc().depth };
+			blit.srcSubresource.aspectMask = this->aspectFlags();
+			blit.srcSubresource.baseArrayLayer = 0;
+			blit.srcSubresource.layerCount = this->desc().arrayLayers;
+			blit.srcSubresource.mipLevel = 0;
+			//
+			blit.dstOffsets[0] = {};
+			blit.dstOffsets[1] = { (int32_t)this->desc().width>>i, (int32_t)this->desc().height>>i, (int32_t)this->desc().depth };
+			blit.dstSubresource.aspectMask = this->aspectFlags();
+			blit.dstSubresource.baseArrayLayer = 0;
+			blit.dstSubresource.layerCount = this->desc().arrayLayers;
+			blit.dstSubresource.mipLevel = i;
+			//
+			mipmapBlits.push_back(blit);
+		}
+		// 注意Nearest和Linear的过滤器，到时候看看效果，因为他们肯定是有效果的区别的，而且是从原图直接生成的各级mipmap
+		vkCmdBlitImage( cmdbufVk, image, VK_IMAGE_LAYOUT_GENERAL, image, VK_IMAGE_LAYOUT_GENERAL, (uint32_t)mipmapBlits.size(), mipmapBlits.data(), VkFilter::VK_FILTER_NEAREST );
+		resEncoder->imageTransitionBarrier(this, this->primaryAccessType(), PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read );
+		resEncoder->endEncode();
+   }
 
 }

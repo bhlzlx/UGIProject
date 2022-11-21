@@ -82,13 +82,21 @@ namespace ugi {
             const ImageRegion* regions, uint32_t count, 
             uint8_t const* data, uint32_t dataSize, uint64_t const* offsets,
             GPUAsyncLoadManager* asnycLoadManager, 
-            std::function<void(void* res, CommandBuffer*)> &&callback
+            AsyncLoadCallback &&callback
         );
+
+        /**
+         * @brief 
+         * 由于生成mipmap必须要一个graphics queue，所以
+         * @param device 
+         * @param asyncLoadManager 
+         * @param callback 
+         */
+        void generateMipmap(CommandBuffer* buffer);
 
         virtual void release( Device* _device ) override;
         //
         static Texture* CreateTexture(Device* device, VkImage image, const tex_desc_t& desc, ResourceAccessType accessType );
-        static Texture* CreateTextureDDS(Device* device, char const* data, uint32_t dataLen);
     };
 
 }

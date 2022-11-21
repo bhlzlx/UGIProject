@@ -18,9 +18,12 @@
 #include <ugi/render_components/Renderable.h>
 #include <ugi/render_components/PipelineMaterial.h>
 #include <ugi/RenderContext.h>
-#include <ugi/TextureKTX.h>
+#include <ugi/TextureUtil.h>
 #include <ugi/helper/pipeline_helper.h>
 #include <cmath>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
 namespace ugi {
 
@@ -179,16 +182,18 @@ namespace ugi {
         //     }
         // );
         char const* imagePaths[] = {
-            "image/ushio.ktx",
-            "image/island.ktx",
+            "image/ushio.png",
+            "image/island.png",
         };
         for(int i = 0; i<2; ++i) {
             auto ktxfile = _renderContext->archive()->openIStream(imagePaths[i], {comm::ReadFlag::binary});
             auto buffer = malloc(ktxfile->size());
             ktxfile->read(buffer, ktxfile->size());
-            Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, ktxfile->size(), _renderContext->asyncLoadManager(), 
+            Texture* texture = CreateTexturePNG(device, (uint8_t const*)buffer, ktxfile->size(), _renderContext->asyncLoadManager(), 
+            // Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, ktxfile->size(), _renderContext->asyncLoadManager(), 
                 [this,i,device](void* res, CommandBuffer* cb) {
                     _textures[i] = (Texture*)res;
+                    _textures[i]->generateMipmap(cb);
                     auto resEnc = cb->resourceCommandEncoder();
                     resEnc->imageTransitionBarrier(
                         _textures[i], ResourceAccessType::ShaderRead, 
