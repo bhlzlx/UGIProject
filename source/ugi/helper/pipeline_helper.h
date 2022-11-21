@@ -1,6 +1,6 @@
 #pragma once
 #include <LightWeightCommon/lightweight_comm.h>
-#include <ugi/pipeline.h>
+#include <ugi/Pipeline.h>
 #include <vector>
 
 namespace ugi {
