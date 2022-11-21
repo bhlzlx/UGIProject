@@ -34,8 +34,8 @@ namespace ugi {
             uint32_t regionCount
         ) const;
 
-        Texture* createTextureKTX( const void* data, uint32_t length ) const;
-        Texture* createTexturePNG( const void* data, uint32_t length ) const;
+        Texture* createTextureKTX(const void* data, uint32_t length) const;
+        Texture* createTexturePNG(const void* data, uint32_t length) const;
         void generateMipmaps( Texture* texture ) const;
     };
 

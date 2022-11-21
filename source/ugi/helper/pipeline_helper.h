@@ -11,7 +11,7 @@ namespace ugi {
         uint8_t*                data_;
     public: 
         PipelineHelper(PipelineHelper const&) = delete;
-        PipelineHelper(PipelineHelper &&) = delete;
+        PipelineHelper(PipelineHelper &&);
         PipelineHelper()
             : desc_{}
             , data_(nullptr)

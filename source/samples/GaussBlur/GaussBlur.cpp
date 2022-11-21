@@ -12,7 +12,8 @@
 #include <ugi/Texture.h>
 #include <ugi/render_components/Renderable.h>
 #include <ugi/UniformBuffer.h>
-#include <ugi/TextureUtility.h>
+// #include <ugi/TextureUtility.h>
+#include <ugi/TextureKTX.h>
 #include <ugi/RenderContext.h>
 #include "GaussBlurProcessor.h"
 #define STB_IMAGE_IMPLEMENTATION
@@ -21,20 +22,19 @@
 #include <cmath>
 #include <tweeny.h>
 
+#include <LightWeightCommon/io/archive.h>
+
 namespace ugi {
 
     bool GaussBlurTest::initialize(void* _wnd, comm::IArchive* archive) {
         printf("initialize\n");
-        this->renderContext_ = new StandardRenderContext()
-        _flightIndex = 0;
-        //
-        TextureUtility texUtil(_device, _uploadQueue);
-        //
-        auto fileStream = assetsSource->Open("image/island.png");
-        size_t fileSize = fileStream->GetSize();
-        uint8_t* fileBuff = (uint8_t*)malloc(fileStream->GetSize());
-        fileStream->ReadFully(fileBuff, fileStream->GetSize());
-        fileStream->Close();
+        renderContext_ = new StandardRenderContext();
+        auto file = archive->openIStream("image/island.png", {comm::ReadFlag::binary});
+        size_t fileSize = file->size();
+        uint8_t* fileBuff = (uint8_t*)malloc(fileSize);
+        file->read(fileBuff, fileSize);
+        file->close();
+        CreateTextureKTX
         _texture = texUtil.createTexturePNG(fileBuff, fileSize);
         free(fileBuff);
         delete fileStream;
