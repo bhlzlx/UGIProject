@@ -1,6 +1,6 @@
 #pragma once
 #include <LightWeightCommon/lightweight_comm.h>
-#include <ugi/pipeline.h>
+#include <ugi/Pipeline.h>
 #include <vector>
 
 namespace ugi {
@@ -11,7 +11,7 @@ namespace ugi {
         uint8_t*                data_;
     public: 
         PipelineHelper(PipelineHelper const&) = delete;
-        PipelineHelper(PipelineHelper &&) = delete;
+        PipelineHelper(PipelineHelper &&);
         PipelineHelper()
             : desc_{}
             , data_(nullptr)

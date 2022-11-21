@@ -1,4 +1,4 @@
-#include "TextureKTX.h"
+#include "TextureUtil.h"
 #ifdef _WIN32
 #include <Windows.h>
 #define GL_APIENTRY APIENTRY
@@ -8,6 +8,8 @@
 #include <opengl_registry/api/GLES2/gl2ext.h>
 #include <ugi/UGITypeMapping.h>
 #include <ugi/Texture.h>
+
+#include <stb/stb_image.h>
 
 namespace ugi {
 
@@ -154,5 +156,38 @@ namespace ugi {
 		delete[]content;
 		return texture;
     }
+
+    Texture* CreateTexturePNG(Device* device, uint8_t const* data, uint32_t dataLen, GPUAsyncLoadManager* asyncLoadMgr, AsyncLoadCallback&& callback) {
+        int x; int y; int channels;
+        auto pixel = stbi_load_from_memory( (stbi_uc*)data, dataLen,&x, &y, &channels, 4 );
+        tex_desc_t textureDescription;
+		//
+		uint32_t mipmapLevel = 1; {
+			int mipmapRefSize = x > y ? x : y;
+			while(mipmapRefSize!=1) {
+				++mipmapLevel;
+				mipmapRefSize = mipmapRefSize >> 1;
+			}
+		}
+        textureDescription.format = ugi::UGIFormat::RGBA8888_UNORM;
+        textureDescription.width = x;
+        textureDescription.height = y;
+        textureDescription.depth = 1;
+        textureDescription.mipmapLevel = mipmapLevel;
+        textureDescription.arrayLayers = 1;
+        textureDescription.type = TextureType::Texture2D;
+        auto texture = device->createTexture(textureDescription);
+		//
+		ImageRegion region;
+		region.arrayIndex = 0;
+		region.arrayCount = 1;
+		region.extent = { (uint32_t)x, (uint32_t)y, (uint32_t)1 };
+		region.mipLevel = 0;
+		region.offset = {};
+		uint64_t offset = 0;
+		texture->updateRegions(device, &region, 1, pixel, x*y*4, &offset, asyncLoadMgr, std::move(callback));
+		stbi_image_free(pixel); // cleanup!!!
+		return texture;
+	}
 
 }

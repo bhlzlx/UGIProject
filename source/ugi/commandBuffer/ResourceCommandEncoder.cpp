@@ -164,7 +164,7 @@ namespace ugi {
         // 源buffer一般用完就回收了，可以省去转换回来的处理
     }
 
-    void ResourceCommandEncoder::blitImage( Texture* dst, Texture* src, const ImageRegion* dstRegions, const ImageRegion* srcRegions, uint32_t regionCount ) {
+    void ResourceCommandEncoder::blitImage(Texture* dst, Texture* src, const ImageRegion* dstRegions, const ImageRegion* srcRegions, uint32_t regionCount ) {
         imageTransitionBarrier( src, ResourceAccessType::TransferSource, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Read );
         imageTransitionBarrier( dst, ResourceAccessType::TransferDestination, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Write );
         std::vector<VkImageBlit> regions;

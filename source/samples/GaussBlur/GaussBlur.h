@@ -34,25 +34,18 @@ namespace ugi {
 
     class GaussBlurTest : public UGIApplication {
     private:
-        void*                   hwnd_;                                             //
-        StandardRenderContext   renderContext_;
-        ugi::Texture*           _texture;
-        ugi::Texture*           _bluredTexture;
-        ugi::Texture*           _bluredTextureFinal;
-        //
-        ugi::GaussBlurProcessor*    _gaussProcessor;
-        ugi::GaussBlurItem*         _blurItem;
-        ugi::GaussBlurItem*         _blurItem2;
-
-        ugi::UniformAllocator*  _uniformAllocator;
-        res_descriptor_t      _uniformDescriptor;
-        //
-        uint32_t                _flightIndex;                                      // flight index
-        //
-        float                   _width;
-        float                   _height;
+        void*                           hwnd_;                                             //
+        StandardRenderContext*          renderContext_;
+        ugi::Texture*                   texture_;
+        ugi::Texture*                   bluredTexture_;
+        ugi::Texture*                   bluredTextureFinal_;
+        ugi::GaussBlurProcessor*        gaussProcessor_;
+        ugi::GaussBlurItem*             blurItem_;
+        ugi::GaussBlurItem*             blurItem2_;
+        float                           width_;
+        float                           height_;
     public:
-        virtual bool initialize( void* _wnd, comm::IArchive* archive);
+        virtual bool initialize(void* _wnd, comm::IArchive* archive);
         virtual void resize( uint32_t _width, uint32_t _height );
         virtual void release();
         virtual void tick();

@@ -20,4 +20,10 @@ namespace ugi {
         return rst;
     }
 
+    PipelineHelper::PipelineHelper(PipelineHelper && other) {
+        desc_ = other.desc_;
+        data_ = other.data_;
+        other.data_ = nullptr;
+    }
+
 }

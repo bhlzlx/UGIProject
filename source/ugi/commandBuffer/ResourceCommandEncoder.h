@@ -27,7 +27,7 @@ namespace ugi {
         // update texture region for specified regions( render command queue )
         void updateImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount );
         // 
-        void blitImage( Texture* dst, Texture* src, const ImageRegion* dstRegions, const ImageRegion* srcRegions, uint32_t regionCount );
+        void blitImage(Texture* dst, Texture* src, const ImageRegion* dstRegions, const ImageRegion* srcRegions, uint32_t regionCount );
         // update texture region for specified regions( transfer queue )
         void replaceImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount );
 
