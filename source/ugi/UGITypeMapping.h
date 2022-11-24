@@ -192,6 +192,7 @@ namespace ugi {
             case ResourceAccessType::ShaderRead: { // sampled texture
                 layout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; break;
             }
+            case ResourceAccessType::ShaderWrite:
             case ResourceAccessType::ShaderReadWrite: { // storage image
                 layout = VkImageLayout::VK_IMAGE_LAYOUT_GENERAL;
                 break;

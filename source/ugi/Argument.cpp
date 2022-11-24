@@ -78,7 +78,6 @@ namespace ugi {
         case res_descriptor_type::UniformBuffer: {
             VkDescriptorBufferInfo* pBufferInfo = (VkDescriptorBufferInfo*)&mixedDescriptor;
             if( pBufferInfo->buffer != (VkBuffer)resource.res.buffer.buffer) {
-                _reallocBitMask.set(h.setID);
                 pBufferInfo->buffer = (VkBuffer)resource.res.buffer.buffer;
                 pBufferInfo->offset = 0; // resource.bufferOffset;  这个offset为什么是0？？因为绑定的时候还会再设置一次动态offset
                 write.pBufferInfo = pBufferInfo;
@@ -104,7 +103,6 @@ namespace ugi {
             pImageInfo->imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             auto sampler = CreateSampler( _groupLayout->device(), resource.res.samplerState );
             if( pImageInfo->sampler != sampler ) {
-                _reallocBitMask.set(h.setID);
                 pImageInfo->sampler = sampler; // 再也不和 texture 混合绑定了
                 write.pImageInfo = pImageInfo;
             }            
@@ -125,6 +123,7 @@ namespace ugi {
             assert(false);// 没支持的以后再支持
             break;
         }
+        _reallocBitMask.set(h.setID);
     }
 
     DescriptorBinder::DescriptorBinder( const MaterialLayout* groupLayout, DescriptorSetAllocator* setAllocator, VkPipelineBindPoint bindPoint )

@@ -277,7 +277,6 @@ namespace ugi {
         if(_dsTexture) {
             ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier(_dsTexture, _decription.depthStencil.initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::EaryFragmentTestShading, StageAccess::Write);
         }
-        //
         vkCmdBeginRenderPass( *encoder->commandBuffer(), &_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
     

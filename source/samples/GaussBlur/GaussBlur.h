@@ -3,9 +3,17 @@
 #include <algorithm>
 #include <ugi/UGIDeclare.h>
 #include <ugi/UGITypes.h>
-#include <ugi/Argument.h>
+#include <vector>
+// #include <ugi/Argument.h>
 
 namespace ugi {
+
+    struct GaussBlurParameter {
+        float       direction[2];
+        uint32_t    radius;
+        uint32_t    padding;
+        float       gaussDistribution[12];
+    };
 
     std::vector<float> GenerateGaussDistribution( float sigma ) {
         sigma = sigma > 0 ? sigma : -sigma;  
@@ -29,19 +37,19 @@ namespace ugi {
         return distribution;
     }
 
-    class GaussBlurProcessor;
-    class GaussBlurItem;
-
     class GaussBlurTest : public UGIApplication {
     private:
         void*                           hwnd_;                                             //
         StandardRenderContext*          renderContext_;
+
+        ComputePipeline*                pipeline_;
+        Material*                       pass1mtl_;
+        Material*                       pass2mtl_;
+
         ugi::Texture*                   texture_;
-        ugi::Texture*                   bluredTexture_;
-        ugi::Texture*                   bluredTextureFinal_;
-        ugi::GaussBlurProcessor*        gaussProcessor_;
-        ugi::GaussBlurItem*             blurItem_;
-        ugi::GaussBlurItem*             blurItem2_;
+        ugi::Texture*                   blurTextures_[2];
+        ugi::image_view_t               blurImageViews_[2];
+        ugi::Material*                  blurMaterials_[2];
         float                           width_;
         float                           height_;
     public:
