@@ -112,15 +112,15 @@
             "environment": [],
             "externalConsole": false
         },{
-            "name": "(msvc) GaussBlurTest",
+            "name": "(msvc) GaussBlur",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/GaussBlurTest.exe",
+            "program": "${workspaceFolder}/bin/Windows_64_Debug/GaussBlur.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
             "environment": [],
-            "externalConsole": true
+            "externalConsole": false
         },
         {
             "name": "(msvc) SDFTest",

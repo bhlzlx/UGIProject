@@ -57,27 +57,35 @@ namespace ugi {
         pipeline_desc_t const& desc() const {
             return _pipelineDesc;
         }
-        //
-        // DescriptorBinder* argumentBinder() const {
-        //     return _descriptorBinder;
-        // }
     };
-
 
     class ComputePipeline {
     private:
         Device*                                             _device;
         VkPipeline                                          _pipeline;
+        pipeline_desc_t                                     _pipelineDesc;
         VkComputePipelineCreateInfo                         _createInfo;
         uint64_t                                            _pipelineLayoutHash;
-    public:
-        ComputePipeline() {
-        }
-        static ComputePipeline* CreatePipeline( Device* device, const pipeline_desc_t& pipelineDesc );
+        MaterialLayout*                                     _materialLayout;
+        DescriptorBinder*                                   _descriptorBinder;
+    private:
         DescriptorBinder* createArgumentGroup() const ;
-        VkPipeline pipeline() {
-            return _pipeline;
-        }     
+    public:
+        ComputePipeline()
+            : _device(nullptr)
+            , _pipeline(VK_NULL_HANDLE)
+            , _createInfo{}
+            , _pipelineLayoutHash(0)
+            , _materialLayout(nullptr)
+            , _descriptorBinder(nullptr)
+        {}
+        Material* createMaterial(std::vector<std::string> const& parameters, std::vector<res_union_t> const& resources);
+        void applyMaterial(Material const* material);
+        void flushMaterials(CommandBuffer const* cmd);
+        void resetMaterials();
+        uint32_t getDescriptorHandle(char const* descriptorName, res_descriptor_info_t* descriptorInfo = nullptr) const;
+        static ComputePipeline* CreatePipeline( Device* device, const pipeline_desc_t& pipelineDesc );
+        VkPipeline pipeline();
     };
 
 

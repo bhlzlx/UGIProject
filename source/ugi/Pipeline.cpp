@@ -408,6 +408,8 @@ namespace ugi {
             computePipeline->_pipeline = pipeline;
             computePipeline->_pipelineLayoutHash = pipelineLayoutHash;
             computePipeline->_createInfo = createInfo;
+            computePipeline->_descriptorBinder = computePipeline->createArgumentGroup();
+            computePipeline->_pipelineDesc = pipelineDesc;
             return computePipeline;
         }
         return nullptr;
@@ -421,6 +423,101 @@ namespace ugi {
         }
         DescriptorBinder* group = new DescriptorBinder(argumentLayout, _device->descriptorSetAllocator(), VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE);
         return group;
+    }
+
+    Material* ComputePipeline::createMaterial(std::vector<std::string> const& parameters, std::vector<res_union_t> const& resources) {
+        if(resources.size()) {
+            if(resources.size()!=parameters.size()) {
+                return nullptr;
+            }
+        }
+        Material* mtl = new Material();
+        for(size_t i = 0; i<parameters.size(); ++i) {
+            auto const& name = parameters[i];
+            res_descriptor_info_t descInfo;
+            auto handle = this->getDescriptorHandle(name.c_str(), &descInfo);
+            if(handle != ~0) {
+                res_descriptor_t descriptor;
+                descriptor.handle = handle;
+                descriptor.type = descInfo.type;
+                if(descriptor.type == res_descriptor_type::UniformBuffer) {
+                    descriptor.res.buffer.size = descInfo.dataSize;
+                    descriptor.res.buffer.size = descInfo.dataSize;
+                }
+                if(resources.size()) {
+                    if(descriptor.type == res_descriptor_type::UniformBuffer) {
+                        descriptor.res.buffer.buffer = resources[i].buffer.buffer;
+                        descriptor.res.buffer.offset = resources[i].buffer.offset;
+                    } else {
+                        descriptor.res = resources[i];
+                    }
+                }
+                mtl->descriptors_.push_back(descriptor);
+            }
+        }
+        return mtl;
+    }
+
+    void ComputePipeline::applyMaterial(Material const* material) {
+        for(auto const& item: material->descriptors()) {
+            _descriptorBinder->updateDescriptor(item);
+        }
+    }
+
+    void ComputePipeline::flushMaterials(CommandBuffer const* cmd) {
+        this->_descriptorBinder->bind(cmd);
+    }
+
+    void ComputePipeline::resetMaterials() {
+        this->_descriptorBinder->reset();
+    }
+
+    VkPipeline ComputePipeline::pipeline() {
+        return _pipeline;
+    }
+
+    uint32_t ComputePipeline::getDescriptorHandle(char const* descriptorName, res_descriptor_info_t* descriptorInfo) const {
+        DescriptorHandleImp handle;
+        handle.descriptorIndex = 0;
+        handle.specifiedIndex = 0;
+        handle.binding = 0;
+        handle.handle = 0;
+        //
+        uint32_t dynamicBufferIndex = 0;
+        uint32_t imageIndex = 0;
+
+        for( uint32_t argIndex = 0; argIndex< _pipelineDesc.argumentCount; ++argIndex) {
+            auto setIndex = _pipelineDesc.argumentLayouts[argIndex].index;
+            handle.setID = setIndex;
+            for( uint32_t descriptorIndex = 0; descriptorIndex < _pipelineDesc.argumentLayouts[argIndex].descriptorCount; ++descriptorIndex) {
+                const auto& descriptor = _pipelineDesc.argumentLayouts[argIndex].descriptors[descriptorIndex];
+                auto binding = descriptor.binding;
+                assert(handle.binding <= binding);
+                handle.binding = binding;
+                if( strcmp(descriptor.name, descriptorName) == 0 ) {
+                    handle.bindingIndex = descriptorIndex;                    
+                    handle.setIndex = argIndex;
+                    if(isDynamicBufferType( descriptor.type)) {
+                        handle.specifiedIndex = dynamicBufferIndex;
+                    } else if( isImageType( descriptor.type) ) {
+                        handle.specifiedIndex = imageIndex;
+                    }
+                    assert( handle.specifiedIndex < 16 );
+                    if(descriptorInfo) {
+                        *descriptorInfo = descriptor;
+                    }
+                    return handle.handle;
+                }
+                ++handle.descriptorIndex;
+                // 处理动态绑定（buffer）
+                if(isDynamicBufferType( descriptor.type)) {
+                    ++dynamicBufferIndex;
+                } else if( isImageType( descriptor.type) ) {
+                    ++imageIndex;
+                }
+            }
+        }
+        return ~0;
     }
 
 }

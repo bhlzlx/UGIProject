@@ -1,11 +1,16 @@
 ﻿#include "UGITypes.h"
 #include "UGIDeclare.h"
+#include "VulkanDeclare.h"
+#include "UGIDeclare.h"
 
 #include <vector>
 #include <array>
 #include <cstdint>
 #include <cassert>
 #include <functional>
+
+#include <LightWeightCommon/memory/flight_ring.h>
+#include <vk_mem_alloc.h>
 
 namespace ugi {
 
@@ -21,68 +26,65 @@ namespace ugi {
      *  所以这里引入一个 uniform allocator 的概念，一个 allocator 给一类资源使用
      * */
 
-    class UniformBuffer 
-    {
-    private:
-        Buffer*     _buffer;
-        uint32_t    _offset;
-    public:
-        UniformBuffer( Buffer* buffer, uint32_t offset );
-        UniformBuffer( const UniformBuffer& buffer );
-        void writeData( uint32_t offset, const void* data, uint32_t size );
-        Buffer* buffer() {
-            return _buffer;
-        }
-        uint32_t offset() {
-            return _offset;
-        }
+    struct uniform_t {
+        size_t      buffer; 
+        uint32_t    offset;
+        uint32_t    size;
+        uint8_t*    ptr;
     };
+
     class UniformAllocator 
     {
     private:
-        Device*                                             _device;
-        std::vector<Buffer*>                                _buffers;
-        uint32_t                                            _offset;
-        //
-        std::array<std::vector<Buffer*>, MaxFlightCount+1>  _freeTable;
-        uint32_t                                            _freeIndex;
-        //
-        uint32_t                                            _ringStart;
-        uint32_t                                            _ringEnd;
-
-        uint32_t                                            _minUniformAlignParam;
-        struct FlightBufferRange { // begin - end 实际可能不是连续的
-            uint32_t begin = 0;
-            uint32_t end = 0;
-            uint32_t size = 0;
+        struct buf_t {
+            VkBuffer buf;
+            uint8_t* ptr;
+            uint32_t size;
+            VmaAllocation vmaAlloc;
         };
-        // 这玩意是只有一个buffer时，为了循环使用ringbuffer用的，所以如果有分配时一个buffer不够导致分配多个buffer的情况时，这东西就应该重置了，不需要它了，因为下一个tick会重建buffer重来
-        std::array<FlightBufferRange,MaxFlightCount>        _flightRanges;
-        uint32_t                                            _flightIndexInside;
-    public:
-        UniformAllocator( Device* device );
-        void tick();
+    private:
+        Device*                                             _device;
+        uint32_t                                            _alignSize;
+        uint32_t                                            _maxCapacity;
+        bool                                                _overflow;
+        buf_t                                               _buffer;
+        comm::FlightRing<MaxFlightCount>                    _ring;
         //
-        UniformBuffer allocate( uint32_t size );
+        std::array<std::vector<buf_t>, MaxFlightCount>      _freeTable;
+        uint32_t                                            _flight;
 
-        template< class T >
-        void allocateForDescriptor( res_descriptor_t& descriptor, const T& value ) {
+        buf_t createUniformBlock(uint32_t size);
+    public:
+        UniformAllocator(Device* device);
+        void tick();
+        uniform_t allocate(uint32_t size);
+
+        // template< class T >
+        // void allocateForDescriptor(res_descriptor_t& descriptor, const T& value) {
+        //     assert( descriptor.type == res_descriptor_type::UniformBuffer );
+        //     auto ubo = allocate(sizeof(value));
+        //     memcpy(ubo.ptr, &value, descriptor.res.buffer.size);
+        //     descriptor.res.buffer.buffer = ubo.buffer;
+        //     descriptor.res.buffer.offset = ubo.offset;
+        // }
+
+        void allocateForDescriptor(res_descriptor_t& descriptor, void* ptr) {
             assert( descriptor.type == res_descriptor_type::UniformBuffer );
-            auto ubo = allocate(sizeof(value));
-            ubo.writeData(0, &value, sizeof(value) );
-            descriptor.buffer = ubo.buffer();
-            descriptor.bufferOffset = ubo.offset();
+            auto ubo = allocate(descriptor.res.buffer.size);
+            memcpy(ubo.ptr, ptr, descriptor.res.buffer.size);
+            descriptor.res.buffer.buffer = ubo.buffer;
+            descriptor.res.buffer.offset = ubo.offset;
         }
 
-        template< class T >
-        void allocateForDescriptor( res_descriptor_t& descriptor, const std::vector<T>& value ) {
-            assert( descriptor.type == res_descriptor_type::UniformBuffer );
-            uint32_t uboSize = (uint32_t)(value.size() * sizeof(T));
-            auto ubo = allocate( uboSize );
-            ubo.writeData(0, value.data(), uboSize );
-            descriptor.buffer = ubo.buffer();
-            descriptor.bufferOffset = ubo.offset();
-        }
+        // template< class T >
+        // void allocateForDescriptor(res_descriptor_t& descriptor, const std::vector<T>& value) {
+        //     assert( descriptor.type == res_descriptor_type::UniformBuffer );
+        //     uint32_t uboSize = (uint32_t)(value.size() * sizeof(T));
+        //     auto ubo = allocate( uboSize );
+        //     ubo.writeData(0, value.data(), uboSize );
+        //     descriptor.buffer = ubo.buffer();
+        //     descriptor.bufferOffset = ubo.offset();
+        // }
 
         static UniformAllocator* createUniformAllocator( Device* device );
     };

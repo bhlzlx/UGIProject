@@ -185,7 +185,7 @@ namespace ugi {
             r.dstOffsets[1] = { (int32_t)dstRegions[i].extent.width + dstRegions[i].offset.x, (int32_t)dstRegions[i].extent.height + dstRegions[i].offset.y, (int32_t)dstRegions[i].extent.depth+dstRegions[i].offset.z };
             regions.push_back(r);
         }
-        vkCmdBlitImage( *_commandBuffer, src->image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regionCount, regions.data(), VkFilter::VK_FILTER_NEAREST );
+        vkCmdBlitImage(*_commandBuffer, src->image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regionCount, regions.data(), VkFilter::VK_FILTER_NEAREST );
     }
 
     void ResourceCommandEncoder::updateImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount ) {

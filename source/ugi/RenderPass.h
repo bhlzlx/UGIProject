@@ -51,14 +51,15 @@ namespace ugi {
         virtual VkRenderPass renderPass() const = 0;
         virtual void begin( RenderCommandEncoder* encoder ) const = 0;
         virtual void end( RenderCommandEncoder* encoder ) const = 0;
-        virtual void release( Device* device ) = 0;
-        virtual image_view_t color( uint32_t index ) = 0;
+        virtual void release(Device* device) = 0;
+        virtual image_view_t colorView(uint32_t index) = 0;
+        virtual Texture* colorTexture(uint32_t index) = 0;
     };
 
     class RenderPass : IRenderPass {
         friend class CommandBuffer;
     private:
-        renderpass_desc_t                       _decription;
+        renderpass_desc_t                           _decription;
         uint64_t                                    _subpassHash;                              ///> render pass's hash value
         //
         VkFramebuffer                               _framebuffer;                              ///> framebuffer 对象
@@ -94,11 +95,17 @@ namespace ugi {
         virtual VkRenderPass renderPass() const override {
             return _renderPass;
         }
-        virtual image_view_t color( uint32_t index ) override {
+        virtual image_view_t colorView( uint32_t index ) override {
             if(index<_colorTextureCount) {
                 return _colorViews[index];
             }
             return image_view_t();
+        }
+        virtual Texture* colorTexture(uint32_t index) override {
+            if(index<_colorTextureCount) {
+                return _colorTexture[index];
+            }
+            return nullptr;
         }
         virtual ~RenderPass() {};
         virtual void begin( RenderCommandEncoder* encoder ) const override;

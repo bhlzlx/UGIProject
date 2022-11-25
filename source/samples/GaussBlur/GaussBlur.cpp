@@ -1,44 +1,66 @@
 ﻿#include "GaussBlur.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+#include <cmath>
+#include <tweeny.h>
+
 #include <cassert>
 #include <ugi/Device.h>
 #include <ugi/Swapchain.h>
+
+
 #include <ugi/CommandQueue.h>
 #include <ugi/CommandBuffer.h>
 #include <ugi/Buffer.h>
 #include <ugi/RenderPass.h>
+
+
 #include <ugi/Semaphore.h>
 #include <ugi/Pipeline.h>
+#include <ugi/helper/pipeline_helper.h>
 #include <ugi/Argument.h>
 #include <ugi/Texture.h>
 #include <ugi/render_components/Renderable.h>
 #include <ugi/UniformBuffer.h>
-// #include <ugi/TextureUtility.h>
-#include <ugi/TextureKTX.h>
+#include <ugi/render_components/PipelineMaterial.h>
 #include <ugi/RenderContext.h>
-#include "GaussBlurProcessor.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
-#include <cmath>
-#include <tweeny.h>
+// #include "GaussBlurProcessor.h"
 
 #include <LightWeightCommon/io/archive.h>
+
+#include <ugi/TextureUtil.h>
 
 namespace ugi {
 
     bool GaussBlurTest::initialize(void* _wnd, comm::IArchive* archive) {
         printf("initialize\n");
+        ugi::DeviceDescriptor descriptor; {
+            descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
+            descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
+            descriptor.debugLayer = 1;
+            descriptor.graphicsQueueCount = 1;
+            descriptor.transferQueueCount = 1;
+            descriptor.wnd = _wnd;
+        };
         renderContext_ = new StandardRenderContext();
+        renderContext_->initialize(_wnd, descriptor, archive);
         auto device = renderContext_->device();
         auto asyncLoadManager = renderContext_->asyncLoadManager();
-        auto file = archive->openIStream("image/island.ktx", {comm::ReadFlag::binary});
+        { // 创建管线 
+            auto pplfile = archive->openIStream("shaders/GaussBlur/pipeline.bin", {comm::ReadFlag::binary});
+            PipelineHelper pplhelper = PipelineHelper::FromIStream(pplfile);
+            pipeline_ = device->createComputePipeline(pplhelper.desc());
+        }
+        // 创建纹理
+        auto file = archive->openIStream("image/ushio.png", {comm::ReadFlag::binary});
         size_t fileSize = file->size();
         uint8_t* fileBuff = (uint8_t*)malloc(fileSize);
         file->read(fileBuff, fileSize);
         file->close();
-        texture_ = CreateTextureKTX(device, fileBuff, fileSize, asyncLoadManager, 
+        texture_ = CreateTexturePNG(device, fileBuff, fileSize, asyncLoadManager, 
             [](void* res, CommandBuffer* cmd) {
                 Texture* texture = (Texture*)res;
+                texture->generateMipmap(cmd); // 生成mipmap
                 auto resEnc = cmd->resourceCommandEncoder();
                 resEnc->imageTransitionBarrier(
                     texture, ResourceAccessType::ShaderRead, 
@@ -50,123 +72,138 @@ namespace ugi {
                 texture->markAsUploaded();
             }
         );
-        bluredTexture_ = device->createTexture(texture_->desc(), ResourceAccessType::ShaderReadWrite);
-        bluredTextureFinal_ = device->createTexture(texture_->desc(), ResourceAccessType::ShaderReadWrite);
 
-        // fileStream = assetsSource->Open(u8"image/island.ktx");
-        // if(fileStream) {
-        //     fileBuff = (uint8_t*)malloc(fileStream->GetSize());
-        //     fileStream->ReadFully( fileBuff,fileStream->GetSize());
-        //     TextureUtility texUtil(_device, _uploadQueue);
-        //     _texture = texUtil.createTextureKTX(fileBuff, fileStream->GetSize());
-        // }
-		_gaussProcessor = new GaussBlurProcessor();
-        auto rst = _gaussProcessor->intialize(_device, assetsSource);
-        _blurItem = _gaussProcessor->createGaussBlurItem(_bluredTexture, _bluredTextureFinal);
-
-        auto distributions = GenerateGaussDistribution(1.8f);
-
-        GaussBlurParameter parameter = {
-            { 1.0f, 0.0f }, distributions.size()/2+1, 0,
-            {},
-        };
-        memcpy( parameter.gaussDistribution, distributions.data()+distributions.size()/2, (distributions.size()/2+1)*sizeof(float) );
-        _blurItem->setParameter(parameter);
-        _blurItem2 = _gaussProcessor->createGaussBlurItem(_bluredTextureFinal, _bluredTexture);
-        parameter.direction[0] = 0.0f; parameter.direction[1] = 1.0f;
-        _blurItem2->setParameter(parameter);
-        //
+        for(uint32_t i = 0; i<2; ++i) {
+            blurTextures_[i] = device->createTexture(texture_->desc(), ResourceAccessType::ShaderReadWrite);
+            blurImageViews_[i] = blurTextures_[i]->createImageView(device, image_view_param_t{});
+            blurMaterials_[i]= pipeline_->createMaterial({"InputImage", "OutputImage", "BlurParameter"},{});
+        }
+        // update materials, except uniform buffer
+        for(uint32_t i = 0; i<2; ++i) {
+            auto input = blurMaterials_[i]->descriptors()[0];
+            input.res.imageView = blurImageViews_[i%2].handle;
+            auto output = blurMaterials_[i]->descriptors()[1];
+            output.res.imageView = blurImageViews_[(i+1)%2].handle;
+            blurMaterials_[i]->updateDescriptor(input); // input image
+            blurMaterials_[i]->updateDescriptor(output); // output image
+        }
         return true;
     }
 
     void GaussBlurTest::tick() {
-        
-        _device->waitForFence( _frameCompleteFences[_flightIndex] );
-        _uniformAllocator->tick();
-        uint32_t imageIndex = _swapchain->acquireNextImage( _device, _flightIndex );
-
-        IRenderPass* mainRenderPass = _swapchain->renderPass(imageIndex);
-        
-        auto cmdbuf = _commandBuffers[_flightIndex];
-
+        renderContext_->onPreTick();
+        auto device = renderContext_->device();
+        auto queue = renderContext_->primaryQueue();
+        auto cmdbuf = queue->createCommandBuffer(device, ugi::CmdbufType::Transient);
+        device->cycleInvoker().postCallable([queue, device, cmdbuf](){
+            queue->destroyCommandBuffer(device, cmdbuf);
+        });
         cmdbuf->beginEncode(); {
-            //
             renderpass_clearval_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
             clearValues.stencil = 0xffffffff;
+            auto fbo = renderContext_->mainFramebuffer();
+            fbo->setClearValues(clearValues);
+            if(texture_->uploaded()) {
+                auto imgWidth = texture_->desc().width;
+                auto imgHeight = texture_->desc().height;
+                ugi::ImageRegion srcRegion;
+                srcRegion.arrayIndex = 0; srcRegion.mipLevel = 0;
+                srcRegion.offset = {};
+                srcRegion.extent = { imgWidth, imgHeight, 1 };
+                ugi::ImageRegion dstRegion;
+                dstRegion.arrayIndex = 0; dstRegion.mipLevel = 0;
+                dstRegion.offset = {};
+                dstRegion.extent = { imgWidth, imgHeight, 1 };
 
-            mainRenderPass->setClearValues(clearValues);
+                static auto tween = tweeny::from(0).to(12).during(60);
+                auto v = tween.step(1);
+                auto progress = tween.progress();
+                if( progress == 1.0f ) {
+                    tween = tween.backward();
+                } else if( progress == 0.0f ) {
+                    tween = tween.forward();
+                }
 
-            ugi::ImageRegion srcRegion;
-            srcRegion.arrayIndex = 0; srcRegion.mipLevel = 0;
-            srcRegion.offset = {};
-            srcRegion.extent = { _texture->desc().width, _texture->desc().height, 1 };
-            ugi::ImageRegion dstRegion;
-            dstRegion.arrayIndex = 0; dstRegion.mipLevel = 0;
-            dstRegion.offset = {};
-            dstRegion.extent = { _texture->desc().width, _texture->desc().height, 1 };
+                auto resEnc = cmdbuf->resourceCommandEncoder();
+                resEnc->blitImage(blurTextures_[0], texture_, &dstRegion, &srcRegion, 1 );
+                resEnc->blitImage(blurTextures_[1], texture_, &dstRegion, &srcRegion, 1 );
+                resEnc->endEncode();
 
-            auto resEncoder = cmdbuf->resourceCommandEncoder();
-            resEncoder->blitImage( _bluredTexture, _texture, &dstRegion, &srcRegion, 1 );
-            resEncoder->blitImage( _bluredTextureFinal, _texture, &dstRegion, &srcRegion, 1 );
-            resEncoder->endEncode();
+                auto distributions = GenerateGaussDistribution(1.8f);
+                GaussBlurParameter parameter = {
+                    { 1.0f, 0.0f }, (uint32_t)distributions.size()/2+1, 0,
+                    {},
+                };
+                memcpy(parameter.gaussDistribution, distributions.data()+distributions.size()/2, (distributions.size()/2+1)*sizeof(float) );
 
-            static auto tween = tweeny::from(0).to(12).during(60);
-            auto v = tween.step(1);
-            auto progress = tween.progress();
-            if( progress == 1.0f ) {
-                tween = tween.backward();
-            } else if( progress == 0.0f ) {
-                tween = tween.forward();
+                for(auto i = 0; i<2; ++i) { // update uniform buffer
+                    if(i == 1) {
+                        parameter.direction[0] = 0.0f; parameter.direction[1] = 1.0f;
+                    }
+                    auto tor = blurMaterials_[i]->descriptors()[2];
+                    auto ubo = renderContext_->uniformAllocator()->allocate(tor.res.buffer.size);
+                    ubo.writeData(0, &parameter, sizeof(parameter));
+                    tor.res.buffer.buffer = (size_t)ubo.buffer()->buffer();
+                    tor.res.buffer.offset = (size_t)ubo.offset();
+                    blurMaterials_[i]->updateDescriptor(tor);
+                }
+
+                for( int i = 0; i<v; ++i) {
+                    resEnc = cmdbuf->resourceCommandEncoder();
+                    resEnc->imageTransitionBarrier(blurTextures_[0], ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
+                    resEnc->imageTransitionBarrier(blurTextures_[1], ResourceAccessType::ShaderWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
+                    resEnc->endEncode();
+                    pipeline_->applyMaterial(blurMaterials_[0]);
+                    pipeline_->flushMaterials(cmdbuf);
+                    auto computeEncoder = cmdbuf->computeCommandEncoder(); {
+                        computeEncoder->bindPipeline(pipeline_);
+                        computeEncoder->dispatch(32, 32, 1);
+                        computeEncoder->endEncode();
+                    }
+                    resEnc = cmdbuf->resourceCommandEncoder();
+                    resEnc->imageTransitionBarrier(blurTextures_[1], ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
+                    resEnc->imageTransitionBarrier(blurTextures_[0], ResourceAccessType::ShaderWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
+                    resEnc->endEncode();
+                    pipeline_->applyMaterial(blurMaterials_[1]);
+                    pipeline_->flushMaterials(cmdbuf);
+                    computeEncoder = cmdbuf->computeCommandEncoder(); {
+                        computeEncoder->bindPipeline(pipeline_);
+                        computeEncoder->dispatch(32, 32, 1);
+                        computeEncoder->endEncode();
+                    }
+                }
+                resEnc = cmdbuf->resourceCommandEncoder();
+                Texture* screen = fbo->colorTexture(0);
+                resEnc->blitImage(screen, blurTextures_[0], &dstRegion, &srcRegion, 1 );
+                dstRegion.offset = { (int32_t)srcRegion.extent.width, 0, 0 };
+                resEnc->blitImage(screen, texture_, &dstRegion, &srcRegion, 1 );
+                resEnc->imageTransitionBarrier(screen, ResourceAccessType::Present, PipelineStages::Transfer, StageAccess::Write, PipelineStages::Top, StageAccess::Read, nullptr);
+                resEnc->endEncode();
             }
-            for( int i = 0; i<v; ++i) {
-                _gaussProcessor->processBlur(_blurItem, cmdbuf, _uniformAllocator);
-                _gaussProcessor->processBlur(_blurItem2, cmdbuf, _uniformAllocator);
-            }
-            resEncoder = cmdbuf->resourceCommandEncoder();
-            Texture* screen = mainRenderPass->color(0);
-            resEncoder->blitImage( screen, _bluredTextureFinal, &dstRegion, &srcRegion, 1 );
-            dstRegion.offset = { (int32_t)srcRegion.extent.width, 0, 0 };
-            resEncoder->blitImage( screen, _texture, &dstRegion, &srcRegion, 1 );
-
-            resEncoder->endEncode();
-
-            auto renderCommandEncoder = cmdbuf->renderCommandEncoder( mainRenderPass ); {
-            }
-            renderCommandEncoder->endEncode();
+            // auto renderCommandEncoder = cmdbuf->renderCommandEncoder(fbo); {
+            //     renderCommandEncoder->endEncode();
+            // }
         }
         cmdbuf->endEncode();
-
-		Semaphore* imageAvailSemaphore = _swapchain->imageAvailSemaphore();
-		QueueSubmitInfo submitInfo {
-			&cmdbuf,
-			1,
-			&imageAvailSemaphore,// submitInfo.semaphoresToWait
-			1,
-			&_renderCompleteSemaphores[_flightIndex], // submitInfo.semaphoresToSignal
-			1
-		};
-		QueueSubmitBatchInfo submitBatch(&submitInfo, 1, _frameCompleteFences[_flightIndex]);
-
-        bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
-        assert(submitRst);
-        _swapchain->present( _device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex] );
-
+		Semaphore* imageAvailSemaphore = renderContext_->mainFramebufferAvailSemaphore();
+		Semaphore* renderCompleteSemaphore = renderContext_->renderCompleteSemephore();
+        renderContext_->submitCommand({{cmdbuf}, {imageAvailSemaphore}, {renderCompleteSemaphore}});
+        renderContext_->onPostTick();
     }
         
     void GaussBlurTest::resize(uint32_t width, uint32_t height) {
-        _swapchain->resize( _device, width, height );
-        //
-        _width = width;
-        _height = height;
+        renderContext_->onResize(width, height);
+        width_ = width;
+        height_ = height;
     }
 
     void GaussBlurTest::release() {
     }
 
     const char * GaussBlurTest::title() {
-        return "HelloWorld";
+        return "GaussBlur - Compute Shader";
     }
         
     uint32_t GaussBlurTest::rendererType() {

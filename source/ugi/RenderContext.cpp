@@ -47,9 +47,9 @@ namespace ugi {
     bool StandardRenderContext::onPreTick() {
         _device->waitForFence(_frameCompleteFences[_flightIndex] );
         // status tick
+        _device->cycleInvoker().tick();
         _descriptorSetAllocator->tick();
         _uniformAllocator->tick();
-        _device->cycleInvoker().tick();
         //
         auto cb = _graphicsQueue->createCommandBuffer(_device, CmdbufType::Transient);
         cb->beginEncode(); {
