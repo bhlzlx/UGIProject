@@ -1,10 +1,9 @@
 ﻿#include "UniformBuffer.h"
-#include "Buffer.h"
+// #include "Buffer.h"
 #include "Device.h"
 #include <cassert>
 
 namespace ugi {
-
 
     constexpr uint32_t UniformAlignBytes = 256;
     constexpr uint32_t InitialBlockSize = 0x10000;

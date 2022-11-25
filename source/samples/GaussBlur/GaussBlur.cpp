@@ -143,10 +143,7 @@ namespace ugi {
                         parameter.direction[0] = 0.0f; parameter.direction[1] = 1.0f;
                     }
                     auto tor = blurMaterials_[i]->descriptors()[2];
-                    auto ubo = renderContext_->uniformAllocator()->allocate(tor.res.buffer.size);
-                    ubo.writeData(0, &parameter, sizeof(parameter));
-                    tor.res.buffer.buffer = (size_t)ubo.buffer()->buffer();
-                    tor.res.buffer.offset = (size_t)ubo.offset();
+                    renderContext_->uniformAllocator()->allocateForDescriptor(tor, &parameter);
                     blurMaterials_[i]->updateDescriptor(tor);
                 }
 
