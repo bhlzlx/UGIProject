@@ -57,10 +57,7 @@ namespace ugi {
 
     void Render::setUBO(Renderable* renderable, uint8_t* data) {
         auto mtl = renderable->material();
-        auto ubo = _uniformAllocator->allocate(_uboptor.res.buffer.size);
-        ubo.writeData(0, data, _uboptor.res.buffer.size);
-        _uboptor.res.buffer.buffer = (size_t)ubo.buffer()->buffer();
-        _uboptor.res.buffer.offset = ubo.offset();
+        _uniformAllocator->allocateForDescriptor(_uboptor, data);
         mtl->updateDescriptor(_uboptor);
     }
 
