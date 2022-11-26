@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include <ugi/UGIDeclare.h>
-#include <ugi/UGITypes.h>
+#include <ugi/ugi_declare.h>
+#include <ugi/ugi_types.h>
 #include <vector>
 #include <cstdint>
 #include <hgl/math/Vector.h>

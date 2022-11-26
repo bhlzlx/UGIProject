@@ -2,8 +2,8 @@
 #include <hgl/math/Vector.h>
 #include <algorithm>
 #include <utility>
-#include <ugi/UGIDeclare.h>
-#include <ugi/UGITypes.h>
+#include <ugi/ugi_declare.h>
+#include <ugi/ugi_types.h>
 
 namespace hgl {
     namespace assets {

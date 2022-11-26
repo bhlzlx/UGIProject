@@ -1,6 +1,6 @@
-#include "Buffer.h"
-#include "Device.h"
-#include "VulkanFunctionDeclare.h"
+#include "buffer.h"
+#include "device.h"
+#include "vulkan_function_declare.h"
 
 namespace ugi {
 

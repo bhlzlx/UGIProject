@@ -1,15 +1,15 @@
 ﻿#include "SDFFontRenderer.h"
 #include "SDFTextureTileManager.h"
 #include <hgl/assets/AssetsSource.h>
-#include <ugi/Device.h>
-#include <ugi/Buffer.h>
-#include <ugi/ResourceManager.h>
-#include <ugi/Argument.h>
-#include <ugi/Pipeline.h>
+#include <ugi/device.h>
+#include <ugi/buffer.h>
+#include <ugi/flight_cycle_invoker.h>
+#include <ugi/descriptor_binder.h>
+#include <ugi/pipeline.h>
 #include <ugi/Drawable.h>
-#include <ugi/UniformBuffer.h>
-#include <ugi/commandBuffer/ResourceCommandEncoder.h>
-#include <ugi/commandBuffer/RenderCommandEncoder.h>
+#include <ugi/uniform_buffer_allocator.h>
+#include <ugi/command_encoder/resource_cmd_encoder.h>
+#include <ugi/command_encoder/render_cmd_encoder.h>
 #include <hgl/io/InputStream.h>
 
 #include <json.hpp>

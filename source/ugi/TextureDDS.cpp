@@ -1,6 +1,6 @@
 #include "TextureDDS.h"
-#include <ugi/Device.h>
-#include <ugi/Texture.h>
+#include <ugi/device.h>
+#include <ugi/texture.h>
 #include <tinyddsloader/tinyddsloader.h>
 
 namespace ugi {

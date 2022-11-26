@@ -1,9 +1,9 @@
 ﻿#include <UGIApplication.h>
 #include <cstdio>
 #include <algorithm>
-#include <ugi/UGIDeclare.h>
-#include <ugi/UGITypes.h>
-#include <ugi/Argument.h>
+#include <ugi/ugi_declare.h>
+#include <ugi/ugi_types.h>
+#include <ugi/descriptor_binder.h>
 #include <hgl/math/Vector.h>
 // #include <glm/glm.hpp>
 

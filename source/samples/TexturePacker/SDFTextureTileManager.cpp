@@ -1,11 +1,11 @@
 ﻿#include "SDFTextureTileManager.h"
-#include <ugi/Device.h>
-#include <ugi/Texture.h>
-#include <ugi/Buffer.h>
-#include <ugi/ResourceManager.h>    
+#include <ugi/device.h>
+#include <ugi/texture.h>
+#include <ugi/buffer.h>
+#include <ugi/flight_cycle_invoker.h>    
 #include <hgl/assets/AssetsSource.h>
-#include <ugi/commandBuffer/ResourceCommandEncoder.h>
-#include <ugi/CommandBuffer.h>
+#include <ugi/command_encoder/resource_cmd_encoder.h>
+#include <ugi/command_buffer.h>
 
 namespace ugi {
 

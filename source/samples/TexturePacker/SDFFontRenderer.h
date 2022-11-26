@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include <hgl/math/Vector.h>
-#include <ugi/UGIDeclare.h>
-#include <ugi/UGITypes.h>
+#include <ugi/ugi_declare.h>
+#include <ugi/ugi_types.h>
 #include <hgl/type/RectScope.h>
 #include <map>
 

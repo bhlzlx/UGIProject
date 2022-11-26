@@ -1,9 +1,9 @@
 ﻿#pragma once
-#include "VulkanDeclare.h"
-#include "UGIDeclare.h"
-#include "UGIVulkanPrivate.h"
+#include "vulkan_declare.h"
+#include "ugi_declare.h"
+#include "ugi_vulkan_private.h"
 #include <vk_mem_alloc.h>
-#include "Resource.h"
+#include "resource.h"
 #include <map>
 #include <functional>
 

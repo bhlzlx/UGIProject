@@ -2,8 +2,8 @@
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-#include <ugi/UGIDeclare.h>
-#include <ugi/VulkanDeclare.h>
+#include <ugi/ugi_declare.h>
+#include <ugi/vulkan_declare.h>
 
 #ifdef VK_NO_PROTOTYPES
 #else

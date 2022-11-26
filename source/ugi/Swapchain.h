@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "VulkanDeclare.h"
-#include "UGIVulkanPrivate.h"
-#include "UGIDeclare.h"
+#include "vulkan_declare.h"
+#include "ugi_vulkan_private.h"
+#include "ugi_declare.h"
 #include <Windows.h>
 
 namespace ugi {

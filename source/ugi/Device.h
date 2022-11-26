@@ -2,15 +2,15 @@
 
 #include <cstdint>
 #include <memory>
-#include "VulkanFunctionDeclare.h"
+#include "vulkan_function_declare.h"
 #include <vk_mem_alloc.h>
 #include <vector>
 #include <unordered_map>
 
-#include "UGIDeclare.h"
-#include "UGITypes.h"
+#include "ugi_declare.h"
+#include "ugi_types.h"
 #include <LightWeightCommon/io/archive.h>
-#include <ResourceManager.h>
+#include <flight_cycle_invoker.h>
 
 namespace ugi {
 

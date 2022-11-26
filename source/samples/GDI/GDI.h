@@ -1,10 +1,10 @@
 ﻿#include <UGIApplication.h>
 #include <cstdio>
 #include <algorithm>
-#include <ugi/UGIDeclare.h>
-#include <ugi/UGITypes.h>
-#include <ugi/Argument.h>
-#include <ugi/ResourceManager.h>
+#include <ugi/ugi_declare.h>
+#include <ugi/ugi_types.h>
+#include <ugi/descriptor_binder.h>
+#include <ugi/flight_cycle_invoker.h>
 #include <gdi/gdi.h>
 #include <gdi/geometry/geometryBuilder.h>
 #include <gdi/geometry/geometryDrawData.h>
@@ -23,7 +23,7 @@ namespace ugi {
         ugi::CommandBuffer*             _commandBuffers[MaxFlightCount];                   // command buffer for each frame
         ugi::CommandQueue*              _graphicsQueue;                                    // graphics queue
         ugi::CommandQueue*              _uploadQueue;                                      // upload queue
-        ugi::GraphicsPipeline*                  _pipeline;
+        ugi::GraphicsPipeline*          _pipeline;
         ugi::ResourceManager*           _resourceManager;                                  // resource manager
         ///> ===========================================================================
         ugi::ArgumentGroup*             _argumentGroup;                                    //

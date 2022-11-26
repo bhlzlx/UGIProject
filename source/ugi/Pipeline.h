@@ -1,13 +1,13 @@
 ﻿#pragma once
 
-#include "VulkanDeclare.h"
-#include "UGIDeclare.h"
-#include "UGITypes.h"
+#include "vulkan_declare.h"
+#include "ugi_declare.h"
+#include "ugi_types.h"
 #include <unordered_map>
 #include <vector>
 #include <array>
 #include <cstdint>
-#include "UGIUtility.h"
+#include "ugi_utility.h"
 
 namespace ugi {
 

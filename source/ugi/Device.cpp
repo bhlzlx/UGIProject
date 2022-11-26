@@ -1,7 +1,7 @@
-﻿#include "Device.h"
+﻿#include "device.h"
 
-#include "VulkanFunctionDeclare.h"
-#include "VulkanDebugConfigurator.h"
+#include "vulkan_function_declare.h"
+#include "vulkan_debug_configurator.h"
 //
 #include <vector>
 #include <set>
@@ -13,18 +13,18 @@
 
 #include <vk_mem_alloc.h>
 
-#include "Buffer.h"
-#include "Texture.h"
-#include "Swapchain.h"
-#include "Semaphore.h"
-#include "RenderPass.h"
-#include "CommandQueue.h"
-#include "UGITypeMapping.h"
-#include "Argument.h"
-#include "Pipeline.h"
-#include "Descriptor.h"
-#include "UniformBuffer.h"
-#include "ResourceManager.h"
+#include "buffer.h"
+#include "texture.h"
+#include "swapchain.h"
+#include "semaphore.h"
+#include "render_pass.h"
+#include "command_queue.h"
+#include "ugi_type_mapping.h"
+#include "descriptor_binder.h"
+#include "pipeline.h"
+#include "descriptor_set_allocator.h"
+#include "uniform_buffer_allocator.h"
+#include "flight_cycle_invoker.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -105,7 +105,7 @@ namespace ugi {
         if (library == NULL) {
             return nullptr;
         }
-#include "VulkanFunctionRegistList.h"
+#include "vulkan_function_regist_list.h"
 #ifdef _WIN32
         REGIST_VULKAN_FUNCTION(vkCreateWin32SurfaceKHR)
 #elif defined __ANDROID__
@@ -125,7 +125,7 @@ namespace ugi {
 // #undef REGIST_VULKAN_FUNCTION
 //  #define REGIST_VULKAN_FUNCTION(FUNCTION) { #FUNCTION, (const void* const)FUNCTION },
 //          FUNCTION_ITEM apiList[] = {
-//              #include "VulkanFunctionRegistList.h"
+//              #include "vulkan_function_regist_list.h"
 //          };
 // #endif
         createVulkanInstance( _descriptor.debugLayer );

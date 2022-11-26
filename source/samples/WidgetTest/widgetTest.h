@@ -1,10 +1,10 @@
 ﻿#include <UGIApplication.h>
 #include <cstdio>
 #include <algorithm>
-#include <ugi/UGIDeclare.h>
-#include <ugi/UGITypes.h>
-#include <ugi/Argument.h>
-#include <ugi/ResourceManager.h>
+#include <ugi/ugi_declare.h>
+#include <ugi/ugi_types.h>
+#include <ugi/descriptor_binder.h>
+#include <ugi/flight_cycle_invoker.h>
 #include <gdi/widget/GdiSystem.h>
 
 namespace ugi {

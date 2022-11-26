@@ -1,13 +1,13 @@
 ﻿#pragma once
 
-#include "VulkanDeclare.h"
-#include "UGITypeMapping.h"
-#include "UGITypes.h"
-#include "UGIDeclare.h"
+#include "vulkan_declare.h"
+#include "ugi_type_mapping.h"
+#include "ugi_types.h"
+#include "ugi_declare.h"
 #include <vk_mem_alloc.h>
 #include <memory>
 #include <cassert>
-#include "Resource.h"
+#include "resource.h"
 
 /* -
     这里有一个有意思的问题，vk_mem_alloc 已经帮我们把内存管理做好了，但是 vulkan 还有一个 buffer 对象的数据限制

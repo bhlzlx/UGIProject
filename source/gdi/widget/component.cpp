@@ -3,7 +3,7 @@
 #include <geometry/geometryDrawData.h>
 #include <widget/widget.h>
 #include <widget/GdiSystem.h>
-#include <ugi/UGIUtility.h>
+#include <ugi/ugi_utility.h>
 
 namespace ugi {
 

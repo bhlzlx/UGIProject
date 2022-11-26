@@ -1,7 +1,7 @@
 #pragma once
 
-#include "VulkanDeclare.h"
-#include "VulkanFunctionDeclare.h"
+#include "vulkan_declare.h"
+#include "vulkan_function_declare.h"
 #include <vector>
 
 namespace ugi {

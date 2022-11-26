@@ -1,5 +1,5 @@
 #include "Semaphore.h"
-#include <Device.h>
+#include <device.h>
 
 namespace ugi {
 
