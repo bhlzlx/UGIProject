@@ -1,11 +1,11 @@
 ﻿#include "gdi.h"
-#include <ugi/Device.h>
-#include <ugi/CommandQueue.h>
-#include <ugi/Buffer.h>
-#include <ugi/commandBuffer.h>
+#include <ugi/device.h>
+#include <ugi/command_queue.h>
+#include <ugi/buffer.h>
+#include <ugi/commandbuffer.h>
 #include <ugi/Drawable.h>
-#include <ugi/Pipeline.h>
-#include <ugi/Argument.h>
+#include <ugi/pipeline.h>
+#include <ugi/descriptor_binder.h>
 #include <hgl/assets/AssetsSource.h>
 
 namespace ugi {

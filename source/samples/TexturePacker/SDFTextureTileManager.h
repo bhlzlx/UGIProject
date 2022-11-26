@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <ugi/UGIDeclare.h>
+#include <ugi/ugi_declare.h>
 #include <cstdint>
 #include <unordered_map>
 #include <queue>

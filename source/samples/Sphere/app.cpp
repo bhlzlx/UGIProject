@@ -1,17 +1,17 @@
 ﻿#include "app.h"
 #include <cassert>
-#include <ugi/Device.h>
-#include <ugi/Swapchain.h>
-#include <ugi/CommandQueue.h>
-#include <ugi/CommandBuffer.h>
-#include <ugi/Buffer.h>
-#include <ugi/RenderPass.h>
+#include <ugi/device.h>
+#include <ugi/swapchain.h>
+#include <ugi/command_queue.h>
+#include <ugi/command_buffer.h>
+#include <ugi/buffer.h>
+#include <ugi/render_pass.h>
 #include <ugi/Semaphore.h>
-#include <ugi/Pipeline.h>
-#include <ugi/Argument.h>
-#include <ugi/Texture.h>
+#include <ugi/pipeline.h>
+#include <ugi/descriptor_binder.h>
+#include <ugi/texture.h>
 #include <ugi/Drawable.h>
-#include <ugi/UniformBuffer.h>
+#include <ugi/uniform_buffer_allocator.h>
 #include <hgl/assets/AssetsSource.h>
 #include <hgl/math/Matrix.h>
 #include <hgl/math/Vector.h>
@@ -231,7 +231,7 @@ namespace ugi {
         //
         res_descriptor_t res;
         m_uniformDescriptor.type = res_descriptor_type::UniformBuffer;
-        m_uniformDescriptor.handle = DescriptorBinder::GetDescriptorHandle("Argument", pipelineDesc );
+        m_uniformdescriptor_binder.handle = DescriptorBinder::GetDescriptorHandle("Argument", pipelineDesc );
         m_uniformDescriptor.bufferRange = 64 * 3;
 
         res.type = res_descriptor_type::Sampler;

@@ -3,13 +3,13 @@
 #include "geometryDrawData.h"
 #include "../gdi.h"
 
-#include <ugi/Descriptor.h>
-#include <ugi/Device.h>
-#include <ugi/Pipeline.h>
-#include <ugi/Buffer.h>
-#include <ugi/Argument.h>
-#include <ugi/CommandQueue.h>
-#include <ugi/CommandBuffer.h>
+#include <ugi/descriptor_binder.h>
+#include <ugi/device.h>
+#include <ugi/pipeline.h>
+#include <ugi/buffer.h>
+#include <ugi/descriptor_binder.h>
+#include <ugi/command_queue.h>
+#include <ugi/command_buffer.h>
 #include <ugi/Drawable.h>
 
 namespace ugi {
@@ -262,14 +262,14 @@ namespace ugi {
                 transformDescriptor.type = res_descriptor_type::UniformBuffer;
                 transformDescriptor.bufferOffset = 0;
                 transformDescriptor.bufferRange = sizeof(GeometryTransformArgument) * _maxArgPerDraw;
-                transformDescriptor.handle = drawData->_argGroups[0]->GetDescriptorHandle("ElementInformation", pipelineDesc);
+                transformdescriptor_binder.handle = drawData->_argGroups[0]->GetDescriptorHandle("ElementInformation", pipelineDesc);
                 transformDescriptor.buffer = nullptr;
             }
             res_descriptor_t globalInfoDescriptor; {
                 globalInfoDescriptor.type = res_descriptor_type::UniformBuffer;
                 globalInfoDescriptor.bufferOffset = 0;
                 globalInfoDescriptor.bufferRange = sizeof(ContextInformation);
-                globalInfoDescriptor.handle = drawData->_argGroups[0]->GetDescriptorHandle("GlobalInformation", pipelineDesc);
+                globalInfodescriptor_binder.handle = drawData->_argGroups[0]->GetDescriptorHandle("GlobalInformation", pipelineDesc);
                 globalInfoDescriptor.buffer = nullptr;
             }
             drawData->_elementInformationDescriptor = transformDescriptor;

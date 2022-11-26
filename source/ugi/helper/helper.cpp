@@ -1,6 +1,6 @@
-#include <ugi/UGIDeclare.h>
-#include <ugi/VulkanDeclare.h>
-#include <ugi/VulkanFunctionDeclare.h>
+#include <ugi/ugi_declare.h>
+#include <ugi/vulkan_declare.h>
+#include <ugi/vulkan_function_declare.h>
 #include <vector>
 #include <string>
 #include <cassert>

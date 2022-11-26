@@ -3,7 +3,7 @@
 #include <gdi.h>
 #include <geometry/geometryBuilder.h>
 #include <geometry/geometryDrawData.h>
-#include <ugi/CommandBuffer.h>
+#include <ugi/command_buffer.h>
 
 namespace ugi {
     namespace gdi {

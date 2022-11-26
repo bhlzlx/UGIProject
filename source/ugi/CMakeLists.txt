@@ -12,39 +12,40 @@ PUBLIC
 
 target_sources( UGI 
 PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/VulkanFunctionDefine.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/VulkanDebugConfigurator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Device.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ArgumentGroupLayout.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Texture.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/RenderPass.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Swapchain.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Semaphore.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ResourceManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Argument.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Pipeline.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/Drawable.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/UniformBuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CommandBuffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Sampler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/MeshBufferAllocator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/resourcePool/ArgumentGroupLayoutPool.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/RenderCommandEncoder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ResourceCommandEncoder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/commandBuffer/ComputeCommandEncoder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/PipelineMaterial.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/MeshPrimitive.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/Renderable.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/async_load/AsyncLoadManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/async_load/GPUAsyncLoadItem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/RenderContext.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/TextureDDS.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TextureUtil.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/vulkan_function_declare.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/vulkan_debug_configurator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/command_queue.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/descriptor_binder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/texture.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_pass.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/swapchain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/semaphore.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/descriptor_binder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/command_buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/sampler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/texture_util.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/material_layout.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/resource_pool/material_layout_pool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/command_encoder/compute_cmd_encoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/command_encoder/resource_cmd_encoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/command_encoder/render_cmd_encoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/asyncload/gpu_asyncload_item.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/asyncload/gpu_asyncload_manager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/helper/helper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/helper/pipeline_helper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/flight_cycle_invoker.cpp
+    #  allocators
+    ${CMAKE_CURRENT_SOURCE_DIR}/descriptor_set_allocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/uniform_buffer_allocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mesh_buffer_allocator.cpp
+    # render components
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/pipeline_material.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/render_components/renderable.cpp
 )
 
 target_link_libraries(UGI

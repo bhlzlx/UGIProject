@@ -1,8 +1,8 @@
-#include "Renderable.h"
-#include <render_components/MeshPrimitive.h>
-#include <Pipeline.h>
-#include <CommandBuffer.h>
-#include <VulkanFunctionDeclare.h>
+#include "renderable.h"
+#include <render_components/mesh.h>
+#include <pipeline.h>
+#include <command_buffer.h>
+#include <vulkan_function_declare.h>
 
 namespace ugi {
     

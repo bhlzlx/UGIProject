@@ -5,30 +5,30 @@
 #include <tweeny.h>
 
 #include <cassert>
-#include <ugi/Device.h>
-#include <ugi/Swapchain.h>
+#include <ugi/device.h>
+#include <ugi/swapchain.h>
 
 
-#include <ugi/CommandQueue.h>
-#include <ugi/CommandBuffer.h>
-#include <ugi/Buffer.h>
-#include <ugi/RenderPass.h>
+#include <ugi/command_queue.h>
+#include <ugi/command_buffer.h>
+#include <ugi/buffer.h>
+#include <ugi/render_pass.h>
 
 
-#include <ugi/Semaphore.h>
-#include <ugi/Pipeline.h>
+#include <ugi/semaphore.h>
+#include <ugi/pipeline.h>
 #include <ugi/helper/pipeline_helper.h>
-#include <ugi/Argument.h>
-#include <ugi/Texture.h>
+#include <ugi/descriptor_binder.h>
+#include <ugi/texture.h>
 #include <ugi/render_components/Renderable.h>
-#include <ugi/UniformBuffer.h>
-#include <ugi/render_components/PipelineMaterial.h>
-#include <ugi/RenderContext.h>
+#include <ugi/uniform_buffer_allocator.h>
+#include <ugi/render_components/pipeline_material.h>
+#include <ugi/render_context.h>
 // #include "GaussBlurProcessor.h"
 
 #include <LightWeightCommon/io/archive.h>
 
-#include <ugi/TextureUtil.h>
+#include <ugi/texture_util.h>
 
 namespace ugi {
 
@@ -143,10 +143,7 @@ namespace ugi {
                         parameter.direction[0] = 0.0f; parameter.direction[1] = 1.0f;
                     }
                     auto tor = blurMaterials_[i]->descriptors()[2];
-                    auto ubo = renderContext_->uniformAllocator()->allocate(tor.res.buffer.size);
-                    ubo.writeData(0, &parameter, sizeof(parameter));
-                    tor.res.buffer.buffer = (size_t)ubo.buffer()->buffer();
-                    tor.res.buffer.offset = (size_t)ubo.offset();
+                    renderContext_->uniformAllocator()->allocateForDescriptor(tor, &parameter);
                     blurMaterials_[i]->updateDescriptor(tor);
                 }
 
