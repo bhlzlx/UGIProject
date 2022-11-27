@@ -19,6 +19,8 @@ namespace ugi {
     static const uint32_t MaxMipLevelCount = 12;
     static const uint32_t MaxSubpassCount = 8;
 
+    using GPUHandle = uint64_t;
+
     template <class DEST, class SOURCE>
     struct IntegerComposer {
         union {
@@ -49,6 +51,7 @@ namespace ugi {
         }
         static_assert(sizeof(DEST) == sizeof(SOURCE) * 2, "!");
     };
+
 
     template <class T>
     struct point_t {
@@ -618,20 +621,20 @@ namespace ugi {
 
     constexpr uint32_t PipelineDescriptionSize = sizeof(pipeline_desc_t);
 
-    struct image_view_t {
-        size_t handle;
-    };
-
     struct buffer_desc_t {
         size_t buffer;
         uint32_t offset;
         uint32_t size;
     };
 
+    struct image_view_t {
+        GPUHandle handle;
+    };
+
     struct res_union_t {
         union {
-            buffer_desc_t buffer;
-            uint64_t imageView;
+            buffer_desc_t   buffer;
+            GPUHandle       imageView;
             sampler_state_t samplerState;
         };
     };
@@ -650,11 +653,11 @@ namespace ugi {
     };
 
     struct gpu_semaphore_t {
-        uint64_t id;
+        GPUHandle handle;
     };
 
     struct gpu_fence_t {
-        uint64_t id;
+        GPUHandle handle;
     };
 
 }

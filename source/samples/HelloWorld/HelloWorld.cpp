@@ -15,8 +15,8 @@
 #include <ugi/mesh_buffer_allocator.h>
 #include <ugi/render_components/mesh.h>
 #include <ugi/asyncload/gpu_asyncload_manager.h>
-#include <ugi/render_components/renderable.h>
 #include <ugi/render_components/pipeline_material.h>
+#include <ugi/render_components/renderable.h>
 #include <ugi/render_context.h>
 #include <ugi/texture_util.h>
 #include <ugi/helper/pipeline_helper.h>
