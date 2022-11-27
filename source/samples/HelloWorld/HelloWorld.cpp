@@ -93,11 +93,11 @@ namespace ugi {
         PipelineHelper ppl = PipelineHelper::FromIStream(pipelineFile);
         pipelineFile->close();
         auto ppldesc = ppl.desc();
-        ppldesc.topologyMode = topology_mode_t::TriangleList;
+        ppldesc.topologyMode = TopologyMode::TriangleList;
         printf("initialize\n");
-        ugi::DeviceDescriptor descriptor; {
-            descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
-            descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
+        ugi::device_descriptor_t descriptor; {
+            descriptor.apiType = ugi::GraphicsAPIType::VULKAN;
+            descriptor.deviceType = ugi::GraphicsDeviceType::DISCRETE;
             descriptor.debugLayer = 1;
             descriptor.graphicsQueueCount = 1;
             descriptor.transferQueueCount = 1;
@@ -133,7 +133,7 @@ namespace ugi {
         // texDesc.height = 16;
         // texDesc.type = TextureType::Texture2D;
         // texDesc.mipmapLevel = 1;
-        // texDesc.arrayLayers = 1;
+        // texDesc.layoutCount = 1;
         // _texture = device->createTexture(texDesc, ResourceAccessType::ShaderRead );
         // uint32_t texData[] = {
         //     0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
@@ -145,9 +145,9 @@ namespace ugi {
         //     0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
         //     0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
         // };
-        // std::vector<ImageRegion> regions;
+        // std::vector<image_region_t> regions;
         // std::vector<uint64_t> offsets = {0, 0, 0, 0};
-        // ImageRegion region;
+        // image_region_t region;
         // region.offset = {};
         // region.mipLevel = 0;
         // region.arrayIndex = 0;

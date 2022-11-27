@@ -1,4 +1,4 @@
-#include "Sampler.h"
+#include "sampler.h"
 
 namespace ugi {
 

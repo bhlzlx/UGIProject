@@ -344,15 +344,15 @@ namespace ugi {
 		return VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	}
 
-    static inline VkShaderStageFlagBits shaderStageToVk( ugi::shader_stage_t type ) {
+    static inline VkShaderStageFlagBits shaderStageToVk( ugi::ShaderStage type ) {
         switch ( type )
         {
-        case shader_stage_t::VertexShader : return VK_SHADER_STAGE_VERTEX_BIT;
-        case shader_stage_t::TessellationControlShader : return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-        case shader_stage_t::TessellationEvaluationShader : return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-        case shader_stage_t::GeometryShader : return VK_SHADER_STAGE_GEOMETRY_BIT;
-        case shader_stage_t::FragmentShader : return VK_SHADER_STAGE_FRAGMENT_BIT;
-        case shader_stage_t::ComputeShader : return VK_SHADER_STAGE_VERTEX_BIT;;
+        case ShaderStage::VertexShader : return VK_SHADER_STAGE_VERTEX_BIT;
+        case ShaderStage::TessellationControlShader : return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        case ShaderStage::TessellationEvaluationShader : return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        case ShaderStage::GeometryShader : return VK_SHADER_STAGE_GEOMETRY_BIT;
+        case ShaderStage::FragmentShader : return VK_SHADER_STAGE_FRAGMENT_BIT;
+        case ShaderStage::ComputeShader : return VK_SHADER_STAGE_VERTEX_BIT;;
             break;
         default:
             break;
@@ -360,15 +360,15 @@ namespace ugi {
         return VK_SHADER_STAGE_VERTEX_BIT;
     }
 
-    static inline VkPrimitiveTopology topolotyToVk(  ugi::topology_mode_t topoloty ) {
+    static inline VkPrimitiveTopology topolotyToVk(  ugi::TopologyMode topoloty ) {
         switch (topoloty)
 		{
-		case topology_mode_t::Points: return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-		case topology_mode_t::LineStrip: return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-		case topology_mode_t::LineList: return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-		case topology_mode_t::TriangleStrip: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-		case topology_mode_t::TriangleList: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		case topology_mode_t::TriangleFan: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+		case TopologyMode::Points: return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+		case TopologyMode::LineStrip: return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+		case TopologyMode::LineList: return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+		case TopologyMode::TriangleStrip: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+		case TopologyMode::TriangleList: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		case TopologyMode::TriangleFan: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
 			break;
 		}
 		return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
@@ -476,31 +476,31 @@ namespace ugi {
         return VK_CULL_MODE_NONE;
     }
 
-     static inline VkShaderStageFlags stageFlagsToVk( shader_stage_t shaderStage ) {
+     static inline VkShaderStageFlags stageFlagsToVk( ShaderStage shaderStage ) {
         VkShaderStageFlags stageFlags = 0;
         switch (shaderStage)
         {
-        case shader_stage_t::VertexShader: {
+        case ShaderStage::VertexShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
             break;
         }
-        case shader_stage_t::FragmentShader: {
+        case ShaderStage::FragmentShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
             break;
         }
-        case shader_stage_t::ComputeShader: {
+        case ShaderStage::ComputeShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
             break;
         }
-        case shader_stage_t::TessellationControlShader: {
+        case ShaderStage::TessellationControlShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
             break;
         }
-        case shader_stage_t::TessellationEvaluationShader: {
+        case ShaderStage::TessellationEvaluationShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
             break;
         }
-        case shader_stage_t::GeometryShader: {
+        case ShaderStage::GeometryShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT;
             break;
         }        

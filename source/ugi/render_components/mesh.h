@@ -19,7 +19,7 @@ namespace ugi {
         uint64_t                attriOffsets_[MaxVertexAttribute];
         //
         vertex_layout_t         vertexLayout_;
-        topology_mode_t         topologyMode_;
+        TopologyMode         topologyMode_;
         polygon_mode_t          polygonMode_;
         uint8_t                 uploaded_:1;
     public:
@@ -31,7 +31,7 @@ namespace ugi {
             , indexCount_(0)
             , attriCount_(0)
             , attriOffsets_{}
-            , topologyMode_(topology_mode_t::TriangleList)
+            , topologyMode_(TopologyMode::TriangleList)
             , polygonMode_(polygon_mode_t::Line)
             , uploaded_(0)
         {}
@@ -48,7 +48,7 @@ namespace ugi {
             return indexCount_;
         }
 
-        topology_mode_t topologyMode() const {
+        TopologyMode topologyMode() const {
             return topologyMode_;
         }
 
@@ -73,7 +73,7 @@ namespace ugi {
             uint8_t const* vb, uint32_t vbSize, 
             uint16_t const* indice, uint32_t indexCount,
             vertex_layout_t layout,
-            topology_mode_t topologyMode,
+            TopologyMode topologyMode,
             polygon_mode_t polygonMode,
             std::function<void(void*,CommandBuffer*)> onComplete
         );

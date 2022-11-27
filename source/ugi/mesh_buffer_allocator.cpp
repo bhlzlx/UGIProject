@@ -130,8 +130,8 @@ namespace ugi {
     struct buffer_cpy_t {
         VkBuffer dst;
         VkBuffer src;
-        BufferSubResource dstRes;
-        BufferSubResource srcRes;
+        buffer_subres_t dstRes;
+        buffer_subres_t srcRes;
     };
     static_assert(std::is_pod_v<buffer_cpy_t>, "");
 
@@ -154,7 +154,7 @@ namespace ugi {
         uint32_t totalSize = 0;
         for(auto& alloc_t: bufferAllocs_) { // 原来的alloc保持不变
             if(alloc_t.buffer) {
-                buffer_cpy_t cpy = { VK_NULL_HANDLE,alloc_t.buffer, BufferSubResource{totalSize, alloc_t.length}, BufferSubResource{alloc_t.offset, alloc_t.length} };
+                buffer_cpy_t cpy = { VK_NULL_HANDLE,alloc_t.buffer, buffer_subres_t{totalSize, alloc_t.length}, buffer_subres_t{alloc_t.offset, alloc_t.length} };
                 copies.push_back(cpy); // buffer 后续再更新
                 totalSize += alloc_t.length;
                 mesh_buffer_alloc_t alloc = {VK_NULL_HANDLE, totalSize, alloc_t.length, 0, 1};
@@ -175,7 +175,7 @@ namespace ugi {
                 ResourceAccessType::TransferSource, 
                 PipelineStages::VertexShading, StageAccess::Read,
                 PipelineStages::Transfer, StageAccess::Read,
-                BufferSubResource{0, (uint32_t)block.bufferSize}
+                buffer_subres_t{0, (uint32_t)block.bufferSize}
             );
         }
         // 更新相关数据

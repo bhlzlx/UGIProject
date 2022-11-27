@@ -79,7 +79,7 @@ namespace ugi {
                 //
         VkRenderPassBeginInfo                       _renderPassBeginInfo;
                 //
-        Size<uint32_t>                              _size; // 宽高
+        extent_2d_t<uint32_t>                       _size; // 宽高
     public:
         virtual void setClearValues( const renderpass_clearval_t& clearValues ) override;
         //== 

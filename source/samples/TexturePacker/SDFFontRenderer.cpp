@@ -66,7 +66,7 @@ namespace ugi {
         }
         //_pipelineDescription.vertexLayout.buffers[2].
         _pipelineDescription.pologonMode = polygon_mode_t::Fill;
-        _pipelineDescription.topologyMode = topology_mode_t::TriangleList;
+        _pipelineDescription.topologyMode = TopologyMode::TriangleList;
         _pipelineDescription.renderState.cullMode = CullMode::None;
         _pipelineDescription.renderState.blendState.enable = true;
         _pipeline = _device->createGraphicsPipeline(_pipelineDescription);
@@ -417,10 +417,10 @@ namespace ugi {
 
     void SDFFontRenderer::tickResource( ResourceCommandEncoder* resEncoder ) {
         for( auto& item : _updateItems) {
-            BufferSubResource vbSubRes = { 0, item.vertexBuffer->size() };
-            BufferSubResource ibSubRes = { 0, item.indexBuffer->size() };
-            BufferSubResource vbStagingSubRes = { 0, item.vertexBuffer->size() };
-            BufferSubResource ibStagingSubRes = { item.vertexBuffer->size(), item.indexBuffer->size() };
+            buffer_subres_t vbSubRes = { 0, item.vertexBuffer->size() };
+            buffer_subres_t ibSubRes = { 0, item.indexBuffer->size() };
+            buffer_subres_t vbStagingSubRes = { 0, item.vertexBuffer->size() };
+            buffer_subres_t ibStagingSubRes = { item.vertexBuffer->size(), item.indexBuffer->size() };
             resEncoder->updateBuffer( item.vertexBuffer, item.stagingBuffer, &vbSubRes, &vbStagingSubRes );
             resEncoder->updateBuffer( item.indexBuffer, item.stagingBuffer, &ibSubRes, &ibStagingSubRes );
             // 回收 staging buffer

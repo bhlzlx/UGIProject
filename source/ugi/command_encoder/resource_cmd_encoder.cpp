@@ -51,7 +51,7 @@ namespace ugi {
       //  AllCommands             = 1<<16,
 
     
-    void ResourceCommandEncoder::bufferBarrier(VkBuffer buff, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const BufferSubResource& res) {
+    void ResourceCommandEncoder::bufferBarrier(VkBuffer buff, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const buffer_subres_t& res) {
         VkBufferMemoryBarrier barrier; {
             barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
             barrier.pNext = nullptr;
@@ -74,7 +74,7 @@ namespace ugi {
         );
     }
 
-    void ResourceCommandEncoder::bufferTransitionBarrier( Buffer* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const BufferSubResource* subResource ) {
+    void ResourceCommandEncoder::bufferTransitionBarrier( Buffer* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const buffer_subres_t* subResource ) {
         if( buffer->accessType() == dstAccessType ) {
             return;
         }
@@ -102,7 +102,7 @@ namespace ugi {
         buffer->updateAccessType(dstAccessType);
     }
 
-    void ResourceCommandEncoder::imageTransitionBarrier( Texture* texture, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const ImageSubResource* subResource) {
+    void ResourceCommandEncoder::imageTransitionBarrier( Texture* texture, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const image_subres_t* subResource) {
         if( texture->accessType() == dstAccessType ) {
             return;
         }
@@ -120,7 +120,7 @@ namespace ugi {
         barrier.subresourceRange.baseMipLevel = subResource? subResource->baseMipLevel : 0;
         barrier.subresourceRange.levelCount = subResource ? subResource->mipLevelCount : texture->desc().mipmapLevel;
         barrier.subresourceRange.baseArrayLayer = subResource? subResource->baseLayer : 0;
-        barrier.subresourceRange.layerCount = subResource? subResource->size.depth : texture->desc().depth;
+        barrier.subresourceRange.layerCount = subResource? subResource->layerCount: texture->desc().layoutCount;
         barrier.image = texture->image();
         //
         VkCommandBuffer cmdbuf = *_commandBuffer;
@@ -137,7 +137,7 @@ namespace ugi {
     }
 
 
-    void ResourceCommandEncoder::updateBuffer( Buffer* _dst, Buffer* _src, BufferSubResource* _dstSubRes, BufferSubResource* _srcSubRes, bool uploadMode ) {
+    void ResourceCommandEncoder::updateBuffer( Buffer* _dst, Buffer* _src, buffer_subres_t* _dstSubRes, buffer_subres_t* _srcSubRes, bool uploadMode ) {
         VkBufferCopy region;
 
         VkDeviceSize dstOffset = _dstSubRes ? _dstSubRes->offset : 0;
@@ -164,7 +164,7 @@ namespace ugi {
         // 源buffer一般用完就回收了，可以省去转换回来的处理
     }
 
-    void ResourceCommandEncoder::blitImage(Texture* dst, Texture* src, const ImageRegion* dstRegions, const ImageRegion* srcRegions, uint32_t regionCount ) {
+    void ResourceCommandEncoder::blitImage(Texture* dst, Texture* src, const image_region_t* dstRegions, const image_region_t* srcRegions, uint32_t regionCount ) {
         imageTransitionBarrier( src, ResourceAccessType::TransferSource, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Read );
         imageTransitionBarrier( dst, ResourceAccessType::TransferDestination, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Write );
         std::vector<VkImageBlit> regions;
@@ -188,13 +188,13 @@ namespace ugi {
         vkCmdBlitImage(*_commandBuffer, src->image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regionCount, regions.data(), VkFilter::VK_FILTER_NEAREST );
     }
 
-    void ResourceCommandEncoder::updateImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount ) {
+    void ResourceCommandEncoder::updateImage( Texture* dst, Buffer* src, const image_region_t* regions, const uint32_t* offsets, uint32_t regionCount ) {
         imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
         // 一个 region 只能传输一个 mip level
         std::vector< VkBufferImageCopy > copies;
 
         for( uint32_t i = 0; i<regionCount; ++i) {
-            const ImageRegion& region = regions[i];
+            const image_region_t& region = regions[i];
             VkBufferImageCopy copy;
             copy.imageExtent.height = region.extent.height;
             copy.imageExtent.width = region.extent.width;
@@ -218,14 +218,14 @@ namespace ugi {
         vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)copies.size(), copies.data() );
     }
 
-    void ResourceCommandEncoder::replaceImage( Texture* dst, Buffer* src, const ImageRegion* regions, const uint32_t* offsets, uint32_t regionCount ) {
+    void ResourceCommandEncoder::replaceImage( Texture* dst, Buffer* src, const image_region_t* regions, const uint32_t* offsets, uint32_t regionCount ) {
         //
         imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, nullptr );
         // 一个 region 只能传输一个 mip level
         std::vector< VkBufferImageCopy > copies;
 
         for( uint32_t i = 0; i<regionCount; ++i) {
-            const ImageRegion& region = regions[i];
+            const image_region_t& region = regions[i];
             VkBufferImageCopy copy;
             copy.imageExtent.height = region.extent.height;
             copy.imageExtent.width = region.extent.width;
@@ -248,7 +248,7 @@ namespace ugi {
         vkCmdCopyBufferToImage( cmdbuf, src->buffer(), dst->image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)copies.size(), copies.data() );
     }
 
-    void ResourceCommandEncoder::copyBuffer(VkBuffer dst, VkBuffer src, BufferSubResource dstRange, BufferSubResource srcRange) {
+    void ResourceCommandEncoder::copyBuffer(VkBuffer dst, VkBuffer src, buffer_subres_t dstRange, buffer_subres_t srcRange) {
         assert(dstRange.size == srcRange.size);
         VkBufferCopy copy;
         copy.dstOffset = dstRange.offset;
@@ -267,12 +267,12 @@ namespace ugi {
      * @param offsets offsets in buffer
      * @param regionCount image region count
      */
-    void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const ImageRegion* regions, uint64_t const* offsets, uint32_t regionCount) {
+    void ResourceCommandEncoder::copyBufferToImage(VkImage dst, VkImageAspectFlags aspectFlags, VkBuffer src, const image_region_t* regions, uint64_t const* offsets, uint32_t regionCount) {
         //imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
         // 一个 region 只能传输一个 mip level
         std::vector<VkBufferImageCopy> copies;
         for( uint32_t i = 0; i<regionCount; ++i) {
-            const ImageRegion& region = regions[i];
+            const image_region_t& region = regions[i];
             VkBufferImageCopy copy;
             copy.imageExtent.height = region.extent.height;
             copy.imageExtent.width = region.extent.width;

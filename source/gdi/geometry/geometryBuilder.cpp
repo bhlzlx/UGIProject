@@ -226,12 +226,12 @@ namespace ugi {
             stagingBuffer->unmap(device);
             cmd->beginEncode(); {
                 auto resourceEncoder = cmd->resourceCommandEncoder(); {
-                    BufferSubResource srcSubRes;
+                    buffer_subres_t srcSubRes;
                     srcSubRes.offset = 0; srcSubRes.size = vertexBuffer->size();
                     resourceEncoder->updateBuffer(vertexBuffer, stagingBuffer, &srcSubRes, &srcSubRes);
                     srcSubRes.offset = vertexBuffer->size();
                     srcSubRes.size = indexBuffer->size();
-                    BufferSubResource dstSubRes = srcSubRes;
+                    buffer_subres_t dstSubRes = srcSubRes;
                     dstSubRes.offset = 0;
                     resourceEncoder->updateBuffer(indexBuffer, stagingBuffer, &dstSubRes, &srcSubRes);
                     resourceEncoder->endEncode();

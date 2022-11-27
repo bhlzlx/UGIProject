@@ -28,9 +28,9 @@ namespace ugi {
 
         _renderSystem = new ugi::RenderSystem();
 
-        ugi::DeviceDescriptor descriptor; {
-            descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
-            descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
+        ugi::device_descriptor_t descriptor; {
+            descriptor.apiType = ugi::GraphicsAPIType::VULKAN;
+            descriptor.deviceType = ugi::GraphicsDeviceType::DISCRETE;
             descriptor.debugLayer = 1;
             descriptor.graphicsQueueCount = 1;
             descriptor.transferQueueCount = 1;

@@ -115,9 +115,9 @@ namespace ugi {
                 writeOffset += dataLength;
             }
         }
-        std::vector<ImageRegion> regions;
+        std::vector<image_region_t> regions;
         for(uint32_t i = 0; i<file.GetMipCount(); ++i) {
-            ImageRegion region;
+            image_region_t region;
             region.mipLevel = 0;
             region.arrayIndex = 0;
             region.arrayCount = desc.depth;

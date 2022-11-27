@@ -47,9 +47,9 @@ namespace ugi {
 
         _renderSystem = new ugi::RenderSystem();
 
-        ugi::DeviceDescriptor descriptor; {
-            descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
-            descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
+        ugi::device_descriptor_t descriptor; {
+            descriptor.apiType = ugi::GraphicsAPIType::VULKAN;
+            descriptor.deviceType = ugi::GraphicsDeviceType::DISCRETE;
             descriptor.debugLayer = 1;
             descriptor.graphicsQueueCount = 1;
             descriptor.transferQueueCount = 1;
@@ -97,7 +97,7 @@ namespace ugi {
 
         auto resourceEncoder = updateCmd->resourceCommandEncoder();
 
-        BufferSubResource subRes;
+        buffer_subres_t subRes;
         subRes.offset = 0; subRes.size = m_vertexBuffer->size();
         resourceEncoder->updateBuffer( m_vertexBuffer, vertexStagingBuffer, &subRes, &subRes );
         subRes.size = m_indexBuffer->size();
@@ -114,7 +114,7 @@ namespace ugi {
         texDesc.height = 16;
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
-        texDesc.arrayLayers = 1;
+        texDesc.layoutCount = 1;
         _texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
 
         uint32_t texData[] = {
@@ -132,7 +132,7 @@ namespace ugi {
         memcpy(ptr, texData, sizeof(texData));
         texStagingBuffer->unmap(_device);
 
-        ImageSubResource texSubRes;
+        image_subres_t texSubRes;
         texSubRes.baseLayer = 0;
         texSubRes.offset = { 0, 0, 0 };
         texSubRes.size.depth = 1;

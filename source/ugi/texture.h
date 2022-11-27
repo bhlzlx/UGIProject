@@ -79,7 +79,7 @@ namespace ugi {
 
         void updateRegions(
             Device* device, 
-            const ImageRegion* regions, uint32_t count, 
+            const image_region_t* regions, uint32_t count, 
             uint8_t const* data, uint32_t dataSize, uint64_t const* offsets,
             GPUAsyncLoadManager* asnycLoadManager, 
             AsyncLoadCallback &&callback

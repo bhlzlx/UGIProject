@@ -1,6 +1,6 @@
 #include "command_queue.h"
 #include "command_buffer.h"
-#include "Semaphore.h"
+#include "semaphore.h"
 #include "device.h"
 
 namespace ugi {

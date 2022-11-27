@@ -112,7 +112,7 @@ namespace ugi {
                     _desc.width, _desc.height, _desc.depth
                 };
                 info.mipLevels = _desc.mipmapLevel;
-                info.arrayLayers = _desc.arrayLayers;
+                info.arrayLayers = _desc.layoutCount;
                 info.samples = VK_SAMPLE_COUNT_1_BIT;
                 info.tiling = VK_IMAGE_TILING_OPTIMAL;
                 info.usage = usageFlags;
@@ -191,7 +191,7 @@ namespace ugi {
         vkDestroyImageView(device->device(), internalView.view(), nullptr);
     }
 
-    void Texture::updateRegions(Device* device, const ImageRegion* regions, uint32_t count, uint8_t const* data, uint32_t size, uint64_t const* offsets, GPUAsyncLoadManager* asyncLoadManager, std::function<void(void*, CommandBuffer*)>&& callback) { 
+    void Texture::updateRegions(Device* device, const image_region_t* regions, uint32_t count, uint8_t const* data, uint32_t size, uint64_t const* offsets, GPUAsyncLoadManager* asyncLoadManager, std::function<void(void*, CommandBuffer*)>&& callback) { 
         // dealing staging buffer
         Buffer* staging = device->createBuffer(BufferType::StagingBuffer, size);
         auto ptr = staging->map(device);
@@ -240,14 +240,14 @@ namespace ugi {
 			blit.srcOffsets[1] = { (int32_t)this->desc().width, (int32_t)this->desc().height, (int32_t)this->desc().depth };
 			blit.srcSubresource.aspectMask = this->aspectFlags();
 			blit.srcSubresource.baseArrayLayer = 0;
-			blit.srcSubresource.layerCount = this->desc().arrayLayers;
+			blit.srcSubresource.layerCount = this->desc().layoutCount;
 			blit.srcSubresource.mipLevel = 0;
 			//
 			blit.dstOffsets[0] = {};
 			blit.dstOffsets[1] = { (int32_t)this->desc().width>>i, (int32_t)this->desc().height>>i, (int32_t)this->desc().depth };
 			blit.dstSubresource.aspectMask = this->aspectFlags();
 			blit.dstSubresource.baseArrayLayer = 0;
-			blit.dstSubresource.layerCount = this->desc().arrayLayers;
+			blit.dstSubresource.layerCount = this->desc().layoutCount;
 			blit.dstSubresource.mipLevel = i;
 			//
 			mipmapBlits.push_back(blit);

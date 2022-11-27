@@ -115,7 +115,7 @@ namespace ugi {
         }
         tex_desc_t texDesc;
         texDesc.type = TextureType::Texture2DArray;
-        texDesc.arrayLayers = arrayLayer;
+        texDesc.layoutCount = arrayLayer;
         texDesc.format = UGIFormat::R8_UNORM;
         texDesc.width = texDesc.height = texSize;
         texDesc.depth = 1;
@@ -346,9 +346,9 @@ namespace ugi {
             stagingBuffer->unmap(_device);
 
             std::vector<uint32_t> offsets;
-            std::vector<ImageRegion> regions;
+            std::vector<image_region_t> regions;
             for( const auto& item : _cachedTileItems ) {
-                ImageRegion region;
+                image_region_t region;
                 region.mipLevel = 0;
                 region.arrayIndex = item.glyphInfo->texIndex;
                 region.offset = { item.glyphInfo->bitmapOffsetX, item.glyphInfo->bitmapOffsetY, 0 };

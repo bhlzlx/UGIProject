@@ -26,7 +26,7 @@ namespace ugi {
     {
     }
 
-    bool StandardRenderContext::initialize(void* wnd, ugi::DeviceDescriptor deviceDesc, comm::IArchive* archive) {
+    bool StandardRenderContext::initialize(void* wnd, ugi::device_descriptor_t deviceDesc, comm::IArchive* archive) {
         _archive = archive;
         _renderSystem = new RenderSystem();
         _device = _renderSystem->createDevice(deviceDesc, archive);

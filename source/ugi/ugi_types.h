@@ -51,109 +51,77 @@ namespace ugi {
     };
 
     template <class T>
-    struct Point {
+    struct point_t {
         T x;
         T y;
     };
 
     template <class T>
-    struct Size {
+    struct extent_2d_t {
         T width;
         T height;
     };
 
     template <class T>
-    struct Size3D {
+    struct extent_3d_t {
         T width;
         T height;
         T depth;
     };
 
     template <class T>
-    struct Rect {
-        Point<T> origin;
-        Size<T> size;
+    struct rect_t {
+        point_t<T> origin;
+        extent_2d_t<T> size;
     };
 
     template <class T>
-    struct Offset2D {
+    struct offset_2d_t {
         T x, y;
     };
 
     template <class T>
-    struct Offset3D {
+    struct offset_3d_t {
         T x, y, z;
     };
 
-    struct Viewport {
+    struct viewport_t {
         float x, y;
         float width, height;
         float zNear, zFar;
     };
 
-    typedef Rect<int> Scissor;
+    typedef extent_2d_t<int> Scissor;
 
-    // image region used for operation
-    struct ImageRegion {
-        struct Offset {
-            int32_t x;
-            int32_t y;
-            int32_t z;
-            Offset(int32_t x = 0, int32_t y = 0, int32_t z = 0)
-                : x(x)
-                , y(y)
-                , z(z)
-            {
-            }
-        };
-        struct Extent {
-            uint32_t width;
-            uint32_t height;
-            uint32_t depth;
-            Extent(uint32_t width = 1, uint32_t height = 1, uint32_t depth = 1)
-                : width(width)
-                , height(height)
-                , depth(depth)
-            {
-            }
-        };
-        uint32_t mipLevel;
-        uint32_t arrayIndex; // texture array index only avail for texture array
-        uint32_t arrayCount;
-        Offset offset;
-        Extent extent;
-        //
-        ImageRegion(uint32_t mipLevel = 0, uint32_t arrayIndex = 0)
-            : mipLevel(mipLevel)
-            , arrayIndex(arrayIndex)
-            , offset()
-            , extent()
-        {
-        }
+    // 用于操作image的某一个miplevel上的区域
+    struct image_region_t {
+        uint32_t mipLevel = 0;
+        uint32_t arrayIndex = 0; // texture array index only avail for texture array
+        uint32_t arrayCount = 1;
+        offset_3d_t<int> offset = {};
+        extent_3d_t<uint32_t> extent = {};
     };
 
-    // image sub resource used for resource access synchornize
-    struct ImageSubResource {
+    // 用于给image的某几个miplevel加资源同步操作，它没有image_region_t那么精确
+    struct image_subres_t {
         uint32_t baseMipLevel;
         uint32_t mipLevelCount;
         uint32_t baseLayer;
         uint32_t layerCount;
-        Offset3D<uint32_t> offset;
-        Size3D<uint32_t> size;
     };
 
-    struct BufferSubResource {
+    struct buffer_subres_t {
         uint32_t offset;
         uint32_t size;
     };
 
-    enum GRAPHICS_API_TYPE {
+    enum GraphicsAPIType {
         VULKAN = 0,
         DX12 = 1,
         METAL = 2
     };
 
-    enum GRAPHICS_DEVICE_TYPE {
+    enum GraphicsDeviceType {
         INTEGATED = 0,
         DISCRETE = 1,
         SOFTWARE = 2,
@@ -165,16 +133,16 @@ namespace ugi {
         Resetable,
     };
 
-    struct DeviceDescriptor {
-        GRAPHICS_API_TYPE apiType;
-        GRAPHICS_DEVICE_TYPE deviceType;
+    struct device_descriptor_t {
+        GraphicsAPIType apiType;
+        GraphicsDeviceType deviceType;
         uint8_t debugLayer;
         uint8_t graphicsQueueCount; // for vulkan API, queue count must be specified when creating the device
         uint8_t transferQueueCount; //
         void* wnd; // surface window handle
     };
 
-    enum class shader_stage_t : uint8_t {
+    enum class ShaderStage : uint8_t {
         VertexShader = 0,
         TessellationControlShader,
         TessellationEvaluationShader,
@@ -253,7 +221,7 @@ namespace ugi {
         Invalid
     };
 
-    enum class topology_mode_t : uint8_t {
+    enum class TopologyMode : uint8_t {
         Points = 0,
         LineStrip,
         LineList,
@@ -495,7 +463,7 @@ namespace ugi {
         TextureType type; // texture types
         UGIFormat format; // format
         uint32_t mipmapLevel; // mip map level count
-        uint32_t arrayLayers; // array layer count
+        uint32_t layoutCount; // array layer count
         //
         uint32_t width; // size
         uint32_t height;
@@ -556,7 +524,7 @@ namespace ugi {
         alignas(1) uint8_t binding = 0xff;
         alignas(1) uint8_t dataSize = 0;
         alignas(1) res_descriptor_type type = res_descriptor_type::InputAttachment;
-        alignas(1) shader_stage_t shaderStage = shader_stage_t::ComputeShader;
+        alignas(1) ShaderStage shaderStage = ShaderStage::ComputeShader;
     };
 
     struct descriptor_set_info_t {
@@ -566,7 +534,7 @@ namespace ugi {
     };
 
     struct shader_desc_t {
-        alignas(4) shader_stage_t type;
+        alignas(4) ShaderStage type;
         union {
             alignas(8) char name[64];
             struct {
@@ -575,7 +543,7 @@ namespace ugi {
             };
         };
         shader_desc_t()
-            : type(shader_stage_t::ShaderStageCount)
+            : type(ShaderStage::ShaderStageCount)
             , name {}
         {
         }
@@ -590,13 +558,13 @@ namespace ugi {
 
     struct pipeline_desc_t {
         // == 生成好的信息
-        alignas(8) shader_desc_t shaders[(uint8_t)shader_stage_t::ShaderStageCount];
+        alignas(8) shader_desc_t shaders[(uint8_t)ShaderStage::ShaderStageCount];
         alignas(4) uint32_t argumentCount = 0;
         alignas(4) descriptor_set_info_t argumentLayouts[MaxArgumentCount];
         alignas(4) vertex_layout_t vertexLayout;
-        alignas(4) pipeline_constants_t pipelineConstants[(uint8_t)shader_stage_t::ShaderStageCount];
+        alignas(4) pipeline_constants_t pipelineConstants[(uint8_t)ShaderStage::ShaderStageCount];
         alignas(4) pipeline_state_t renderState;
-        alignas(1) topology_mode_t topologyMode;
+        alignas(1) TopologyMode topologyMode;
         alignas(4) uint32_t tessPatchCount = 0;
     };
 
@@ -679,6 +647,14 @@ namespace ugi {
             , res {}
         {
         }
+    };
+
+    struct gpu_semaphore_t {
+        uint64_t id;
+    };
+
+    struct gpu_fence_t {
+        uint64_t id;
     };
 
 }

@@ -82,17 +82,17 @@ namespace ugi {
 			// unsupported texture format
 			return nullptr;
 		}
-		desc.arrayLayers = 1;
+		desc.layoutCount = 1;
 		desc.depth = 1;
 		desc.mipmapLevel = header->mipLevelCount;
 		if (header->faceCount == 6) {
 			if (header->arraySize >= 1) {
 				desc.type = TextureType::TextureCubeArray;
-				desc.arrayLayers = header->faceCount * header->arraySize;
+				desc.layoutCount = header->faceCount * header->arraySize;
 			}
 			else {
 				desc.type = TextureType::TextureCube;
-				desc.arrayLayers = 6;
+				desc.layoutCount = 6;
 			}
 		}
 		else if( header->pixelDepth >=1 ) {
@@ -102,7 +102,7 @@ namespace ugi {
 		else {
 			if (header->arraySize >= 1) {
 				desc.type = TextureType::Texture2DArray;
-				desc.arrayLayers = header->arraySize;
+				desc.layoutCount = header->arraySize;
 			}
 			else
 			{
@@ -142,9 +142,9 @@ namespace ugi {
 			ptr += mipBytes;
 			contentR += mipBytes;
 		}
-		std::vector<ImageRegion> regions;
+		std::vector<image_region_t> regions;
 		for(uint32_t i = 0; i<header->mipLevelCount; ++i) {
-			ImageRegion region;
+			image_region_t region;
 			region.arrayIndex = 0;
 			region.arrayCount = header->arraySize;
 			region.mipLevel = i;
@@ -174,11 +174,11 @@ namespace ugi {
         textureDescription.height = y;
         textureDescription.depth = 1;
         textureDescription.mipmapLevel = mipmapLevel;
-        textureDescription.arrayLayers = 1;
+        textureDescription.layoutCount = 1;
         textureDescription.type = TextureType::Texture2D;
         auto texture = device->createTexture(textureDescription);
 		//
-		ImageRegion region;
+		image_region_t region;
 		region.arrayIndex = 0;
 		region.arrayCount = 1;
 		region.extent = { (uint32_t)x, (uint32_t)y, (uint32_t)1 };

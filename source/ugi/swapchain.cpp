@@ -2,7 +2,7 @@
 #include "vulkan_function_declare.h"
 #include "device.h"
 #include "command_queue.h"
-#include "Semaphore.h"
+#include "semaphore.h"
 #include "texture.h"
 #include "ugi_type_mapping.h"
 #include "render_pass.h"
@@ -268,7 +268,7 @@ namespace ugi {
             colorTexDesc.width = _createInfo.imageExtent.width;
             colorTexDesc.height = _createInfo.imageExtent.height;
             colorTexDesc.mipmapLevel = 1;
-            colorTexDesc.arrayLayers = 1;
+            colorTexDesc.layoutCount = 1;
             colorTexDesc.type = TextureType::Texture2D;
             _embedColors[embedImageIndex] = Texture::CreateTexture( device, _images[embedImageIndex], colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
             //

@@ -34,9 +34,9 @@ namespace ugi {
 
     bool GaussBlurTest::initialize(void* _wnd, comm::IArchive* archive) {
         printf("initialize\n");
-        ugi::DeviceDescriptor descriptor; {
-            descriptor.apiType = ugi::GRAPHICS_API_TYPE::VULKAN;
-            descriptor.deviceType = ugi::GRAPHICS_DEVICE_TYPE::DISCRETE;
+        ugi::device_descriptor_t descriptor; {
+            descriptor.apiType = ugi::GraphicsAPIType::VULKAN;
+            descriptor.deviceType = ugi::GraphicsDeviceType::DISCRETE;
             descriptor.debugLayer = 1;
             descriptor.graphicsQueueCount = 1;
             descriptor.transferQueueCount = 1;
@@ -108,11 +108,11 @@ namespace ugi {
             if(texture_->uploaded()) {
                 auto imgWidth = texture_->desc().width;
                 auto imgHeight = texture_->desc().height;
-                ugi::ImageRegion srcRegion;
+                ugi::image_region_t srcRegion;
                 srcRegion.arrayIndex = 0; srcRegion.mipLevel = 0;
                 srcRegion.offset = {};
                 srcRegion.extent = { imgWidth, imgHeight, 1 };
-                ugi::ImageRegion dstRegion;
+                ugi::image_region_t dstRegion;
                 dstRegion.arrayIndex = 0; dstRegion.mipLevel = 0;
                 dstRegion.offset = {};
                 dstRegion.extent = { imgWidth, imgHeight, 1 };

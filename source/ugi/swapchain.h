@@ -31,7 +31,7 @@ namespace ugi {
         uint32_t                            _imageIndex;
         uint32_t                            _flightIndex;
         VkBool32                            _available;
-        Size<uint32_t>                      _size;
+        extent_2d_t<uint32_t>                      _size;
         //
     private:
         VkSurfaceKHR createSurface( Device* device, void* window );

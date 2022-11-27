@@ -40,7 +40,7 @@ namespace ugi {
         std::vector<queue_submit_t>     _submits;
     public:
         StandardRenderContext();
-        bool initialize(void* _wnd, ugi::DeviceDescriptor deviceDesc, comm::IArchive* archive);
+        bool initialize(void* _wnd, ugi::device_descriptor_t deviceDesc, comm::IArchive* archive);
         bool onPreTick(); // sync gpu result
         bool onPostTick(); // present the swapchain
         bool onResize(uint32_t width, uint32_t height);

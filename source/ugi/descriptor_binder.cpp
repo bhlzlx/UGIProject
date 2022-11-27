@@ -11,52 +11,6 @@
 namespace ugi {
 
     VkSampler CreateSampler( Device* device, const sampler_state_t& samplerState );
-    // 
-    // vulkan 的 handle是 set/binding 组合
-    // uint32_t DescriptorBinder::GetDescriptorHandle(const char* descriptorName, const pipeline_desc_t& pipelineDescription, res_descriptor_info_t* descriptorInfo ) 
-    // {
-    //     DescriptorHandleImp handle;
-    //     handle.descriptorIndex = 0;
-    //     handle.specifiedIndex = 0;
-    //     handle.binding = 0;
-    //     handle.handle = 0;
-    //     //
-    //     uint32_t dynamicBufferIndex = 0;
-    //     uint32_t imageIndex = 0;
-
-    //     for( uint32_t argIndex = 0; argIndex< pipelineDescription.argumentCount; ++argIndex) {
-    //         auto setIndex = pipelineDescription.argumentLayouts[argIndex].index;
-    //         handle.setID = setIndex;
-    //         for( uint32_t descriptorIndex = 0; descriptorIndex < pipelineDescription.argumentLayouts[argIndex].descriptorCount; ++descriptorIndex) {
-    //             const auto& descriptor = pipelineDescription.argumentLayouts[argIndex].descriptors[descriptorIndex];
-    //             auto binding = descriptor.binding;
-    //             assert(handle.binding <= binding);
-    //             handle.binding = binding;
-    //             if( strcmp(descriptor.name, descriptorName) == 0 ) {
-    //                 handle.bindingIndex = descriptorIndex;                    
-    //                 handle.setIndex = argIndex;
-    //                 if(isDynamicBufferType( descriptor.type)) {
-    //                     handle.specifiedIndex = dynamicBufferIndex;
-    //                 } else if( isImageType( descriptor.type) ) {
-    //                     handle.specifiedIndex = imageIndex;
-    //                 }
-    //                 assert( handle.specifiedIndex < 16 );
-    //                 if(descriptorInfo) {
-    //                     *descriptorInfo = descriptor;
-    //                 }
-    //                 return handle.handle;
-    //             }
-    //             ++handle.descriptorIndex;
-    //             // 处理动态绑定（buffer）
-    //             if(isDynamicBufferType( descriptor.type)) {
-    //                 ++dynamicBufferIndex;
-    //             } else if( isImageType( descriptor.type) ) {
-    //                 ++imageIndex;
-    //             }
-    //         }
-    //     }
-    //     return ~0;
-    // }
 
     void DescriptorBinder::_writeDescriptorResource( const res_descriptor_t& resource ) {
         DescriptorHandleImp h;
@@ -217,22 +171,6 @@ namespace ugi {
     VkPipelineLayout GetPipelineLayout( const MaterialLayout* argGroupLayout ) {
         return argGroupLayout->pipelineLayout();
     }
-
-    // bool ArgumentGroup::prepairResource( ResourceCommandEncoder* commandEncoder ) {
-    //     if( !validateDescriptorSets()) {
-    //         return false;
-    //     }
-    //      // update all image layouts
-    //     for( uint32_t i = 0; i < _groupLayout->imageResourceTotal(); ++i ) {
-    //         auto type = _groupLayout->imageResourceType(i);
-    //         if( type == ArgumentDescriptorType::Image ) {
-    //             commandEncoder->imageTransitionBarrier( _imageResources[i].texture(), ResourceAccessType::ShaderRead, PipelineStages::Bottom, StageAccess::Write, PipelineStages::VertexInput, StageAccess::Read);
-    //         } else if( type == ArgumentDescriptorType::StorageImage ) {
-    //             commandEncoder->imageTransitionBarrier( _imageResources[i].texture(), ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
-    //         }
-    //     }
-    //     return true;
-    // }
 
     void DescriptorBinder::reset() {
         _reallocBitMask.reset();

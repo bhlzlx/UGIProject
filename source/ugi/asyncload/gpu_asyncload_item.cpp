@@ -1,6 +1,6 @@
 #include "gpu_asyncload_item.h"
 #include <device.h>
-#include <Semaphore.h>
+#include <semaphore.h>
 #include <command_queue.h>
 #include <render_components/mesh.h>
 

@@ -24,7 +24,7 @@ namespace ugi {
     //
     class DescriptorBinder {
     private:
-        const MaterialLayout*                                      _groupLayout;
+        const MaterialLayout*                                           _groupLayout;
         // 资源绑定信息最终决定放在ArgumentGroup对象里了，主要是因为这个uniform更新的时候如果是做ringbuffer那么这个buffer在下一次绑定的时候可能就不是它了，这个情况下需要重新生成新的 descriptor,旧的 descriptor 回收
         // 所以我们如果需要做这个判断，就需要存储之前的绑定信息，所以最终决定绑定的资源放在这里了
         uint32_t                                                        _resourceMasks[MaxArgumentCount];   ///> 记录哪些资源已经绑定上了，资源刷新绑定到 descriptor set上时是需要做完整性检验的
@@ -57,7 +57,6 @@ namespace ugi {
         void reset();
         //* 更新绑定的 API
         void updateDescriptor(const res_descriptor_t& resource);
-        // bool prepairResource(ResourceCommandEncoder* encoder);
         void bind(CommandBuffer const* commandBuffer);
         ~DescriptorBinder();
     public:

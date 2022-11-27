@@ -79,18 +79,18 @@ PFN_vkCreateXlibSurfaceKHR vkCreateXlibSurfaceKHR;
 
 namespace ugi {
 
-    VkPhysicalDeviceType MappingDeviceType( ugi::GRAPHICS_DEVICE_TYPE _type ) {
+    VkPhysicalDeviceType MappingDeviceType( ugi::GraphicsDeviceType _type ) {
         switch( _type ) {
-            case GRAPHICS_DEVICE_TYPE::INTEGATED: {
+            case GraphicsDeviceType::INTEGATED: {
                 return VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
             }
-            case GRAPHICS_DEVICE_TYPE::DISCRETE: {
+            case GraphicsDeviceType::DISCRETE: {
                 return VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
             }
-            case GRAPHICS_DEVICE_TYPE::SOFTWARE: {
+            case GraphicsDeviceType::SOFTWARE: {
                 return VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_CPU;
             }
-            case GRAPHICS_DEVICE_TYPE::OTHER: {
+            case GraphicsDeviceType::OTHER: {
                 return VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_OTHER;
             }
         }
@@ -99,7 +99,7 @@ namespace ugi {
 
     DebugReporterVk debugReporter;
 
-    Device* RenderSystem::createDevice( const DeviceDescriptor& _descriptor, comm::IArchive* archive) {
+    Device* RenderSystem::createDevice( const device_descriptor_t& _descriptor, comm::IArchive* archive) {
         m_deviceDescriptorVk = _descriptor;
         auto library = OpenLibrary(VULKAN_LIBRARY_NAME);
         if (library == NULL) {
@@ -559,7 +559,7 @@ namespace ugi {
     }
 
     ComputePipeline* Device::createComputePipeline( const pipeline_desc_t& pipelineDescription ) {
-        assert( pipelineDescription.shaders[(uint32_t)shader_stage_t::ComputeShader].spirvData );
+        assert( pipelineDescription.shaders[(uint32_t)ShaderStage::ComputeShader].spirvData );
         return ComputePipeline::CreatePipeline(this, pipelineDescription);
     }
 

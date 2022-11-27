@@ -1,4 +1,4 @@
-#include "Semaphore.h"
+#include "semaphore.h"
 #include <device.h>
 
 namespace ugi {

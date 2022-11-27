@@ -30,7 +30,7 @@ namespace ugi {
                 }
             }
             pipelineDesc.pologonMode = polygon_mode_t::Fill;
-            pipelineDesc.topologyMode = topology_mode_t::TriangleList;
+            pipelineDesc.topologyMode = TopologyMode::TriangleList;
             pipelineDesc.renderState.cullMode = CullMode::None;
             pipelineDesc.renderState.blendState.enable = true;
             _pipeline = _device->createGraphicsPipeline(pipelineDesc);

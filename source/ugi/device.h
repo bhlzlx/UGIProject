@@ -15,7 +15,7 @@
 namespace ugi {
 
     class MaterialLayout;
-    struct DeviceDescriptorVulkan : public DeviceDescriptor {
+    struct DeviceDescriptorVulkan : public device_descriptor_t {
         //
         constexpr static uint32_t MaxQueueCountSupport = 8;
         //
@@ -37,8 +37,8 @@ namespace ugi {
             , archive(nullptr) {
         }
         
-        DeviceDescriptorVulkan( const DeviceDescriptor& _baseDesc )
-            : DeviceDescriptor( _baseDesc )
+        DeviceDescriptorVulkan( const device_descriptor_t& _baseDesc )
+            : device_descriptor_t( _baseDesc )
         {
         }
     };
@@ -167,7 +167,7 @@ namespace ugi {
     public:
         RenderSystem() {
         }
-        Device* createDevice( const DeviceDescriptor& _descriptor, comm::IArchive* archive);
+        Device* createDevice( const device_descriptor_t& _descriptor, comm::IArchive* archive);
         //
         const DeviceDescriptorVulkan* getVulkanDeviceDescriptor() const {
             return &m_deviceDescriptorVk;
