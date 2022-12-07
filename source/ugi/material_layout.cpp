@@ -1,9 +1,8 @@
+#include "material_layout.inl"
 #include "descriptor_binder.h"
 #include "buffer.h"
 #include "texture.h"
-#include "descriptor_binder.h"
 #include "device.h"
-#include "material_layout.inl"
 
 namespace ugi {
 
