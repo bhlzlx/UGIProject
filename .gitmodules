@@ -19,3 +19,6 @@
 [submodule "thirdpart/stb"]
 	path = thirdpart/stb
 	url = https://github.com/nothings/stb
+[submodule "thirdpart/imgui"]
+	path = thirdpart/imgui
+	url = https://github.com/ocornut/imgui.git

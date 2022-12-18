@@ -38,6 +38,8 @@ public:
     }
     virtual void onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y) {
     }
+
+    virtual ~UGIApplication() {}
 };
 
 UGIApplication * GetApplication();

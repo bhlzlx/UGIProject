@@ -7,6 +7,7 @@
 #include <vector>
 #include <array>
 #include <cstdint>
+#include <string>
 #include "ugi_utility.h"
 
 namespace ugi {

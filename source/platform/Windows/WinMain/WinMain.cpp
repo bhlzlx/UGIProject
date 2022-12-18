@@ -6,6 +6,10 @@
 #include <cmath>
 #include <io/archive.h>
 
+#if USE_IMGUI
+    extern LRESULT WINAPI ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
+
 #define MAX_LOADSTRING 100
 
 static int captionHeight;
@@ -272,8 +276,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         object->onMouseEvent(UGIApplication::RButtonMouse, UGIApplication::MouseUp, x, y);
         break;
     }
-    default:
+    default: {
+        #if USE_IMGUI
+        if(ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam)) {
+            return TRUE;
+        }
+        #endif
         return DefWindowProc(hWnd, message, wParam, lParam);
+    }
     }
     return 0;
 }

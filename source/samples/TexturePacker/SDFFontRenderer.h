@@ -220,8 +220,8 @@ namespace ugi {
         void resize( uint32_t width, uint32_t height );
         //==== Build functions
         void beginBuild();
-        // 这个接口默认会给分配一个新的 style/transform index位以及数据元
-        IndexHandle appendText( float x, float y, SDFChar* text, uint32_t length, const Transform& transform, const Style& style, hgl::RectScope2f& rect );
+        // 这个接口默认会给分配一个新的 style/transform index位以及数据uint32_t元
+        IndexHandle appendText( float x, float y, SDFChar* text,  length, const Transform& transform, const Style& style, hgl::RectScope2f& rect );
         // 这个接口是用来重用的
         IndexHandle appendTextReuseTransform( 
             float x, float y, SDFChar* text, uint32_t length,

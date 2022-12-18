@@ -1,4 +1,5 @@
 ﻿#include "ugi_types.h"
+#include <ugi/vulkan_declare.h>
 
 namespace ugi {
 
