@@ -8,7 +8,7 @@ PRIVATE
 
 target_compile_options(GaussBlur
 PRIVATE
-    $<$<IN_LIST:${CMAKE_CXX_COMPILER_ID}, "GNU">: -municode>
+    $<$<IN_LIST:${CMAKE_CXX_COMPILER_ID},"GNU">: -municode>
 )
 
 target_include_directories(GaussBlur

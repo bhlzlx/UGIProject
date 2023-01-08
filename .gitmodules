@@ -22,3 +22,6 @@
 [submodule "thirdpart/imgui"]
 	path = thirdpart/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "gui"]
+	path = gui
+	url = https://github.com/bhlzlx/gui

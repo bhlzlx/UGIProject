@@ -27,3 +27,5 @@ endif()
 add_subdirectory( thirdpart )
 
 add_subdirectory( source )
+
+add_subdirectory( gui )
