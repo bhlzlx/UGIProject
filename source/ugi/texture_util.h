@@ -14,8 +14,8 @@ namespace ugi {
                     auto resEnc = cb->resourceCommandEncoder();
                     resEnc->imageTransitionBarrier(
                         _textures[i], ResourceAccessType::ShaderRead, 
-                        PipelineStages::Bottom, StageAccess::Write,
-                        PipelineStages::FragmentShading, StageAccess::Read,
+                        pipeline_stage_t::Bottom, StageAccess::Write,
+                        pipeline_stage_t::FragmentShading, StageAccess::Read,
                         nullptr
                     );
                     resEnc->endEncode();

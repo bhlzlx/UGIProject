@@ -84,7 +84,7 @@ namespace ugi {
         }
 
         pipelineDesc.pologonMode = polygon_mode_t::Fill;
-        pipelineDesc.topologyMode = TopologyMode::TriangleList;
+        pipelineDesc.topologyMode = topology_mode_t::TriangleList;
 
         // 因为我们buffer放同一块内存了，这里特殊处理一下
         uint32_t fullStride = 0;
@@ -119,7 +119,7 @@ namespace ugi {
             _renderCompleteSemaphores[i] = _device->createSemaphore();
             _commandBuffers[i] = _graphicsQueue->createCommandBuffer( _device );
         }
-        pipelineDesc.renderState.cullMode = CullMode::None;
+        pipelineDesc.renderState.cullMode = cull_mode_t::None;
         pipelineDesc.renderState.blendState.enable = false;
         _pipeline = _device->createGraphicsPipeline(pipelineDesc);
         //

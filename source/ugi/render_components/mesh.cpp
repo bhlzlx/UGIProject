@@ -44,7 +44,7 @@ namespace ugi {
         uint8_t const* vb, uint32_t vbSize,
         uint16_t const* indice, uint32_t indexCount,
         vertex_layout_t layout,
-        TopologyMode topologyMode,
+        topology_mode_t topologyMode,
         polygon_mode_t polygonMode,
         std::function<void(void*,CommandBuffer*)> callback
     ) {

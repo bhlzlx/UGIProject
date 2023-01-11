@@ -145,7 +145,7 @@ namespace ugi {
         void* wnd; // surface window handle
     };
 
-    enum class ShaderStage : uint8_t {
+    enum class shader_stage_t : uint8_t {
         VertexShader = 0,
         TessellationControlShader,
         TessellationEvaluationShader,
@@ -155,7 +155,7 @@ namespace ugi {
         ShaderStageCount,
     };
 
-    enum class PipelineStages {
+    enum class pipeline_stage_t {
         Top = 1 << 0,
         DrawIndirect = 1 << 1,
         VertexInput = 1 << 2,
@@ -224,7 +224,7 @@ namespace ugi {
         Invalid
     };
 
-    enum class TopologyMode : uint8_t {
+    enum class topology_mode_t : uint8_t {
         Points = 0,
         LineStrip,
         LineList,
@@ -233,7 +233,7 @@ namespace ugi {
         TriangleFan,
     };
 
-    enum class CompareFunction : uint8_t {
+    enum class compare_function_t : uint8_t {
         Never,
         Less,
         Equal,
@@ -243,7 +243,7 @@ namespace ugi {
         Always,
     };
 
-    enum class BlendFactor : uint8_t {
+    enum class blend_factor_t : uint8_t {
         Zero,
         One,
         SourceColor,
@@ -258,13 +258,13 @@ namespace ugi {
         InvertDestinationAlpha,
     };
 
-    enum class BlendOperation : uint8_t {
+    enum class blend_operation_t : uint8_t {
         Add,
         Subtract,
         Revsubtract,
     };
 
-    enum class StencilOperation : uint8_t {
+    enum class stencil_operation : uint8_t {
         Keep,
         Zero,
         Replace,
@@ -368,7 +368,7 @@ namespace ugi {
         TextureFilter mip : 8;
         //
         TextureCompareMode compareMode : 8;
-        CompareFunction compareFunction : 8;
+        compare_function_t compareFunction : 8;
         bool operator<(const sampler_state_t& _ss) const
         {
             return *(uint64_t*)this < *(uint64_t*)&_ss;
@@ -392,35 +392,35 @@ namespace ugi {
     struct depth_state_t {
         alignas(1) uint8_t writable = 1;
         alignas(1) uint8_t testable = 1;
-        alignas(1) CompareFunction cmpFunc = CompareFunction::LessEqual;
+        alignas(1) compare_function_t cmpFunc = compare_function_t::LessEqual;
     };
 
     struct blend_state_t {
         alignas(1) uint8_t enable = 1;
-        alignas(1) BlendFactor srcFactor = BlendFactor::SourceAlpha;
-        alignas(1) BlendFactor dstFactor = BlendFactor::InvertSourceAlpha;
-        alignas(1) BlendOperation op = BlendOperation::Add;
+        alignas(1) blend_factor_t srcFactor = blend_factor_t::SourceAlpha;
+        alignas(1) blend_factor_t dstFactor = blend_factor_t::InvertSourceAlpha;
+        alignas(1) blend_operation_t op = blend_operation_t::Add;
     };
 
     struct stencil_state_t {
         alignas(1) uint8_t enable = 0;
-        alignas(1) StencilOperation opFail = StencilOperation::Keep;
-        alignas(1) StencilOperation opZFail = StencilOperation::Keep;
-        alignas(1) StencilOperation opPass = StencilOperation::Keep;
+        alignas(1) stencil_operation opFail = stencil_operation::Keep;
+        alignas(1) stencil_operation opZFail = stencil_operation::Keep;
+        alignas(1) stencil_operation opPass = stencil_operation::Keep;
         alignas(1) uint8_t enableCCW = 0;
-        alignas(1) StencilOperation opFailCCW = StencilOperation::Keep;
-        alignas(1) StencilOperation opZFailCCW = StencilOperation::Keep;
-        alignas(1) StencilOperation opPassCCW = StencilOperation::Keep;
-        alignas(1) CompareFunction cmpFunc = CompareFunction::Greater;
+        alignas(1) stencil_operation opFailCCW = stencil_operation::Keep;
+        alignas(1) stencil_operation opZFailCCW = stencil_operation::Keep;
+        alignas(1) stencil_operation opPassCCW = stencil_operation::Keep;
+        alignas(1) compare_function_t cmpFunc = compare_function_t::Greater;
         alignas(4) uint32_t mask = 0xffffffff;
     };
 
-    enum class FrontFace : uint8_t {
+    enum class front_face_t : uint8_t {
         ClockWise = 0,
         CounterClockWise = 1,
     };
 
-    enum class CullMode : uint8_t {
+    enum class cull_mode_t : uint8_t {
         None = 0,
         Front = 1,
         Back = 2
@@ -438,8 +438,8 @@ namespace ugi {
         float depthBiasSlopeFactor = 0.0f;
         float depthBiasClamp = 0.0f;
         //
-        FrontFace frontFace = FrontFace::ClockWise;
-        CullMode cullMode = CullMode::None;
+        front_face_t frontFace = front_face_t::ClockWise;
+        cull_mode_t cullMode = cull_mode_t::None;
         polygon_mode_t polygonMode = polygon_mode_t::Fill;
     };
     //
@@ -452,8 +452,8 @@ namespace ugi {
 
     struct pipeline_state_t {
         alignas(1) uint8_t writeMask = 0xff;
-        alignas(1) CullMode cullMode = CullMode::None;
-        alignas(1) FrontFace windingMode = FrontFace::ClockWise;
+        alignas(1) cull_mode_t cullMode = cull_mode_t::None;
+        alignas(1) front_face_t windingMode = front_face_t::ClockWise;
         alignas(1) uint8_t scissorEnable = 1;
         alignas(4) depth_state_t depthState;
         alignas(4) blend_state_t blendState;
@@ -527,7 +527,7 @@ namespace ugi {
         alignas(1) uint8_t binding = 0xff;
         alignas(1) uint8_t dataSize = 0;
         alignas(1) res_descriptor_type type = res_descriptor_type::InputAttachment;
-        alignas(1) ShaderStage shaderStage = ShaderStage::ComputeShader;
+        alignas(1) shader_stage_t shaderStage = shader_stage_t::ComputeShader;
     };
 
     struct descriptor_set_info_t {
@@ -537,7 +537,7 @@ namespace ugi {
     };
 
     struct shader_desc_t {
-        alignas(4) ShaderStage type;
+        alignas(4) shader_stage_t type;
         union {
             alignas(8) char name[64];
             struct {
@@ -546,7 +546,7 @@ namespace ugi {
             };
         };
         shader_desc_t()
-            : type(ShaderStage::ShaderStageCount)
+            : type(shader_stage_t::ShaderStageCount)
             , name {}
         {
         }
@@ -561,13 +561,13 @@ namespace ugi {
 
     struct pipeline_desc_t {
         // == 生成好的信息
-        alignas(8) shader_desc_t shaders[(uint8_t)ShaderStage::ShaderStageCount];
+        alignas(8) shader_desc_t shaders[(uint8_t)shader_stage_t::ShaderStageCount];
         alignas(4) uint32_t argumentCount = 0;
         alignas(4) descriptor_set_info_t argumentLayouts[MaxArgumentCount];
         alignas(4) vertex_layout_t vertexLayout;
-        alignas(4) pipeline_constants_t pipelineConstants[(uint8_t)ShaderStage::ShaderStageCount];
+        alignas(4) pipeline_constants_t pipelineConstants[(uint8_t)shader_stage_t::ShaderStageCount];
         alignas(4) pipeline_state_t renderState;
-        alignas(1) TopologyMode topologyMode;
+        alignas(1) topology_mode_t topologyMode;
         alignas(4) uint32_t tessPatchCount = 0;
     };
 

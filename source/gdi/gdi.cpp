@@ -30,8 +30,8 @@ namespace ugi {
                 }
             }
             pipelineDesc.pologonMode = polygon_mode_t::Fill;
-            pipelineDesc.topologyMode = TopologyMode::TriangleList;
-            pipelineDesc.renderState.cullMode = CullMode::None;
+            pipelineDesc.topologyMode = topology_mode_t::TriangleList;
+            pipelineDesc.renderState.cullMode = cull_mode_t::None;
             pipelineDesc.renderState.blendState.enable = true;
             _pipeline = _device->createGraphicsPipeline(pipelineDesc);
             _pipelineDesc = *(ugi::pipeline_desc_t*)mem;

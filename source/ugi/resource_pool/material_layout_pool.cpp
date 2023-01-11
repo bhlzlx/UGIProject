@@ -86,12 +86,12 @@ namespace ugi {
             }
             std::vector<VkPushConstantRange> ranges;
             VkShaderStageFlags rangeFlagBits = 0;
-            for( uint32_t i = (uint32_t)ugi::ShaderStage::VertexShader; i<(uint32_t)ugi::ShaderStage::ShaderStageCount; ++i) {
+            for( uint32_t i = (uint32_t)ugi::shader_stage_t::VertexShader; i<(uint32_t)ugi::shader_stage_t::ShaderStageCount; ++i) {
                 if( pipelineDescription.pipelineConstants[i].size ) {
                     VkPushConstantRange range;
                     range.size =  pipelineDescription.pipelineConstants[i].size;
                     range.offset = pipelineDescription.pipelineConstants[i].offset;
-                    range.stageFlags = shaderStageToVk( (ShaderStage)i );
+                    range.stageFlags = shaderStageToVk( (shader_stage_t)i );
                     rangeFlagBits |= range.stageFlags;
                 }
             }

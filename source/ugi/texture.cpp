@@ -205,7 +205,7 @@ namespace ugi {
         auto cb = queue->createCommandBuffer(device, CmdbufType::Resetable);
         cb->beginEncode(); {
             auto resEnc = cb->resourceCommandEncoder();
-            resEnc->imageTransitionBarrier(this, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, nullptr);
+            resEnc->imageTransitionBarrier(this, ResourceAccessType::TransferDestination, pipeline_stage_t::Top, StageAccess::Read, pipeline_stage_t::Transfer, StageAccess::Write, nullptr);
             resEnc->copyBufferToImage(this->_image, this->_aspectFlags, staging->buffer(), regions, offsets, count);
             resEnc->endEncode();
         }
@@ -230,7 +230,7 @@ namespace ugi {
     void Texture::generateMipmap(CommandBuffer* cmdbuf) {
 		auto resEncoder = cmdbuf->resourceCommandEncoder();
 		// 转换为LayoutGeneral
-		resEncoder->imageTransitionBarrier(this, ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Write);
+		resEncoder->imageTransitionBarrier(this, ResourceAccessType::ShaderReadWrite, pipeline_stage_t::Bottom, StageAccess::Write, pipeline_stage_t::Top, StageAccess::Write);
 		VkCommandBuffer cmdbufVk = *cmdbuf;
 		VkImage image = this->image();
 		std::vector<VkImageBlit> mipmapBlits;
@@ -254,7 +254,7 @@ namespace ugi {
 		}
 		// 注意Nearest和Linear的过滤器，到时候看看效果，因为他们肯定是有效果的区别的，而且是从原图直接生成的各级mipmap
 		vkCmdBlitImage( cmdbufVk, image, VK_IMAGE_LAYOUT_GENERAL, image, VK_IMAGE_LAYOUT_GENERAL, (uint32_t)mipmapBlits.size(), mipmapBlits.data(), VkFilter::VK_FILTER_NEAREST );
-		resEncoder->imageTransitionBarrier(this, this->primaryAccessType(), PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read );
+		resEncoder->imageTransitionBarrier(this, this->primaryAccessType(), pipeline_stage_t::Bottom, StageAccess::Write, pipeline_stage_t::Top, StageAccess::Read );
 		resEncoder->endEncode();
    }
 

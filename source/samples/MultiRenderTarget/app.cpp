@@ -41,7 +41,7 @@ namespace ugi {
         
         pipelineDesc.pologonMode = PolygonMode::Fill;
         //
-        pipelineDesc.topologyMode = TopologyMode::TriangleList;
+        pipelineDesc.topologyMode = topology_mode_t::TriangleList;
 
         printf("initialize\n");
 

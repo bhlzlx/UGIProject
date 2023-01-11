@@ -93,7 +93,7 @@ namespace ugi {
         PipelineHelper ppl = PipelineHelper::FromIStream(pipelineFile);
         pipelineFile->close();
         auto ppldesc = ppl.desc();
-        ppldesc.topologyMode = TopologyMode::TriangleList;
+        ppldesc.topologyMode = topology_mode_t::TriangleList;
         printf("initialize\n");
         ugi::device_descriptor_t descriptor; {
             descriptor.apiType = ugi::GraphicsAPIType::VULKAN;
@@ -105,7 +105,7 @@ namespace ugi {
         }
         _renderContext = new StandardRenderContext();
         _renderContext->initialize(_wnd, descriptor, arch);
-        ppldesc.renderState.cullMode = CullMode::None;
+        ppldesc.renderState.cullMode = cull_mode_t::None;
         ppldesc.renderState.blendState.enable = false;
         auto pipeline = _renderContext->device()->createGraphicsPipeline(ppldesc);
         auto bufferAllocator = new MeshBufferAllocator();
@@ -170,8 +170,8 @@ namespace ugi {
         //         auto resEnc = cb->resourceCommandEncoder();
         //         resEnc->imageTransitionBarrier(
         //             _texture, ResourceAccessType::ShaderRead, 
-        //             PipelineStages::Bottom, StageAccess::Write,
-        //             PipelineStages::FragmentShading, StageAccess::Read,
+        //             pipeline_stage_t::Bottom, StageAccess::Write,
+        //             pipeline_stage_t::FragmentShading, StageAccess::Read,
         //             nullptr
         //         );
         //         resEnc->endEncode();
@@ -183,19 +183,19 @@ namespace ugi {
             "image/island.png",
         };
         for(int i = 0; i<2; ++i) {
-            auto ktxfile = _renderContext->archive()->openIStream(imagePaths[i], {comm::ReadFlag::binary});
-            auto buffer = malloc(ktxfile->size());
-            ktxfile->read(buffer, ktxfile->size());
-            Texture* texture = CreateTexturePNG(device, (uint8_t const*)buffer, ktxfile->size(), _renderContext->asyncLoadManager(), 
-            // Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, ktxfile->size(), _renderContext->asyncLoadManager(), 
+            auto imgFile = _renderContext->archive()->openIStream(imagePaths[i], {comm::ReadFlag::binary});
+            auto buffer = malloc(imgFile->size());
+            imgFile->read(buffer, imgFile->size());
+            Texture* texture = CreateTexturePNG(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
+            // Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
                 [this,i,device](void* res, CommandBuffer* cb) {
                     _textures[i] = (Texture*)res;
                     _textures[i]->generateMipmap(cb);
                     auto resEnc = cb->resourceCommandEncoder();
                     resEnc->imageTransitionBarrier(
                         _textures[i], ResourceAccessType::ShaderRead, 
-                        PipelineStages::Bottom, StageAccess::Write,
-                        PipelineStages::FragmentShading, StageAccess::Read,
+                        pipeline_stage_t::Bottom, StageAccess::Write,
+                        pipeline_stage_t::FragmentShading, StageAccess::Read,
                         nullptr
                     );
                     image_view_param_t ivp;
@@ -205,7 +205,7 @@ namespace ugi {
                 }
             );
             free(buffer);
-            ktxfile->close();
+            imgFile->close();
         }
         _render->setSampler(_renderable, _samplerState);
         // _render->setTexture(_renderable, _imageView);

@@ -104,7 +104,7 @@ namespace ugi {
         }
 
         pipelineDesc.pologonMode = PolygonMode::Fill;
-        pipelineDesc.topologyMode = TopologyMode::TriangleList;
+        pipelineDesc.topologyMode = topology_mode_t::TriangleList;
         pipelineDesc.renderState.depthState.testable = 1;
 
         // 因为我们buffer放同一块内存了，这里特殊处理一下

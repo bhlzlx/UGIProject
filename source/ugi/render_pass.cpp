@@ -272,10 +272,10 @@ namespace ugi {
 
     void RenderPass::begin( RenderCommandEncoder* encoder ) const {
         for( uint32_t i = 0; i<_decription.colorAttachmentCount; ++i ) {
-            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier(_colorTexture[i], _decription.colorAttachments[i].initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::ColorAttachmentOutput, StageAccess::Write );
+            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier(_colorTexture[i], _decription.colorAttachments[i].initialAccessType, pipeline_stage_t::Bottom, StageAccess::Read, pipeline_stage_t::ColorAttachmentOutput, StageAccess::Write );
         }
         if(_dsTexture) {
-            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier(_dsTexture, _decription.depthStencil.initialAccessType, PipelineStages::Bottom, StageAccess::Read, PipelineStages::EaryFragmentTestShading, StageAccess::Write);
+            ((ResourceCommandEncoder*)encoder)->imageTransitionBarrier(_dsTexture, _decription.depthStencil.initialAccessType, pipeline_stage_t::Bottom, StageAccess::Read, pipeline_stage_t::EaryFragmentTestShading, StageAccess::Write);
         }
         vkCmdBeginRenderPass( *encoder->commandBuffer(), &_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
     }

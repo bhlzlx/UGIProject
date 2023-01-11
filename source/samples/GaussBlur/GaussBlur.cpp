@@ -64,8 +64,8 @@ namespace ugi {
                 auto resEnc = cmd->resourceCommandEncoder();
                 resEnc->imageTransitionBarrier(
                     texture, ResourceAccessType::ShaderRead, 
-                    PipelineStages::Bottom, StageAccess::Write,
-                    PipelineStages::FragmentShading, StageAccess::Read,
+                    pipeline_stage_t::Bottom, StageAccess::Write,
+                    pipeline_stage_t::FragmentShading, StageAccess::Read,
                     nullptr
                 );
                 resEnc->endEncode();
@@ -149,8 +149,8 @@ namespace ugi {
 
                 for( int i = 0; i<v; ++i) {
                     resEnc = cmdbuf->resourceCommandEncoder();
-                    resEnc->imageTransitionBarrier(blurTextures_[0], ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
-                    resEnc->imageTransitionBarrier(blurTextures_[1], ResourceAccessType::ShaderWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
+                    resEnc->imageTransitionBarrier(blurTextures_[0], ResourceAccessType::ShaderReadWrite, pipeline_stage_t::Bottom, StageAccess::Write, pipeline_stage_t::Top, StageAccess::Read);
+                    resEnc->imageTransitionBarrier(blurTextures_[1], ResourceAccessType::ShaderWrite, pipeline_stage_t::Bottom, StageAccess::Write, pipeline_stage_t::Top, StageAccess::Read);
                     resEnc->endEncode();
                     pipeline_->applyMaterial(blurMaterials_[0]);
                     pipeline_->flushMaterials(cmdbuf);
@@ -160,8 +160,8 @@ namespace ugi {
                         computeEncoder->endEncode();
                     }
                     resEnc = cmdbuf->resourceCommandEncoder();
-                    resEnc->imageTransitionBarrier(blurTextures_[1], ResourceAccessType::ShaderReadWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
-                    resEnc->imageTransitionBarrier(blurTextures_[0], ResourceAccessType::ShaderWrite, PipelineStages::Bottom, StageAccess::Write, PipelineStages::Top, StageAccess::Read);
+                    resEnc->imageTransitionBarrier(blurTextures_[1], ResourceAccessType::ShaderReadWrite, pipeline_stage_t::Bottom, StageAccess::Write, pipeline_stage_t::Top, StageAccess::Read);
+                    resEnc->imageTransitionBarrier(blurTextures_[0], ResourceAccessType::ShaderWrite, pipeline_stage_t::Bottom, StageAccess::Write, pipeline_stage_t::Top, StageAccess::Read);
                     resEnc->endEncode();
                     pipeline_->applyMaterial(blurMaterials_[1]);
                     pipeline_->flushMaterials(cmdbuf);
@@ -176,7 +176,7 @@ namespace ugi {
                 resEnc->blitImage(screen, blurTextures_[0], &dstRegion, &srcRegion, 1 );
                 dstRegion.offset = { (int32_t)srcRegion.extent.width, 0, 0 };
                 resEnc->blitImage(screen, texture_, &dstRegion, &srcRegion, 1 );
-                resEnc->imageTransitionBarrier(screen, ResourceAccessType::Present, PipelineStages::Transfer, StageAccess::Write, PipelineStages::Top, StageAccess::Read, nullptr);
+                resEnc->imageTransitionBarrier(screen, ResourceAccessType::Present, pipeline_stage_t::Transfer, StageAccess::Write, pipeline_stage_t::Top, StageAccess::Read, nullptr);
                 resEnc->endEncode();
             }
             // auto renderCommandEncoder = cmdbuf->renderCommandEncoder(fbo); {

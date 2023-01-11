@@ -66,8 +66,8 @@ namespace ugi {
         }
         //_pipelineDescription.vertexLayout.buffers[2].
         _pipelineDescription.pologonMode = polygon_mode_t::Fill;
-        _pipelineDescription.topologyMode = TopologyMode::TriangleList;
-        _pipelineDescription.renderState.cullMode = CullMode::None;
+        _pipelineDescription.topologyMode = topology_mode_t::TriangleList;
+        _pipelineDescription.renderState.cullMode = cull_mode_t::None;
         _pipelineDescription.renderState.blendState.enable = true;
         _pipeline = _device->createGraphicsPipeline(_pipelineDescription);
         pipelineFile->Close();

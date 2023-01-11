@@ -12,13 +12,13 @@
 
 namespace ugi {
 
-    VkAccessFlags GetBarrierAccessMask( PipelineStages stage, StageAccess stageTransition );
+    VkAccessFlags GetBarrierAccessMask( pipeline_stage_t stage, StageAccess stageTransition );
 
     void ResourceCommandEncoder::endEncode() {
         _commandBuffer = nullptr;
     }
 
-    void ResourceCommandEncoder::executionBarrier( PipelineStages _srcStage, PipelineStages _dstStage ) {
+    void ResourceCommandEncoder::executionBarrier( pipeline_stage_t _srcStage, pipeline_stage_t _dstStage ) {
         vkCmdPipelineBarrier( 
             *_commandBuffer, 
             (VkPipelineStageFlagBits)_srcStage,     // 生产阶段
@@ -51,7 +51,7 @@ namespace ugi {
       //  AllCommands             = 1<<16,
 
     
-    void ResourceCommandEncoder::bufferBarrier(VkBuffer buff, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const buffer_subres_t& res) {
+    void ResourceCommandEncoder::bufferBarrier(VkBuffer buff, ResourceAccessType dstAccessType, pipeline_stage_t srcStage, StageAccess srcStageMask, pipeline_stage_t dstStage, StageAccess dstStageMask, const buffer_subres_t& res) {
         VkBufferMemoryBarrier barrier; {
             barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
             barrier.pNext = nullptr;
@@ -74,7 +74,7 @@ namespace ugi {
         );
     }
 
-    void ResourceCommandEncoder::bufferTransitionBarrier( Buffer* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const buffer_subres_t* subResource ) {
+    void ResourceCommandEncoder::bufferTransitionBarrier( Buffer* buffer, ResourceAccessType dstAccessType, pipeline_stage_t srcStage, StageAccess srcStageMask, pipeline_stage_t dstStage, StageAccess dstStageMask, const buffer_subres_t* subResource ) {
         if( buffer->accessType() == dstAccessType ) {
             return;
         }
@@ -102,7 +102,7 @@ namespace ugi {
         buffer->updateAccessType(dstAccessType);
     }
 
-    void ResourceCommandEncoder::imageTransitionBarrier( Texture* texture, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const image_subres_t* subResource) {
+    void ResourceCommandEncoder::imageTransitionBarrier( Texture* texture, ResourceAccessType dstAccessType, pipeline_stage_t srcStage, StageAccess srcStageMask, pipeline_stage_t dstStage, StageAccess dstStageMask, const image_subres_t* subResource) {
         if( texture->accessType() == dstAccessType ) {
             return;
         }
@@ -153,11 +153,11 @@ namespace ugi {
         region.size = srcSize;
         // 没错！就支持复制一块内存！
         if( uploadMode ) {
-            bufferTransitionBarrier( _dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, _dstSubRes  ); ///> 目标transition，适当等待一下
+            bufferTransitionBarrier( _dst, ResourceAccessType::TransferDestination, pipeline_stage_t::Top, StageAccess::Read, pipeline_stage_t::Transfer, StageAccess::Write, _dstSubRes  ); ///> 目标transition，适当等待一下
         } else {
-            bufferTransitionBarrier( _dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, _dstSubRes ); ///> 目标transition，适当等待一下
+            bufferTransitionBarrier( _dst, ResourceAccessType::TransferDestination, pipeline_stage_t::Top, StageAccess::Read, pipeline_stage_t::Top, StageAccess::Write, _dstSubRes ); ///> 目标transition，适当等待一下
         }
-        bufferTransitionBarrier( _src, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Read, _srcSubRes); ///> 源 transition，无需等待，直接转换因为我们确定没有其它地方用它
+        bufferTransitionBarrier( _src, ResourceAccessType::TransferDestination, pipeline_stage_t::Top, StageAccess::Read, pipeline_stage_t::Transfer, StageAccess::Read, _srcSubRes); ///> 源 transition，无需等待，直接转换因为我们确定没有其它地方用它
         vkCmdCopyBuffer( *_commandBuffer, _src->buffer(), _dst->buffer(), 1, &region );
         // 万能等待
         // bufferTransitionBarrier( _dst, _dst->primaryAccessType(), PipelineStages::Transfer, StageAccess::Write, PipelineStages::Bottom, StageAccess::Read, _dstSubRes  );
@@ -165,8 +165,8 @@ namespace ugi {
     }
 
     void ResourceCommandEncoder::blitImage(Texture* dst, Texture* src, const image_region_t* dstRegions, const image_region_t* srcRegions, uint32_t regionCount ) {
-        imageTransitionBarrier( src, ResourceAccessType::TransferSource, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Read );
-        imageTransitionBarrier( dst, ResourceAccessType::TransferDestination, ugi::PipelineStages::Bottom, ugi::StageAccess::Write, ugi::PipelineStages::Top, ugi::StageAccess::Write );
+        imageTransitionBarrier( src, ResourceAccessType::TransferSource, ugi::pipeline_stage_t::Bottom, ugi::StageAccess::Write, ugi::pipeline_stage_t::Top, ugi::StageAccess::Read );
+        imageTransitionBarrier( dst, ResourceAccessType::TransferDestination, ugi::pipeline_stage_t::Bottom, ugi::StageAccess::Write, ugi::pipeline_stage_t::Top, ugi::StageAccess::Write );
         std::vector<VkImageBlit> regions;
         for( uint32_t i = 0; i<regionCount; ++i) {
             VkImageBlit r = {};
@@ -189,7 +189,7 @@ namespace ugi {
     }
 
     void ResourceCommandEncoder::updateImage( Texture* dst, Buffer* src, const image_region_t* regions, const uint32_t* offsets, uint32_t regionCount ) {
-        imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Top, StageAccess::Write, nullptr  );
+        imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, pipeline_stage_t::Top, StageAccess::Read, pipeline_stage_t::Top, StageAccess::Write, nullptr  );
         // 一个 region 只能传输一个 mip level
         std::vector< VkBufferImageCopy > copies;
 
@@ -220,7 +220,7 @@ namespace ugi {
 
     void ResourceCommandEncoder::replaceImage( Texture* dst, Buffer* src, const image_region_t* regions, const uint32_t* offsets, uint32_t regionCount ) {
         //
-        imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, PipelineStages::Top, StageAccess::Read, PipelineStages::Transfer, StageAccess::Write, nullptr );
+        imageTransitionBarrier(  dst, ResourceAccessType::TransferDestination, pipeline_stage_t::Top, StageAccess::Read, pipeline_stage_t::Transfer, StageAccess::Write, nullptr );
         // 一个 region 只能传输一个 mip level
         std::vector< VkBufferImageCopy > copies;
 

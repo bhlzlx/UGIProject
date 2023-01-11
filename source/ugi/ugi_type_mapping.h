@@ -303,17 +303,17 @@ namespace ugi {
         return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
     }
 
-    static inline VkCompareOp compareOpToVk( CompareFunction _op)
+    static inline VkCompareOp compareOpToVk( compare_function_t _op)
 	{
 		switch (_op)
 		{
-		case CompareFunction::Never: return VK_COMPARE_OP_NEVER;
-		case CompareFunction::Less: return VK_COMPARE_OP_LESS;
-		case CompareFunction::Equal: return VK_COMPARE_OP_EQUAL;
-		case CompareFunction::LessEqual: return VK_COMPARE_OP_LESS_OR_EQUAL;
-		case CompareFunction::Greater: return VK_COMPARE_OP_GREATER;
-		case CompareFunction::GreaterEqual: return VK_COMPARE_OP_GREATER_OR_EQUAL;
-		case CompareFunction::Always: return VK_COMPARE_OP_ALWAYS;
+		case compare_function_t::Never: return VK_COMPARE_OP_NEVER;
+		case compare_function_t::Less: return VK_COMPARE_OP_LESS;
+		case compare_function_t::Equal: return VK_COMPARE_OP_EQUAL;
+		case compare_function_t::LessEqual: return VK_COMPARE_OP_LESS_OR_EQUAL;
+		case compare_function_t::Greater: return VK_COMPARE_OP_GREATER;
+		case compare_function_t::GreaterEqual: return VK_COMPARE_OP_GREATER_OR_EQUAL;
+		case compare_function_t::Always: return VK_COMPARE_OP_ALWAYS;
 		}
 		return VK_COMPARE_OP_ALWAYS;
 	}
@@ -344,15 +344,15 @@ namespace ugi {
 		return VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	}
 
-    static inline VkShaderStageFlagBits shaderStageToVk( ugi::ShaderStage type ) {
+    static inline VkShaderStageFlagBits shaderStageToVk( ugi::shader_stage_t type ) {
         switch ( type )
         {
-        case ShaderStage::VertexShader : return VK_SHADER_STAGE_VERTEX_BIT;
-        case ShaderStage::TessellationControlShader : return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-        case ShaderStage::TessellationEvaluationShader : return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-        case ShaderStage::GeometryShader : return VK_SHADER_STAGE_GEOMETRY_BIT;
-        case ShaderStage::FragmentShader : return VK_SHADER_STAGE_FRAGMENT_BIT;
-        case ShaderStage::ComputeShader : return VK_SHADER_STAGE_VERTEX_BIT;;
+        case shader_stage_t::VertexShader : return VK_SHADER_STAGE_VERTEX_BIT;
+        case shader_stage_t::TessellationControlShader : return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+        case shader_stage_t::TessellationEvaluationShader : return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+        case shader_stage_t::GeometryShader : return VK_SHADER_STAGE_GEOMETRY_BIT;
+        case shader_stage_t::FragmentShader : return VK_SHADER_STAGE_FRAGMENT_BIT;
+        case shader_stage_t::ComputeShader : return VK_SHADER_STAGE_VERTEX_BIT;;
             break;
         default:
             break;
@@ -360,60 +360,60 @@ namespace ugi {
         return VK_SHADER_STAGE_VERTEX_BIT;
     }
 
-    static inline VkPrimitiveTopology topolotyToVk(  ugi::TopologyMode topoloty ) {
+    static inline VkPrimitiveTopology topolotyToVk(  ugi::topology_mode_t topoloty ) {
         switch (topoloty)
 		{
-		case TopologyMode::Points: return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
-		case TopologyMode::LineStrip: return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-		case TopologyMode::LineList: return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-		case TopologyMode::TriangleStrip: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-		case TopologyMode::TriangleList: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		case TopologyMode::TriangleFan: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+		case topology_mode_t::Points: return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+		case topology_mode_t::LineStrip: return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+		case topology_mode_t::LineList: return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+		case topology_mode_t::TriangleStrip: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+		case topology_mode_t::TriangleList: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		case topology_mode_t::TriangleFan: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
 			break;
 		}
 		return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
     }
 
-    static inline VkBlendFactor blendFactorToVk( BlendFactor _factor)
+    static inline VkBlendFactor blendFactorToVk( blend_factor_t _factor)
 	{
 		switch (_factor)
 		{
-		case BlendFactor::Zero: return VK_BLEND_FACTOR_ZERO;
-		case BlendFactor::One: return VK_BLEND_FACTOR_ONE;
-		case BlendFactor::SourceColor: return VK_BLEND_FACTOR_SRC_COLOR;
-		case BlendFactor::InvertSourceColor: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
-		case BlendFactor::SourceAlpha: return VK_BLEND_FACTOR_SRC_ALPHA;
-		case BlendFactor::InvertSourceAlpha: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-		case BlendFactor::DestinationColor: return VK_BLEND_FACTOR_DST_COLOR;
-		case BlendFactor::InvertDestinationColor: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
-		case BlendFactor::DestinationAlpha: return VK_BLEND_FACTOR_DST_ALPHA;
-		case BlendFactor::InvertDestinationAlpha: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
-		case BlendFactor::SourceAlphaSat: return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+		case blend_factor_t::Zero: return VK_BLEND_FACTOR_ZERO;
+		case blend_factor_t::One: return VK_BLEND_FACTOR_ONE;
+		case blend_factor_t::SourceColor: return VK_BLEND_FACTOR_SRC_COLOR;
+		case blend_factor_t::InvertSourceColor: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+		case blend_factor_t::SourceAlpha: return VK_BLEND_FACTOR_SRC_ALPHA;
+		case blend_factor_t::InvertSourceAlpha: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		case blend_factor_t::DestinationColor: return VK_BLEND_FACTOR_DST_COLOR;
+		case blend_factor_t::InvertDestinationColor: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+		case blend_factor_t::DestinationAlpha: return VK_BLEND_FACTOR_DST_ALPHA;
+		case blend_factor_t::InvertDestinationAlpha: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+		case blend_factor_t::SourceAlphaSat: return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
 		}
 		return VK_BLEND_FACTOR_ONE;
 	}
 
-    static inline VkBlendOp blendOpToVk( BlendOperation op ) {
+    static inline VkBlendOp blendOpToVk( blend_operation_t op ) {
         switch (op)
 		{
-		case BlendOperation::Add: return VK_BLEND_OP_ADD;
-		case BlendOperation::Subtract: return VK_BLEND_OP_SUBTRACT;
-		case BlendOperation::Revsubtract: return VK_BLEND_OP_REVERSE_SUBTRACT;
+		case blend_operation_t::Add: return VK_BLEND_OP_ADD;
+		case blend_operation_t::Subtract: return VK_BLEND_OP_SUBTRACT;
+		case blend_operation_t::Revsubtract: return VK_BLEND_OP_REVERSE_SUBTRACT;
 		}
 		return VK_BLEND_OP_ADD;
     }
 
-    static inline VkStencilOp stencilOpToVk( StencilOperation op ) {
+    static inline VkStencilOp stencilOpToVk( stencil_operation op ) {
         switch (op)
 		{
-		case StencilOperation::Keep:return VK_STENCIL_OP_KEEP;
-		case StencilOperation::Zero: return VK_STENCIL_OP_ZERO;
-		case StencilOperation::Replace: return VK_STENCIL_OP_REPLACE;
-		case StencilOperation::IncrSat:return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
-		case StencilOperation::DecrSat:return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
-		case StencilOperation::Invert:return VK_STENCIL_OP_INVERT;
-		case StencilOperation::Inc:return VK_STENCIL_OP_INCREMENT_AND_WRAP;
-		case StencilOperation::Dec:return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+		case stencil_operation::Keep:return VK_STENCIL_OP_KEEP;
+		case stencil_operation::Zero: return VK_STENCIL_OP_ZERO;
+		case stencil_operation::Replace: return VK_STENCIL_OP_REPLACE;
+		case stencil_operation::IncrSat:return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+		case stencil_operation::DecrSat:return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+		case stencil_operation::Invert:return VK_STENCIL_OP_INVERT;
+		case stencil_operation::Inc:return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+		case stencil_operation::Dec:return VK_STENCIL_OP_DECREMENT_AND_WRAP;
 		}
 		return VK_STENCIL_OP_REPLACE;
     }
@@ -459,48 +459,48 @@ namespace ugi {
         return VK_POLYGON_MODE_FILL;
     }
 
-    static inline VkFrontFace frontFaceToVk( FrontFace mode ) {
-        if( mode == FrontFace::ClockWise ) {
+    static inline VkFrontFace frontFaceToVk( front_face_t mode ) {
+        if( mode == front_face_t::ClockWise ) {
             return VK_FRONT_FACE_CLOCKWISE;
         } else {
             return VK_FRONT_FACE_COUNTER_CLOCKWISE;
         }
     }
 
-    static inline VkCullModeFlags cullModeToVk( CullMode mode ) {
+    static inline VkCullModeFlags cullModeToVk( cull_mode_t mode ) {
         switch( mode ) {
-            case CullMode::None: return VK_CULL_MODE_NONE;
-            case CullMode::Front: return VK_CULL_MODE_FRONT_BIT;
-            case CullMode::Back: return VK_CULL_MODE_BACK_BIT;
+            case cull_mode_t::None: return VK_CULL_MODE_NONE;
+            case cull_mode_t::Front: return VK_CULL_MODE_FRONT_BIT;
+            case cull_mode_t::Back: return VK_CULL_MODE_BACK_BIT;
         }
         return VK_CULL_MODE_NONE;
     }
 
-     static inline VkShaderStageFlags stageFlagsToVk( ShaderStage shaderStage ) {
+     static inline VkShaderStageFlags stageFlagsToVk( shader_stage_t shaderStage ) {
         VkShaderStageFlags stageFlags = 0;
         switch (shaderStage)
         {
-        case ShaderStage::VertexShader: {
+        case shader_stage_t::VertexShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
             break;
         }
-        case ShaderStage::FragmentShader: {
+        case shader_stage_t::FragmentShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
             break;
         }
-        case ShaderStage::ComputeShader: {
+        case shader_stage_t::ComputeShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
             break;
         }
-        case ShaderStage::TessellationControlShader: {
+        case shader_stage_t::TessellationControlShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
             break;
         }
-        case ShaderStage::TessellationEvaluationShader: {
+        case shader_stage_t::TessellationEvaluationShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
             break;
         }
-        case ShaderStage::GeometryShader: {
+        case shader_stage_t::GeometryShader: {
             stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT;
             break;
         }        

@@ -173,8 +173,8 @@ namespace ugi {
             encoder->bufferBarrier(
                 block.buffer, 
                 ResourceAccessType::TransferSource, 
-                PipelineStages::VertexShading, StageAccess::Read,
-                PipelineStages::Transfer, StageAccess::Read,
+                pipeline_stage_t::VertexShading, StageAccess::Read,
+                pipeline_stage_t::Transfer, StageAccess::Read,
                 buffer_subres_t{0, (uint32_t)block.bufferSize}
             );
         }

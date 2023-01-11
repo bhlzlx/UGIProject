@@ -12,7 +12,7 @@
 
 namespace ugi {
 
-    VkAccessFlags GetBarrierAccessMask( PipelineStages stage, StageAccess stageTransition ) {
+    VkAccessFlags GetBarrierAccessMask( pipeline_stage_t stage, StageAccess stageTransition ) {
         struct BarrierAccessMask {
                 VkAccessFlags accessFlags[2];
             BarrierAccessMask( uint32_t src1, uint32_t dst1) 
@@ -37,35 +37,35 @@ namespace ugi {
             { 0, 0 },
         };
         switch( stage ) {
-            case PipelineStages::Top:
+            case pipeline_stage_t::Top:
                 return accessMaskTable[0].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::DrawIndirect:
+            case pipeline_stage_t::DrawIndirect:
                 return accessMaskTable[1].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::VertexInput:
+            case pipeline_stage_t::VertexInput:
                 return accessMaskTable[2].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::VertexShading:
+            case pipeline_stage_t::VertexShading:
                 return accessMaskTable[3].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::TessControlShading:
+            case pipeline_stage_t::TessControlShading:
                 return accessMaskTable[4].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::TessEvaluationShading:
+            case pipeline_stage_t::TessEvaluationShading:
                 return accessMaskTable[5].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::GeometryShading:
+            case pipeline_stage_t::GeometryShading:
                 return accessMaskTable[6].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::FragmentShading:
+            case pipeline_stage_t::FragmentShading:
                 return accessMaskTable[7].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::EaryFragmentTestShading:
+            case pipeline_stage_t::EaryFragmentTestShading:
                 return accessMaskTable[8].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::LateFragmmentTestShading:
+            case pipeline_stage_t::LateFragmmentTestShading:
                 return accessMaskTable[9].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::ColorAttachmentOutput:
+            case pipeline_stage_t::ColorAttachmentOutput:
                 return accessMaskTable[10].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::ComputeShading:
+            case pipeline_stage_t::ComputeShading:
                 return accessMaskTable[11].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::Transfer:
+            case pipeline_stage_t::Transfer:
                 return accessMaskTable[12].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::Bottom:
+            case pipeline_stage_t::Bottom:
                 return accessMaskTable[13].accessFlags[(uint32_t)stageTransition];
-            case PipelineStages::Host:
+            case pipeline_stage_t::Host:
                 return accessMaskTable[13].accessFlags[(uint32_t)stageTransition];
             default: 
                 assert( false );

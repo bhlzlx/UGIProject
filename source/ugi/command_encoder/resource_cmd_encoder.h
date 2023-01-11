@@ -16,12 +16,12 @@ namespace ugi {
         {
         }
         
-        void executionBarrier(PipelineStages srcStage, PipelineStages dstStage);
+        void executionBarrier(pipeline_stage_t srcStage, pipeline_stage_t dstStage);
         //// 队列里有很多指令，我目前想等待这些指令（部分执行）完，让其它阶段的的命令去处理
         //// 那么我需要尽量不干预无关的阶段执行，还要禁止在数据生产阶段没执行完就去执行处理的阶段
-        void bufferBarrier(VkBuffer buff, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const buffer_subres_t& subResource );
-        void bufferTransitionBarrier(Buffer* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const buffer_subres_t* subResource = nullptr );
-        void imageTransitionBarrier(Texture* buffer, ResourceAccessType dstAccessType, PipelineStages srcStage, StageAccess srcStageMask, PipelineStages dstStage, StageAccess dstStageMask, const image_subres_t* subResource = nullptr );
+        void bufferBarrier(VkBuffer buff, ResourceAccessType dstAccessType, pipeline_stage_t srcStage, StageAccess srcStageMask, pipeline_stage_t dstStage, StageAccess dstStageMask, const buffer_subres_t& subResource );
+        void bufferTransitionBarrier(Buffer* buffer, ResourceAccessType dstAccessType, pipeline_stage_t srcStage, StageAccess srcStageMask, pipeline_stage_t dstStage, StageAccess dstStageMask, const buffer_subres_t* subResource = nullptr );
+        void imageTransitionBarrier(Texture* buffer, ResourceAccessType dstAccessType, pipeline_stage_t srcStage, StageAccess srcStageMask, pipeline_stage_t dstStage, StageAccess dstStageMask, const image_subres_t* subResource = nullptr );
         void updateBuffer(Buffer* dst, Buffer* src, buffer_subres_t* dstSubRes, buffer_subres_t* srcSubRes, bool uploadMode = false );
         // void blitBuffer(VkBuffer dst, VkBuffer src, buffer_subres_t dstRange, buffer_subres_t srcRange);
         // update texture region for specified regions( render command queue )
