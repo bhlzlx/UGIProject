@@ -13,8 +13,8 @@ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/HelloWorld.cpp
 )
 
-target_link_libraries(
-    HelloWorld
+target_link_libraries( HelloWorld
+PRIVATE
     UGI
     LightWeightCommon
 )

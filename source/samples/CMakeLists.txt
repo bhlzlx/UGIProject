@@ -50,6 +50,7 @@ else()
         add_subdirectory( TexturePacker )
         add_subdirectory( DX11Test )
         add_subdirectory( GaussBlur )
+        add_subdirectory( gui_test )
         
         SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET Sphere PROPERTY FOLDER "Samples")
