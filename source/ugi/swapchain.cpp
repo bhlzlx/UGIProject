@@ -268,7 +268,7 @@ namespace ugi {
             colorTexDesc.width = _createInfo.imageExtent.width;
             colorTexDesc.height = _createInfo.imageExtent.height;
             colorTexDesc.mipmapLevel = 1;
-            colorTexDesc.layoutCount = 1;
+            colorTexDesc.layerCount = 1;
             colorTexDesc.type = TextureType::Texture2D;
             _embedColors[embedImageIndex] = Texture::CreateTexture( device, _images[embedImageIndex], colorTexDesc, ResourceAccessType::ColorAttachmentReadWrite );
             //

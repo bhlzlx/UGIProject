@@ -115,7 +115,7 @@ namespace ugi {
         }
         tex_desc_t texDesc;
         texDesc.type = TextureType::Texture2DArray;
-        texDesc.layoutCount = arrayLayer;
+        texDesc.layerCount = arrayLayer;
         texDesc.format = UGIFormat::R8_UNORM;
         texDesc.width = texDesc.height = texSize;
         texDesc.depth = 1;

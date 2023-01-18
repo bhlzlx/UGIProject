@@ -1,4 +1,4 @@
-﻿#include "HelloWorld.h"
+﻿#include "gui_test.h"
 #include <cassert>
 #include <ugi/device.h>
 #include <ugi/swapchain.h>
@@ -126,58 +126,6 @@ namespace ugi {
             0, 1, 2
         };
         _renderable = _render->createRenderable((uint8_t const*)vertexData, sizeof(vertexData), indexData, 3, _renderContext->asyncLoadManager());
-        // tex_desc_t texDesc;
-        // texDesc.format = UGIFormat::RGBA8888_UNORM;
-        // texDesc.depth = 1;
-        // texDesc.width = 16;
-        // texDesc.height = 16;
-        // texDesc.type = TextureType::Texture2D;
-        // texDesc.mipmapLevel = 1;
-        // texDesc.layoutCount = 1;
-        // _texture = device->createTexture(texDesc, ResourceAccessType::ShaderRead );
-        // uint32_t texData[] = {
-        //     0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-        //     0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-        //     0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-        //     0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-        //     0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-        //     0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-        //     0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 
-        //     0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 0xff000000, 0xffffffff, 
-        // };
-        // std::vector<image_region_t> regions;
-        // std::vector<uint64_t> offsets = {0, 0, 0, 0};
-        // image_region_t region;
-        // region.offset = {};
-        // region.mipLevel = 0;
-        // region.arrayIndex = 0;
-        // region.arrayCount = 1;
-        // region.extent.height = region.extent.width = 8;
-        // region.extent.depth = 1;
-        // regions.push_back(region);
-        // region.offset.x = 8;
-        // regions.push_back(region);
-        // region.offset.x = 0; region.offset.y = 8;
-        // regions.push_back(region);
-        // region.offset.x = 8; region.offset.y = 8;
-        // regions.push_back(region);
-        // _texture->updateRegions(
-        //     device, 
-        //     regions.data(), regions.size(), 
-        //     (uint8_t const*)texData, sizeof(texData), offsets.data(), 
-        //     _renderContext->asyncLoadManager(),
-        //     [this](CommandBuffer* cb) {
-        //         auto resEnc = cb->resourceCommandEncoder();
-        //         resEnc->imageTransitionBarrier(
-        //             _texture, ResourceAccessType::ShaderRead, 
-        //             pipeline_stage_t::Bottom, StageAccess::Write,
-        //             pipeline_stage_t::FragmentShading, StageAccess::Read,
-        //             nullptr
-        //         );
-        //         resEnc->endEncode();
-        //         _texture->markAsUploaded();
-        //     }
-        // );
         char const* imagePaths[] = {
             "image/ushio.png",
             "image/island.png",
@@ -187,7 +135,6 @@ namespace ugi {
             auto buffer = malloc(imgFile->size());
             imgFile->read(buffer, imgFile->size());
             Texture* texture = CreateTexturePNG(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
-            // Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
                 [this,i,device](void* res, CommandBuffer* cb) {
                     _textures[i] = (Texture*)res;
                     _textures[i]->generateMipmap(cb);
@@ -208,7 +155,6 @@ namespace ugi {
             imgFile->close();
         }
         _render->setSampler(_renderable, _samplerState);
-        // _render->setTexture(_renderable, _imageView);
         _flightIndex = 0;
         return true;
     }
@@ -216,7 +162,6 @@ namespace ugi {
     void HelloWorld::tick() {
         _renderContext->onPreTick();
         _render->tick();
-        //
         Device* device = _renderContext->device();
         IRenderPass* mainRenderPass = _renderContext->mainFramebuffer();
         auto cmdbuf = _renderContext->primaryQueue()->createCommandBuffer(device, CmdbufType::Transient);
@@ -224,7 +169,6 @@ namespace ugi {
             _renderContext->primaryQueue()->destroyCommandBuffer(device, cmdbuf);
         });
         cmdbuf->beginEncode(); {
-            //
             renderpass_clearval_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;

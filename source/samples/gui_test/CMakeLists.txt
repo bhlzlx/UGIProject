@@ -14,5 +14,5 @@ PRIVATE
 
 target_compile_options(gui_test
 PRIVATE
-    $<$<
+    $<$<CXX_COMPILER_ID:GNU>:-municode>
 )

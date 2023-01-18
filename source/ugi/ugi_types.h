@@ -466,7 +466,7 @@ namespace ugi {
         TextureType type; // texture types
         UGIFormat format; // format
         uint32_t mipmapLevel; // mip map level count
-        uint32_t layoutCount; // array layer count
+        uint32_t layerCount; // array layer count
         //
         uint32_t width; // size
         uint32_t height;

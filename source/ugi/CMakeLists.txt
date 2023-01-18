@@ -6,6 +6,7 @@ target_include_directories( UGI
 PUBLIC
     ${SOLUTION_DIR}/thirdpart/include
     ${SOLUTION_DIR}/thirdpart
+    ${SOLUTION_DIR}/thirdpart/glm
     ${SOLUTION_DIR}/source
     ${CMAKE_CURRENT_SOURCE_DIR}
 )

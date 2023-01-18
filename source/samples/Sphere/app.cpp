@@ -175,7 +175,7 @@ namespace ugi {
         texDesc.height = 16;
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
-        texDesc.layoutCount = 1;
+        texDesc.layerCount = 1;
         _texture = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
 
         uint32_t texData[] = {

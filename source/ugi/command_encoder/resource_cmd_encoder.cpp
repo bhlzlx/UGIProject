@@ -120,7 +120,7 @@ namespace ugi {
         barrier.subresourceRange.baseMipLevel = subResource? subResource->baseMipLevel : 0;
         barrier.subresourceRange.levelCount = subResource ? subResource->mipLevelCount : texture->desc().mipmapLevel;
         barrier.subresourceRange.baseArrayLayer = subResource? subResource->baseLayer : 0;
-        barrier.subresourceRange.layerCount = subResource? subResource->layerCount: texture->desc().layoutCount;
+        barrier.subresourceRange.layerCount = subResource? subResource->layerCount: texture->desc().layerCount;
         barrier.image = texture->image();
         //
         VkCommandBuffer cmdbuf = *_commandBuffer;

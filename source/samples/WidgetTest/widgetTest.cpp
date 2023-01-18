@@ -77,7 +77,7 @@ namespace ugi {
         texDesc.height = 16;
         texDesc.type = TextureType::Texture2D;
         texDesc.mipmapLevel = 1;
-        texDesc.layoutCount = 1;
+        texDesc.layerCount = 1;
         auto tex = _device->createTexture(texDesc, ResourceAccessType::ShaderRead );
         //
         for( size_t i = 0; i<MaxFlightCount; ++i) {

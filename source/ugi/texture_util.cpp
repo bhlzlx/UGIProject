@@ -82,17 +82,17 @@ namespace ugi {
 			// unsupported texture format
 			return nullptr;
 		}
-		desc.layoutCount = 1;
+		desc.layerCount = 1;
 		desc.depth = 1;
 		desc.mipmapLevel = header->mipLevelCount;
 		if (header->faceCount == 6) {
 			if (header->arraySize >= 1) {
 				desc.type = TextureType::TextureCubeArray;
-				desc.layoutCount = header->faceCount * header->arraySize;
+				desc.layerCount = header->faceCount * header->arraySize;
 			}
 			else {
 				desc.type = TextureType::TextureCube;
-				desc.layoutCount = 6;
+				desc.layerCount = 6;
 			}
 		}
 		else if( header->pixelDepth >=1 ) {
@@ -102,7 +102,7 @@ namespace ugi {
 		else {
 			if (header->arraySize >= 1) {
 				desc.type = TextureType::Texture2DArray;
-				desc.layoutCount = header->arraySize;
+				desc.layerCount = header->arraySize;
 			}
 			else
 			{
@@ -174,7 +174,7 @@ namespace ugi {
         textureDescription.height = y;
         textureDescription.depth = 1;
         textureDescription.mipmapLevel = mipmapLevel;
-        textureDescription.layoutCount = 1;
+        textureDescription.layerCount = 1;
         textureDescription.type = TextureType::Texture2D;
         auto texture = device->createTexture(textureDescription);
 		//
