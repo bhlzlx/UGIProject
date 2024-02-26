@@ -25,3 +25,6 @@
 [submodule "gui"]
 	path = gui
 	url = https://github.com/bhlzlx/gui
+[submodule "thirdpart/entt"]
+	path = thirdpart/entt
+	url = https://github.com/skypjack/entt

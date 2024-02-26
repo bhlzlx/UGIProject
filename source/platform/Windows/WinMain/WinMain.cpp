@@ -19,8 +19,7 @@ static int frameThicknessY;
 
 HINSTANCE hInst;                                
 WCHAR szTitle[MAX_LOADSTRING];                  
-WCHAR szWindowClass[MAX_LOADSTRING];            
-
+WCHAR szWindowClass[MAX_LOADSTRING];
 UGIApplication* object = nullptr;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -94,6 +93,7 @@ int APIENTRY wWinMain
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
+    // LoadCursor(hInstance, MAKEINTRESOURCE(IDI_SMALL));
     WNDCLASSEXW wcex;
 
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -103,8 +103,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_EMPLTYWINDOW));
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.hCursor = LoadCursor(hInstance, MAKEINTRESOURCE(IDI_CURSOR));
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_EMPLTYWINDOW);
     wcex.lpszClassName = szWindowClass;
@@ -125,16 +125,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     RECT wndRc = {
         0, 0, 640, 480
     };
+
     AdjustWindowRect( &wndRc, WS_OVERLAPPEDWINDOW, TRUE);
 
-    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, wndRc.right, wndRc.bottom, nullptr, nullptr, hInstance, nullptr);
+    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, wndRc.right, wndRc.bottom, nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd) {
         return FALSE;
     }
-
-
 
     object = GetApplication();
 
@@ -189,10 +187,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         int wmId = LOWORD(wParam);
         switch (wmId)
         {
-        case IDM_ABOUT:
-            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-            break;
-        case IDM_EXIT:
+        case WM_QUIT:
             DestroyWindow(hWnd);
             break;
         case WM_KEYDOWN:

@@ -6,6 +6,7 @@
 /bin/Windows_64_Release/*
 /source/utility/ShaderCompiler/lib/*
 /.vs/*
+/.cache/*
 /out/*
 /vsproj/*
 /bin/.vs

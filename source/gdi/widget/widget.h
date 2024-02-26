@@ -45,7 +45,6 @@ namespace ugi {
 
         // 注意，目前Widget还不是带虚函数的，Component这些子类还不是虚继承，以后看看如果有必要就加虚继承
 
-
 		class Widget {
             struct alignas(4) TransformHandle {
                 alignas(4) uint32_t index;

@@ -5,7 +5,7 @@
 
 namespace ugi {
 
-    constexpr uint32_t UniformAlignBytes = 256;
+    // constexpr uint32_t UniformAlignBytes = 256;
     constexpr uint32_t InitialBlockSize = 0x10000;
     //
     UniformAllocator::UniformAllocator( Device* device ) 
