@@ -1,4 +1,4 @@
-project( Samples )
+project( samples )
 
 ##if(WIN32)
 ##    set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
@@ -48,9 +48,10 @@ else()
         add_subdirectory( GDI )
         add_subdirectory( WidgetTest )
         add_subdirectory( TexturePacker )
-        add_subdirectory( DX11Test )
+        # add_subdirectory( DX11Test )
         add_subdirectory( GaussBlur )
         add_subdirectory( gui_test )
+        add_subdirectory( fgui )
         
         SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET Sphere PROPERTY FOLDER "Samples")

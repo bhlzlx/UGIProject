@@ -6,12 +6,6 @@
 #include <stb_truetype.h>
 #include <algorithm>
 
-namespace hgl {
-    namespace assets {
-        class AssetsSource;
-    }
-}
-
 namespace ugi {
 
     // static const int32_t SDFSourceFontBorder = 12;

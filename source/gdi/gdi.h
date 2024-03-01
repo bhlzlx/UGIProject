@@ -1,15 +1,9 @@
 ﻿#pragma once
-#include <hgl/math/Vector.h>
 #include <algorithm>
 #include <utility>
 #include <ugi/ugi_declare.h>
 #include <ugi/ugi_types.h>
-
-namespace hgl {
-    namespace assets {
-        class AssetsSource;
-    }
-}
+#include <glm/glm.hpp>
 
 namespace ugi {
 
@@ -21,12 +15,12 @@ namespace ugi {
         private:
             ugi::Device*                _device;
             hgl::assets::AssetsSource*  _assetsSource;
-            ugi::pipeline_desc_t    _pipelineDesc;
-            ugi::GraphicsPipeline*              _pipeline;
+            ugi::pipeline_desc_t        _pipelineDesc;
+            ugi::GraphicsPipeline*      _pipeline;
             //
-            hgl::Vector2f               _standardSize;
-            hgl::Vector2f               _size;          // context size( width,height )
-            hgl::Vector2f               _scale;         // 
+            glm::vec2                   _standardSize;
+            glm::vec2                   _size;          // context size( width,height )
+            glm::vec2                   _scale;         // 
             float                       _commonScale;
             //
             uint32_t                    _uniformMaxSize;

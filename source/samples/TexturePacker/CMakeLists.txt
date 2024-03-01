@@ -25,6 +25,11 @@ add_executable( SDFTest WIN32
     ${PROJECT_HEADER}
 )
 
+target_include_directories(SDFTest
+PRIVATE
+    ../../common
+)
+
 target_link_libraries(
     SDFTest
     CMCore

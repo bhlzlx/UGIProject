@@ -1,180 +1,31 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) WidgetTest",
-            "type": "cppdbg",
+            "type": "lua",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/WidgetTest.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "gdb.exe",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
+            "tag": "normal",
+            "name": "LuaPanda",
+            "description": "通用模式,通常调试项目请选择此模式 | launchVer:3.2.0",
+            "cwd": "${workspaceFolder}",
+            "luaFileExtension": "",
+            "connectionPort": 8818,
+            "stopOnEntry": true,
+            "useCHook": true,
+            "autoPathMode": true
         },
         {
-            "name": "(gdb) GDITest",
-            "type": "cppdbg",
+            "type": "lua",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/GDITest.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "gdb.exe",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },{
-            "name": "(gdb) Sphere",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/Sphere.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "gdb.exe",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },{
-            "name": "(gdb) HelloWorld",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/HelloWorld.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "gdb.exe",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },{
-            "name": "(gdb) ShaderCompiler",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/ShaderCompiler.exe",
-            "args": ["Sphere"],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "gdb.exe",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "(msvc) DX11Test",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/DX11Test.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false
-        },{
-            "name": "(msvc) GaussBlur",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/GaussBlur.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false
-        },
-        {
-            "name": "(msvc) SDFTest",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/SDFTest.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false
-        },
-        {
-            "name": "(msvc) WidgetTest",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/WidgetTest.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false
-        },{
-            "name": "(msvc) GDITest",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/GDITest.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false
-        },
-        {
-            "name": "(msvc) HelloWorld",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/HelloWorld.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false
-        },
-        {
-            "name": "(msvc) Sphere",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/Windows_64_Debug/Sphere.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Windows_64_Debug/",
-            "environment": [],
-            "externalConsole": false
+            "tag": "independent_file",
+            "name": "LuaPanda-IndependentFile",
+            "description": "独立文件调试模式,使用前请参考文档",
+            "luaPath": "",
+            "packagePath": [],
+            "luaFileExtension": "",
+            "connectionPort": 8820,
+            "stopOnEntry": true,
+            "useCHook": true
         }
     ]
 }

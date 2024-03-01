@@ -1,5 +1,11 @@
 add_executable(GaussBlur WIN32)
 
+target_link_libraries(GaussBlur
+PRIVATE
+    UGI
+    # UGIApp
+)
+
 target_sources(GaussBlur
 PRIVATE
     ${PLATFORM_SOURCE}
@@ -15,9 +21,4 @@ target_include_directories(GaussBlur
 PRIVATE
     ${CMAKE_SOURCE_DIR}/source
     ${CMAKE_SOURCE_DIR}/thirdpart/tweeny/include
-)
-
-target_link_libraries( GaussBlur
-PRIVATE
-    UGI
 )

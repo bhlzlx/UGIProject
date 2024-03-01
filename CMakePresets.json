@@ -1,8 +1,21 @@
 {
-    "version": 2,
+    "version": 6,
     "configurePresets": [
         {
-            "name": "msvc_x64",
+            "name": "tdm-gcc-10",
+            "displayName": "TDM-GCC",
+            "description": "gcc",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "E:/compilers/mingw64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "E:/compilers/mingw64/bin/g++.exe",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "msvc",
             "displayName": "Visual Studio Community 2022 Release - amd64",
             "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
             "generator": "Visual Studio 17 2022",
@@ -18,16 +31,11 @@
     ],
     "buildPresets": [
         {
-            "name": "msvc_x64-debug",
+            "name": "msvc-debug",
             "displayName": "Visual Studio Community 2022 Release - amd64 - Debug",
-            "configurePreset": "msvc_x64",
+            "configurePreset": "msvc",
             "configuration": "Debug"
-        },
-        {
-            "name": "msvc_x64-release",
-            "displayName": "Visual Studio Community 2022 Release - amd64 - Release",
-            "configurePreset": "msvc_x64",
-            "configuration": "Release"
         }
+        
     ]
 }

@@ -4,15 +4,16 @@
 #include <ugi/ugi_declare.h>
 #include <ugi/ugi_types.h>
 #include <ugi/descriptor_binder.h>
-#include <hgl/math/Vector.h>
-// #include <glm/glm.hpp>
+// #include <hgl/math/Vector.h>
+#include <cassert>
+#include <glm/glm.hpp>
 
 namespace ugi {
 
     struct CVertex {
-        hgl::vec3<float> position;
-        hgl::vec3<float> normal;
-        hgl::vec2<float> coord;
+        glm::vec3 position;
+        glm::vec3 normal;
+        glm::vec2 coord;
 	};
 
 	void CreateSphere(int _nstack, int _nslice, std::vector<CVertex>& _vertices, std::vector<uint16_t>& _indices) {
@@ -49,9 +50,9 @@ namespace ugi {
 				x = cos(xarc) * xzref;
 				z = sin(xarc) * xzref;
 				//
-				hgl::vec3<float> pos(x, y, z);
-				hgl::vec3<float> normal(x, y, z);
-				hgl::vec2<float> coord(1.0f - 1.0f / (sliceCount - 1) * slc, 1.0f - (y + 1.0f) / 2.0f);
+				glm::vec3 pos(x, y, z);
+				glm::vec3 normal(x, y, z);
+				glm::vec2 coord(1.0f - 1.0f / (sliceCount - 1) * slc, 1.0f - (y + 1.0f) / 2.0f);
 				//
 				CVertex vertex;
 				vertex.position = pos;

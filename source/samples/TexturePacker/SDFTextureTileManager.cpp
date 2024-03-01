@@ -3,7 +3,6 @@
 #include <ugi/texture.h>
 #include <ugi/buffer.h>
 #include <ugi/flight_cycle_invoker.h>    
-#include <hgl/assets/AssetsSource.h>
 #include <ugi/command_encoder/resource_cmd_encoder.h>
 #include <ugi/command_buffer.h>
 

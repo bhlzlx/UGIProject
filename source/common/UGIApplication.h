@@ -1,6 +1,9 @@
 #pragma once
 #include <cstdint>
-#include <LightWeightCommon/lightweight_comm.h>
+
+namespace comm {
+    class IArchive;
+}
 
 class UGIApplication {
 public:

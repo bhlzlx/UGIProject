@@ -8,6 +8,8 @@
 
 namespace ugi {
 
+    // glm::mat4 CreateCameraMatrix(glm::vec2 screenSize, float fov);
+
     ugi::vertex_layout_t vertexLayout;
 
     class Render {

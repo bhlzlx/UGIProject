@@ -1,10 +1,10 @@
-﻿#include <UGIApplication.h>
+﻿#include "../../common/UGIApplication.h"
+
 #include <cstdio>
 #include <algorithm>
 #include <ugi/ugi_declare.h>
 #include <ugi/ugi_types.h>
 #include <vector>
-// #include <ugi/descriptor_binder.h>
 
 namespace ugi {
 
