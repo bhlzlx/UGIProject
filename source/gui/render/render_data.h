@@ -5,12 +5,14 @@
 namespace gui {
 
     // shader vertex desc
+    #pragma pack(push, 1)
     struct image_vertex_t {
         glm::vec3   position;
-        glm::vec2   uv;
         uint32_t    packed_color;
+        glm::vec2   uv;
         uint32_t    instIndex;
     };
+    #pragma pack(pop)
 
     // shader uniform buffer desc
     struct image_inst_data_t {
@@ -41,9 +43,9 @@ namespace gui {
         std::vector<uint16_t>       indices;
     };
 
-    class BatchData {
-    private:
-    public:
+
+    struct image_render_batch {
+
     };
 
 }

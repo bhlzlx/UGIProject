@@ -4,6 +4,7 @@
 #include <ugi/ugi_types.h>
 #include <ugi/descriptor_binder.h>
 #include <io/archive.h>
+#include "core/n_texture.h"
 #include "render_data.h"
 
 namespace gui {
@@ -37,7 +38,10 @@ namespace gui {
         void bind(ugi::RenderCommandEncoder* encoder);
         void draw(ugi::RenderCommandEncoder* enc, ugi::Renderable* renderable);
 
-        image_item_t* createImageItem();
+        static image_item_t* createImageItem(image_desc_t const& desc);
+        static image_item_t* createImageItem(image_9grid_desc_t const& desc);
+
+        static image_render_batch* createImageRenderBatch(std::vector<image_item_t*> const& items, std::vector<image_inst_data_t>const& args, Handle texture);
 
 
         bool initialize();

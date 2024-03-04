@@ -26,7 +26,7 @@
 namespace gui {
 
     bool UIImageRender::initialize() {
-        auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
+        auto material = _pipeline->createMaterial({"args", "image_sampler", "image_tex"}, {});
         _uboptor = material->descriptors()[0];
         _samptor = material->descriptors()[1];
         _texptor = material->descriptors()[2];
@@ -84,6 +84,31 @@ namespace gui {
         auto material = _pipeline->createMaterial({"args", "image_sampler", "image_tex"}, {});
         auto renderable = new ugi::Renderable(mesh, material, _pipeline, ugi::raster_state_t());
         return renderable;
+    }
+
+    image_item_t* UIImageRender::createImageItem(image_desc_t const& desc) {
+        std::vector<image_vertex_t> vertices = {
+            {{0, 0, 0}, desc.uv[0], 0xffffffff, 0},
+            {{desc.size.x, 0, 0}, {desc.uv[1].x, desc.uv[0].y}, 0xffffffff, 0},
+            {{desc.size.x, desc.size.y, 0}, desc.uv[1], 0xffffffff, 0},
+            {{0, desc.size.y, 0}, {desc.uv[0].x, desc.uv[1].y}, 0xffffffff, 0},
+        };
+        std::vector<uint16_t> indices = {0,1,2,0,2,3};
+        return new image_item_t {std::move(vertices), std::move(indices)};
+    }
+
+    /**
+     * @brief Create a Image Item object
+     *  先写个简单的错误实现
+     * @param desc 
+     * @return image_item_t* 
+     */
+    image_item_t* UIImageRender::createImageItem(image_9grid_desc_t const& desc) {
+        return createImageItem(image_desc_t{desc.size, {desc.uv[0], desc.uv[1]}});
+    }
+
+
+    image_render_batch* UIImageRender::createImageRenderBatch(std::vector<image_item_t*> const& items, std::vector<image_inst_data_t>const& args, Handle texture) {
     }
 
 
