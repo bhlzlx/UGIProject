@@ -24,13 +24,13 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-// #include <glm/glm/glm.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 namespace ugi {
 
+    // 生成2D的相机view * projection矩阵
     glm::mat4 CreateVPMat(glm::vec2 screenSize, float fov) {
         glm::vec3 camPos;
         camPos.z = (screenSize.x / 2) / tan(fov/2.f/180.f);
@@ -98,7 +98,7 @@ namespace ugi {
             ugi::polygon_mode_t::Fill,
             [](void*, CommandBuffer* cb){}
         );
-        auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
+        auto material = _pipeline->createMaterial({"args", "image_sampler", "image_tex"}, {});
         auto renderable = new Renderable(mesh, material, _pipeline, raster_state_t());
         return renderable;
     }

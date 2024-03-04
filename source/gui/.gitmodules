@@ -1,0 +1,3 @@
+[submodule "thirdpart/lwc"]
+	path = thirdpart/lwc
+	url = https://github.com/bhlzlx/LightWeightCommon

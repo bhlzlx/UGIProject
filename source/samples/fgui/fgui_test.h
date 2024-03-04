@@ -5,6 +5,7 @@
 #include <ugi/ugi_types.h>
 #include <ugi/descriptor_binder.h>
 #include <io/archive.h>
+#include <mesh_buffer_allocator.h>
 
 namespace ugi {
 

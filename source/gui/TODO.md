@@ -1,0 +1,3 @@
+# 添加控件ID管理
+
+FairyGUI的ID是字符串，应该可以使用NamePool进行管理，通过ID获取Object对象的时候也会更快。
