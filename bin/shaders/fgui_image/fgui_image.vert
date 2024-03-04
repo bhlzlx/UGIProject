@@ -6,6 +6,7 @@
 layout (location = 0) in vec3 position;
 layout (location = 1) in uint packed_color;
 layout (location = 2) in vec2 uv;
+layout (location = 3) in uint propIndex;
 
 layout (location = 0) out vec2 frag_uv;
 layout (location = 1) out vec4 frag_color;
@@ -14,14 +15,23 @@ out gl_PerVertex  {
     vec4 gl_Position;
 };
 
-struct 
+// 65536 / sizeof(instance_data_t) = 682
 
-layout( set = 0, binding = 0 ) uniform args {
-	mat4 vp;
+struct instance_data_t {
+    mat4    transfrom;
+    vec4    image_color;
+    float   hdr;
+    float   gray;
+    float   alpha;
+};
+
+layout(set = 0, binding = 0) uniform args {
+    instance_data_t image_datas[512];
 };
 
 void main() {
-	gl_Position = vec4(position,1.0f) * vp;
+    uint idx = propIndex;
+	gl_Position = vec4(position,1.0f) * image_datas[idx].transfrom;
 	frag_uv = uv;
     float a = float(((packed_color >> 24) & 0xff)) / 255.0f;
     float r = float(((packed_color >> 16) & 0xff)) / 255.0f;

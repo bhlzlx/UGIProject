@@ -7,8 +7,20 @@
 layout (location = 0) in vec2 frag_uv;
 layout (location = 1) in vec4 frag_color;
 
-layout ( set = 0, binding = 1 ) uniform sampler image_sampler;
-layout ( set = 0, binding = 2 ) uniform texture2D image_tex;
+struct instance_data_t {
+    mat4    transfrom;
+    vec4    image_color;
+    float   hdr;
+    float   gray;
+    float   alpha;
+};
+
+layout(set = 0, binding = 0) uniform args {
+    instance_data_t image_datas[512];
+};
+
+layout ( set = 0, binding = 1 ) uniform sampler     image_sampler;
+layout ( set = 0, binding = 2 ) uniform texture2D   image_tex;
 
 layout ( location = 0 ) out vec4 outFragColor;
 
