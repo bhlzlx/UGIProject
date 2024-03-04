@@ -1,0 +1,5 @@
+CompileFlags:
+    Add : [-std=c++20]
+    CompilationDatabase : out/build/clang-cl/
+
+    
