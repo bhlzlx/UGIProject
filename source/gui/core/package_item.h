@@ -3,46 +3,10 @@
 #include <core/hit_test.h>
 #include <string>
 #include "../utils/byte_buffer.h"
-#include "core/ui_objects/object_factory.h"
+#include "core/ui/object_factory.h"
 
 namespace gui {
 
-    enum class PackageItemType : uint8_t {
-        Image, // 纹理
-        MovieClip, // 序列
-        Sound, // 音频
-        Component, // 组件
-        Atlas,
-        Font,
-        Swf,
-        Misc,
-        Unknown,
-        Spine,
-        DragonBones,
-    };
-
-    enum class ObjectType : uint8_t {
-        Image,
-        MovieClip,
-        Swf,
-        Graph,
-        Loader,
-        Group,
-        Text,
-        RichText,
-        InputText,
-        Component,
-        List,
-        Label,
-        Button,
-        ComboBox,
-        ProgressBar,
-        Slider,
-        ScrollBar,
-        Tree,
-        Loader3D,
-    };
-    
     class PackageItem {
         friend class Package;
         friend class ObjectFactory;

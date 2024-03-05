@@ -153,7 +153,7 @@ namespace gui {
         template<class T>
         requires std::is_enum_v<T>
         inline T read() {
-            return (T)read<std::underlying_type<T>>();
+            return (T)read<std::underlying_type_t<T>>();
         }
 
         template<>

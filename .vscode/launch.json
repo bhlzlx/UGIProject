@@ -2,6 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "vsdbg-ui",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Windows_64_Debug/ui.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin",
+            "environment": [],
+            "console": "externalTerminal"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "lldb-ui",
+            "program": "${workspaceFolder}/bin/Windows_64_Debug/ui.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/bin"
+        },
+
+        {
             "type": "lua",
             "request": "launch",
             "tag": "normal",

@@ -1,12 +1,11 @@
 #pragma once
 #include <string>
-#include "core/ui_objects/component.h"
-#include "core/data_types/tweener.h"
 #include <core/declare.h>
-#include <core/ease/ease_type.h>
+#include "core/data_types/handle.h"
+#include "core/data_types/tweener.h"
 #include <core/data_types/tween_types.h>
-
-#include "../utility/enum_bits.h"
+#include <core/ease/ease_type.h>
+#include <core/utility/enum_bits.h>
 
 namespace gui {
 
@@ -34,7 +33,7 @@ namespace gui {
 
     struct TransitionItem {
         float                   time;
-        ObjectUID               targetID;
+        Handle                  targetID;
         TransitionActionType    type;
         TweenConfig*            tweenConfig;
         std::string             label;

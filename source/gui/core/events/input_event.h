@@ -2,8 +2,6 @@
 #include "core/data_types/handle.h"
 #include "glm/fwd.hpp"
 #include <core/declare.h>
-#include <cstdint>
-
 #include <LightWeightCommon/utils/enum_class_bits.h>
 
 namespace gui {

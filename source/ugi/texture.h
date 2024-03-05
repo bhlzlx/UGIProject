@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "ugi_types.h"
 #include "vulkan_declare.h"
 #include "ugi_declare.h"
 #include "ugi_vulkan_private.h"
@@ -40,9 +41,14 @@ namespace ugi {
         VkImageAspectFlags                              _aspectFlags;           // color / depth /stencil / 
         bool                                            _ownsImage;
         bool                                            _uploaded;
+        image_view_t                                    _view;
     public:
         VkImage image() const {
             return _image;
+        }
+
+        image_view_t defaultView() const {
+            return _view;
         }
 
         bool uploaded() const {

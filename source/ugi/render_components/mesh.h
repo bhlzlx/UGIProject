@@ -19,7 +19,7 @@ namespace ugi {
         uint64_t                attriOffsets_[MaxVertexAttribute];
         //
         vertex_layout_t         vertexLayout_;
-        topology_mode_t            topologyMode_;
+        topology_mode_t         topologyMode_;
         polygon_mode_t          polygonMode_;
         uint8_t                 uploaded_:1;
     public:

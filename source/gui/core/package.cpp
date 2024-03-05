@@ -1,7 +1,6 @@
 #include "package.h"
 #include "core/package.h"
-#include "core/ui_objects/object_factory.h"
-#include <cstdlib>
+#include "core/ui/object_factory.h"
 #include <utils/byte_buffer.h>
 #include <utils/toolset.h>
 //
@@ -14,7 +13,7 @@
 #include <log/client_log.h>
 //
 #include <core/package_item.h>
-#include <core/ui_objects/object.h>
+#include <core/ui/object.h>
 
 namespace gui {
 

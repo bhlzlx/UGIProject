@@ -1,9 +1,8 @@
 #pragma once
-#include "core/data_types/ui_types.h"
-#include "core/data_types/transition.h"
-#include <core/ui_objects/object.h>
 #include <vector>
-#include "../display_objects/container.h"
+#include <core/data_types/ui_types.h>
+#include <core/data_types/transition.h>
+#include <core/ui/object.h>
 #include "core/declare.h"
 #include "core/display_objects/display_object.h"
 #include "core/events/event_dispatcher.h"

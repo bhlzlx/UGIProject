@@ -3,8 +3,7 @@
 #include <core/ease/ease.h>
 #include <core/gui_context.h>
 #include <core/data_types/interpolatable_path.h>
-#include <core/ui_objects/object.h>
-#include <random>
+#include <core/ui/object.h>
 
 namespace gui {
 
@@ -23,7 +22,7 @@ namespace gui {
             break;
 
         case TweenPropType::Position:
-            target->setPosition(val.vec2());
+            target->setPosition(val.vec3());
             break;
 
         case TweenPropType::Width:
@@ -123,12 +122,12 @@ namespace gui {
         return this;
     }
 
-    Tweener* Tweener::setTarget(ObjectUID uid) {
+    Tweener* Tweener::setTarget(Handle uid) {
         target_ = uid;
         return this;
     }
 
-    Tweener* Tweener::setTarget(ObjectUID uid, TweenPropType type) {
+    Tweener* Tweener::setTarget(Handle uid, TweenPropType type) {
         target_ = uid;
         return this;
     }
@@ -180,7 +179,7 @@ namespace gui {
         return repeat_;
     }
 
-    ObjectUID Tweener::getTarget() const {
+    Handle Tweener::getTarget() const {
         return target_;
     }
 
@@ -335,12 +334,12 @@ namespace gui {
         }
         //
         auto objectTable = GetGUIContext()->objectTable();
-        if(target_.valid() && propType_ != TweenPropType::None) {
-            auto obj = objectTable->query(target_);
-            if(obj) {
-                // setProps
-            }
-        }
+        // if(target_ && propType_ != TweenPropType::None) {
+        //     auto obj = objectTable->query(target_);
+        //     if(obj) {
+        //         // setProps
+        //     }
+        // }
         
 
     }

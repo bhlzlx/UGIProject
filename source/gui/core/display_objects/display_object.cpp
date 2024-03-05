@@ -14,7 +14,7 @@ namespace gui {
 
     DisplayObject DisplayObject::parent() const {
         if(reg.any_of<dispcomp::parent>(entity_)) {
-            return reg.get<dispcomp::parent>(entity_).parent;
+            return reg.get<dispcomp::parent>(entity_).val;
         }
         return DisplayObject();
     }
@@ -26,7 +26,7 @@ namespace gui {
         } else {
             comp = &reg.get<dispcomp::children>(entity_);
         }
-        std::vector<DisplayObject> &children = comp->children;
+        std::vector<DisplayObject> &children = comp->val;
         int count = children.size();
         if(index > count) {
             return;
@@ -41,14 +41,13 @@ namespace gui {
             // child.remove
             // children.insert()
         }
-        std::swap(children.back(),)
     }
 
     void DisplayObject::removeChild(DisplayObject child) {
         if(!reg.any_of<dispcomp::children>(entity_)) {
             return;
         }
-        auto &children = reg.get<dispcomp::children>(entity_).children;
+        auto &children = reg.get<dispcomp::children>(entity_).val;
         auto iter = std::find(children.begin(), children.end(), child);
         if(iter != children.end()) {
             children.erase(iter);
@@ -59,7 +58,7 @@ namespace gui {
         if(!reg.any_of<dispcomp::children>(entity_)) {
             return;
         }
-        auto &children = reg.get<dispcomp::children>(entity_).children;
+        auto &children = reg.get<dispcomp::children>(entity_).val;
         if(index < children.size()) {
             children.erase(children.begin() + index);
         }

@@ -1,4 +1,9 @@
-﻿#include "gui_test.h"
+﻿#include "fgui_test.h"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/trigonometric.hpp"
+#include "gui/render/render_data.h"
+#include "gui/render/ui_image_render.h"
+#include "ugi_types.h"
 #include <cassert>
 #include <ugi/device.h>
 #include <ugi/swapchain.h>
@@ -22,75 +27,29 @@
 #include <ugi/helper/pipeline_helper.h>
 #include <cmath>
 
+#include <gui/render/ui_image_render.h>
+
+#include <glm/ext.hpp>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 namespace ugi {
 
-    bool Render::initialize() {
-
-        auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
-        _uboptor = material->descriptors()[0];
-        _samptor = material->descriptors()[1];
-        _texptor = material->descriptors()[2];
-        _bufferAllocator = new MeshBufferAllocator();
-        auto rst = _bufferAllocator->initialize(_device, 4096);
-        return rst;
-    }
-
-    void Render::setRasterization(raster_state_t rasterState) {
-        _pipeline->setRasterizationState(rasterState);
-    }
-
-    void Render::tick() {
-        _pipeline->resetMaterials();
-    }
-
-    void Render::bind(RenderCommandEncoder* encoder) {
-        encoder->bindPipeline(_pipeline);
-    }
-
-    void Render::draw(RenderCommandEncoder* enc, Renderable* renderable) {
-        _pipeline->applyMaterial(renderable->material());
-        _pipeline->flushMaterials(enc->commandBuffer());
-        enc->draw(renderable->mesh(), renderable->mesh()->indexCount());
-    }
-
-    void Render::setUBO(Renderable* renderable, uint8_t* data) {
-        auto mtl = renderable->material();
-        _uniformAllocator->allocateForDescriptor(_uboptor, data);
-        mtl->updateDescriptor(_uboptor);
-    }
-
-    void Render::setSampler(Renderable* renderable, sampler_state_t sampler) {
-        auto mtl = renderable->material();
-        _samptor.res.samplerState = sampler;
-        mtl->updateDescriptor(_samptor);
-    }
-
-    void Render::setTexture(Renderable* renderable, image_view_t imageView) {
-        auto mtl = renderable->material();
-        _texptor.res.imageView = imageView.handle;
-        mtl->updateDescriptor(_texptor);
-    }
-
-    Renderable* Render::createRenderable(uint8_t const* vd, uint32_t vdsize, uint16_t const* id, uint32_t indexCount, GPUAsyncLoadManager* asyncLoadManager) {
-        auto mesh = Mesh::CreateMesh(
-            _device, _bufferAllocator, asyncLoadManager,
-            (uint8_t const*)vd, vdsize,
-            id, indexCount,
-            _pipeline->desc().vertexLayout,
-            _pipeline->desc().topologyMode,
-            ugi::polygon_mode_t::Fill,
-            [](void*, CommandBuffer* cb){}
-        );
-        auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
-        auto renderable = new Renderable(mesh, material, _pipeline, raster_state_t());
-        return renderable;
+    // 生成2D的相机view * projection矩阵
+    glm::mat4 CreateVPMat(glm::vec2 screenSize, float fovy) {
+        glm::vec3 camPos;
+        camPos.z = (screenSize.y / 2) / tan(fovy/2.f/180.f * 3.1415926);
+        camPos.x = screenSize.x / 2;
+        camPos.y = -screenSize.y / 2;
+        glm::mat4 viewMat = glm::lookAt(camPos, glm::vec3(camPos.x, camPos.y, 0.f), glm::vec3(0, 1,0)); // view mat
+        // float fovy = atan((screenSize.y / 2) / camPos.z) * 2 / 3.1415926f * 180.f;
+        glm::mat4 projMat = glm::perspective(fovy, screenSize.x / screenSize.y, 0.1f, camPos.z * 2);
+        return projMat * viewMat;
     }
 
     bool HelloWorld::initialize( void* _wnd, comm::IArchive* arch) {
-        auto pipelineFile = arch->openIStream("/shaders/triangle/pipeline.bin", {comm::ReadFlag::binary});
+        auto pipelineFile = arch->openIStream("/shaders/fgui_image/pipeline.bin", {comm::ReadFlag::binary});
         PipelineHelper ppl = PipelineHelper::FromIStream(pipelineFile);
         pipelineFile->close();
         auto ppldesc = ppl.desc();
@@ -113,20 +72,8 @@ namespace ugi {
         bufferAllocator->initialize(_renderContext->device(), 1024);
 
         auto device = _renderContext->device();
-        _render = new Render(device, pipeline, bufferAllocator, _renderContext->uniformAllocator());
+        _render = new gui::UIImageRender(device, pipeline, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
         _render->initialize();
-
-        float centerH = 1.0f / std::sqrt(3.0f);
-        float edge = 0.5f;
-        float vertexData[] = {
-            -edge, -centerH * edge, 0, 0,
-            0, edge * (sqrt(3.0f) - centerH), 0.5, 1.0,
-            edge, -centerH * edge, 1.0, 0
-        };
-        uint16_t indexData[] = {
-            0, 1, 2
-        };
-        _renderable = _render->createRenderable((uint8_t const*)vertexData, sizeof(vertexData), indexData, 3, _renderContext->asyncLoadManager());
         char const* imagePaths[] = {
             "image/ushio.png",
             "image/island.png",
@@ -135,10 +82,12 @@ namespace ugi {
             auto imgFile = _renderContext->archive()->openIStream(imagePaths[i], {comm::ReadFlag::binary});
             auto buffer = malloc(imgFile->size());
             imgFile->read(buffer, imgFile->size());
-            Texture* texture = CreateTexturePNG(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
+            _textures[i] = CreateTexturePNG(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
+            // Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
                 [this,i,device](void* res, CommandBuffer* cb) {
-                    _textures[i] = (Texture*)res;
-                    _textures[i]->generateMipmap(cb);
+                    auto texture = (Texture*)res;
+                    // _textures[i] = (Texture*)res;
+                    texture->generateMipmap(cb);
                     auto resEnc = cb->resourceCommandEncoder();
                     resEnc->imageTransitionBarrier(
                         _textures[i], ResourceAccessType::ShaderRead, 
@@ -149,20 +98,61 @@ namespace ugi {
                     image_view_param_t ivp;
                     _imageViews[i] = _textures[i]->createImageView(device, ivp);
                     resEnc->endEncode();
-                    _textures[i]->markAsUploaded();
+                    texture->markAsUploaded();
                 }
             );
             free(buffer);
             imgFile->close();
         }
-        _render->setSampler(_renderable, _samplerState);
         _flightIndex = 0;
+        //
+        gui::image_desc_t image_desc[2] = {
+            {
+                {64, 64},
+                {{0, 0}, {.51f, .5f}}
+            },
+            {
+                {32, 32},
+                {{0.5f, 0.5f}, {1.0f, 1.0f}}
+            }
+        };
+        auto vp = CreateVPMat(glm::vec2(640, 480), 45.f);
+        auto unit = glm::identity<glm::mat4>();
+        gui::image_inst_data_t inst_data[2] = {
+            {
+                vp *glm::translate(unit, glm::vec3(32,32,0)),
+                glm::vec4(1.f, 1.f, 1.f, 0.5f),
+                glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+            },
+            {
+                vp *glm::translate(unit, glm::vec3(64,64,0)),
+                glm::vec4(1.f, 1.f, 1.f, 0.5f),
+                glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+            }
+        };
+        gui::image_item_t* imageItems[2] = {
+            // _render->createImageItem()
+            _render->createImageItem(image_desc[0]),
+            _render->createImageItem(image_desc[1])
+        };
+        std::vector<gui::image_render_data_t> renderDatas = {
+            {
+                imageItems[0],
+                inst_data,
+            },
+            {
+                imageItems[1],
+                inst_data + 1,
+            },
+        };
+        _imageBatches = _render->buildImageRenderBatch(renderDatas, _textures[0]);
         return true;
     }
 
     void HelloWorld::tick() {
         _renderContext->onPreTick();
         _render->tick();
+        //
         Device* device = _renderContext->device();
         IRenderPass* mainRenderPass = _renderContext->mainFramebuffer();
         auto cmdbuf = _renderContext->primaryQueue()->createCommandBuffer(device, CmdbufType::Transient);
@@ -170,6 +160,7 @@ namespace ugi {
             _renderContext->primaryQueue()->destroyCommandBuffer(device, cmdbuf);
         });
         cmdbuf->beginEncode(); {
+            //
             renderpass_clearval_t clearValues;
             clearValues.colors[0] = { 0.5f, 0.5f, 0.5f, 1.0f }; // RGBA
             clearValues.depth = 1.0f;
@@ -178,33 +169,16 @@ namespace ugi {
             mainRenderPass->setClearValues(clearValues);
 
             auto renderEnc = cmdbuf->renderCommandEncoder(mainRenderPass); {
-                if(_textures[0] && _textures[1] && _renderable->mesh()->prepared()) {
-                    static uint64_t angle = 0;
-                    float sinVal = sin( ((float)angle)/180.0f * 3.1415926f );
-                    float cosVal = cos( ((float)angle)/180.0f * 3.1415926f );
-                    float col2[2][4] = {
-                        { cosVal, -sinVal, 0, 0 },
-                        { sinVal,  cosVal, 0, 0 }
-                    };
+                if(_textures[0]->uploaded() && _textures[1]->uploaded() && _imageBatches.prepared()) {
                     static ugi::raster_state_t rasterizationState;
-                    if( angle % 180 == 0 ) {
-                        rasterizationState.polygonMode = polygon_mode_t::Fill;
-                    } else if( angle % 90 == 0) {
-                        rasterizationState.polygonMode = polygon_mode_t::Line;
-                    }
-                    if( angle % 60 == 0 ) {
-                        _render->setTexture(_renderable, _imageViews[0]);
-                    } else if( angle % 30 == 0) {
-                        _render->setTexture(_renderable, _imageViews[1]);
-                    }
-                    ++angle;
-                    _render->setUBO(_renderable, (uint8_t*)col2);
+                    rasterizationState.polygonMode = polygon_mode_t::Fill;
                     renderEnc->setLineWidth(1.0f);
                     renderEnc->setViewport(0, 0, _width, _height, 0, 1.0f);
                     renderEnc->setScissor(0, 0, _width, _height);
                     _render->setRasterization(rasterizationState);
                     _render->bind(renderEnc);
-                    _render->draw(renderEnc, _renderable);
+                    _render->drawBatch(_imageBatches, renderEnc);
+                    // _render->draw(renderEnc, _renderable);
                 }
             }
             renderEnc->endEncode();
@@ -219,6 +193,44 @@ namespace ugi {
         
     void HelloWorld::resize(uint32_t width, uint32_t height) {
         _renderContext->onResize(width, height);
+        // gui::image_desc_t image_desc[2] = {
+        //     {
+        //         {64, 64},
+        //         {{0, 0}, {.51f, .5f}}
+        //     },
+        //     {
+        //         {32, 32},
+        //         {{0.5f, 0.5f}, {1.0f, 1.0f}}
+        //     }
+        // };
+        // gui::image_inst_data_t inst_data[2] = {
+        //     {
+        //         glm::translate(glm::mat4(), glm::vec3(32,32,0)),
+        //         glm::vec4(1.f, 1.f, 1.f, 0.5f),
+        //         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+        //     },
+        //     {
+        //         glm::translate(glm::mat4(), glm::vec3(64,64,0)),
+        //         glm::vec4(1.f, 1.f, 1.f, 0.5f),
+        //         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+        //     }
+        // };
+        // gui::image_item_t* imageItems[2] = {
+        //     _render->createImageItem(image_desc[0]),
+        //     _render->createImageItem(image_desc[1])
+        // };
+        // std::vector<gui::image_render_data_t> renderDatas = {
+        //     {
+        //         imageItems[0],
+        //         inst_data,
+        //     },
+        //     {
+        //         imageItems[1],
+        //         inst_data + 1,
+        //     },
+        // };
+        // _imageBatches = _render->buildImageRenderBatch(renderDatas, _textures[0]);
+        //
         _width = width;
         _height = height;
     }

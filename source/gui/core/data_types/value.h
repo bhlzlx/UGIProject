@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <stdint.h>
 #include <string>
-#include <concepts>
 #include <type_traits>
 #include <core/events/ui_events.h>
 
@@ -73,7 +72,7 @@ namespace gui {
         requires std::same_as<std::string, T>
         Value(T&& val)
             : type_(ValueType::String)
-            , sval(std::forward(val))
+            , sval(std::forward<T>(val))
         {
         }
 
@@ -85,7 +84,7 @@ namespace gui {
         requires std::is_pointer_v<T>
         Value(T val)
             : type_(ValueType::Pointer)
-            , ptr(val)
+            , ptr((void*)val)
         {
         }
 
