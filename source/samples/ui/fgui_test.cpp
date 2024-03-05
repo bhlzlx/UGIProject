@@ -1,10 +1,8 @@
 ﻿#include "fgui_test.h"
 #include "glm/ext/matrix_transform.hpp"
-#include "glm/trigonometric.hpp"
 #include "gui/render/render_data.h"
 #include "gui/render/ui_image_render.h"
 #include "ugi_types.h"
-#include <cassert>
 #include <ugi/device.h>
 #include <ugi/swapchain.h>
 #include <ugi/command_queue.h>
@@ -41,9 +39,8 @@ namespace ugi {
         glm::vec3 camPos;
         camPos.z = (screenSize.y / 2) / tan(fovy/2.f/180.f * 3.1415926);
         camPos.x = screenSize.x / 2;
-        camPos.y = -screenSize.y / 2;
+        camPos.y = screenSize.y / 2;
         glm::mat4 viewMat = glm::lookAt(camPos, glm::vec3(camPos.x, camPos.y, 0.f), glm::vec3(0, 1,0)); // view mat
-        // float fovy = atan((screenSize.y / 2) / camPos.z) * 2 / 3.1415926f * 180.f;
         glm::mat4 projMat = glm::perspective(fovy, screenSize.x / screenSize.y, 0.1f, camPos.z * 2);
         return projMat * viewMat;
     }
@@ -109,18 +106,18 @@ namespace ugi {
         gui::image_desc_t image_desc[2] = {
             {
                 {64, 64},
-                {{0, 0}, {.51f, .5f}}
+                {{0, 0}, {.5f, .5f}}
             },
             {
                 {32, 32},
                 {{0.5f, 0.5f}, {1.0f, 1.0f}}
             }
         };
-        auto vp = CreateVPMat(glm::vec2(640, 480), 45.f);
+        auto vp = CreateVPMat(glm::vec2(633, 450), 45.f);
         auto unit = glm::identity<glm::mat4>();
         gui::image_inst_data_t inst_data[2] = {
             {
-                vp *glm::translate(unit, glm::vec3(32,32,0)),
+                vp *glm::translate(unit, glm::vec3(0, 0,0)),
                 glm::vec4(1.f, 1.f, 1.f, 0.5f),
                 glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
             },
@@ -193,44 +190,6 @@ namespace ugi {
         
     void HelloWorld::resize(uint32_t width, uint32_t height) {
         _renderContext->onResize(width, height);
-        // gui::image_desc_t image_desc[2] = {
-        //     {
-        //         {64, 64},
-        //         {{0, 0}, {.51f, .5f}}
-        //     },
-        //     {
-        //         {32, 32},
-        //         {{0.5f, 0.5f}, {1.0f, 1.0f}}
-        //     }
-        // };
-        // gui::image_inst_data_t inst_data[2] = {
-        //     {
-        //         glm::translate(glm::mat4(), glm::vec3(32,32,0)),
-        //         glm::vec4(1.f, 1.f, 1.f, 0.5f),
-        //         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-        //     },
-        //     {
-        //         glm::translate(glm::mat4(), glm::vec3(64,64,0)),
-        //         glm::vec4(1.f, 1.f, 1.f, 0.5f),
-        //         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-        //     }
-        // };
-        // gui::image_item_t* imageItems[2] = {
-        //     _render->createImageItem(image_desc[0]),
-        //     _render->createImageItem(image_desc[1])
-        // };
-        // std::vector<gui::image_render_data_t> renderDatas = {
-        //     {
-        //         imageItems[0],
-        //         inst_data,
-        //     },
-        //     {
-        //         imageItems[1],
-        //         inst_data + 1,
-        //     },
-        // };
-        // _imageBatches = _render->buildImageRenderBatch(renderDatas, _textures[0]);
-        //
         _width = width;
         _height = height;
     }
@@ -239,7 +198,7 @@ namespace ugi {
     }
 
     const char * HelloWorld::title() {
-        return "HelloWorld";
+        return "ui api demo";
     }
         
     uint32_t HelloWorld::rendererType() {

@@ -1,20 +1,9 @@
 #pragma once
 #include "core/data_types/handle.h"
 #include "core/declare.h"
-#include "texture.h"
+// #include "texture.h"
 
 namespace gui {
-
-    class RawTexture : public ObjectHandle {
-    private:
-        ugi::Texture*                       tex_;
-    public:
-        RawTexture(ugi::Texture* tex)
-            : ObjectHandle(this)
-            , tex_(tex)
-        {
-        }
-    };
 
     class NTexture : public ObjectHandle {
     private:
@@ -26,9 +15,9 @@ namespace gui {
         NTexture() {
         }
 
-        NTexture(RawTexture* raw, Rect<float> rc)
+        NTexture(Handle rawTex, Rect<float> rc)
             : ObjectHandle(this)
-            , native_(raw->handle())
+            , native_(rawTex)
             , root_(handle())
             , rc_(rc)
             , uvRc_()
@@ -44,12 +33,12 @@ namespace gui {
         NTexture* root() const {
             return root_.as<NTexture>();
         }
-        RawTexture* nativeTexture() const {
-            return native_.as<RawTexture>();
+        Handle nativeTexture() const {
+            return native_;
         }
 
         void unload();
-        void reload(RawTexture* native);
+        // void reload(RawTexture* native);
     };
 
     static NTexture empty;
