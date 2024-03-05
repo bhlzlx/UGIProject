@@ -1,6 +1,6 @@
 #include "hit_test.h"
 #include <utils/byte_buffer.h>
-#include <core/ui_objects/object.h>
+#include <core/ui/object.h>
 
 namespace gui {
 
@@ -20,15 +20,15 @@ namespace gui {
         }
     }
 
-    void PixelHitTestData::load(ByteBuffer<PackageBlocks>* buffer) {
-        buffer->skip(4);
-        width = buffer->read<int>();
-        scale = 1.0f / buffer->read<int8_t>();
-        auto byteCount = buffer->read<int>();
+    void PixelHitTestData::load(ByteBuffer& buffer) {
+        buffer.skip(4);
+        width = buffer.read<int>();
+        scale = 1.0f / buffer.read<int8_t>();
+        auto byteCount = buffer.read<int>();
         height =  byteCount / width;
         pixels = new uint8_t[byteCount];
         for(uint32_t i = 0; i<byteCount; ++i) {
-            pixels[i] = buffer->read<uint8_t>();
+            pixels[i] = buffer.read<uint8_t>();
         }
     }
 

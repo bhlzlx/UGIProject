@@ -86,6 +86,43 @@ namespace gui {
         }
     };
 
+    enum class PackageItemType : uint8_t {
+        Image, // 纹理
+        MovieClip, // 序列
+        Sound, // 音频
+        Component, // 组件
+        Atlas,
+        Font,
+        Swf,
+        Misc,
+        Unknown,
+        Spine,
+        DragonBones,
+    };
+
+    enum class ObjectType : uint8_t {
+        Image,
+        MovieClip,
+        Swf,
+        Graph,
+        Loader,
+        Group,
+        Text,
+        RichText,
+        InputText,
+        Component,
+        List,
+        Label,
+        Button,
+        ComboBox,
+        ProgressBar,
+        Slider,
+        ScrollBar,
+        Tree,
+        Loader3D,
+    };
+    
+
     enum class MouseButton : int {
         Left,
         Right,

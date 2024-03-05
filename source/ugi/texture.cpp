@@ -1,4 +1,5 @@
-﻿#include <ugi/texture.h>
+﻿#include "ugi_types.h"
+#include <ugi/texture.h>
 #include <ugi/device.h>
 #include <ugi/ugi_utility.h>
 #include <ugi/ugi_type_mapping.h>
@@ -161,6 +162,10 @@ namespace ugi {
             texture->_currentAccessType = ResourceAccessType::None;
             texture->_primaryAccessType = _accessType;
         }
+        image_view_param_t vp;
+        vp.viewType = _desc.type;
+        auto iv = texture->createImageView(_device, vp);
+        texture->_view = iv;
         return texture;
     }
 

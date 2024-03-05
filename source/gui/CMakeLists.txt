@@ -46,6 +46,7 @@ target_include_directories(gui
 PRIVATE
     .
     ${CMAKE_SOURCE_DIR}/thirdpart/glm
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_compile_definitions(gui

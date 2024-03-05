@@ -1,6 +1,6 @@
 #include "relation.h"
 #include <core/declare.h>
-#include <core/ui_objects/object.h>
+#include <core/ui/object.h>
 
 namespace gui {
 

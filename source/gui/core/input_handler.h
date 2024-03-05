@@ -7,7 +7,7 @@
 
 namespace gui {
 
-    using CaptureEventCallback = std::function<void(EventType)>;
+    using CaptureEventCallback = std::function<void(int)>;
 
     class InputHandler {
     private:

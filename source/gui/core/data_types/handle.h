@@ -93,6 +93,11 @@ namespace gui {
         bool operator == (nullptr_t) const {
             return !as<void*>();
         }
+        Handle operator = (Handle const&handle) {
+            ref_ = handle.ref_;
+            ref_->addRef();
+            return *this;
+        }
         ~Handle() {
             if(ref_) {
                 ref_->deRef();

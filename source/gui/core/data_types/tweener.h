@@ -1,4 +1,5 @@
 #pragma once
+#include "core/data_types/handle.h"
 #include <functional>
 #include <core/declare.h>
 #include <core/data_types/tween_types.h>
@@ -52,8 +53,8 @@ namespace gui {
         Tweener* setTimeScale(float value);
         Tweener* setSnapping(bool value);
         Tweener* setTargetAny(void* val);
-        Tweener* setTarget(ObjectUID uid);
-        Tweener* setTarget(ObjectUID uid, TweenPropType type);
+        Tweener* setTarget(Handle uid);
+        Tweener* setTarget(Handle uid, TweenPropType type);
         Tweener* setUserData(Userdata const& ud);
         Tweener* setPath(InterpoPath* path);
         Tweener* setUpdateCallback(TweenCallback const& callback);
@@ -65,7 +66,7 @@ namespace gui {
         float getDelay() const;
         float getDuration() const;
         int getRepeat() const;
-        ObjectUID getTarget() const;
+        Handle getTarget() const;
         float getNormalizedTime() const;
         bool isCompleted() const;
         bool allCompleted() const;
@@ -95,7 +96,7 @@ namespace gui {
         void callCompleteCallback();
 
         // void*               target_;
-        ObjectUID           target_;
+        Handle           target_;
         // cocos2d::Ref* _refTarget;
         TweenPropType       propType_;
         UnderlyingEnum<TweenValueType>      valueType_;

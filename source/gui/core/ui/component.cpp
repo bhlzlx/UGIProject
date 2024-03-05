@@ -5,7 +5,7 @@
 #include "core/events/event_dispatcher.h"
 #include "core/package.h"
 #include "core/package_item.h"
-#include "core/ui_objects/object_factory.h"
+#include "core/ui/object_factory.h"
 #include "imgui/imgui.h"
 #include "utils/byte_buffer.h"
 #include "core/display_objects/display_object.h"

@@ -1,4 +1,8 @@
 #pragma once
+#include <gui/core/declare.h>
+#include <gui/core/data_types/handle.h>
+#include "ugi_declare.h"
+#include "ugi_types.h"
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -17,10 +21,8 @@ namespace gui {
     // shader uniform buffer desc
     struct image_inst_data_t {
         glm::mat4   transfrom;
-        glm::vec3   image_color;
-        float       hdr;
-        float       gray;
-        float       alpha;
+        glm::vec4   color;// rgb, alpha
+        glm::vec4   props; // gray, hdr
     };
 
     struct image_desc_t {
@@ -43,9 +45,27 @@ namespace gui {
         std::vector<uint16_t>       indices;
     };
 
-
-    struct image_render_batch {
-
+    struct image_render_data_t {
+        image_item_t const*         item;
+        image_inst_data_t const*    args;
+        // Texture*                    tex;
+        // ugi::sampler_state_t        sampler;
     };
+
+    struct image_render_batch_t {
+        ugi::Renderable*                renderable;
+        ugi::res_descriptor_t           argsDetor;
+        ugi::res_descriptor_t           samplerDetor;
+        ugi::res_descriptor_t           textureDetor;
+        std::vector<image_inst_data_t>  args;
+        ugi::sampler_state_t            sampler;
+        Texture*                        texture; // 以后改成安全的
+    };
+
+    struct image_render_batches_t {
+        std::vector<image_render_batch_t*> batches;
+        bool prepared() const;
+    };
+
 
 }
