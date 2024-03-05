@@ -31,7 +31,7 @@ layout(set = 0, binding = 0) uniform args {
 
 void main() {
     uint idx = propIndex;
-	gl_Position = vec4(position,1.0f) * image_datas[idx].transfrom;
+	gl_Position = image_datas[idx].transfrom * vec4(position,1.0f);
 	frag_uv = uv;
     float a = float(((packed_color >> 24) & 0xff)) / 255.0f;
     float r = float(((packed_color >> 16) & 0xff)) / 255.0f;
