@@ -347,7 +347,7 @@ namespace gui {
                     break;
                 }
                 case gui::PackageItemType::Image: {
-                    // loadImageItem();
+                    loadImageItem(item);
                     break;
                 }
                 default:
@@ -374,8 +374,8 @@ namespace gui {
         }
         if(item->rawTexture_ == nullptr) {
             item->rawTexture_ = tex;
-        } else {
-            assert(false); // 尚未处理
+        // } else {
+        //     assert(false); // 尚未处理
         }
         if(item->rawTexture_) {
             item->texture_ = NTexture(item->rawTexture_->handle(), Rect<float>{{0, 0}, {(float)tex->desc().width, (float)tex->desc().height}});
@@ -386,11 +386,14 @@ namespace gui {
         auto iter = sprites_.find(item->id_);
         if(iter != sprites_.end()) {
             auto const& sprite = iter->second;
+            if(nullptr == sprite.item->rawTexture_) {
+                loadAtlasItem(sprite.item);
+            }
             auto atlas = sprite.item->texture_;
             if(atlas.size().width == sprite.rect.size.width && atlas.size().height == sprite.rect.size.height) {
                 item->texture_ = atlas;
             } else {
-                item->texture_ = NTexture(atlas, sprite.rect, sprite.rotated, sprite.origSize, sprite.offset);
+                item->texture_ = NTexture(atlas, sprite.rect, sprite.rotated, Size2D<float>(sprite.origSize.x, sprite.origSize.y), sprite.offset);
             }
         }
     }

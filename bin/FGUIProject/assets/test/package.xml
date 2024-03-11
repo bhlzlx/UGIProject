@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="ztph75qb">
+  <resources>
+    <component id="i9ln0" name="comp.xml" path="/" exported="true"/>
+    <image id="t8i71" name="ushio.png" path="/img/"/>
+  </resources>
+  <publish name=""/>
+</packageDescription>

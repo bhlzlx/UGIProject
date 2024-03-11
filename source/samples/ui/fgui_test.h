@@ -7,6 +7,8 @@
 #include <mesh_buffer_allocator.h>
 #include <gui/render/ui_image_render.h>
 
+#include <gui/core/package.h>
+
 namespace ugi {
 
     class HelloWorld : public UGIApplication {
