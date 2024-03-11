@@ -353,5 +353,8 @@ namespace gui {
     void Tweener::callCompleteCallback() {
     }
 
+    Tweener::TweenCallback Tweener::OnDelayedPlay;
+    Tweener::TweenCallback Tweener::OnCheckAllComplete;
+    Tweener::TweenCallback Tweener::OnDelayedPlayItem;
 
 }

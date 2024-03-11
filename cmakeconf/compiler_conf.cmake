@@ -83,4 +83,6 @@ endif()
 
 message( "target platform : ${CMAKE_SYSTEM_NAME}")
 
+# add_compile_definitions()
+
 set( SOLUTION_DIR ${CMAKE_CURRENT_SOURCE_DIR} )

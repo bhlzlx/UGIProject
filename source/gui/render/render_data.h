@@ -1,6 +1,6 @@
 #pragma once
 #include <gui/core/declare.h>
-#include <gui/core/data_types/handle.h>
+#include <LightWeightCommon/utils/handle.h>
 #include "ugi_declare.h"
 #include "ugi_types.h"
 #include <glm/glm.hpp>

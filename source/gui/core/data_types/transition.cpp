@@ -37,5 +37,8 @@ namespace gui {
     {
     }
 
+    void Transition::setup(ByteBuffer& buffer) {
+        return;
+    }
 
 }

@@ -6,10 +6,10 @@ namespace ugi {
 
     class Device;
 
-    class Resource : public comm::Handle {
+    class Resource : public comm::ObjectHandle {
     public:
         Resource()
-            : Handle(this)
+            : comm::ObjectHandle(this)
         {}
         virtual void release(Device* _device) = 0;
         virtual ~Resource() = default;

@@ -1,6 +1,6 @@
 #include "controller.h"
-#include "core/data_types/value.h"
-#include "core/ui_objects/component.h"
+#include <core/data_types/value.h>
+#include <core/ui/component.h>
 
 namespace gui {
 
@@ -21,6 +21,10 @@ namespace gui {
 
     void Controller::runActions() {
         return; 
+    }
+
+    void Controller::setup(ByteBuffer const& buffer) {
+        return;
     }
 
 }

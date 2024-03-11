@@ -1,10 +1,12 @@
 #pragma once
-#include "core/data_types/handle.h"
 #include <functional>
 #include <core/declare.h>
 #include <core/data_types/tween_types.h>
+#include <LightWeightCommon/utils/handle.h>
 
 namespace gui {
+
+    using namespace comm;
 
     enum class TweenPropType {
         None,

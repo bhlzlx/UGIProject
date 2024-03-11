@@ -32,7 +32,7 @@ namespace gui {
         {
         }
 
-        void setup(ByteBuffer buffer);
+        void setup(ByteBuffer const& buffer);
 
         void runActions();
 

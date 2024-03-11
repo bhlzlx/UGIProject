@@ -4,11 +4,12 @@
 #include <functional>
 #include <vector>
 #include <concepts>
-#include "../data_types/handle.h"
-#include "core/data_types/handle.h"
+#include <LightWeightCommon/utils/handle.h>
 #include "core/data_types/value.h"
 
 namespace gui {
+
+    using namespace comm;
 
     class EventContext {
     private:

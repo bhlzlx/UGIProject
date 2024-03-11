@@ -16,6 +16,7 @@ PRIVATE
     core/data_types/interpolatable_path.cpp
     core/data_types/tweener.cpp
     core/data_types/tween_types.cpp
+    core/ease/ease.cpp
     core/events/event_dispatcher.cpp
     core/events/input_event.cpp
     core/input_handler.cpp
@@ -30,7 +31,9 @@ PRIVATE
     core/display_objects/container.cpp
     # ui
     core/ui/component.cpp
+    core/controller.cpp
     core/ui/object.cpp
+    core/ui/object_factory.cpp
     core/ui/image.cpp
     render/ui_image_render.cpp
 )
@@ -50,6 +53,6 @@ PRIVATE
 )
 
 target_compile_definitions(gui
-PRIVATE
-    $<$<STREQUAL:${CMAKE_CXX_BYTE_ORDER},"BIG_ENDIAN">: BIG_ENDIAN=1>
+PUBLIC
+    $<$<STREQUAL:${CMAKE_CXX_BYTE_ORDER},BIG_ENDIAN>: BIG_ENDIAN=1>
 )

@@ -14,6 +14,38 @@ namespace gui {
 
     Object::~Object() {}
 
+
+    void Object::onInit() {
+
+    }
+    void Object::onSizeChanged() {
+
+    }
+    void Object::onScaleChanged() {
+
+    }
+    void Object::onGrayedChanged() {
+
+    }
+    void Object::onPositionChanged() {
+
+    }
+    void Object::onAlphaChanged() {
+
+    }
+    void Object::onVisibleChanged() {
+
+    }
+    void Object::onEnter() {
+
+    }
+    void Object::onExit() {
+
+    }
+    void Object::onControllerChanged(Controller* controller) {
+
+    }
+
     void Object::setupBeforeAdd(ByteBuffer& bufRef, int startPos) {
         auto buffer = &bufRef;
         buffer->seekToBlock(startPos, ObjectBlocks::Props);
@@ -84,6 +116,9 @@ namespace gui {
         data_ = buffer->read<std::string>(); // user data???
     }
 
+    void Object::setupAfterAdd(ByteBuffer& buffer, int startPos) {
+    }
+
     void Object::internalSetParent(Component* comp) {
         parent_ = comp;
     }
@@ -96,6 +131,25 @@ namespace gui {
 
     void Object::createDisplayObject() {
         dispobj_ = DisplayObject::createDisplayObject();
+    }
+
+    void Object::setScale(float x, float y)  {
+    }
+
+    void Object::setSkew(float x, float y) {
+    }
+
+    void Object::setPivot( glm::vec2 const& pivot, bool asAnchor) {
+    }
+
+    void Object::setAlpha(float val) {
+    }
+    void Object::setGrayed(bool val) {
+    }
+    void Object::setVisible(bool) {
+    }
+
+    void Object::setPixelSnapping(bool val) {
     }
 
 }

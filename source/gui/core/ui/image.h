@@ -30,6 +30,8 @@ namespace gui {
         {
         }
 
+        ~Image() {}
+
     };
 
 }

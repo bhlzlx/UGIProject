@@ -250,4 +250,12 @@ namespace gui {
         return;
     }
 
+
+    void Component::onAddedToStage(EventContext* context) {
+    }
+    void Component::onRemoveFromStage(EventContext* context) {
+    }
+    void Component::updateClipRect() {
+    }
+
 }

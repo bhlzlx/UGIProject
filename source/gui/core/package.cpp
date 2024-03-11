@@ -1,12 +1,16 @@
 #include "package.h"
+#include "core/declare.h"
+#include "core/n_texture.h"
 #include "core/package.h"
 #include "core/ui/object_factory.h"
+#include "ugi_types.h"
 #include <utils/byte_buffer.h>
 #include <utils/toolset.h>
 //
 #include <ugi/device.h>
 #include <ugi/render_context.h>
 #include <ugi/texture.h>
+#include <ugi/texture_util.h>
 #include <ugi/command_buffer.h>
 //
 #include <io/archive.h>
@@ -17,11 +21,26 @@
 
 namespace gui {
 
+    comm::IArchive*                                 Package::archive_ = nullptr;
+    std::unordered_map<std::string, Package*>       Package::packageInstByID;
+    std::unordered_map<std::string, Package*>       Package::packageInstByName;
+    std::vector<Package*>                           Package::packageList_;
+    std::unordered_map<std::string, std::string>    Package::vars_;
+    std::string                                     Package::branch_;
+    Texture*                                        Package::emptyTexture_;
+    uint32_t                                        Package::moduleInited_;
+
     namespace {
         uint32_t White2x2Data[] = {
             0xffffffff,0xffffffff,
             0xffffffff,0xffffffff,
         };
+    }
+
+
+    Package::Package() {
+    }
+    Package::~Package() {
     }
 
     bool Package::CheckModuleInitialized() {
@@ -33,8 +52,9 @@ namespace gui {
 
     bool Package::loadFromBuffer(ByteBuffer& bufferRef, std::string_view assetPath) {
         auto buffer = &bufferRef;
+        auto magicNumber = buffer->read<uint32_t>();
         // magic number, version, bool, id, name,[20 bytes], indexTables
-        if(buffer->read<uint32_t>() != 0x46475549) {
+        if(magicNumber != 0x46475549) {
             return false;
         }
         assetPath_ = assetPath;
@@ -55,6 +75,7 @@ namespace gui {
                 stringTable_[i] = buffer->read<std::string>();
             } 
         }
+        buffer->setStringTable(&stringTable_);
         // read dependences
         buffer->seekToBlock(indexTablePos, PackageBlocks::Dependences); {
             count = buffer->read<int16_t>();
@@ -189,21 +210,21 @@ namespace gui {
             auto const& itemID = buffer->read<csref>();
             item = itemsByID_[buffer->read<csref>()];
             //
-            AtlasSprite* sprite = new AtlasSprite();
-            sprite->item = item;
-            sprite->rect.base.x = buffer->read<int>();
-            sprite->rect.base.y = buffer->read<int>();
-            sprite->rect.size.width = buffer->read<int>();
-            sprite->rect.size.height = buffer->read<int>();
-            sprite->rotated = buffer->read<bool>();
+            AtlasSprite sprite;
+            sprite.item = item;
+            sprite.rect.base.x = buffer->read<int>();
+            sprite.rect.base.y = buffer->read<int>();
+            sprite.rect.size.width = buffer->read<int>();
+            sprite.rect.size.height = buffer->read<int>();
+            sprite.rotated = buffer->read<bool>();
             if(v2 && buffer->read<bool>()) {
-                sprite->offset.x = buffer->read<int>();
-                sprite->offset.y = buffer->read<int>();
-                sprite->origSize.x = buffer->read<int>();
-                sprite->origSize.y = buffer->read<int>();
+                sprite.offset.x = buffer->read<int>();
+                sprite.offset.y = buffer->read<int>();
+                sprite.origSize.x = buffer->read<int>();
+                sprite.origSize.y = buffer->read<int>();
             } else {
-                sprite->offset = {};
-                sprite->origSize = sprite->rect.size;
+                sprite.offset = {};
+                sprite.origSize = sprite.rect.size;
             }
             sprites_[itemID] = sprite;
             buffer->setPos(nextPos);
@@ -231,15 +252,15 @@ namespace gui {
     }
 
     Package* Package::AddPackage(std::string const& assetPath) {
-        if(!CheckModuleInitialized()) {
-            assert("not initialized yet!");
-            return nullptr;
-        }
+        // if(!CheckModuleInitialized()) {
+        //     assert("not initialized yet!");
+        //     return nullptr;
+        // }
         auto iter = packageInstByID.find(assetPath);
         if(iter != packageInstByID.end()) {
             return iter->second;
         }
-        auto file = archive_->openIStream(assetPath + ".fui", {comm::ReadFlag::binary});
+        auto file = archive_->openIStream(assetPath + "_fui.bytes", {comm::ReadFlag::binary});
         if(!file) {
             COMMLOGE("GUI: package not found [%s]", assetPath.c_str());
             return nullptr;
@@ -266,7 +287,7 @@ namespace gui {
             return ;
         }
         archive_ = archive;
-        auto renderContext = GetRenderContext();
+        auto renderContext = ugi::StandardRenderContext::Instance();
         auto device = renderContext->device();
         // init empty textur
         ugi::tex_desc_t whiteTexDesc = {
@@ -317,5 +338,79 @@ namespace gui {
         }
         return nullptr;
     }
+
+    void Package::loadAllAssets() {
+        for(auto [id, item]: itemsByID_) {
+            switch(item->type_) {
+                case gui::PackageItemType::Atlas: {
+                    loadAtlasItem(item);
+                    break;
+                }
+                case gui::PackageItemType::Image: {
+                    // loadImageItem();
+                    break;
+                }
+                default:
+                break;
+            }
+        }
+    }
+
+    void Package::loadAtlasItem(PackageItem* item) {
+        auto const& filepath = item->file_;
+        auto rc = ugi::StandardRenderContext::Instance();
+        auto file = archive_->openIStream(filepath, {comm::ReadFlag::binary});
+        ugi::Texture* tex = nullptr;
+        if(file) {
+            std::vector<uint8_t> pngData;
+            pngData.resize(file->size());
+            file->read(pngData.data(), file->size());
+            tex = rc->createTexturePNG(pngData.data(), pngData.size(), [](void* res, ugi::CommandBuffer* cmd) {
+                // async load
+            } );
+        }
+        if(!tex) {
+            tex = emptyTexture_;
+        }
+        if(item->rawTexture_ == nullptr) {
+            item->rawTexture_ = tex;
+        } else {
+            assert(false); // 尚未处理
+        }
+        if(item->rawTexture_) {
+            item->texture_ = NTexture(item->rawTexture_->handle(), Rect<float>{{0, 0}, {(float)tex->desc().width, (float)tex->desc().height}});
+        }
+    }
+
+    void Package::loadImageItem(PackageItem* item) {
+        auto iter = sprites_.find(item->id_);
+        if(iter != sprites_.end()) {
+            auto const& sprite = iter->second;
+            auto atlas = sprite.item->texture_;
+            if(atlas.size().width == sprite.rect.size.width && atlas.size().height == sprite.rect.size.height) {
+                item->texture_ = atlas;
+            } else {
+                item->texture_ = NTexture(atlas, sprite.rect, sprite.rotated, sprite.origSize, sprite.offset);
+            }
+        }
+    }
+
+    // bool Package::CheckModuleInitialized() {
+    //     return true;
+    // }
+
+
+    Package* PackageForID(std::string const& id) {
+        return nullptr;
+    }
+
+    Package* PackageForName(std::string const& name) {
+        return nullptr;
+    }
+
+    Package* LoadPackageFromAsset(std::string const& assetPath) {
+        return nullptr;
+    }
+
 
 }

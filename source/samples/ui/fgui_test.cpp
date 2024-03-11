@@ -1,7 +1,9 @@
 ﻿#include "fgui_test.h"
 #include "glm/ext/matrix_transform.hpp"
+#include "gui/core/package.h"
 #include "gui/render/render_data.h"
 #include "gui/render/ui_image_render.h"
+#include "io/archive.h"
 #include "ugi_types.h"
 #include <ugi/device.h>
 #include <ugi/swapchain.h>
@@ -60,7 +62,7 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         }
-        _renderContext = new StandardRenderContext();
+        _renderContext = StandardRenderContext::Instance();
         _renderContext->initialize(_wnd, descriptor, arch);
         ppldesc.renderState.cullMode = cull_mode_t::None;
         ppldesc.renderState.blendState.enable = false;
@@ -143,6 +145,10 @@ namespace ugi {
             },
         };
         _imageBatches = _render->buildImageRenderBatch(renderDatas, _textures[0]);
+        //
+        gui::Package::archive_ = comm::CreateFSArchive(arch->rootPath() + "/test/bytes");
+        auto uipack = gui::Package::AddPackage("test");
+        uipack->loadAllAssets();
         return true;
     }
 

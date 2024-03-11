@@ -1,6 +1,7 @@
 #pragma once
-#include "utils/byte_buffer.h"
-#include <core/declare.h>
+#include "render_context.h"
+#include "../utils/byte_buffer.h"
+#include <gui/core/declare.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -23,7 +24,7 @@ namespace gui {
 
         std::unordered_map<std::string, PackageItem*>               itemsByID_;
         std::unordered_map<std::string, PackageItem*>               itemsByName_;
-        std::unordered_map<std::string, AtlasSprite*>               sprites_; 
+        std::unordered_map<std::string, AtlasSprite>                sprites_; 
         std::string                                                 customID_;
         std::vector<std::string>                                    stringTable_;
         std::vector<dependence_t>                                   dependencies_;
@@ -39,7 +40,9 @@ namespace gui {
         static std::string                                          branch_;
         static Texture*                                             emptyTexture_;
         static uint32_t                                             moduleInited_;
+    public:
         static comm::IArchive*                                      archive_;
+        //
     public:
         Package();
         ~Package();
@@ -51,12 +54,18 @@ namespace gui {
             return branchIndex_;
         }
         PackageItem* itemByID(std::string const& id);
+
+        void loadAllAssets();
+
+        void loadAtlasItem(PackageItem* item);
+        void loadImageItem(PackageItem* item);
+
+        
     private:
         static bool CheckModuleInitialized();
     public:
         static Package* AddPackage(std::string const& assetPath);
         static void InitPackageModule(comm::IArchive* archive);
-
     };
 
     Package* PackageForID(std::string const& id);

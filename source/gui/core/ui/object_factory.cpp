@@ -1,9 +1,8 @@
 #include "object_factory.h"
 #include "core/declare.h"
 #include "core/package_item.h"
-#include "core/ui_objects/component.h"
+#include <core/ui/component.h>
 #include "image.h"
-#include <winnt.h>
 
 namespace gui {
 
@@ -46,6 +45,18 @@ namespace gui {
 
     Object* ObjectFactory::createComponent(PackageItem* item) {
         switch(item->objType_) {
+            case ObjectType::Component: {
+                return new Component();
+            }
+            default: {
+                return nullptr;
+            }
+        }
+        return nullptr;
+    }
+
+    Object* ObjectFactory::CreateObject(ObjectType type) {
+        switch(type) {
             case ObjectType::Component: {
                 return new Component();
             }

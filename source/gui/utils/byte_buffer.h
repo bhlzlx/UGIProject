@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <string>
 #include <vector>
-#include <compiler_def.h>
-#include <core/declare.h>
+#include <gui/compiler_def.h>
+#include <gui/core/declare.h>
 
 namespace gui {
 
@@ -98,6 +98,10 @@ namespace gui {
         {
         }
 
+        void setStringTable(std::vector<std::string>* table) {
+            stringTable_ = table;
+        }
+
         ByteBuffer clone() const {
             auto buff = ByteBuffer(length_);
             memcpy(buff.ptr_, ptr(), length_);
@@ -139,16 +143,27 @@ namespace gui {
             static_assert(std::is_trivial_v<T>, "must be pod type!");
             T val;
             #if LITTLE_ENDIAN // 这里需要注意一下大小端问题
-            memcpy(&val, ptr_ + offset_ + position_, sizeof(T));
-            #else
             uint8_t* dst = (uint8_t*)&val;
             for(size_t i = 0; i<sizeof(T); ++i) {
                 dst[sizeof(T)-1-i] = ptr_[offset_+position_+i];
             }
+            #else
+            memcpy(&val, ptr_ + offset_ + position_, sizeof(T));
             #endif
             position_ += sizeof(T);
             return val;
         }
+
+        // template<class T>
+        // requires std::is_integral_v<T>
+        // inline T read() {
+        //     T val;
+        //     for(size_t i = 0; i<sizeof(T); ++i) {
+        //         int64_t b;
+        //         memcpy(&b, ptr_ + offset_ + position_ + i, 1);
+        //         #
+        //     }
+        // }
 
         template<class T>
         requires std::is_enum_v<T>

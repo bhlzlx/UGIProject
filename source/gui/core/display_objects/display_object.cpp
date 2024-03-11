@@ -19,6 +19,17 @@ namespace gui {
         return DisplayObject();
     }
 
+    void DisplayObject::addChild(DisplayObject child) {
+        dispcomp::children* comp = nullptr;
+        if(!reg.any_of<dispcomp::children>(entity_)) {
+            comp = &reg.emplace<dispcomp::children>(entity_);
+        } else {
+            comp = &reg.get<dispcomp::children>(entity_);
+        }
+        comp->val.push_back(child);
+        return;
+    }
+
     void DisplayObject::addChildAt(DisplayObject child, uint32_t index) {
         dispcomp::children* comp = nullptr;
         if(!reg.any_of<dispcomp::children>(entity_)) {
@@ -72,7 +83,7 @@ namespace gui {
         parent.removeChild(*this);
     }
 
-    void setPosition(Point2D<float> const& pos) {
+    void DisplayObject::setPosition(Point2D<float> const& pos) {
         return;
     }
 

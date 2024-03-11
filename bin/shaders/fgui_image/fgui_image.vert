@@ -12,7 +12,6 @@ layout (location = 0) out vec2 frag_uv;
 layout (location = 1) out vec4 frag_color;
 layout (location = 2) out vec4 frag_props;
 
-
 out gl_PerVertex  {
     vec4 gl_Position;
 };
@@ -23,6 +22,7 @@ struct instance_data_t {
     mat4    transfrom;
     vec4    color;
     vec4    props; // gray， hdr
+    // vec4    clipRect; // 
 };
 
 layout(set = 0, binding = 0) uniform args {

@@ -1,11 +1,13 @@
 #include "render_context.h"
 #include <ugi/device.h>
 #include <ugi/command_queue.h>
+#include <ugi/texture.h>
 #include <ugi/command_buffer.h>
 #include <ugi/asyncload/gpu_asyncload_manager.h>
 #include <ugi/descriptor_set_allocator.h>
 #include <ugi/swapchain.h>
 #include <ugi/uniform_buffer_allocator.h>
+#include <ugi/texture_util.h>
 
 namespace ugi {
 
@@ -149,4 +151,23 @@ namespace ugi {
     comm::IArchive* StandardRenderContext::archive() const {
         return _archive;
     }
+
+    void StandardRenderContext::updateTexture(
+        Texture* texture,
+        const image_region_t* regions, uint32_t count, 
+        uint8_t const* data, uint32_t dataSize, uint64_t const* offsets,
+        AsyncLoadCallback &&callback
+    ) {
+        texture->updateRegions(_device, regions, count, data, dataSize, offsets, _asyncLoadManager, std::move(callback));
+    }
+
+    Texture* StandardRenderContext::createTexture(tex_desc_t const& desc) {
+        return _device->createTexture(desc);
+    }
+
+    Texture* StandardRenderContext::createTexturePNG(uint8_t const* data, uint32_t length, AsyncLoadCallback&& asyncCallback) {
+        Texture* tex = CreateTexturePNG(_device, data, length, _asyncLoadManager, std::move(asyncCallback));
+        return tex;
+    }
+
 }

@@ -16,6 +16,12 @@ namespace gui {
         }
     }
 
+    void RelationItem::registEventListener(Object* target) {
+    }
+
+    void RelationItem::unregistEventListener(Object* target) {
+    }
+
     void RelationItem::add(RelationType type, bool usePercent) {
         if(type == RelationType::Size) {
             add(RelationType::Width, usePercent);
@@ -118,6 +124,13 @@ namespace gui {
                 // item->
             }
         }
+    }
+
+    void Relations::clearAll() {
+    }
+
+    void Relations::setup(ByteBuffer buffer, bool parentToChild) {
+        return;
     }
 
 

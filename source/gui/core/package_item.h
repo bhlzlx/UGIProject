@@ -3,6 +3,7 @@
 #include <core/hit_test.h>
 #include <string>
 #include "../utils/byte_buffer.h"
+#include "core/n_texture.h"
 #include "core/ui/object_factory.h"
 
 namespace gui {
@@ -25,7 +26,8 @@ namespace gui {
         std::vector<std::string>*       highResolution_;
 
         // if is atlas
-        Texture*                        texture_;
+        ugi::Texture*                   rawTexture_;
+        NTexture                        texture_;
 
         // if is image
         Rect<float>*                    scale9Grid_;

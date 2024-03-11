@@ -1,4 +1,5 @@
 #pragma once
+#include "utils/singleton.h"
 #include <ugi/ugi_declare.h>
 #include <ugi/ugi_types.h>
 #include <ugi/command_queue.h>
@@ -18,7 +19,8 @@ namespace ugi {
         std::vector<Semaphore*>         semaphoresSignals_;
     };
 
-    class StandardRenderContext {
+    class StandardRenderContext : public comm::Singleton<StandardRenderContext> {
+        friend class comm::Singleton<StandardRenderContext>;
     protected:
         comm::IArchive*                 _archive;
         ugi::RenderSystem*              _renderSystem;                                     //
@@ -38,8 +40,9 @@ namespace ugi {
         //
         // std::vector<QueueSubmitInfo>    _submitInfos;
         std::vector<queue_submit_t>     _submits;
-    public:
+        //
         StandardRenderContext();
+    public:
         bool initialize(void* _wnd, ugi::device_descriptor_t deviceDesc, comm::IArchive* archive);
         bool onPreTick(); // sync gpu result
         bool onPostTick(); // present the swapchain
@@ -56,6 +59,17 @@ namespace ugi {
         IRenderPass* mainFramebuffer() const;
         comm::IArchive* archive() const;
         //
+
+        Texture* createTexture(tex_desc_t const& desc);
+        Texture* createTexturePNG(uint8_t const* data, uint32_t length, AsyncLoadCallback&& asyncCallback);
+
+        void updateTexture(
+            Texture* texture,
+            const image_region_t* regions, uint32_t count, 
+            uint8_t const* data, uint32_t dataSize, uint64_t const* offsets,
+            AsyncLoadCallback &&callback
+        );
+
         void submitCommand(queue_submit_t&& submit);
     };
 
