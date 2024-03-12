@@ -149,6 +149,7 @@ namespace ugi {
         gui::Package::archive_ = comm::CreateFSArchive(arch->rootPath() + "/test/bytes");
         auto uipack = gui::Package::AddPackage("test");
         uipack->loadAllAssets();
+        gui::Object* uiobj = uipack->createObject("test");
         return true;
     }
 

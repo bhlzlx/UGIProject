@@ -46,6 +46,9 @@ namespace gui {
 
     PackageItem* PackageItem::getBranch(){
         do {
+            if(!branches_) {
+                break;
+            }
             if(!branches_->size()) {
                 break;
             }
@@ -58,7 +61,7 @@ namespace gui {
             }
             return owner_->itemByID(itemID);
         }while(true);
-        return nullptr;
+        return this;
     }
 
     PackageItem const* PackageItem::getBranch() const{
@@ -77,4 +80,14 @@ namespace gui {
         }while(true);
         return nullptr;
     }
+
+    PackageItem* PackageItem::getHighSolution() {
+        return this;
+        // if(highResolution_ && )
+    }
+
+    void PackageItem::load() {
+        owner_->loadAssetItem(this);
+    }
+
 }

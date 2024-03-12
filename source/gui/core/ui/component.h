@@ -37,6 +37,7 @@ namespace gui {
             , controllers_()
             , transitions_()
             , margin_()
+            , childrenRenderOrder_(ChildrenRenderOrder::Ascent)
         {
         }
 

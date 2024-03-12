@@ -54,8 +54,11 @@ namespace gui {
     public:
         PackageItem const* getBranch() const;
         PackageItem* getBranch();
+        PackageItem* getHighSolution();
         PackageItem();
         ~PackageItem();
+
+        void load();
     };
 
 }

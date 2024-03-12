@@ -43,6 +43,7 @@ namespace gui {
             };
             uint32_t val;
         };
+        Color4B() : val(0xffffffff) {}
         Color4B(uint32_t ival) : val(ival) {}
         Color4B(uint8_t rr, uint8_t gg, uint8_t bb, uint8_t aa)
         #if BIG_ENDIAN
@@ -173,6 +174,7 @@ namespace gui {
     };
 
     enum class ImageScaleOption {
+        None,
         Grid9,
         Tile,
     };

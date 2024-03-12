@@ -22,6 +22,9 @@ namespace gui {
         entt::entity entity() const {
             return entity_;
         }
+        operator entt::entity () const {
+            return entity();
+        }
     public:
 
         bool operator == (DisplayObject const& obj) const {

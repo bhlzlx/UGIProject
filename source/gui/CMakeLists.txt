@@ -46,7 +46,7 @@ PRIVATE
 )
 
 target_include_directories(gui
-PRIVATE
+PUBLIC
     .
     ${CMAKE_SOURCE_DIR}/thirdpart/glm
     ${CMAKE_CURRENT_SOURCE_DIR}

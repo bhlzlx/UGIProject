@@ -4,6 +4,7 @@
 #include <ugi/ugi_types.h>
 #include <ugi/descriptor_binder.h>
 #include <io/archive.h>
+#include <gui/render/render_data.h>
 #include "command_encoder/render_cmd_encoder.h"
 #include "render_data.h"
 #include "texture.h"

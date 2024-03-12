@@ -43,6 +43,7 @@ namespace gui {
     public:
         static comm::IArchive*                                      archive_;
         //
+
     public:
         Package();
         ~Package();
@@ -57,11 +58,10 @@ namespace gui {
 
         void loadAllAssets();
 
+        void loadAssetItem(PackageItem* item);
+    private:
         void loadAtlasItem(PackageItem* item);
         void loadImageItem(PackageItem* item);
-
-        
-    private:
         static bool CheckModuleInitialized();
     public:
         static Package* AddPackage(std::string const& assetPath);

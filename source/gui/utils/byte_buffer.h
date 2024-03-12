@@ -32,11 +32,12 @@ namespace gui {
         ScrollData = 7,
     };
 
-    enum class ObjectBlocks {
+    enum class ObjectBlocks : uint8_t {
         Props = 0,
         Extra = 1,
         Gears = 2,
         Relations = 3,
+        FillInfo = 5,
     };
 
     // 目测序列化FGUI是按小端存储的
@@ -61,15 +62,10 @@ namespace gui {
         {
         }
         ByteBuffer(ByteBuffer const& buffer) {
-            if(ownBuffer_ && ptr_) {
-                delete []ptr_;
-            }
             memcpy(this, &buffer, sizeof(buffer));
+            ownBuffer_ = false;
         }
         ByteBuffer(ByteBuffer && buffer) {
-            if(ownBuffer_ && ptr_) {
-                delete []ptr_;
-            }
             memcpy(this, &buffer, sizeof(buffer));
             memset(&buffer, 0, sizeof(buffer));
         }
@@ -79,6 +75,14 @@ namespace gui {
             }
             memcpy(this, &buffer, sizeof(buffer));
             memset(&buffer, 0, sizeof(buffer));
+            return *this;
+        }
+        ByteBuffer& operator = (ByteBuffer const& buffer) {
+            if(ownBuffer_ && ptr_) {
+                delete []ptr_;
+            }
+            memcpy(this, &buffer, sizeof(buffer));
+            ownBuffer_ = false;
             return *this;
         }
         ByteBuffer(uint8_t* ptr, int len)
@@ -107,6 +111,7 @@ namespace gui {
             memcpy(buff.ptr_, ptr(), length_);
             buff.offset_ = 0;
             buff.stringTable_ = stringTable_;
+            buff.version = version;
             return buff;
         }
 
@@ -242,7 +247,7 @@ namespace gui {
 
         template<>
         inline csref read<csref>() {
-            auto index = this->read<uint16_t>();
+            int index = this->read<uint16_t>();
             if(stringTable_->size() > index) {
                 return stringTable_->at(index);
             }

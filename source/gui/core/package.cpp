@@ -341,22 +341,29 @@ namespace gui {
 
     void Package::loadAllAssets() {
         for(auto [id, item]: itemsByID_) {
-            switch(item->type_) {
-                case gui::PackageItemType::Atlas: {
-                    loadAtlasItem(item);
-                    break;
-                }
-                case gui::PackageItemType::Image: {
-                    loadImageItem(item);
-                    break;
-                }
-                default:
+            loadAssetItem(item);
+        }
+    }
+
+    void Package::loadAssetItem(PackageItem* item) {
+        switch(item->type_) {
+            case gui::PackageItemType::Atlas: {
+                loadAtlasItem(item);
                 break;
             }
+            case gui::PackageItemType::Image: {
+                loadImageItem(item);
+                break;
+            }
+            default:
+            break;
         }
     }
 
     void Package::loadAtlasItem(PackageItem* item) {
+        if(item->rawTexture_) { // 已经加载过了
+            return;
+        }
         auto const& filepath = item->file_;
         auto rc = ugi::StandardRenderContext::Instance();
         auto file = archive_->openIStream(filepath, {comm::ReadFlag::binary});

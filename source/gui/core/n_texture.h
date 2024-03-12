@@ -25,6 +25,8 @@ namespace gui {
             , root_(handle())
             , rc_(rc)
             , uvRc_()
+            , originSize_(rc.size)
+            , offset_{}
         {
         }
 

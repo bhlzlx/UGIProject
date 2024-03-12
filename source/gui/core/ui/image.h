@@ -32,6 +32,9 @@ namespace gui {
 
         ~Image() {}
 
+        virtual void constructFromResource() override;
+        virtual void setupBeforeAdd(ByteBuffer& buffer, int startPos = 0) override;
+        virtual void setupAfterAdd(ByteBuffer& buffer, int startPos = 0) override;
     };
 
 }

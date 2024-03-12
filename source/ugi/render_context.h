@@ -1,10 +1,10 @@
 #pragma once
-#include "utils/singleton.h"
+#include <lightweight_comm.h>
+#include <utils/singleton.h>
 #include <ugi/ugi_declare.h>
 #include <ugi/ugi_types.h>
 #include <ugi/command_queue.h>
 #include <vector>
-#include <LightWeightCommon/lightweight_comm.h>
 
 namespace ugi {
 

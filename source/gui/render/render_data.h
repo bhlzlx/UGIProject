@@ -1,12 +1,16 @@
 #pragma once
 #include <gui/core/declare.h>
 #include <LightWeightCommon/utils/handle.h>
+#include <core/data_types/ui_types.h>
+#include <core/n_texture.h>
 #include "ugi_declare.h"
 #include "ugi_types.h"
 #include <glm/glm.hpp>
 #include <vector>
 
 namespace gui {
+
+    class UIImageRender;
 
     // shader vertex desc
     #pragma pack(push, 1)
@@ -67,5 +71,13 @@ namespace gui {
         bool prepared() const;
     };
 
+    struct NGraphics {
+        image_item_t        mesh;
+        UIImageRender*      render;
+        NTexture            texture;
+        float               alpha;
+        Color4B             color;
+        FlipType            flip;
+    };
 
 }

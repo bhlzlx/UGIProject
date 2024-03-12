@@ -78,14 +78,14 @@ namespace gui {
             auto childData = buff.readShortBuffer();
             childData.seekToBlock(0, ObjectBlocks::Props);
             auto type = childData.read<ObjectType>();
-            std::string itemID = buff.read<std::string>();
-            std::string pkgID = buff.read<std::string>();
+            std::string itemID = childData.read<csref>();
+            std::string pkgID = childData.read<csref>();
             PackageItem* pi = nullptr;
             Package* pkg = nullptr;
             if(itemID.size()) {
                 pkg = PackageForID(pkgID);
                 if(!pkg) {
-                    pkg = pi->owner_;
+                    pkg = contentItem->owner_;
                 }
                 if(pkg) {
                     pi = pkg->itemByID(itemID);
@@ -131,7 +131,7 @@ namespace gui {
             buff.read<bool>(); // mask 暂时不处理
         }
         {
-            auto hitTestID = buff.read<std::string>();
+            auto hitTestID = buff.read<csref>();
             int i1 = buff.read<int>(), i2 = buff.read<int>();
             if(hitTestID.size()) {
                 auto hitItem = contentItem->owner_->itemByID(hitTestID);
@@ -141,8 +141,8 @@ namespace gui {
             }
         }
         if(buff.version >= 5) {
-            std::string soundAddToStage = buff.read<std::string>();
-            std::string soundRemoveFrom = buff.read<std::string>();
+            std::string soundAddToStage = buff.read<csref>();
+            std::string soundRemoveFrom = buff.read<csref>();
         }
         buff.seekToBlock(0, ComponentBlocks::Transitions);
         auto transitionCount = buff.read<int16_t>();
