@@ -38,6 +38,8 @@ PRIVATE
     core/ui/object_factory.cpp
     core/ui/image.cpp
     render/ui_image_render.cpp
+
+    mesh/image_mesh.cpp
 )
 
 target_link_libraries(gui

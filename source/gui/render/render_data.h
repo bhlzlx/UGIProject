@@ -48,6 +48,12 @@ namespace gui {
         glm::mat4   transfrom;
         glm::vec4   color;// rgb, alpha
         glm::vec4   props; // gray, hdr
+        void setGray(float gray) {
+            props.x = gray;
+        }
+        void setHDR(float hdr) {
+            props.y = hdr;
+        }
     };
 
 
