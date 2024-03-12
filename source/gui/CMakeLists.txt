@@ -30,6 +30,8 @@ PRIVATE
     core/display_objects/display_object.cpp
     core/display_objects/container.cpp
     # ui
+    core/ui/stage.cpp
+    core/ui/root.cpp
     core/ui/component.cpp
     core/controller.cpp
     core/ui/object.cpp

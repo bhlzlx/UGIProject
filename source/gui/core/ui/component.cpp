@@ -2,6 +2,7 @@
 #include "core/data_types/transition.h"
 #include "core/data_types/ui_types.h"
 #include "core/declare.h"
+#include "core/display_objects/display_components.h"
 #include "core/events/event_dispatcher.h"
 #include "core/package.h"
 #include "core/package_item.h"
@@ -240,9 +241,9 @@ namespace gui {
         }
     }
 
-
     void Component::createDisplayObject() {
-        root_ = DisplayObject::createDisplayObject();
+        Object::createDisplayObject();
+        root_ = dispobj_;
     }
 
     void Component::setBoundsChangedFlag() {
@@ -256,6 +257,11 @@ namespace gui {
     void Component::onRemoveFromStage(EventContext* context) {
     }
     void Component::updateClipRect() {
+    }
+
+    void Component::asBatchNode(bool batch) {
+        this->asBatchNode_ = batch;
+        reg.emplace_or_replace<dispcomp::batch_node>(dispobj_);
     }
 
 }

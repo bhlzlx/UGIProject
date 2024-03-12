@@ -181,4 +181,9 @@ namespace gui {
         return true;
     }
 
+    image_item_t* CreateImageItem(dispcomp::image_mesh const& mesh) {
+        auto render = UIImageRender::Instance();
+        return render->createImageItem(mesh.desc);
+    }
+
 };

@@ -32,6 +32,7 @@ namespace gui {
     protected:
         std::string     id_;
         std::string     name_;
+        ObjectType      type_;
         glm::vec3       position_;
         Size2D<float>   rawSize_;
         Size2D<float>   size_;

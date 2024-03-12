@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <gui/core/declare.h>
 #include <LightWeightCommon/utils/handle.h>
 #include <core/data_types/ui_types.h>
@@ -22,13 +23,6 @@ namespace gui {
     };
     #pragma pack(pop)
 
-    // shader uniform buffer desc
-    struct image_inst_data_t {
-        glm::mat4   transfrom;
-        glm::vec4   color;// rgb, alpha
-        glm::vec4   props; // gray, hdr
-    };
-
     struct image_desc_t {
         glm::vec2   size;
         glm::vec2   uv[2];
@@ -49,11 +43,17 @@ namespace gui {
         std::vector<uint16_t>       indices;
     };
 
+    // shader uniform buffer desc
+    struct image_inst_data_t {
+        glm::mat4   transfrom;
+        glm::vec4   color;// rgb, alpha
+        glm::vec4   props; // gray, hdr
+    };
+
+
     struct image_render_data_t {
         image_item_t const*         item;
         image_inst_data_t const*    args;
-        // Texture*                    tex;
-        // ugi::sampler_state_t        sampler;
     };
 
     struct image_render_batch_t {
@@ -71,13 +71,23 @@ namespace gui {
         bool prepared() const;
     };
 
-    struct NGraphics {
-        image_item_t        mesh;
-        UIImageRender*      render;
-        NTexture            texture;
-        float               alpha;
-        Color4B             color;
-        FlipType            flip;
+    struct font_render_data_t {
+    };
+
+    enum class RenderDataType {
+        Image,
+        Font,
+    };
+
+    struct opaque_render_data_t {
+        RenderDataType  type;
+        void*           renderData;
+    };
+
+    struct NGraphics { // 它其实是一个控件持有的渲染数据
+        opaque_render_data_t    renderData;     // mesh data
+        NTexture                texture;        // texture
+        image_inst_data_t       args;           // 现在是image，其实font都是通用的
     };
 
 }

@@ -23,21 +23,49 @@ namespace gui {
             entt::entity val;
         };
 
-        struct is_root {
+        struct parent_batch {
+            entt::entity val;
         };
+
+        struct batch_node {
+            std::vector<DisplayObject> leafs;
+            std::vector<DisplayObject> batchNodes;
+        };
+
+        struct mesh_dirty {};
+
+        struct image_ext {
+            Color4B             color;
+            FlipType            flip;
+            float               fillAmount;
+            FillMethod          fill;
+            FillOrigin          fillOrig;
+            bool                fillClockwise;
+        };
+
+        struct image_mesh {
+            image_desc_t desc;
+            Rect<float>* grid9;
+            bool         scaleByTile;
+            image_ext    ext;
+        };
+
+        struct font_mesh {};
+
+        struct polygon_mesh {};
+
+        struct is_root {};
+
+        struct batch_dirty {};
 
         struct owner {
             Handle val;
         };
 
-        struct image_info {
-            Color4B             color;
-            float               fillAmount;
-            FillMethod          fill;
-            FillOrigin          fillOrig;
-            FlipType            flip;
-            bool                fillClockwise;
-        };
+
+        struct visible {};
+        struct final_visible {};
+        struct visible_changed { bool visible; };
 
         struct graphics {
             NGraphics graphics;

@@ -1,6 +1,7 @@
 #include "object.h"
 #include "core/data_types/transition.h"
 #include "core/declare.h"
+#include "core/display_objects/display_components.h"
 #include "core/display_objects/display_object.h"
 #include "utils/byte_buffer.h"
 #include <cassert>
@@ -144,9 +145,13 @@ namespace gui {
 
     void Object::setAlpha(float val) {
     }
+
     void Object::setGrayed(bool val) {
     }
-    void Object::setVisible(bool) {
+
+    void Object::setVisible(bool val) {
+        visible_ = val;
+        reg.emplace_or_replace<dispcomp::visible_changed>(dispobj_, val);
     }
 
     void Object::setPixelSnapping(bool val) {

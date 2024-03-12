@@ -28,10 +28,12 @@ namespace gui {
             , clockwise_(true)
             , texture_()
         {
+            type_ = ObjectType::Image;
         }
 
         ~Image() {}
 
+        virtual void createDisplayObject() override;
         virtual void constructFromResource() override;
         virtual void setupBeforeAdd(ByteBuffer& buffer, int startPos = 0) override;
         virtual void setupAfterAdd(ByteBuffer& buffer, int startPos = 0) override;

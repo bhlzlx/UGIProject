@@ -122,6 +122,7 @@ namespace gui {
         ScrollBar,
         Tree,
         Loader3D,
+        Root,
     };
     
 

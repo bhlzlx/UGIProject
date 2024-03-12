@@ -6,12 +6,14 @@
 #include <io/archive.h>
 #include <gui/render/render_data.h>
 #include "command_encoder/render_cmd_encoder.h"
+#include "core/display_objects/display_components.h"
 #include "render_data.h"
 #include "texture.h"
+#include "utils/singleton.h"
 
 namespace gui {
 
-    class UIImageRender {
+    class UIImageRender : public comm::Singleton<UIImageRender> {
     private:
         ugi::GraphicsPipeline*          _pipeline;
         ugi::MeshBufferAllocator*       _bufferAllocator;
@@ -22,13 +24,30 @@ namespace gui {
         ugi::res_descriptor_t           _samptor;
         ugi::GPUAsyncLoadManager*       _asyncLoadManager;
     public:
-        UIImageRender(ugi::Device* device, ugi::GraphicsPipeline* pipeline, ugi::MeshBufferAllocator* msalloc, ugi::UniformAllocator* uniformAllocator, ugi::GPUAsyncLoadManager* asyncLoaderManager)
-            : _pipeline(pipeline)
-            , _bufferAllocator(msalloc)
-            , _uniformAllocator(uniformAllocator)
-            , _device(device)
-            , _asyncLoadManager(asyncLoaderManager)
-        {
+        UIImageRender()
+            : _pipeline(nullptr)
+            , _bufferAllocator(nullptr)
+            , _uniformAllocator(nullptr)
+            , _device(nullptr)
+            , _asyncLoadManager(nullptr)
+        {}
+
+        // UIImageRender(ugi::Device* device, ugi::GraphicsPipeline* pipeline, ugi::MeshBufferAllocator* msalloc, ugi::UniformAllocator* uniformAllocator, ugi::GPUAsyncLoadManager* asyncLoaderManager)
+        //     : _pipeline(pipeline)
+        //     , _bufferAllocator(msalloc)
+        //     , _uniformAllocator(uniformAllocator)
+        //     , _device(device)
+        //     , _asyncLoadManager(asyncLoaderManager)
+        // {
+        // }
+
+        void initialize(ugi::Device* device, ugi::GraphicsPipeline* pipeline, ugi::MeshBufferAllocator* msalloc, ugi::UniformAllocator* uniformAllocator, ugi::GPUAsyncLoadManager* asyncLoaderManager) {
+            _pipeline = pipeline;
+            _pipeline = pipeline;
+            _bufferAllocator = msalloc;
+            _uniformAllocator = uniformAllocator;
+            _device = device;
+            _asyncLoadManager = asyncLoaderManager;
         }
 
         ugi::Material* createMaterial(std::vector<std::string>const & params);
@@ -54,6 +73,7 @@ namespace gui {
         void tick();
     };
 
+    image_item_t* CreateImageItem(dispcomp::image_mesh const& mesh);
 
 
 }

@@ -31,14 +31,19 @@ namespace gui {
         glm::vec2                   clipSoftness_;
         int                         sortingChildrenCount_;
         Controller*                 applyingController_;
+
+        //
+        bool                        asBatchNode_;
     public: 
         Component()
-            : children_()
+            : Object()
+            , children_()
             , controllers_()
             , transitions_()
             , margin_()
             , childrenRenderOrder_(ChildrenRenderOrder::Ascent)
         {
+            this->type_ = ObjectType::Component;
         }
 
         virtual void constructFromResource() override;
@@ -62,6 +67,8 @@ namespace gui {
         void applyAllControllers();
 
         void setBoundsChangedFlag();
+
+        void asBatchNode(bool batch);
 
 
     };
