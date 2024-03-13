@@ -3,6 +3,7 @@
 #include <pipeline.h>
 #include <command_buffer.h>
 #include <vulkan_function_declare.h>
+#include <ugi/render_components/pipeline_material.h>
 
 namespace ugi {
     
@@ -41,6 +42,15 @@ namespace ugi {
         pipeline_->setRasterizationState(rasterState_);
         pipeline_->bind(encoder);
         // vkCmdDrawIndexed(*encoder->commandBuffer(), mesh_->indexCount(), 1, 0, )
+    }
+
+    Renderable::~Renderable() {
+        if(mesh_) {
+            delete mesh_;
+        }
+        if(material_) {
+            delete material_;
+        }
     }
 
 }

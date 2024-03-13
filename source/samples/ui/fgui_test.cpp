@@ -71,8 +71,8 @@ namespace ugi {
         bufferAllocator->initialize(_renderContext->device(), 1024);
 
         auto device = _renderContext->device();
-        _render = new gui::UIImageRender(device, pipeline, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
-        _render->initialize();
+        _render = gui::UIImageRender::Instance();
+        _render->initialize(device, pipeline, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
         char const* imagePaths[] = {
             "image/ushio.png",
             "image/island.png",
@@ -117,7 +117,7 @@ namespace ugi {
         };
         auto vp = CreateVPMat(glm::vec2(633, 450), 45.f);
         auto unit = glm::identity<glm::mat4>();
-        gui::image_inst_data_t inst_data[2] = {
+        gui::ui_inst_data_t inst_data[2] = {
             {
                 vp *glm::translate(unit, glm::vec3(0, 0,0)),
                 glm::vec4(1.f, 1.f, 1.f, 0.5f),

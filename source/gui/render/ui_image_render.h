@@ -23,6 +23,9 @@ namespace gui {
         ugi::res_descriptor_t           _texptor;
         ugi::res_descriptor_t           _samptor;
         ugi::GPUAsyncLoadManager*       _asyncLoadManager;
+
+    private:
+        bool initialize_();
     public:
         UIImageRender()
             : _pipeline(nullptr)
@@ -32,15 +35,6 @@ namespace gui {
             , _asyncLoadManager(nullptr)
         {}
 
-        // UIImageRender(ugi::Device* device, ugi::GraphicsPipeline* pipeline, ugi::MeshBufferAllocator* msalloc, ugi::UniformAllocator* uniformAllocator, ugi::GPUAsyncLoadManager* asyncLoaderManager)
-        //     : _pipeline(pipeline)
-        //     , _bufferAllocator(msalloc)
-        //     , _uniformAllocator(uniformAllocator)
-        //     , _device(device)
-        //     , _asyncLoadManager(asyncLoaderManager)
-        // {
-        // }
-
         void initialize(ugi::Device* device, ugi::GraphicsPipeline* pipeline, ugi::MeshBufferAllocator* msalloc, ugi::UniformAllocator* uniformAllocator, ugi::GPUAsyncLoadManager* asyncLoaderManager) {
             _pipeline = pipeline;
             _pipeline = pipeline;
@@ -48,6 +42,8 @@ namespace gui {
             _uniformAllocator = uniformAllocator;
             _device = device;
             _asyncLoadManager = asyncLoaderManager;
+            //
+            initialize_();
         }
 
         ugi::Material* createMaterial(std::vector<std::string>const & params);
@@ -64,16 +60,13 @@ namespace gui {
         image_item_t* createImageItem(image_desc_t const& desc);
         image_item_t* createImageItem(image_9grid_desc_t const& desc);
 
-        gui::image_render_batches_t buildImageRenderBatch(std::vector<image_render_data_t> const& renderDatas, ugi::Texture* textur);
+        gui::ui_render_batches_t buildImageRenderBatch(std::vector<image_render_data_t> const& renderDatas, ugi::Texture* textur);
 
-        void drawBatch(image_render_batches_t batches, ugi::RenderCommandEncoder* encoder);
+        void destroyRenderBatch(gui::ui_render_batches_t batches);
 
-        bool initialize();
+        void drawBatch(ui_render_batches_t batches, ugi::RenderCommandEncoder* encoder);
 
         void tick();
     };
-
-    image_item_t* CreateImageItem(dispcomp::image_mesh const& mesh);
-
 
 }

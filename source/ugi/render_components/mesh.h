@@ -36,6 +36,9 @@ namespace ugi {
             , uploaded_(0)
         {}
 
+        ~Mesh();
+
+
         mesh_buffer_alloc_t buffer() const {
             return meshbufferAllocator->deref(buffer_);
         }

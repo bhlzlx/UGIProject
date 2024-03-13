@@ -1,20 +1,22 @@
 #include "image_mesh.h"
+#include "core/display_objects/display_components.h"
 #include "render/render_data.h"
 #include "render/ui_image_render.h"
+#include "render/ui_render.h"
 
 namespace gui {
 
     void updateImageMesh() {
-        reg.view<dispcomp::mesh_dirty, dispcomp::image_mesh>().each([](auto ett, dispcomp::image_mesh& imageMesh) {
+        reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::image_mesh>().each([](auto ett, dispcomp::image_mesh& imageMesh) {
             NGraphics* graphics = nullptr;
             if(!reg.any_of<NGraphics>(ett)) {
                 graphics = &reg.emplace_or_replace<NGraphics>(ett);
             } else {
                 graphics = &reg.get<NGraphics>(ett);
             }
-            graphics->renderData.type = RenderDataType::Image;
-            if(graphics->renderData.renderData) {
-                delete (image_render_data_t*)graphics->renderData.renderData;
+            graphics->renderItem.type = RenderItemType::Image;
+            if(graphics->renderItem.item) {
+                delete (image_render_data_t*)graphics->renderItem.item;
             }
             glm::vec2  uvbackup[2]; 
             uvbackup[0] = imageMesh.desc.uv[0];
@@ -36,7 +38,7 @@ namespace gui {
                 break;
             }
             }
-            graphics->renderData.renderData = CreateImageItem(imageMesh);
+            graphics->renderItem.item = CreateImageItem(imageMesh);
             imageMesh.desc.uv[0] = uvbackup[0];
             imageMesh.desc.uv[1] = uvbackup[1];
         });

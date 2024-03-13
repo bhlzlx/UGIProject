@@ -28,8 +28,12 @@ namespace gui {
         };
 
         struct batch_node {
-            std::vector<DisplayObject> leafs;
+            std::vector<DisplayObject> children;
             std::vector<DisplayObject> batchNodes;
+        };
+
+        struct batch_data {
+            std::vector<ui_render_batches_t> batches;
         };
 
         struct mesh_dirty {};

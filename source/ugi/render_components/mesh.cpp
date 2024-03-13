@@ -100,4 +100,8 @@ namespace ugi {
         return mesh;
     }
 
+    Mesh::~Mesh() {
+        meshbufferAllocator->free(buffer_);
+    }
+
 }

@@ -9,6 +9,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include <entt/entt.hpp>
+
 namespace gui {
 
     class UIImageRender;
@@ -44,7 +46,7 @@ namespace gui {
     };
 
     // shader uniform buffer desc
-    struct image_inst_data_t {
+    struct ui_inst_data_t {
         glm::mat4   transfrom;
         glm::vec4   color;// rgb, alpha
         glm::vec4   props; // gray, hdr
@@ -59,41 +61,45 @@ namespace gui {
 
     struct image_render_data_t {
         image_item_t const*         item;
-        image_inst_data_t const*    args;
+        ui_inst_data_t const*       args;
     };
 
-    struct image_render_batch_t {
+    struct ui_render_batch_t {
         ugi::Renderable*                renderable;
         ugi::res_descriptor_t           argsDetor;
         ugi::res_descriptor_t           samplerDetor;
         ugi::res_descriptor_t           textureDetor;
-        std::vector<image_inst_data_t>  args;
+        std::vector<ui_inst_data_t>     args;
         ugi::sampler_state_t            sampler;
-        Texture*                        texture; // 以后改成安全的
+        Handle                          texture; // 是 raw texture，原生的，不是NTexture
     };
 
-    struct image_render_batches_t {
-        std::vector<image_render_batch_t*> batches;
+    enum class RenderItemType {
+        None,
+        Image,
+        Font,
+        SubBatch,
+    };
+
+    struct ui_render_batches_t {
+        RenderItemType                  type;
+        std::vector<ui_render_batch_t*> batches;
+        entt::entity                    batchNode;
         bool prepared() const;
     };
 
     struct font_render_data_t {
     };
 
-    enum class RenderDataType {
-        Image,
-        Font,
-    };
-
-    struct opaque_render_data_t {
-        RenderDataType  type;
-        void*           renderData;
+    struct opaque_render_item_t {
+        RenderItemType  type;
+        void*           item;
     };
 
     struct NGraphics { // 它其实是一个控件持有的渲染数据
-        opaque_render_data_t    renderData;     // mesh data
+        opaque_render_item_t    renderItem;     // mesh data
+        ui_inst_data_t          args;           // 一个控件的参数，矩阵，透明度，灰度等
         NTexture                texture;        // texture
-        image_inst_data_t       args;           // 现在是image，其实font都是通用的
     };
 
 }

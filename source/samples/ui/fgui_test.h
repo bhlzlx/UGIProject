@@ -26,7 +26,7 @@ namespace ugi {
         float                           _width;
         float                           _height;
         //
-        gui::image_render_batches_t     _imageBatches;
+        gui::ui_render_batches_t        _imageBatches;
     public:
         virtual bool initialize(void* _wnd, comm::IArchive* arch);
         virtual void resize( uint32_t _width, uint32_t _height );

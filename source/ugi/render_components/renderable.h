@@ -25,6 +25,8 @@ namespace ugi {
         GraphicsPipeline const* pipeline() const;
         //
         void draw(RenderCommandEncoder* encoder);
+
+        ~Renderable();
     };
 
 }
