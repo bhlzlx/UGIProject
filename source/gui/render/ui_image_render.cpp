@@ -176,7 +176,7 @@ namespace gui {
         return batches;
     }
 
-    void destroyRenderBatch(gui::ui_render_batches_t batches) {
+    void UIImageRender::destroyRenderBatch(gui::ui_render_batches_t batches) {
         for(auto batch: batches.batches) {
             delete batch->renderable;
             delete batch;

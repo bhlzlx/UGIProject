@@ -12,6 +12,7 @@ namespace gui {
     //
     void DestroyRenderBatches(ui_render_batches_t const& batch);
 
+    void ClearFrameBatchCache();
     void CommitRenderBatch(ui_render_batches_t const& batch);
 
     void DrawRenderBatches(ugi::RenderCommandEncoder* encoder);

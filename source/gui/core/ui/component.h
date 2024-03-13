@@ -70,6 +70,9 @@ namespace gui {
 
         void asBatchNode(bool batch);
 
+        void addChild(Object* child);
+        void addChildAt(Object* child, int32_t index);
+
 
     };
 

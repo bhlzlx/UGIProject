@@ -1,8 +1,6 @@
 ﻿#include "fgui_test.h"
+#include "core/ui/stage.h"
 #include "glm/ext/matrix_transform.hpp"
-#include "gui/core/package.h"
-#include "gui/render/render_data.h"
-#include "gui/render/ui_image_render.h"
 #include "io/archive.h"
 #include "ugi_types.h"
 #include <ugi/device.h>
@@ -27,7 +25,11 @@
 #include <ugi/helper/pipeline_helper.h>
 #include <cmath>
 
-#include <gui/render/ui_image_render.h>
+#include "gui/core/package.h"
+#include "render/ui_render.h"
+// #include "gui/render/render_data.h"
+// #include "gui/render/ui_image_render.h"
+#include "gui.h"
 
 #include <glm/ext.hpp>
 
@@ -73,83 +75,85 @@ namespace ugi {
         auto device = _renderContext->device();
         _render = gui::UIImageRender::Instance();
         _render->initialize(device, pipeline, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
-        char const* imagePaths[] = {
-            "image/ushio.png",
-            "image/island.png",
-        };
-        for(int i = 0; i<2; ++i) {
-            auto imgFile = _renderContext->archive()->openIStream(imagePaths[i], {comm::ReadFlag::binary});
-            auto buffer = malloc(imgFile->size());
-            imgFile->read(buffer, imgFile->size());
-            _textures[i] = CreateTexturePNG(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
-            // Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
-                [this,i,device](void* res, CommandBuffer* cb) {
-                    auto texture = (Texture*)res;
-                    // _textures[i] = (Texture*)res;
-                    texture->generateMipmap(cb);
-                    auto resEnc = cb->resourceCommandEncoder();
-                    resEnc->imageTransitionBarrier(
-                        _textures[i], ResourceAccessType::ShaderRead, 
-                        pipeline_stage_t::Bottom, StageAccess::Write,
-                        pipeline_stage_t::FragmentShading, StageAccess::Read,
-                        nullptr
-                    );
-                    image_view_param_t ivp;
-                    _imageViews[i] = _textures[i]->createImageView(device, ivp);
-                    resEnc->endEncode();
-                    texture->markAsUploaded();
-                }
-            );
-            free(buffer);
-            imgFile->close();
-        }
-        _flightIndex = 0;
-        //
-        gui::image_desc_t image_desc[2] = {
-            {
-                {64, 64},
-                {{0, 0}, {.5f, .5f}}
-            },
-            {
-                {32, 32},
-                {{0.5f, 0.5f}, {1.0f, 1.0f}}
-            }
-        };
-        auto vp = CreateVPMat(glm::vec2(633, 450), 45.f);
-        auto unit = glm::identity<glm::mat4>();
-        gui::ui_inst_data_t inst_data[2] = {
-            {
-                vp *glm::translate(unit, glm::vec3(0, 0,0)),
-                glm::vec4(1.f, 1.f, 1.f, 0.5f),
-                glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-            },
-            {
-                vp *glm::translate(unit, glm::vec3(64,64,0)),
-                glm::vec4(1.f, 1.f, 1.f, 0.5f),
-                glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-            }
-        };
-        gui::image_item_t* imageItems[2] = {
-            // _render->createImageItem()
-            _render->createImageItem(image_desc[0]),
-            _render->createImageItem(image_desc[1])
-        };
-        std::vector<gui::image_render_data_t> renderDatas = {
-            {
-                imageItems[0],
-                inst_data,
-            },
-            {
-                imageItems[1],
-                inst_data + 1,
-            },
-        };
-        _imageBatches = _render->buildImageRenderBatch(renderDatas, _textures[0]);
+        // char const* imagePaths[] = {
+        //     "image/ushio.png",
+        //     "image/island.png",
+        // };
+        // for(int i = 0; i<2; ++i) {
+        //     auto imgFile = _renderContext->archive()->openIStream(imagePaths[i], {comm::ReadFlag::binary});
+        //     auto buffer = malloc(imgFile->size());
+        //     imgFile->read(buffer, imgFile->size());
+        //     _textures[i] = CreateTexturePNG(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
+        //     // Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
+        //         [this,i,device](void* res, CommandBuffer* cb) {
+        //             auto texture = (Texture*)res;
+        //             // _textures[i] = (Texture*)res;
+        //             texture->generateMipmap(cb);
+        //             auto resEnc = cb->resourceCommandEncoder();
+        //             resEnc->imageTransitionBarrier(
+        //                 _textures[i], ResourceAccessType::ShaderRead, 
+        //                 pipeline_stage_t::Bottom, StageAccess::Write,
+        //                 pipeline_stage_t::FragmentShading, StageAccess::Read,
+        //                 nullptr
+        //             );
+        //             image_view_param_t ivp;
+        //             _imageViews[i] = _textures[i]->createImageView(device, ivp);
+        //             resEnc->endEncode();
+        //             texture->markAsUploaded();
+        //         }
+        //     );
+        //     free(buffer);
+        //     imgFile->close();
+        // }
+        // _flightIndex = 0;
+        // //
+        // gui::image_desc_t image_desc[2] = {
+        //     {
+        //         {64, 64},
+        //         {{0, 0}, {.5f, .5f}}
+        //     },
+        //     {
+        //         {32, 32},
+        //         {{0.5f, 0.5f}, {1.0f, 1.0f}}
+        //     }
+        // };
+        // auto vp = CreateVPMat(glm::vec2(633, 450), 45.f);
+        // auto unit = glm::identity<glm::mat4>();
+        // gui::ui_inst_data_t inst_data[2] = {
+        //     {
+        //         vp *glm::translate(unit, glm::vec3(0, 0,0)),
+        //         glm::vec4(1.f, 1.f, 1.f, 0.5f),
+        //         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+        //     },
+        //     {
+        //         vp *glm::translate(unit, glm::vec3(64,64,0)),
+        //         glm::vec4(1.f, 1.f, 1.f, 0.5f),
+        //         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+        //     }
+        // };
+        // gui::image_item_t* imageItems[2] = {
+        //     // _render->createImageItem()
+        //     _render->createImageItem(image_desc[0]),
+        //     _render->createImageItem(image_desc[1])
+        // };
+        // std::vector<gui::image_render_data_t> renderDatas = {
+        //     {
+        //         imageItems[0],
+        //         inst_data,
+        //     },
+        //     {
+        //         imageItems[1],
+        //         inst_data + 1,
+        //     },
+        // };
+        // _imageBatches = _render->buildImageRenderBatch(renderDatas, _textures[0]);
         //
         gui::Package::archive_ = comm::CreateFSArchive(arch->rootPath() + "/test/bytes");
         auto uipack = gui::Package::AddPackage("test");
         uipack->loadAllAssets();
         gui::Object* uiobj = uipack->createObject("test");
+        auto stage = gui::Stage::Instance();
+        auto root = stage->defaultRoot();
         return true;
     }
 
@@ -172,6 +176,8 @@ namespace ugi {
 
             mainRenderPass->setClearValues(clearValues);
 
+            gui::GuiTick();
+
             auto renderEnc = cmdbuf->renderCommandEncoder(mainRenderPass); {
                 if(_textures[0]->uploaded() && _textures[1]->uploaded() && _imageBatches.prepared()) {
                     static ugi::raster_state_t rasterizationState;
@@ -182,6 +188,8 @@ namespace ugi {
                     _render->setRasterization(rasterizationState);
                     _render->bind(renderEnc);
                     _render->drawBatch(_imageBatches, renderEnc);
+                    //
+                    gui::DrawRenderBatches(renderEnc);
                     // _render->draw(renderEnc, _renderable);
                 }
             }

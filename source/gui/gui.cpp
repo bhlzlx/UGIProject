@@ -5,7 +5,6 @@
 #include "entt/entity/fwd.hpp"
 #include "mesh/image_mesh.h"
 #include "render/render_data.h"
-#include "render/ui_image_render.h"
 #include "render/ui_render.h"
 #include "texture.h"
 #include <vector>
@@ -151,7 +150,7 @@ namespace gui {
     };
 
     void updateDirtyBatches() {
-        reg.view<dispcomp::batch_dirty, dispcomp::batch_node, NGraphics>().each([](entt::entity ett, dispcomp::batch_node& batchNode) {
+        reg.view<dispcomp::batch_dirty, dispcomp::batch_node, NGraphics>().each([](entt::entity ett, dispcomp::batch_node& batchNode, NGraphics& graphics) {
             material_batch_desc_t material;
             std::vector<ui_render_batches_t> batches;
             //
@@ -178,7 +177,7 @@ namespace gui {
             };
 
             for(auto child: batchNode.children) {
-                if(!isFinalVisible(child)) {
+                if(!isFinalVisible(child)) { // 只有可见的才挂到渲染树上，不要遍历的时候再去判断，影响性能
                     continue;
                 }
                 if(!isBatchNode(child)) {
@@ -231,17 +230,17 @@ namespace gui {
     }
 
     void commitRenderBatches() {
+        ClearFrameBatchCache();
         auto stage = Stage::Instance();
         auto root = stage->defaultRoot();
+        commitBatchNode(root->getDisplayObject());
     }
 
     void GuiTick() {
-        updateVisible();
-        updateImageMesh();
-        //
-        updateDirtyBatches();
-        //
-        commitRenderBatches();
+        updateVisible(); // 更新可见性
+        updateImageMesh(); // 有必要就更新mesh
+        updateDirtyBatches(); // 更新batch节点的 batch 数据
+        commitRenderBatches(); // 按渲染顺序提交 batch 
     }
     
 }

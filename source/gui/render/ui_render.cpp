@@ -4,8 +4,6 @@
 
 namespace gui {
 
-    std::vector<ui_render_batches_t> frameBatches;
-
     image_item_t* CreateImageItem(dispcomp::image_mesh const& mesh) {
         auto render = UIImageRender::Instance();
         return render->createImageItem(mesh.desc);
@@ -34,6 +32,12 @@ namespace gui {
             }
     }
 
+    std::vector<ui_render_batches_t> frameBatches;
+
+    void ClearFrameBatchCache() {
+        frameBatches.clear();
+    }
+
     void CommitRenderBatch(ui_render_batches_t const& batch) {
         frameBatches.push_back(batch);
     }
@@ -52,8 +56,5 @@ namespace gui {
         }
     }
 
-
-    void GuiTick() {
-    }
 
 }

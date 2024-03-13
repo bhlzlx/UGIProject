@@ -41,6 +41,8 @@ PRIVATE
     render/ui_render.cpp
 
     mesh/image_mesh.cpp
+
+    gui.cpp
 )
 
 target_link_libraries(gui

@@ -7,6 +7,7 @@
 namespace gui {
 
     class Stage : public comm::Singleton<Stage> {
+        friend class Singleton<Stage>;
     private:
         Root*                   ui2dRoot_;
         std::set<Root*>         ui3dRoots_;
