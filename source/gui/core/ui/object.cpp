@@ -1,11 +1,9 @@
 #include "object.h"
-#include "core/data_types/transition.h"
 #include "core/declare.h"
 #include "core/display_objects/display_components.h"
-#include "core/display_objects/display_object.h"
 #include "utils/byte_buffer.h"
-#include <cassert>
 #include <core/gui_context.h>
+#include <core/ui/component.h>
 
 namespace gui {
 
@@ -97,7 +95,7 @@ namespace gui {
             setRotation(f1);
         }
         if(!buffer->read<bool>()) {
-            setVisible(false);
+            setVisible(true);
         }
         if(!buffer->read<bool>()) {
             setTouchable(false);
@@ -130,31 +128,63 @@ namespace gui {
         handlingController_ = false;
     }
 
-    void Object::createDisplayObject() {
-        dispobj_ = DisplayObject::createDisplayObject();
-    }
-
-    void Object::setScale(float x, float y)  {
-    }
-
-    void Object::setSkew(float x, float y) {
-    }
-
-    void Object::setPivot( glm::vec2 const& pivot, bool asAnchor) {
-    }
-
-    void Object::setAlpha(float val) {
-    }
-
-    void Object::setGrayed(bool val) {
-    }
+    void Object::createDisplayObject() {}
 
     void Object::setVisible(bool val) {
         visible_ = val;
-        reg.emplace_or_replace<dispcomp::visible_changed>(dispobj_, val);
+        if(val) {
+            reg.emplace_or_replace<dispcomp::visible>(dispobj_);
+        } else {
+            reg.remove<dispcomp::visible>(dispobj_);
+        }
+        reg.emplace_or_replace<dispcomp::visible_changed>(dispobj_);
     }
 
     void Object::setPixelSnapping(bool val) {
+    }
+
+    bool Object::inContainer() const {
+        return dispobj_ && dispobj_.parent();
+    }
+
+    void Object::removeFromParent() {
+        if(parent_) {
+            parent_->removeChild(this);
+        }
+    }
+
+    void Object::setPosition( glm::vec3 const& val) {
+        position_ = val;
+        dispobj_.setPosition(val);
+    }
+
+    void Object::setSize(Size2D<float> const& size) {
+        dispobj_.setSize(size);
+    }
+
+    void Object::setPivot(glm::vec2 const& pivot, bool asAnchor) {
+        pivot_ = pivot;
+        pivotAsAnchor_ = asAnchor;
+        dispobj_.setPivot(pivot);
+    }
+
+    void Object::setScale(float x, float y) {
+        scale_ = {x, y};
+        dispobj_.setScale({x, y});
+    }
+
+    void Object::setSkew(float x, float y) {
+        skew_ = {x, y};
+        dispobj_.setSkew(skew_);
+    }
+
+    void Object::setAlpha(float val) {
+        alpha_ = val;
+        // dispobj_.
+    }
+
+    void Object::setGrayed(bool val) {
+        grayed_ = val;
     }
 
 }

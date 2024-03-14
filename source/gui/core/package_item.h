@@ -30,10 +30,10 @@ namespace gui {
         NTexture                        texture_;
 
         // if is image
-        Rect<float>*                    scale9Grid_;
-        int                             tileGridIndex_;
-        bool                            scaledByTile_;
-        PixelHitTestData*               pixelHitTestData_;
+        Rect<float>*                    scale9Grid_ = nullptr;
+        int                             tileGridIndex_ = 0;
+        bool                            scaledByTile_ = false;
+        PixelHitTestData*               pixelHitTestData_ = nullptr;
 
         // is is movie clip
         float                           interval_;

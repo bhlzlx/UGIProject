@@ -69,10 +69,28 @@ namespace gui {
 
         struct visible {};
         struct final_visible {};
-        struct visible_changed { bool visible; };
+        struct visible_changed {};
 
         struct graphics {
             NGraphics graphics;
+        };
+
+        struct basic_transfrom {
+            glm::vec2 position;
+            glm::vec2 size;
+            glm::vec2 pivot;
+        };
+
+        struct skew {
+            glm::vec2 val;
+        };
+
+        struct scale {
+            glm::vec2 val;
+        };
+
+        struct rotation {
+            float val;
         };
 
     }

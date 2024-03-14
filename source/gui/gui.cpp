@@ -9,74 +9,13 @@
 #include "texture.h"
 #include <vector>
 
+#include <core/display_objects/display_object_utility.h>
+
 namespace gui {
 
-#pragma region fastaccess_functions 
-
-    bool isFinalVisible(entt::entity ett) {
-        return reg.any_of<dispcomp::final_visible>(ett);
-    }
-
-    bool isBatchNode(entt::entity ett) {
-        return reg.any_of<dispcomp::batch_node>(ett);
-    }
-
-    dispcomp::batch_data* getBatchData(entt::entity ett) {
-        if(reg.any_of<dispcomp::batch_data>(ett)) {
-            return &reg.get<dispcomp::batch_data>(ett);
-        }
-        return nullptr;
-    }
-
-    void setVisible(entt::entity ett, bool visible) {
-        if(visible) {
-            reg.emplace_or_replace<dispcomp::visible>(ett);
-        } else {
-            reg.remove<dispcomp::visible>(ett);
-        }
-    }
-
-    bool getVisible(entt::entity ett) {
-        return reg.any_of<dispcomp::visible>(ett);
-    }
-
-    void setFinalVisible(entt::entity ett, bool visible) {
-        if(visible) {
-            reg.emplace_or_replace<dispcomp::final_visible>(ett);
-        } else {
-            reg.remove<dispcomp::final_visible>(ett);
-        }
-    }
-
-    dispcomp::children* getChildren(entt::entity ett) {
-        dispcomp::children* children = nullptr;
-        if(reg.any_of<dispcomp::children>(ett)) {
-            children = & reg.get<dispcomp::children>(ett);
-        }
-        return children;
-    }
-
-    DisplayObject getParent(entt::entity ett) {
-        if(reg.any_of<dispcomp::parent>(ett)) {
-            return reg.get<dispcomp::parent>(ett).val;
-        } else {
-            return DisplayObject();
-        }
-    }
-
-    NGraphics* getGraphics(entt::entity ett) {
-        if(reg.any_of<NGraphics>(ett)) {
-            return &reg.get<NGraphics>(ett);
-        }
-        return nullptr;
-    }
-
-#pragma endregion
-
-// #pragma region d
-
-    void updateVisibleRecursive_(entt::entity ett, bool parentVisible) {
-        bool finalVisible = parentVisible && getVisible(ett);
+    void updateVisibleRecursive(entt::entity ett, bool parentVisible) {
+        bool visible = isVisible(ett);
+        bool finalVisible = parentVisible && visible;
         setFinalVisible(ett, finalVisible);
         if(isBatchNode(ett)) { // 到batch node就不要再往下更新了
             return;
@@ -84,19 +23,7 @@ namespace gui {
         auto children = getChildren(ett);
         if(children) {
             for(auto child: children->val) {
-                updateVisibleRecursive_(child, finalVisible);
-            }
-        }
-    }
-
-    void updateVisibleRecursive(entt::entity ett, bool changedVisible, bool parentVisible) {
-        bool finalVisible = parentVisible && changedVisible;
-        setVisible(ett, changedVisible);
-        setFinalVisible(ett, finalVisible);
-        if(reg.any_of<dispcomp::children>(ett)) {
-            auto& children = reg.get<dispcomp::children>(ett).val;
-            for(auto child: children) {
-                updateVisibleRecursive_(ett, finalVisible);
+                updateVisibleRecursive(child, finalVisible);
             }
         }
     }
@@ -105,24 +32,33 @@ namespace gui {
         auto stage = Stage::Instance();
         auto root = stage->defaultRoot();
         //
-        reg.view<dispcomp::visible_changed>().each([](auto ett, dispcomp::visible_changed changedVisible) {
+        reg.view<dispcomp::visible_changed>().each([](auto ett) {
             bool isRoot = false;
             isRoot = reg.any_of<dispcomp::is_root>(ett);
             auto parent = getParent(ett);
             if(!isBatchNode(ett) && parent && isRoot) {  // 没有父控件，而且是脏的，现在不是更新它的时候
                 return;
             } else {
-                updateVisibleRecursive(ett, changedVisible.visible, isFinalVisible(parent));
+                if(parent) {
+                    updateVisibleRecursive(ett,isFinalVisible(parent));
+                } else {
+                    updateVisibleRecursive(ett, true);
+                }
             }
+            reg.remove<dispcomp::visible_changed>(ett);
         });
     }
 
     void travalBatchNode(entt::entity ett, std::function<void(entt::entity)>const& callback) {
-        auto children = getChildren(ett)->val;
-        for(auto child: children) { // 按渲染顺序遍历
-            callback(child);
-            if(!isBatchNode(child)) { // 遇到batch node节点终止
-                travalBatchNode(child, callback);
+        auto children = getChildren(ett);
+        if(!children) {
+            callback(ett);
+            return;
+        } else {
+            for(auto child: children->val) { // 按渲染顺序遍历
+                if(!isBatchNode(child)) { // 遇到batch node节点终止
+                    travalBatchNode(child, callback);
+                }
             }
         }
     }
@@ -150,7 +86,7 @@ namespace gui {
     };
 
     void updateDirtyBatches() {
-        reg.view<dispcomp::batch_dirty, dispcomp::batch_node, NGraphics>().each([](entt::entity ett, dispcomp::batch_node& batchNode, NGraphics& graphics) {
+        reg.view<dispcomp::batch_dirty, dispcomp::batch_node>().each([](entt::entity ett, dispcomp::batch_node& batchNode) {
             material_batch_desc_t material;
             std::vector<ui_render_batches_t> batches;
             //
@@ -220,6 +156,9 @@ namespace gui {
 
     void commitBatchNode(entt::entity ett) {
         auto batchData = getBatchData(ett);
+        if(!batchData) {
+            return;
+        }
         for(auto batch: batchData->batches) {
             if(batch.type != RenderItemType::SubBatch) {
                 CommitRenderBatch(batch);
@@ -239,6 +178,7 @@ namespace gui {
     void GuiTick() {
         updateVisible(); // 更新可见性
         updateImageMesh(); // 有必要就更新mesh
+        updateBatchNodes();
         updateDirtyBatches(); // 更新batch节点的 batch 数据
         commitRenderBatches(); // 按渲染顺序提交 batch 
     }

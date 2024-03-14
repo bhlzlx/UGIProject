@@ -1,4 +1,5 @@
 #include "image.h"
+#include "core/display_objects/display_object.h"
 #include "render/render_data.h"
 #include <core/data_types/ui_types.h>
 #include <core/declare.h>
@@ -45,7 +46,8 @@ namespace gui {
     }
 
     void Image::createDisplayObject() {
-        Object::createDisplayObject();
+        // Object::createDisplayObject();
+        dispobj_ = DisplayObject::createDisplayObject();
         reg.emplace_or_replace<dispcomp::mesh_dirty>(dispobj_);
         reg.emplace_or_replace<dispcomp::image_mesh>(dispobj_);
     }

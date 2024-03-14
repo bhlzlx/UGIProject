@@ -3,6 +3,7 @@
 #include "core/package_item.h"
 #include <core/ui/component.h>
 #include "image.h"
+#include "root.h"
 
 namespace gui {
 
@@ -35,18 +36,22 @@ namespace gui {
         case ObjectType::ScrollBar:
         case ObjectType::Tree:
         case ObjectType::Loader3D:
+        case ObjectType::Root: {
+        }
           break;
         }
         if(obj) {
             obj->packageItem_ = item;
         }
+        obj->createDisplayObject();
         return obj;
     }
 
     Object* ObjectFactory::createComponent(PackageItem* item) {
         switch(item->objType_) {
             case ObjectType::Component: {
-                return new Component();
+                auto comp = new Component();
+                return comp;
             }
             default: {
                 return nullptr;
@@ -56,15 +61,23 @@ namespace gui {
     }
 
     Object* ObjectFactory::CreateObject(ObjectType type) {
+        Object* obj = nullptr;
         switch(type) {
             case ObjectType::Component: {
-                return new Component();
+                obj = new Component();
+                obj->createDisplayObject();
+                return obj;
+            }
+            case ObjectType::Root: {
+                obj = new Root();
+                obj->createDisplayObject();
+                break;
             }
             default: {
                 return nullptr;
             }
         }
-        return nullptr;
+        return obj;
     }
 
 }

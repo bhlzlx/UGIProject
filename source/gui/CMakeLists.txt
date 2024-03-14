@@ -28,6 +28,7 @@ PRIVATE
     utils/toolset.cpp
     #
     core/display_objects/display_object.cpp
+    core/display_objects/display_object_utility.cpp
     core/display_objects/container.cpp
     # ui
     core/ui/stage.cpp
@@ -37,6 +38,7 @@ PRIVATE
     core/ui/object.cpp
     core/ui/object_factory.cpp
     core/ui/image.cpp
+    core/ui/children.cpp
     render/ui_image_render.cpp
     render/ui_render.cpp
 

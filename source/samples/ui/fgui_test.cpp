@@ -151,9 +151,12 @@ namespace ugi {
         gui::Package::archive_ = comm::CreateFSArchive(arch->rootPath() + "/test/bytes");
         auto uipack = gui::Package::AddPackage("test");
         uipack->loadAllAssets();
-        gui::Object* uiobj = uipack->createObject("test");
+        //
         auto stage = gui::Stage::Instance();
+        stage->initialize();
         auto root = stage->defaultRoot();
+        gui::Object* uiobj = uipack->createObject("test");
+        root->addChild(uiobj);
         return true;
     }
 
@@ -179,19 +182,16 @@ namespace ugi {
             gui::GuiTick();
 
             auto renderEnc = cmdbuf->renderCommandEncoder(mainRenderPass); {
-                if(_textures[0]->uploaded() && _textures[1]->uploaded() && _imageBatches.prepared()) {
-                    static ugi::raster_state_t rasterizationState;
-                    rasterizationState.polygonMode = polygon_mode_t::Fill;
-                    renderEnc->setLineWidth(1.0f);
-                    renderEnc->setViewport(0, 0, _width, _height, 0, 1.0f);
-                    renderEnc->setScissor(0, 0, _width, _height);
-                    _render->setRasterization(rasterizationState);
-                    _render->bind(renderEnc);
-                    _render->drawBatch(_imageBatches, renderEnc);
-                    //
-                    gui::DrawRenderBatches(renderEnc);
-                    // _render->draw(renderEnc, _renderable);
-                }
+                static ugi::raster_state_t rasterizationState;
+                rasterizationState.polygonMode = polygon_mode_t::Fill;
+                renderEnc->setLineWidth(1.0f);
+                renderEnc->setViewport(0, 0, _width, _height, 0, 1.0f);
+                renderEnc->setScissor(0, 0, _width, _height);
+                // _render->setRasterization(rasterizationState);
+                // _render->bind(renderEnc);
+                // _render->drawBatch(_imageBatches, renderEnc);
+                //
+                gui::DrawRenderBatches(renderEnc);
             }
             renderEnc->endEncode();
         }

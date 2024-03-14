@@ -60,7 +60,7 @@ namespace gui {
         uint8_t         pixelSnapping_:1;
         Component*      parent_;
         Relations       relations_;
-        SortingOrder    sortingOrder_;
+        uint32_t        sortingOrder_;
         Group*          group_;
         float           sizePercentInGroup_;
         DisplayObject   dispobj_;
@@ -86,8 +86,9 @@ namespace gui {
             , draggable_(0)
             , focusable_(0)
             , pixelSnapping_(0)
+            , parent_(nullptr)
             , relations_(this)
-            , sortingOrder_(SortingOrder::Ascent)
+            , sortingOrder_(0)
             , group_(nullptr)
             , sizePercentInGroup_(1.0f)
         {}
@@ -127,11 +128,6 @@ protected:
         void setY(float v) { position_.y = v; }
 
         glm::vec2 position() const { return position_; }
-        void setPosition( glm::vec3 const& val) { position_ = val; }
-
-        void setSize(Size2D<float> const& size) {
-            size_ = size;
-        }
 
         float xMin() const;
         float yMin() const;
@@ -151,31 +147,35 @@ protected:
         void makeFullScreen();
 
         glm::vec2 pivot() const { return pivot_; }
-        void setPivot( glm::vec2 const& pivot, bool asAnchor = false);
         bool isPivotAsAnchor() const { return pivotAsAnchor_; }
         float scaleX() const { return scale_.x; }
         float scaleY() const { return scale_.y; }
+        //
+        void setPosition( glm::vec3 const& val);
+        void setSize(Size2D<float> const& size);
+        void setPivot( glm::vec2 const& pivot, bool asAnchor = false);
+        void setScale(float x, float y);
+        void setSkew(float x, float y);
+        void setAlpha(float val);
+        void setGrayed(bool val);
+        void setVisible(bool);
+
         void setScaleX(float val) { scale_.x = val; }
         void setScaleY(float val) { scale_.y = val; }
-        void setScale(float x, float y);
 
         float skewX() const { return skew_.x; }
         float skewY() const { return skew_.y; }
         void setSkewX(float val) { skew_.x = val; }
         void setSkewY(float val) { skew_.y = val; }
-        void setSkew(float x, float y);
 
         float rotation() const { return rotation_; }
         void setRotation(float val) { rotation_ = val; }
 
         float alpha() const { return alpha_; }
-        void setAlpha(float val);
 
         bool grayed() const;
-        void setGrayed(bool val);
 
         bool visible() const { return visible_; }
-        void setVisible(bool);
 
         bool touchable() const { return touchable_; }
         void setTouchable(bool val) { touchable_ = val; }
@@ -184,8 +184,8 @@ protected:
             return dispobj_;
         }
 
-        SortingOrder sortingOrder() const { return sortingOrder_; }
-        void setSortingOrder(SortingOrder val) { sortingOrder_ = val; }
+        uint32_t sortingOrder() const { return sortingOrder_; }
+        void setSortingOrder(uint32_t val) { sortingOrder_ = val; }
 
         Group* group() const { return group_; }
         void SetGroup(Group* val) { group_ = val; }
@@ -205,6 +205,10 @@ protected:
         void handleControllerChanged(Controller* controller);
 
         virtual void constructFromResource() {};
+
+        void removeFromParent();
+
+        bool inContainer() const;
 
     };
 

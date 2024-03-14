@@ -29,8 +29,9 @@ namespace gui {
         int                         apexIndex_;
         glm::vec2                   alignOffset_;
         glm::vec2                   clipSoftness_;
-        int                         sortingChildrenCount_;
         Controller*                 applyingController_;
+
+        uint32_t                    sortingChildCount_; // 自定义排序优先级的控件数量
 
         //
         bool                        asBatchNode_;
@@ -40,8 +41,13 @@ namespace gui {
             , children_()
             , controllers_()
             , transitions_()
+            , buildingDisplayList_(false)
             , margin_()
+            , traceBounds_(false)
+            , boundsChanged_(false)
             , childrenRenderOrder_(ChildrenRenderOrder::Ascent)
+            , sortingChildCount_(0)
+            , asBatchNode_(false)
         {
             this->type_ = ObjectType::Component;
         }
@@ -70,10 +76,18 @@ namespace gui {
 
         void asBatchNode(bool batch);
 
-        void addChild(Object* child);
-        void addChildAt(Object* child, int32_t index);
 
+        Object* addChild(Object* child);
+        Object* addChildAt(Object* child, uint32_t index);
 
+        void removeChild(Object* child);
+        void removeChildAt(uint32_t index);
+private:
+        void setChildIndex(Object* child, uint32_t idx);
+        uint32_t setChildIndex_(Object* child, uint32_t oldIdx, uint32_t idx);
+        uint32_t getInsertPosForSortingOrder(Object* child);
+
+        void syncDisplayList(Object* child);
     };
 
 }

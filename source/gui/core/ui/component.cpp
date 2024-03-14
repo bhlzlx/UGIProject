@@ -7,7 +7,6 @@
 #include "core/package.h"
 #include "core/package_item.h"
 #include "core/ui/object_factory.h"
-#include "imgui/imgui.h"
 #include "utils/byte_buffer.h"
 #include "core/display_objects/display_object.h"
 #include "core/controller.h"
@@ -242,8 +241,13 @@ namespace gui {
     }
 
     void Component::createDisplayObject() {
-        Object::createDisplayObject();
+        // Object::createDisplayObject();
+        dispobj_ = DisplayObject::createDisplayObject();
         root_ = dispobj_;
+        container_ = dispobj_;
+
+        reg.emplace_or_replace<dispcomp::batch_dirty>(root_);
+        reg.emplace_or_replace<dispcomp::visible_changed>(root_);
     }
 
     void Component::setBoundsChangedFlag() {
@@ -263,5 +267,183 @@ namespace gui {
         this->asBatchNode_ = batch;
         reg.emplace_or_replace<dispcomp::batch_node>(dispobj_);
     }
+
+    Object* Component::addChild(Object* child) {
+        return addChildAt(child, children_.size());
+    }
+
+    Object* Component::addChildAt(Object* child, uint32_t index) {
+        if(!child) {
+            return nullptr;
+        }
+        if(index > children_.size()) {
+            return nullptr;
+        }
+        if(child->parent_ == this) {
+            setChildIndex(child, index);
+        } else {
+            child->removeFromParent();
+            child->internalSetParent(this);
+
+            int cnt = children_.size();
+            if(child->sortingOrder_ != 0) { // 自定义排序
+                ++sortingChildCount_;
+                index = getInsertPosForSortingOrder(child); // 取得排序区间里的一个位置
+            } else if(sortingChildCount_ > 0) {
+                if(index > (cnt - sortingChildCount_)) {
+                    index = cnt - sortingChildCount_; // 放在排序区间前
+                }
+            }
+            children_.insert(children_.begin() + index, child);
+            syncDisplayList(child);
+            setBoundsChangedFlag();
+        }
+        return child;
+    }
+
+
+    void Component::removeChild(Object* child) {
+
+    }
+
+    void Component::removeChildAt(uint32_t index) {
+    }
+
+
+    /**
+     * @brief 
+     *   同步到display object树
+     * display object树上只有可见的和有效的display object
+     * @param child 
+     */
+    void Component::syncDisplayList(Object* child) {
+        if(buildingDisplayList_) {
+            return;
+        }
+        // int cnt = children_.size();
+        if(!child->dispobj_) {
+            return;
+        }
+        assert(!child->dispobj_.parent());
+        if(child->dispobj_.parent()) {
+            return;
+        }
+        // 因为是更新状态，所以如果已经在树上了，就不用再重复添加
+        // 如果不可见，但是还在树上，就得从树上摘下来
+        // 就这么简单！
+        if(child->internalVisible_) {
+            if(!child->getDisplayObject().parent()) {
+                // 按渲染顺序遍历
+                switch(childrenRenderOrder_) {
+                    case gui::ChildrenRenderOrder::Ascent: {
+                        size_t index = 0;
+                        for(size_t i = 0; i<children_.size(); ++i) {
+                            Object* o = children_[i];
+                            if(o == child) {
+                                break;
+                            }
+                            if(o->getDisplayObject() && o->getDisplayObject().parent()) {
+                                ++index;
+                            }
+                        }
+                        container_.addChildAt(child->getDisplayObject(), index);
+                        break;
+                    }
+                    case gui::ChildrenRenderOrder::Descent: {
+                        size_t index = 0;
+                        size_t cnt = children_.size();
+                        for(size_t i = 0; i<children_.size(); ++i) {
+                            Object* o = children_[cnt - 1 - i];
+                            if(o == child) {
+                                break;
+                            }
+                            if(o->getDisplayObject() && o->getDisplayObject().parent()) {
+                                ++index;
+                            }
+                        }
+                        container_.addChildAt(child->getDisplayObject(), index);
+                        break;
+                    }
+                    default : {
+                        container_.addChild(child->getDisplayObject());
+                        break;
+                    }
+                }
+            }
+        } else if(!child->internalVisible_) {
+            // 尝试从display list上删除
+            if(child->getDisplayObject().parent()) {
+                container_.removeChild(child->getDisplayObject());
+            }
+        }
+
+    }
+
+    uint32_t Component::getInsertPosForSortingOrder(Object* target) {
+        size_t cnt = children_.size();
+        int i = 0;
+        for(;i<cnt; ++i) {
+            auto child = children_[i];
+            if(child == target) {
+                continue;
+            }
+            if(target->sortingOrder_ < child->sortingOrder_) {
+                break;
+            }
+        }
+        return i;
+    }
+
+    // 针对 soring order == 0 的子控件更改索引
+    void Component::setChildIndex(Object* child, uint32_t idx) {
+        if(child->sortingOrder_ != 0) {
+            return ;
+        }
+        auto iter = std::find(children_.begin(), children_.end(), child);
+        if(iter == children_.end()) {
+            return;
+        }
+        int oldIndex = iter - children_.begin();
+        if(sortingChildCount_ > 0){
+            int cnt = children_.size();
+            if(idx > (cnt - sortingChildCount_ - 1)) {
+                idx = cnt - sortingChildCount_ - 1;
+            }
+        }
+        setChildIndex_(child, oldIndex, idx);
+    }
+
+    uint32_t Component::setChildIndex_(Object* child, uint32_t oldIdx, uint32_t idx) {
+        int cnt = children_.size();
+        if(idx > cnt) {
+            idx = cnt;
+        }
+        if(oldIdx == idx) {
+            return oldIdx;
+        }
+        children_.erase(children_.begin() + oldIdx);
+        if(idx >= cnt) {
+            children_.push_back(child);
+        } else {
+            children_.insert(children_.begin() + idx, child);
+        }
+        if(child->inContainer()) { // in container
+            int displayIndex = 0;
+            if(childrenRenderOrder_ == ChildrenRenderOrder::Ascent) {
+                for(uint32_t i = 0; i<idx; ++i) {
+                    Object* obj = children_[i];
+                    if(obj->inContainer()) {
+                        ++displayIndex;
+                    }
+                }
+                container_.setChildIndex(child->getDisplayObject(), displayIndex);
+            }
+            return displayIndex;
+        }
+        return oldIdx;
+    }
+
+
+
 
 }

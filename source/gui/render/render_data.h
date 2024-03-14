@@ -1,5 +1,4 @@
 #pragma once
-#include <cstddef>
 #include <gui/core/declare.h>
 #include <LightWeightCommon/utils/handle.h>
 #include <core/data_types/ui_types.h>
@@ -8,7 +7,6 @@
 #include "ugi_types.h"
 #include <glm/glm.hpp>
 #include <vector>
-
 #include <entt/entt.hpp>
 
 namespace gui {

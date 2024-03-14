@@ -40,10 +40,11 @@ namespace gui {
         }
 
         operator bool () const {
-            return entity_ == entt::null;
+            return entity_ != entt::null;
         }
 
         DisplayObject parent() const;
+        void setParent(DisplayObject parent);
         
         void addChild(DisplayObject child);
         void addChildAt(DisplayObject child, uint32_t index);
@@ -51,7 +52,22 @@ namespace gui {
         void removeChildAt(uint32_t index);
         void removeFromParent();
 
-        void setPosition(Point2D<float> const& pos);
+        std::vector<DisplayObject>* children() const;
+
+        void setPosition(glm::vec2 const& val);
+        void setSize(glm::vec2 const& val);
+        void setPivot(glm::vec2 const& val);
+        void setRotation(float val);
+        void setSkew(glm::vec2 val);
+        void setScale(glm::vec2 val);
+
+        /**
+         * @brief Set the Child Index object
+         * 其实该改成change child'd index 意思比较准确
+         * @param child this object's child
+         * @param index target index
+         */
+        void setChildIndex(DisplayObject child, uint32_t index);
     public:
         static DisplayObject createRootObject();
         static DisplayObject createDisplayObject();
