@@ -46,8 +46,7 @@ namespace gui {
     }
 
     void Image::createDisplayObject() {
-        // Object::createDisplayObject();
-        dispobj_ = DisplayObject::createDisplayObject();
+        Object::createDisplayObject();
         reg.emplace_or_replace<dispcomp::mesh_dirty>(dispobj_);
         reg.emplace_or_replace<dispcomp::image_mesh>(dispobj_);
     }

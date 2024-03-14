@@ -241,8 +241,7 @@ namespace gui {
     }
 
     void Component::createDisplayObject() {
-        // Object::createDisplayObject();
-        dispobj_ = DisplayObject::createDisplayObject();
+        Object::createDisplayObject();
         root_ = dispobj_;
         container_ = dispobj_;
 
@@ -297,6 +296,8 @@ namespace gui {
             children_.insert(children_.begin() + index, child);
             syncDisplayList(child);
             setBoundsChangedFlag();
+            //
+            reg.emplace_or_replace<dispcomp::visible_changed>(child->getDisplayObject());
         }
         return child;
     }

@@ -128,7 +128,11 @@ namespace gui {
         handlingController_ = false;
     }
 
-    void Object::createDisplayObject() {}
+    void Object::createDisplayObject() {
+        dispobj_ = DisplayObject::createDisplayObject();
+        reg.emplace_or_replace<dispcomp::visible>(dispobj_);
+        reg.emplace_or_replace<dispcomp::visible_changed>(dispobj_);
+    }
 
     void Object::setVisible(bool val) {
         visible_ = val;

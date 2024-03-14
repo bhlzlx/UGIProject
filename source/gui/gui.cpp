@@ -41,8 +41,8 @@ namespace gui {
             } else {
                 if(parent) {
                     updateVisibleRecursive(ett,isFinalVisible(parent));
-                } else {
-                    updateVisibleRecursive(ett, true);
+                // } else {
+                //     updateVisibleRecursive(ett, true);
                 }
             }
             reg.remove<dispcomp::visible_changed>(ett);
@@ -86,7 +86,7 @@ namespace gui {
     };
 
     void updateDirtyBatches() {
-        reg.view<dispcomp::batch_dirty, dispcomp::batch_node>().each([](entt::entity ett, dispcomp::batch_node& batchNode) {
+        reg.view<dispcomp::final_visible, dispcomp::batch_dirty, dispcomp::batch_node>().each([](entt::entity ett, dispcomp::batch_node& batchNode) {
             material_batch_desc_t material;
             std::vector<ui_render_batches_t> batches;
             //
