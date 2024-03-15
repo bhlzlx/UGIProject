@@ -46,7 +46,7 @@ namespace gui {
         } else {
             comp = &reg.get<dispcomp::children>(entity_);
         }
-        std::vector<DisplayObject> &children = comp->val;
+        std::vector<entt::entity> &children = comp->val;
         int count = children.size();
         if(index > count) {
             return;
@@ -93,17 +93,17 @@ namespace gui {
     }
 
     void DisplayObject::setPosition(glm::vec2 const& pos) {
-        auto trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
+        auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
         trans.position = pos;
     }
 
     void DisplayObject::setSize(glm::vec2 const& val) {
-        auto trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
+        auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
         trans.size = val;
     }
 
     void DisplayObject::setPivot(glm::vec2 const& val) {
-        auto trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
+        auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
         trans.pivot = val;
     }
 
@@ -132,6 +132,11 @@ namespace gui {
             children->insert(children->begin() + index, child);
         }
         markBatchDirty(entity_);
+    }
+
+    dispcomp::basic_transfrom& DisplayObject::getBasicTransfrom() const {
+        auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
+        return trans;
     }
 
 }

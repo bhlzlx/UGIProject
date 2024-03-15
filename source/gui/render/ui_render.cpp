@@ -1,5 +1,6 @@
 #include "ui_render.h"
 #include "render/render_data.h"
+#include "ugi_types.h"
 #include "ui_image_render.h"
 
 namespace gui {
@@ -43,10 +44,14 @@ namespace gui {
     }
 
     void DrawRenderBatches(ugi::RenderCommandEncoder* encoder) {
+        ugi::raster_state_t rasterizationState;
+        rasterizationState.polygonMode = ugi::polygon_mode_t::Fill;
         for(auto& batch: frameBatches) {
             switch(batch.type) {
                 case gui::RenderItemType::Image: {
                     auto render = UIImageRender::Instance();
+                    render->bind(encoder);
+                    render->setRasterization(rasterizationState);
                     render->drawBatch(batch, encoder);
                     break;
                 }
@@ -56,5 +61,9 @@ namespace gui {
         }
     }
 
+    void SetVPMat(glm::mat4 const& vp) {
+        auto render = UIImageRender::Instance();
+        render->setVP(vp);
+    }
 
 }

@@ -66,10 +66,12 @@ namespace gui {
     public:
         static Package* AddPackage(std::string const& assetPath);
         static void InitPackageModule(comm::IArchive* archive);
+        static ugi::Texture* EmptyTexture();
     };
 
     Package* PackageForID(std::string const& id);
     Package* PackageForName(std::string const& name);
     Package* LoadPackageFromAsset(std::string const& assetPath);
+
 
 }

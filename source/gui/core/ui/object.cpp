@@ -49,8 +49,8 @@ namespace gui {
         auto buffer = &bufRef;
         buffer->seekToBlock(startPos, ObjectBlocks::Props);
         buffer->skip(5);
-        id_ = buffer->read<std::string>();
-        name_ = buffer->read<std::string>();
+        id_ = buffer->read<csref>();
+        name_ = buffer->read<csref>();
         float f1, f2, f3, f4;
         f1 = buffer->read<int>();
         f2 = buffer->read<int>();
@@ -112,7 +112,8 @@ namespace gui {
             buffer->read<float>();
             buffer->read<float>();
         }
-        data_ = buffer->read<std::string>(); // user data???
+        auto dat = buffer->read<csref>();
+        data_ = Value(std::move(dat)); // user data???
     }
 
     void Object::setupAfterAdd(ByteBuffer& buffer, int startPos) {
@@ -131,7 +132,8 @@ namespace gui {
     void Object::createDisplayObject() {
         dispobj_ = DisplayObject::createDisplayObject();
         reg.emplace_or_replace<dispcomp::visible>(dispobj_);
-        reg.emplace_or_replace<dispcomp::visible_changed>(dispobj_);
+        reg.emplace_or_replace<dispcomp::visible_dirty>(dispobj_);
+        reg.emplace_or_replace<dispcomp::transform_dirty>(dispobj_);
     }
 
     void Object::setVisible(bool val) {
@@ -141,7 +143,7 @@ namespace gui {
         } else {
             reg.remove<dispcomp::visible>(dispobj_);
         }
-        reg.emplace_or_replace<dispcomp::visible_changed>(dispobj_);
+        reg.emplace_or_replace<dispcomp::visible_dirty>(dispobj_);
     }
 
     void Object::setPixelSnapping(bool val) {

@@ -27,7 +27,7 @@ namespace gui {
 
         // if is atlas
         ugi::Texture*                   rawTexture_;
-        NTexture                        texture_;
+        NTexture*                       texture_;
 
         // if is image
         Rect<float>*                    scale9Grid_ = nullptr;

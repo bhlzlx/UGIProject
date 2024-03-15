@@ -2,7 +2,6 @@
 
 #include "core/data_types/ui_types.h"
 #include "core/declare.h"
-#include "core/display_objects/display_object.h"
 #include "core/n_texture.h"
 #include "object.h"
 

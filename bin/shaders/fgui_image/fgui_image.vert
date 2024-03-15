@@ -26,12 +26,20 @@ struct instance_data_t {
 };
 
 layout(set = 0, binding = 0) uniform args {
-    instance_data_t image_datas[512];
+    instance_data_t         image_datas[512];
 };
+
+layout(set = 1, binding = 0) uniform global {
+    mat4                    vp;
+};
+
+// 后续需要改成ssbo
+// layout(set = 0, binding = 3) buffer args {
+// };
 
 void main() {
     uint idx = propIndex;
-	gl_Position = image_datas[idx].transfrom * vec4(position,1.0f);
+	gl_Position = vp * image_datas[idx].transfrom * vec4(position,1.0f);
 	frag_uv = uv;
     float a = float(((packed_color >> 24) & 0xff)) / 255.0f;
     float r = float(((packed_color >> 16) & 0xff)) / 255.0f;

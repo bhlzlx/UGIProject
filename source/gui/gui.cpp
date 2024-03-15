@@ -1,8 +1,11 @@
 #include "gui.h"
 #include "core/display_objects/display_components.h"
 #include "core/display_objects/display_object.h"
+#include "core/n_texture.h"
+#include "core/package.h"
 #include "core/ui/stage.h"
 #include "entt/entity/fwd.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "mesh/image_mesh.h"
 #include "render/render_data.h"
 #include "render/ui_render.h"
@@ -32,7 +35,7 @@ namespace gui {
         auto stage = Stage::Instance();
         auto root = stage->defaultRoot();
         //
-        reg.view<dispcomp::visible_changed>().each([](auto ett) {
+        reg.view<dispcomp::visible_dirty>().each([](auto ett) {
             bool isRoot = false;
             isRoot = reg.any_of<dispcomp::is_root>(ett);
             auto parent = getParent(ett);
@@ -45,7 +48,7 @@ namespace gui {
                 //     updateVisibleRecursive(ett, true);
                 }
             }
-            reg.remove<dispcomp::visible_changed>(ett);
+            reg.remove<dispcomp::visible_dirty>(ett);
         });
     }
 
@@ -118,12 +121,19 @@ namespace gui {
                 }
                 if(!isBatchNode(child)) {
                     auto graphics = getGraphics(child);
-                    ugi::Texture* tex = graphics->texture.nativeTexture().as<ugi::Texture>();
+                    ugi::Texture* tex = nullptr;
+                    auto ntex = graphics->texture.as<NTexture>();
+                    if(ntex) {
+                        tex = ntex->nativeTexture().as<ugi::Texture>();
+                    }
+                    if(!tex) {
+                        tex = Package::EmptyTexture();
+                    }
                     if(!material.compatible(graphics->renderItem.type, tex) && renderItems.size()) {
                         breakBatchFn();
-                        material.renderType = graphics->renderItem.type;
-                        material.texture = tex;
                     }
+                    material.renderType = graphics->renderItem.type;
+                    material.texture = tex;
                     renderItems.push_back((void*)graphics->renderItem.item);
                     args.push_back(&graphics->args);
                 } else {
@@ -154,6 +164,17 @@ namespace gui {
         });
     }
 
+    void updateTransfroms() {
+        reg.view<dispcomp::transform_dirty, dispcomp::final_visible, NGraphics>().each([](entt::entity ett, NGraphics& graphics) {
+            DisplayObject obj = ett;
+            auto& transform = obj.getBasicTransfrom();
+            auto mat = glm::translate(glm::mat4(1.0f), glm::vec3(transform.position.x, transform.position.y, 0));
+            graphics.args.transfrom = mat;
+            graphics.args.color = glm::vec4(1.f, 1.f, 1.f, 1.f);
+            reg.remove<dispcomp::transform_dirty>(ett);
+        });
+    }
+
     void commitBatchNode(entt::entity ett) {
         auto batchData = getBatchData(ett);
         if(!batchData) {
@@ -177,6 +198,7 @@ namespace gui {
 
     void GuiTick() {
         updateVisible(); // 更新可见性
+        updateTransfroms();
         updateImageMesh(); // 有必要就更新mesh
         updateBatchNodes();
         updateDirtyBatches(); // 更新batch节点的 batch 数据

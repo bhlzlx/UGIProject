@@ -28,10 +28,14 @@
 namespace gui {
 
     bool UIImageRender::initialize_() {
+        _globalMtl = _pipeline->createMaterial({"global"}, {});
+        _globalMat = _globalMtl->descriptors()[0];
+        //
         auto material = _pipeline->createMaterial({"args", "image_sampler", "image_tex"}, {});
         _uboptor = material->descriptors()[0];
         _samptor = material->descriptors()[1];
         _texptor = material->descriptors()[2];
+        delete material;
         _bufferAllocator = new ugi::MeshBufferAllocator();
         auto rst = _bufferAllocator->initialize(_device, 4096);
         return rst;
@@ -51,8 +55,20 @@ namespace gui {
 
     void UIImageRender::draw(ugi::RenderCommandEncoder* enc, ugi::Renderable* renderable) {
         _pipeline->applyMaterial(renderable->material());
+        //
         _pipeline->flushMaterials(enc->commandBuffer());
         enc->draw(renderable->mesh(), renderable->mesh()->indexCount());
+    }
+
+    void UIImageRender::setVP(glm::mat4 const& vp) {
+        auto ubo = _uniformAllocator->allocate(sizeof(glm::mat4));
+        memcpy(ubo.ptr, &vp, ubo.size);
+        _globalMat.res.buffer.buffer = ubo.buffer;
+        _globalMat.res.buffer.offset = ubo.offset;
+        _globalMat.res.buffer.size = ubo.size;
+        _globalMtl->updateDescriptor(_globalMat);
+        //
+        _pipeline->applyMaterial(_globalMtl);
     }
 
     void UIImageRender::drawBatch(ui_render_batches_t batches, ugi::RenderCommandEncoder* encoder) {

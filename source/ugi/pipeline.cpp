@@ -300,6 +300,7 @@ namespace ugi {
         for( uint32_t argIndex = 0; argIndex< _pipelineDesc.argumentCount; ++argIndex) {
             auto setIndex = _pipelineDesc.argumentLayouts[argIndex].index;
             handle.setID = setIndex;
+            handle.binding = 0;
             for( uint32_t descriptorIndex = 0; descriptorIndex < _pipelineDesc.argumentLayouts[argIndex].descriptorCount; ++descriptorIndex) {
                 const auto& descriptor = _pipelineDesc.argumentLayouts[argIndex].descriptors[descriptorIndex];
                 auto binding = descriptor.binding;

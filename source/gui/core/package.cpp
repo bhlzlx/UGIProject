@@ -309,8 +309,18 @@ namespace gui {
         emptyTexture_ = device->createTexture(whiteTexDesc);
         uint64_t offset = 0;
         if(emptyTexture_) {
-            emptyTexture_->updateRegions(device, &region, 1, (uint8_t const*)White2x2Data, sizeof(White2x2Data), &offset, renderContext->asyncLoadManager(),[](void* res, ugi::CommandBuffer*) {
+            emptyTexture_->updateRegions(device, &region, 1, (uint8_t const*)White2x2Data, sizeof(White2x2Data), &offset, renderContext->asyncLoadManager(),[](void* res, ugi::CommandBuffer* resCmd) {
                 // async load complete!
+                ugi::Texture* tex = (ugi::Texture*)res;
+                tex->generateMipmap(resCmd);
+                auto resEnc = resCmd->resourceCommandEncoder();
+                resEnc->imageTransitionBarrier(
+                    tex, ugi::ResourceAccessType::ShaderRead, 
+                    ugi::pipeline_stage_t::Bottom, ugi::StageAccess::Write,
+                    ugi::pipeline_stage_t::FragmentShading, ugi::StageAccess::Read,
+                    nullptr
+                );
+                resEnc->endEncode();
                 // do nothing
             });
         }
@@ -374,6 +384,16 @@ namespace gui {
             file->read(pngData.data(), file->size());
             tex = rc->createTexturePNG(pngData.data(), pngData.size(), [](void* res, ugi::CommandBuffer* cmd) {
                 // async load
+                ugi::Texture* tex = (ugi::Texture*)res;
+                tex->generateMipmap(cmd);
+                auto resEnc = cmd->resourceCommandEncoder();
+                resEnc->imageTransitionBarrier(
+                    tex, ugi::ResourceAccessType::ShaderRead, 
+                    ugi::pipeline_stage_t::Bottom, ugi::StageAccess::Write,
+                    ugi::pipeline_stage_t::FragmentShading, ugi::StageAccess::Read,
+                    nullptr
+                );
+                resEnc->endEncode();
             } );
         }
         if(!tex) {
@@ -385,7 +405,7 @@ namespace gui {
         //     assert(false); // 尚未处理
         }
         if(item->rawTexture_) {
-            item->texture_ = NTexture(item->rawTexture_->handle(), Rect<float>{{0, 0}, {(float)tex->desc().width, (float)tex->desc().height}});
+            item->texture_ = new NTexture(item->rawTexture_);
         }
     }
 
@@ -397,10 +417,10 @@ namespace gui {
                 loadAtlasItem(sprite.item);
             }
             auto atlas = sprite.item->texture_;
-            if(atlas.size().width == sprite.rect.size.width && atlas.size().height == sprite.rect.size.height) {
+            if(atlas->size().width == sprite.rect.size.width && atlas->size().height == sprite.rect.size.height) {
                 item->texture_ = atlas;
             } else {
-                item->texture_ = NTexture(atlas, sprite.rect, sprite.rotated, Size2D<float>(sprite.origSize.x, sprite.origSize.y), sprite.offset);
+                item->texture_ = new NTexture(atlas->handle(), sprite.rect, sprite.rotated, Size2D<float>(sprite.origSize.x, sprite.origSize.y), sprite.offset);
             }
         }
     }
@@ -420,6 +440,10 @@ namespace gui {
 
     Package* LoadPackageFromAsset(std::string const& assetPath) {
         return nullptr;
+    }
+
+    ugi::Texture* Package::EmptyTexture() {
+        return emptyTexture_;
     }
 
 

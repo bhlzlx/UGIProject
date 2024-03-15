@@ -56,7 +56,6 @@ namespace gui {
         }
     };
 
-
     struct image_render_data_t {
         image_item_t const*         item;
         ui_inst_data_t const*       args;
@@ -97,7 +96,7 @@ namespace gui {
     struct NGraphics { // 它其实是一个控件持有的渲染数据
         opaque_render_item_t    renderItem;     // mesh data
         ui_inst_data_t          args;           // 一个控件的参数，矩阵，透明度，灰度等
-        NTexture                texture;        // texture
+        Handle                  texture;        // texture
     };
 
 }

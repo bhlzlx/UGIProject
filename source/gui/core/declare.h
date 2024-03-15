@@ -25,10 +25,10 @@ namespace gui {
     struct Rect {
         Point2D<T>  base;
         Size2D<T>   size;
-        T left() { return base.x; };
-        T right() { return base.x + size.width; };
-        T top() { return base.y; };
-        T bottom() { return base.y + size.height; };
+        T left() const { return base.x; };
+        T right() const { return base.x + size.width; };
+        T top() const { return base.y; };
+        T bottom() const { return base.y + size.height; };
     };
 
     struct Color4B {

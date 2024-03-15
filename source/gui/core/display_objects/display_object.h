@@ -1,8 +1,10 @@
 #pragma once
 #include "../events/event_dispatcher.h"
 #include "core/declare.h"
+#include "core/display_objects/display_components.h"
 #include "entt/src/entt/entity/entity.hpp"
 #include "entt/src/entt/entity/fwd.hpp"
+#include "glm/fwd.hpp"
 #include <entt/src/entt/entt.hpp>
 
 namespace gui {
@@ -60,6 +62,8 @@ namespace gui {
         void setRotation(float val);
         void setSkew(glm::vec2 val);
         void setScale(glm::vec2 val);
+
+        dispcomp::basic_transfrom& getBasicTransfrom() const;
 
         /**
          * @brief Set the Child Index object

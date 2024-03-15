@@ -246,7 +246,7 @@ namespace gui {
         container_ = dispobj_;
 
         reg.emplace_or_replace<dispcomp::batch_dirty>(root_);
-        reg.emplace_or_replace<dispcomp::visible_changed>(root_);
+        reg.emplace_or_replace<dispcomp::visible_dirty>(root_);
     }
 
     void Component::setBoundsChangedFlag() {
@@ -297,7 +297,7 @@ namespace gui {
             syncDisplayList(child);
             setBoundsChangedFlag();
             //
-            reg.emplace_or_replace<dispcomp::visible_changed>(child->getDisplayObject());
+            reg.emplace_or_replace<dispcomp::visible_dirty>(child->getDisplayObject());
         }
         return child;
     }

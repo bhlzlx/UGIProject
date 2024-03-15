@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="800,600">
   <displayList>
-    <image id="n0_wqox" name="n0" src="wqox1" fileName="img/tomoya.jpg" xy="3,2" size="202,198"/>
+    <image id="n1_pa9v" name="n1" src="wqox1" fileName="img/tomoya.jpg" xy="0,0" size="800,600"/>
+    <image id="n0_wqox" name="n0" src="wqox1" fileName="img/tomoya.jpg" xy="44,40" pivot="0.5,0.5" size="182,93"/>
   </displayList>
 </component>

@@ -15,5 +15,7 @@ namespace gui {
     void ClearFrameBatchCache();
     void CommitRenderBatch(ui_render_batches_t const& batch);
 
+    void SetVPMat(glm::mat4 const& vp);
+
     void DrawRenderBatches(ugi::RenderCommandEncoder* encoder);
 }

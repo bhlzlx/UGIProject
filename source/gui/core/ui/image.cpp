@@ -1,5 +1,4 @@
 #include "image.h"
-#include "core/display_objects/display_object.h"
 #include "render/render_data.h"
 #include <core/data_types/ui_types.h>
 #include <core/declare.h>
@@ -13,12 +12,16 @@ namespace gui {
         rawSize_ = {(float)contentItem->width_, (float)contentItem->height_};
         contentItem = contentItem->getHighSolution();
         contentItem->load();
+        NTexture* tex = contentItem->texture_;
+        auto const& uvRc = tex->uvRc();
         auto& image_mesh = reg.get_or_emplace<dispcomp::image_mesh>(dispobj_);
+        image_mesh.desc.uv[0] = uvRc.base;
+        image_mesh.desc.uv[1] = { uvRc.right(), uvRc.bottom() };
         image_mesh.grid9 = contentItem->scale9Grid_;
         image_mesh.scaleByTile = contentItem->scaledByTile_;
         //
         auto &graphics = reg.get_or_emplace<NGraphics>(dispobj_);
-        graphics.texture = contentItem->texture_;
+        graphics.texture = contentItem->texture_->handle();
         //
         setSize(rawSize_);
     }

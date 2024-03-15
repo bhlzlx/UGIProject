@@ -3,7 +3,7 @@
 #include <LightWeightCommon/utils/handle.h>
 #include "core/data_types/ui_types.h"
 #include "core/declare.h"
-#include "display_object.h"
+// #include "display_object.h"
 #include "render/render_data.h"
 #include <vector>
 
@@ -16,7 +16,7 @@ namespace gui {
     namespace dispcomp {
 
         struct children {
-            std::vector<DisplayObject> val;
+            std::vector<entt::entity> val;
         };
 
         struct parent {
@@ -28,8 +28,8 @@ namespace gui {
         };
 
         struct batch_node {
-            std::vector<DisplayObject> children;
-            std::vector<DisplayObject> batchNodes;
+            std::vector<entt::entity> children;
+            std::vector<entt::entity> batchNodes;
         };
 
         struct batch_data {
@@ -60,16 +60,17 @@ namespace gui {
 
         struct is_root {};
 
+        struct transform_dirty {}; //
+
         struct batch_dirty {};
 
         struct owner {
             Handle val;
         };
 
-
         struct visible {};
         struct final_visible {};
-        struct visible_changed {};
+        struct visible_dirty {};
 
         struct graphics {
             NGraphics graphics;

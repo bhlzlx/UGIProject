@@ -191,6 +191,8 @@ namespace ugi {
                 // _render->bind(renderEnc);
                 // _render->drawBatch(_imageBatches, renderEnc);
                 //
+                auto vp = CreateVPMat(glm::vec2(633, 450), 45.f);
+                gui::SetVPMat(vp);
                 gui::DrawRenderBatches(renderEnc);
             }
             renderEnc->endEncode();

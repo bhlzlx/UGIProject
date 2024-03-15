@@ -1,5 +1,6 @@
 #pragma once
 #include "core/declare.h"
+#include <ugi/texture.h>
 #include <LightWeightCommon/utils/handle.h>
 #include <utility>
 
@@ -16,29 +17,40 @@ namespace gui {
         Size2D<float>       originSize_;
         Point2D<float>      offset_;
     public:
+
+        Rect<float> const& uvRc() const {
+            return uvRc_;
+        }
+
         NTexture() {
         }
 
-        NTexture(Handle rawTex, Rect<float> rc)
-            : ObjectHandle(this)
-            , native_(rawTex)
-            , root_(handle())
-            , rc_(rc)
-            , uvRc_()
-            , originSize_(rc.size)
-            , offset_{}
+        NTexture(ugi::Texture* rawTex)
+            : comm::ObjectHandle(this)
+            , native_(rawTex->handle())
+            , root_()
+            , rc_()
+            , uvRc_{{0,0}, {1,1}}
+            , originSize_()
+            , offset_{0, 0}
         {
+            auto desc = rawTex->desc();
+            rc_.base = {};
+            rc_.size = {(float)desc.width, (float)desc.height};
+            originSize_ = rc_.size;
         }
 
-        NTexture(NTexture root, Rect<float> region, bool rotated)
-            : native_()
-            , root_(root.handle())
+        NTexture(Handle root, Rect<float> region, bool rotated)
+            : comm::ObjectHandle(this)
+            , native_()
+            , root_(root)
         {
+            NTexture &rootRef = *root_.as<NTexture>();
             uvRc_ = {
-                {region.base.x * root.uvRc_.size.width / root.rc_.size.width, 
-                1 - region.size.height + region.base.y / root.rc_.size.height},
-                {region.size.width * root.uvRc_.size.width / root.rc_.size.width,
-                region.size.height * root.uvRc_.size.height / root.rc_.size.height}
+                {region.base.x * rootRef.uvRc_.size.width / rootRef.rc_.size.width, 
+                ((region.size.height + region.base.y) / rootRef.rc_.size.height)},
+                {region.size.width * rootRef.uvRc_.size.width / rootRef.rc_.size.width,
+                region.size.height * rootRef.uvRc_.size.height / rootRef.rc_.size.height}
             };
             if(rotated) {
                 std::swap(region.size.width, region.size.height);
@@ -48,7 +60,7 @@ namespace gui {
             originSize_ = rc_.size;
         }
 
-        NTexture(NTexture root, Rect<float> region, bool rotated, Size2D<float> originSize, Point2D<float> offset)
+        NTexture(Handle root, Rect<float> region, bool rotated, Size2D<float> originSize, Point2D<float> offset)
             : NTexture(root, region, rotated)
         {
             originSize_ = originSize;
@@ -65,7 +77,15 @@ namespace gui {
             return root_.as<NTexture>();
         }
         Handle nativeTexture() const {
-            return native_;
+            if(native_) {
+                return native_;
+            } else {
+                auto root = root_.as<NTexture>();
+                if(root) {
+                    return root->nativeTexture();
+                }
+                return Handle();
+            }
         }
 
         void unload();

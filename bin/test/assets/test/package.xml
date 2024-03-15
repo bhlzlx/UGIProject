@@ -2,7 +2,7 @@
 <packageDescription id="beauv2sr">
   <resources>
     <component id="ocyx0" name="test.xml" path="/" exported="true"/>
-    <image id="wqox1" name="tomoya.jpg" path="/img/"/>
+    <image id="wqox1" name="tomoya.jpg" path="/img/" scale9grid="160,160,320,320"/>
   </resources>
   <publish name="test" path="./bytes" packageCount="2"/>
 </packageDescription>

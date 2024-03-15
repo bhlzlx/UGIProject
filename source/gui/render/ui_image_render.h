@@ -7,6 +7,7 @@
 #include <gui/render/render_data.h>
 #include "command_encoder/render_cmd_encoder.h"
 #include "core/display_objects/display_components.h"
+#include "render_components/pipeline_material.h"
 #include "render_data.h"
 #include "texture.h"
 #include "utils/singleton.h"
@@ -22,8 +23,11 @@ namespace gui {
         ugi::res_descriptor_t           _uboptor;                                       // matrices
         ugi::res_descriptor_t           _texptor;
         ugi::res_descriptor_t           _samptor;
+        ugi::Material*                  _globalMtl;
+        ugi::res_descriptor_t           _globalMat;
         ugi::GPUAsyncLoadManager*       _asyncLoadManager;
-
+        //
+        glm::mat4                       _vp;
     private:
         bool initialize_();
     public:
@@ -45,10 +49,11 @@ namespace gui {
             //
             initialize_();
         }
-
         ugi::Material* createMaterial(std::vector<std::string>const & params);
 
         ugi::Renderable* createRenderable(uint8_t const* vd, uint32_t vdsize, uint16_t const* id, uint32_t indexCount);
+
+        void setVP(glm::mat4 const& vp);
 
         void setUBO(ugi::Renderable* renderable, uint8_t* data);
         void setSampler(ugi::Renderable* renderable, ugi::sampler_state_t sampler);
