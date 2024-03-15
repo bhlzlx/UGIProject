@@ -46,11 +46,17 @@ namespace gui {
             , root_(root)
         {
             NTexture &rootRef = *root_.as<NTexture>();
+            region.base.x += rootRef.rc_.base.x;
+            region.base.y += rootRef.rc_.base.y;
             uvRc_ = {
-                {region.base.x * rootRef.uvRc_.size.width / rootRef.rc_.size.width, 
-                ((region.size.height + region.base.y) / rootRef.rc_.size.height)},
-                {region.size.width * rootRef.uvRc_.size.width / rootRef.rc_.size.width,
-                region.size.height * rootRef.uvRc_.size.height / rootRef.rc_.size.height}
+                {
+                    region.base.x * rootRef.uvRc_.size.width / rootRef.rc_.size.width, 
+                    region.base.y * rootRef.uvRc_.size.height / rootRef.rc_.size.height
+                },
+                {
+                    region.size.width * rootRef.uvRc_.size.width / rootRef.rc_.size.width,
+                    region.size.height * rootRef.uvRc_.size.height / rootRef.rc_.size.height
+                }
             };
             if(rotated) {
                 std::swap(region.size.width, region.size.height);

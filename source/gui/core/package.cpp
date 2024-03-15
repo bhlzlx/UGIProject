@@ -410,6 +410,9 @@ namespace gui {
     }
 
     void Package::loadImageItem(PackageItem* item) {
+        if(item->texture_) {
+            return;
+        }
         auto iter = sprites_.find(item->id_);
         if(iter != sprites_.end()) {
             auto const& sprite = iter->second;

@@ -1,6 +1,8 @@
 ﻿#include "fgui_test.h"
 #include "core/ui/stage.h"
+#include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/trigonometric.hpp"
 #include "io/archive.h"
 #include "ugi_types.h"
 #include <ugi/device.h>
@@ -45,7 +47,17 @@ namespace ugi {
         camPos.x = screenSize.x / 2;
         camPos.y = screenSize.y / 2;
         glm::mat4 viewMat = glm::lookAt(camPos, glm::vec3(camPos.x, camPos.y, 0.f), glm::vec3(0, 1,0)); // view mat
-        glm::mat4 projMat = glm::perspective(fovy, screenSize.x / screenSize.y, 0.1f, camPos.z * 2);
+        glm::mat4 projMat = glm::perspective(glm::radians(fovy), screenSize.x / screenSize.y, 0.1f, camPos.z*2);
+        return projMat * viewMat;
+    }
+
+    glm::mat4 CreateVPMat2(glm::vec2 screenSize) {
+        glm::vec3 camPos;
+        camPos.z = 100;
+        camPos.x = screenSize.x / 2;
+        camPos.y = screenSize.y / 2;
+        glm::mat4 viewMat = glm::lookAt(camPos, glm::vec3(camPos.x, camPos.y, 0.f), glm::vec3(0, 1,0)); // view mat
+        glm::mat4 projMat = glm::ortho(-camPos.x, camPos.x *2, -camPos.y, camPos.y * 2, 0.1f, 105.f);
         return projMat * viewMat;
     }
 
@@ -75,79 +87,6 @@ namespace ugi {
         auto device = _renderContext->device();
         _render = gui::UIImageRender::Instance();
         _render->initialize(device, pipeline, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
-        // char const* imagePaths[] = {
-        //     "image/ushio.png",
-        //     "image/island.png",
-        // };
-        // for(int i = 0; i<2; ++i) {
-        //     auto imgFile = _renderContext->archive()->openIStream(imagePaths[i], {comm::ReadFlag::binary});
-        //     auto buffer = malloc(imgFile->size());
-        //     imgFile->read(buffer, imgFile->size());
-        //     _textures[i] = CreateTexturePNG(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
-        //     // Texture* texture = CreateTextureKTX(device, (uint8_t const*)buffer, imgFile->size(), _renderContext->asyncLoadManager(), 
-        //         [this,i,device](void* res, CommandBuffer* cb) {
-        //             auto texture = (Texture*)res;
-        //             // _textures[i] = (Texture*)res;
-        //             texture->generateMipmap(cb);
-        //             auto resEnc = cb->resourceCommandEncoder();
-        //             resEnc->imageTransitionBarrier(
-        //                 _textures[i], ResourceAccessType::ShaderRead, 
-        //                 pipeline_stage_t::Bottom, StageAccess::Write,
-        //                 pipeline_stage_t::FragmentShading, StageAccess::Read,
-        //                 nullptr
-        //             );
-        //             image_view_param_t ivp;
-        //             _imageViews[i] = _textures[i]->createImageView(device, ivp);
-        //             resEnc->endEncode();
-        //             texture->markAsUploaded();
-        //         }
-        //     );
-        //     free(buffer);
-        //     imgFile->close();
-        // }
-        // _flightIndex = 0;
-        // //
-        // gui::image_desc_t image_desc[2] = {
-        //     {
-        //         {64, 64},
-        //         {{0, 0}, {.5f, .5f}}
-        //     },
-        //     {
-        //         {32, 32},
-        //         {{0.5f, 0.5f}, {1.0f, 1.0f}}
-        //     }
-        // };
-        // auto vp = CreateVPMat(glm::vec2(633, 450), 45.f);
-        // auto unit = glm::identity<glm::mat4>();
-        // gui::ui_inst_data_t inst_data[2] = {
-        //     {
-        //         vp *glm::translate(unit, glm::vec3(0, 0,0)),
-        //         glm::vec4(1.f, 1.f, 1.f, 0.5f),
-        //         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-        //     },
-        //     {
-        //         vp *glm::translate(unit, glm::vec3(64,64,0)),
-        //         glm::vec4(1.f, 1.f, 1.f, 0.5f),
-        //         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-        //     }
-        // };
-        // gui::image_item_t* imageItems[2] = {
-        //     // _render->createImageItem()
-        //     _render->createImageItem(image_desc[0]),
-        //     _render->createImageItem(image_desc[1])
-        // };
-        // std::vector<gui::image_render_data_t> renderDatas = {
-        //     {
-        //         imageItems[0],
-        //         inst_data,
-        //     },
-        //     {
-        //         imageItems[1],
-        //         inst_data + 1,
-        //     },
-        // };
-        // _imageBatches = _render->buildImageRenderBatch(renderDatas, _textures[0]);
-        //
         gui::Package::archive_ = comm::CreateFSArchive(arch->rootPath() + "/test/bytes");
         auto uipack = gui::Package::AddPackage("test");
         uipack->loadAllAssets();
@@ -159,6 +98,8 @@ namespace ugi {
         root->addChild(uiobj);
         return true;
     }
+
+    glm::mat4 vp;
 
     void HelloWorld::tick() {
         _renderContext->onPreTick();
@@ -191,7 +132,6 @@ namespace ugi {
                 // _render->bind(renderEnc);
                 // _render->drawBatch(_imageBatches, renderEnc);
                 //
-                auto vp = CreateVPMat(glm::vec2(633, 450), 45.f);
                 gui::SetVPMat(vp);
                 gui::DrawRenderBatches(renderEnc);
             }
@@ -209,6 +149,9 @@ namespace ugi {
         _renderContext->onResize(width, height);
         _width = width;
         _height = height;
+
+        vp = CreateVPMat(glm::vec2(width, height), 45.f);
+        // vp = CreateVPMat2(glm::vec2(width, height));
     }
 
     void HelloWorld::release() {
