@@ -54,6 +54,7 @@ namespace gui {
         void removeChildAt(uint32_t index);
         void removeFromParent();
 
+
         std::vector<DisplayObject>* children() const;
 
         void setPosition(glm::vec2 const& val);
@@ -63,6 +64,7 @@ namespace gui {
         void setSkew(glm::vec2 val);
         void setScale(glm::vec2 val);
 
+        dispcomp::parent_batch& getParentBatch() const;
         dispcomp::basic_transfrom& getBasicTransfrom() const;
 
         /**

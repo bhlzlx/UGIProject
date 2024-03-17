@@ -297,7 +297,7 @@ namespace gui {
             syncDisplayList(child);
             setBoundsChangedFlag();
             //
-            reg.emplace_or_replace<dispcomp::visible_dirty>(child->getDisplayObject());
+            // reg.emplace_or_replace<dispcomp::visible_dirty>(child->getDisplayObject());
         }
         return child;
     }

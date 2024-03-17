@@ -24,7 +24,8 @@ namespace gui {
         };
 
         struct parent_batch {
-            entt::entity val;
+            entt::entity    val; // 父batch
+            int             instIndex; // 此元件的inst数据索引
         };
 
         struct batch_node {
@@ -60,28 +61,32 @@ namespace gui {
 
         struct is_root {};
 
-        struct transform_dirty {}; //
+        struct transform_dirty {}; // 变换更新
 
-        struct batch_dirty {};
+        struct batch_node_dirty {}; // batch node 需要更新树结构了
+
+        struct batch_dirty {}; // 需要重新构建 batch 信息
 
         struct owner {
             Handle val;
         };
 
-        struct visible {};
-        struct final_visible {};
-        struct visible_dirty {};
+        struct visible {}; // 控件本身的可见性
+        struct final_visible {}; // 最终提交相关的可见性
+        struct visible_dirty {}; // 可见性是不是需要重计算
 
         struct graphics {
             NGraphics graphics;
         };
 
+        // 因为基础变换基本所有的控件都会有，所以组合成一起了
         struct basic_transfrom {
             glm::vec2 position;
             glm::vec2 size;
             glm::vec2 pivot;
         };
 
+        // 而 skew/scale/rotation 并不是所有的控件都有
         struct skew {
             glm::vec2 val;
         };

@@ -14,6 +14,11 @@
 
 #include <core/display_objects/display_object_utility.h>
 
+/**
+ * @brief 
+ 当单个元件的透明度，颜色，旋转发生变化时，往往是不需要去重新构建batch数据的，只需要更新现有batch数据的args参数就可以了
+ */
+
 namespace gui {
 
     void updateVisibleRecursive(entt::entity ett, bool parentVisible) {
@@ -67,15 +72,34 @@ namespace gui {
     }
 
     void updateBatchNodes() {
-        reg.view<dispcomp::batch_dirty, dispcomp::batch_node>().each([=](entt::entity ett, dispcomp::batch_node& batchNode) {
+        // 先处理非batch_node节点，通知它的batch node
+        reg.view<dispcomp::batch_node_dirty, dispcomp::final_visible>(entt::exclude<dispcomp::batch_node>).each([=](entt::entity ett) {
+            DisplayObject obj(ett);
+            auto p = obj.parent();
+            while(!isBatchNode(p)) {
+                p = p.parent();
+            }
+            reg.remove<dispcomp::batch_node_dirty>(ett);
+            if(!isBatchNode(p)) { // 它必须是一个batch_node
+                return;
+            }
+            reg.emplace_or_replace<dispcomp::batch_node_dirty>(p);
+        });
+        // 处理batch node
+        reg.view<dispcomp::batch_node, dispcomp::batch_node_dirty, dispcomp::final_visible>().each([=](entt::entity ett, dispcomp::batch_node& batchNode) {
             batchNode.children.clear();
             batchNode.batchNodes.clear();
-            travalBatchNode(ett, [&batchNode](entt::entity ett) {
+            travalBatchNode(ett, [&batchNode, parent_batch = ett](entt::entity ett) {
                 batchNode.children.push_back(ett);
                 if(isBatchNode(ett)) {
                     batchNode.batchNodes.push_back(ett);
                 }
+                reg.emplace_or_replace<dispcomp::parent_batch>(ett, parent_batch, -1); // 更新当前的parent batch
             });
+            //
+            reg.remove<dispcomp::batch_node_dirty>(ett);
+            // 树结构更新了，自然需要重新构建batch数据
+            reg.emplace_or_replace<dispcomp::batch_dirty>(ett);
         });
     }
 
@@ -119,8 +143,13 @@ namespace gui {
                 if(!isFinalVisible(child)) { // 只有可见的才挂到渲染树上，不要遍历的时候再去判断，影响性能
                     continue;
                 }
+                DisplayObject obj(child);
+                auto& parentBatch = obj.getParentBatch(); // 一定存在
                 if(!isBatchNode(child)) {
                     auto graphics = getGraphics(child);
+                    if(!graphics) { // 没有渲染内容，跳过，像普通的component
+                        continue;
+                    }
                     ugi::Texture* tex = nullptr;
                     auto ntex = graphics->texture.as<NTexture>();
                     if(ntex) {
@@ -136,6 +165,7 @@ namespace gui {
                     material.texture = tex;
                     renderItems.push_back((void*)graphics->renderItem.item);
                     args.push_back(&graphics->args);
+                    parentBatch.instIndex = args.size() - 1; // 更新索引
                 } else {
                     breakBatchFn(); // 遇到batch_root也强行中断
                     material.renderType = RenderItemType::None;

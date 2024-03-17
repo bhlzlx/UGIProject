@@ -35,8 +35,7 @@ namespace gui {
         } else {
             comp = &reg.get<dispcomp::children>(entity_);
         }
-        comp->val.push_back(child);
-        return;
+        addChildAt(child, comp->val.size());
     }
 
     void DisplayObject::addChildAt(DisplayObject child, uint32_t index) {
@@ -61,6 +60,10 @@ namespace gui {
             children.insert(children.begin() + index, child);
             child.setParent(*this);
         }
+        //
+        reg.emplace_or_replace<dispcomp::visible_dirty>(child);
+        reg.emplace_or_replace<dispcomp::transform_dirty>(child);
+        reg.emplace_or_replace<dispcomp::batch_node_dirty>(child);
     }
 
     void DisplayObject::removeChild(DisplayObject child) {
@@ -95,28 +98,34 @@ namespace gui {
     void DisplayObject::setPosition(glm::vec2 const& pos) {
         auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
         trans.position = pos;
+        reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
 
     void DisplayObject::setSize(glm::vec2 const& val) {
         auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
         trans.size = val;
+        reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
 
     void DisplayObject::setPivot(glm::vec2 const& val) {
         auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
         trans.pivot = val;
+        reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
 
     void DisplayObject::setRotation(float val) {
         reg.emplace_or_replace<dispcomp::rotation>(entity_, val);
+        reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
 
     void DisplayObject::setSkew(glm::vec2 val) {
         reg.emplace_or_replace<dispcomp::skew>(entity_, val);
+        reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
 
     void DisplayObject::setScale(glm::vec2 val) {
         reg.emplace_or_replace<dispcomp::scale>(entity_, val);
+        reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
 
     void DisplayObject::setChildIndex(DisplayObject child, uint32_t index) {
@@ -137,6 +146,11 @@ namespace gui {
     dispcomp::basic_transfrom& DisplayObject::getBasicTransfrom() const {
         auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
         return trans;
+    }
+
+    dispcomp::parent_batch& DisplayObject::getParentBatch() const {
+        auto& parentBatch = reg.get_or_emplace<dispcomp::parent_batch>(entity_);
+        return parentBatch;
     }
 
 }
