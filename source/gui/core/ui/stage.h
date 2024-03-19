@@ -24,6 +24,8 @@ namespace gui {
             return ui2dRoot_;
         }
 
+        static glm::vec2 RayHitTest(glm::vec3 eye, glm::vec3 dir, glm::vec3 triangle[3]);
+
     };
 
 }
