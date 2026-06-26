@@ -2,10 +2,11 @@
 
 #include "vulkan_declare.h"
 #include "vulkan_function_declare.h"
+#include <algorithm>
 #include <vector>
+#include "ugi_fwd.h"
 
 namespace ugi {
-
     /**
      * @brief light-weight VkSemaphore wrapper \n
      * light-weight VkSemaphore

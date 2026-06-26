@@ -1,0 +1,8 @@
+{
+	"shaderModule": {
+		"vert": "pbr.vert.slang",
+		"frag": "pbr.frag.slang"
+	},
+	"importPath": ["."],
+	"combineVertex": true
+}

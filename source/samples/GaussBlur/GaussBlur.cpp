@@ -42,7 +42,7 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         };
-        renderContext_ = new StandardRenderContext();
+        renderContext_ = StandardRenderContext::Instance();
         renderContext_->initialize(_wnd, descriptor, archive);
         auto device = renderContext_->device();
         auto asyncLoadManager = renderContext_->asyncLoadManager();

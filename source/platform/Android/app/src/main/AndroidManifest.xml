@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?> <manifest xmlns:android="http://schemas.android.com/apk/res/android"> <!-- Vulkan 支持 -->
+    <uses-feature android:name="android.hardware.vulkan.version"
+                  android:version="0x403000"
+                  android:required="true" />
+
+    <!-- 可选: GLES 回退 -->
+    <uses-feature android:name="android.hardware.vulkan.level"
+                  android:version="1"
+                  android:required="false" />
+
+    <application
+        android:label="UGI PBR"
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+        android:hasCode="true"
+        android:hardwareAccelerated="true">
+
+        <activity
+            android:name="android.app.NativeActivity"
+            android:label="UGI PBR"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:screenOrientation="landscape"
+            android:exported="true">
+
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="ugipbr" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

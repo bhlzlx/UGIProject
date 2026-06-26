@@ -27,16 +27,15 @@ namespace ugi {
         ugi::Device*                    _device;                                           //
         ugi::Swapchain*                 _swapchain;                                        //
         ugi::Fence*                     _frameCompleteFences[MaxFlightCount];              // command buffer 被GPU消化完会给 fence 一个 signal, 用于双缓冲或者多缓冲逻辑隔帧等待
-        ugi::Semaphore*                 _renderCompleteSemaphores[MaxFlightCount];         // 用于GPU内部等待
-        // ugi::CommandBuffer*             _commandBuffers[MaxFlightCount];                   // command buffer for each frame
-        ugi::CommandQueue*              _graphicsQueue;                                    // graphics queue
-        ugi::CommandQueue*              _uploadQueue;                                      // upload queue
+        std::vector<ugi::Semaphore*>    _renderCompleteSemaphores;         // per-swapchain-image
+        ugi::CommandQueue*              _graphicsQueue;
+        ugi::CommandQueue*              _uploadQueue;
         ugi::UniformAllocator*          _uniformAllocator;
         ugi::DescriptorSetAllocator*    _descriptorSetAllocator;
         ugi::GPUAsyncLoadManager*       _asyncLoadManager;
         ugi::IRenderPass*               _mainRenderPass;
         uint32_t                        _flightIndex;
-        uint32_t                        _renderPassIndex;
+        uint32_t                        _imageIndex;
         //
         // std::vector<QueueSubmitInfo>    _submitInfos;
         std::vector<queue_submit_t>     _submits;

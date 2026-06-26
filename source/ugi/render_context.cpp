@@ -25,6 +25,7 @@ namespace ugi {
         , _descriptorSetAllocator(nullptr)
         , _asyncLoadManager(nullptr)
         , _flightIndex(0)
+        , _imageIndex(0)
     {
     }
 
@@ -40,14 +41,21 @@ namespace ugi {
         _asyncLoadManager = new ugi::GPUAsyncLoadManager();
         for( size_t i = 0; i<MaxFlightCount; ++i) {
             _frameCompleteFences[i] = _device->createFence();
+        }
+        // 信号量按 swapchain image 数量分配, 用 image index 索引
+        // swapchain 最少 MaxFlightCount 张图, 信号量按此分配
+        const uint32_t imageCount = 4;
+        _renderCompleteSemaphores.resize(imageCount);
+        for (uint32_t i = 0; i < imageCount; ++i) {
             _renderCompleteSemaphores[i] = _device->createSemaphore();
-            // _commandBuffers[i] = _graphicsQueue->createCommandBuffer(_device);
         }
         return true;
     }
 
     bool StandardRenderContext::onPreTick() {
         _device->waitForFence(_frameCompleteFences[_flightIndex] );
+        // swapchain 未就绪 (Android 窗口尺寸未定等) → 跳过渲染
+        if (!_swapchain || !_swapchain->ready()) return false;
         // status tick
         _device->cycleInvoker().tick();
         _descriptorSetAllocator->tick();
@@ -62,8 +70,8 @@ namespace ugi {
             _graphicsQueue->destroyCommandBuffer(_device, cb);
         });
         this->submitCommand({{cb}, {}, {}});
-        uint32_t imageIndex = _swapchain->acquireNextImage(_device, _flightIndex);
-        _mainRenderPass = _swapchain->renderPass(imageIndex);
+        _imageIndex = _swapchain->acquireNextImage(_device, _flightIndex);
+        _mainRenderPass = _swapchain->renderPass(_imageIndex);
         return true;
     }
 
@@ -86,18 +94,18 @@ namespace ugi {
         for(queue_submit_t& submit: _submits) {
             submitInfos.emplace_back(
                 submit.commandBuffers_.data(),
-                submit.commandBuffers_.size(),
+                (uint32_t)submit.commandBuffers_.size(),
                 submit.semaphoresWaits_.data(),
-                submit.semaphoresWaits_.size(),
+                (uint32_t)submit.semaphoresWaits_.size(),
                 submit.semaphoresSignals_.data(),
-                submit.semaphoresSignals_.size()
+                (uint32_t)submit.semaphoresSignals_.size()
             );
         }
 		QueueSubmitBatchInfo submitBatch(submitInfos.data(), submitInfos.size(), _frameCompleteFences[_flightIndex]);
         bool submitRst = _graphicsQueue->submitCommandBuffers(submitBatch);
         _submits.clear();
         if(submitRst) {
-            _swapchain->present(_device, _graphicsQueue, _renderCompleteSemaphores[_flightIndex]);
+            _swapchain->present(_device, _graphicsQueue, _renderCompleteSemaphores[_imageIndex]);
         }
         ++_flightIndex;
         _flightIndex = _flightIndex % MaxFlightCount;
@@ -125,7 +133,7 @@ namespace ugi {
     }
 
     Semaphore* StandardRenderContext::renderCompleteSemephore() const {
-        return _renderCompleteSemaphores[_flightIndex];
+        return _renderCompleteSemaphores[_imageIndex];
     }
 
     Semaphore* StandardRenderContext::mainFramebufferAvailSemaphore() const {

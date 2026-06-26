@@ -1,7 +1,8 @@
 {
-	"shaderModule" : { 
-		"vert":"triangle.vert", 
-		"frag":"triangle.frag"
-    },
-    "combineVertex" : true
+	"shaderModule" : {
+		"vert":"triangle.vert.slang",
+		"frag":"triangle.frag.slang"
+	},
+	"importPath": ["."],
+	"combineVertex" : true
 }

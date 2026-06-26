@@ -103,7 +103,7 @@ namespace ugi {
             descriptor.transferQueueCount = 1;
             descriptor.wnd = _wnd;
         }
-        _renderContext = new StandardRenderContext();
+        _renderContext = StandardRenderContext::Instance();
         _renderContext->initialize(_wnd, descriptor, arch);
         ppldesc.renderState.cullMode = cull_mode_t::None;
         ppldesc.renderState.blendState.enable = false;
@@ -214,7 +214,7 @@ namespace ugi {
     }
 
     void HelloWorld::tick() {
-        _renderContext->onPreTick();
+        if (!_renderContext->onPreTick()) return; // swapchain 未就绪
         _render->tick();
         //
         Device* device = _renderContext->device();

@@ -477,6 +477,9 @@ namespace ugi {
     }
 
      static inline VkShaderStageFlags stageFlagsToVk( shader_stage_t shaderStage ) {
+        // Slang 共享 binding: shaderStage 可能已经是 VkShaderStageFlags bitmask (如 0x11=VS|FS)
+        if ((uint8_t)shaderStage > (uint8_t)shader_stage_t::ComputeShader)
+            return (VkShaderStageFlags)(uint8_t)shaderStage;
         VkShaderStageFlags stageFlags = 0;
         switch (shaderStage)
         {

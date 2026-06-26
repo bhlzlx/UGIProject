@@ -102,7 +102,7 @@ namespace ugi {
     glm::mat4 vp;
 
     void HelloWorld::tick() {
-        _renderContext->onPreTick();
+        if (!_renderContext->onPreTick()) return;
         _render->tick();
         //
         Device* device = _renderContext->device();

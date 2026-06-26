@@ -39,6 +39,13 @@ namespace ugi {
         
         DeviceDescriptorVulkan( const device_descriptor_t& _baseDesc )
             : device_descriptor_t( _baseDesc )
+            , instance(nullptr)
+            , properties({})
+            , physicalDevice(nullptr)
+            , surface(0)
+            , archive(nullptr)
+            , queueFamilyCount(0)
+            , queueFamilyIndices{}
         {
         }
     };

@@ -433,7 +433,7 @@ namespace ugi {
     }
 
     void RenderSystem::createVulkanSurface() {
-        VkSurfaceKHR surface;
+        VkSurfaceKHR surface = VK_NULL_HANDLE;
         VkResult rst = VK_ERROR_INVALID_EXTERNAL_HANDLE;
 #ifdef _WIN32
         HINSTANCE hInst = ::GetModuleHandle(0);
@@ -453,7 +453,9 @@ namespace ugi {
             0, // flag
             (ANativeWindow*)m_deviceDescriptorVk.wnd
         };
-        rst = vkCreateAndroidSurfaceKHR(m_instance, &surface_create_info, nullptr, &surface);
+        rst = vkCreateAndroidSurfaceKHR(m_deviceDescriptorVk.instance, &surface_create_info, nullptr, &surface);
+        printf("[device] createAndroidSurface instance=%p wnd=%p rst=%d surface=%p\n",
+               (void*)m_deviceDescriptorVk.instance, (void*)m_deviceDescriptorVk.wnd, rst, (void*)surface);
 #elif defined __linux__
         VkXlibSurfaceCreateInfoKHR surface_create_info = {
             VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,  // sType
@@ -461,12 +463,16 @@ namespace ugi {
             0, // flag
             (Display*)m_deviceDescriptorVk.wnd
         };
-        rst = vkCreateXlibSurfaceKHR(m_instance, &surface_create_info, nullptr, &surface);
+        rst = vkCreateXlibSurfaceKHR(instance(), &surface_create_info, nullptr, &surface);
 #endif
         if (rst != VK_SUCCESS){
             throw DeviceCreationException( DeviceCreationException::EXCEPTION_CREATE_SURFACE_FAILED );
         }
-        m_deviceDescriptorVk.surface = surface;
+        if (rst == VK_SUCCESS) {
+            m_deviceDescriptorVk.surface = surface;
+        } else {
+            printf("[device] createVulkanSurface FAILED rst=%d\n", rst);
+        }
     }
 
     bool Device::acquireNextSwapchainImage( VkSwapchainKHR _swapchain, VkSemaphore _semaphore, uint32_t* _imageIndex ) {

@@ -1,0 +1,40 @@
+#pragma once
+// 统一前向声明 — 避免跨平台 include 链差异
+namespace ugi {
+    class Buffer;
+    class CommandBuffer;
+    class CommandQueue;
+    class ComputeCommandEncoder;
+    class ComputePipeline;
+    class DescriptorBinder;
+    class DescriptorSetAllocator;
+    class Device;
+    class DeviceCreationException;
+    class Drawable;
+    class Fence;
+    class FlightCycleInvoker;
+    class GPUAsyncLoadManager;
+    class GPUAsyncLoadItem;
+    class GraphicsPipeline;
+    class IRenderPass;
+    class ITask;
+    class Material;
+    class MaterialLayout;
+    class Mesh;
+    class MeshBufferAllocator;
+    class PipelineHelper;
+    class Renderable;
+    class RenderCommandEncoder;
+    class RenderPass;
+    class RenderPassObjectManager;
+    class RenderSystem;
+    class Resource;
+    class ResourceCommandEncoder;
+    class Semaphore;
+    class StandardRenderContext;
+    class Swapchain;
+    class Texture;
+    class TextureUpdateTask;
+    class UniformAllocator;
+    class WorkThread;
+}

@@ -20,5 +20,6 @@ PRIVATE
 target_include_directories(GaussBlur
 PRIVATE
     ${CMAKE_SOURCE_DIR}/source
+    ${CMAKE_SOURCE_DIR}/source/common/
     ${CMAKE_SOURCE_DIR}/thirdpart/tweeny/include
 )

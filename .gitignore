@@ -11,3 +11,17 @@
 /vsproj/*
 /bin/.vs
 /source/thirdpart/glm
+
+# Shader artifacts
+/bin/shaders/**/*.spv
+/bin/shaders/**/*.slang-module
+
+# Android
+/source/platform/Android/.gradle/
+/source/platform/Android/app/build/
+/source/platform/Android/app/.cxx/
+/source/platform/Android/build/
+/source/platform/Android/local.properties
+/source/platform/Android/.idea/
+/source/platform/Android/*.iml
+/source/platform/Android/gradle/wrapper/gradle-wrapper.jar

@@ -1,7 +1,9 @@
 {
-	"shaderModule" : { 
-		"vert":"fgui_image.vert", 
-		"frag":"fgui_image.frag"
+	"shaderModule" : {
+		"vert":"fgui_image.vert.slang",
+		"frag":"fgui_image.frag.slang"
 	},
-    "combineVertex" : true
+	"importPath": ["."],
+	"slangProfile": "glsl_460",
+	"combineVertex" : true
 }

@@ -2,26 +2,26 @@
     "version": 7,
     "configurePresets": [
         {
-            "name": "clang-cl",
-            "displayName": "Clang-cl 17.0.1 x86_64-pc-windows-msvc",
-            "description": "Using compilers: C = E:\\compilers\\LLVM\\bin\\clang-cl.exe, CXX = E:\\compilers\\LLVM\\bin\\clang-cl.exe",
+            "name": "msvc",
+            "displayName": "Visual Studio Community 2022 Release - amd64",
+            "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
+            "generator": "Visual Studio 17 2022",
+            "toolset": "host=x64",
+            "architecture": "x64",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "E:/compilers/LLVM/bin/clang-cl.exe",
-                "CMAKE_CXX_COMPILER": "E:/compilers/LLVM/bin/clang-cl.exe",
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
             }
         }
     ],
-    "testPresets": [
+    "buildPresets": [
         {
-            "name": "clang-cl",
-            "description": "",
-            "displayName": "",
-            "configurePreset": "clang-cl"
+            "name": "msvc-debug",
+            "displayName": "Visual Studio Community 2022 Release - amd64 - Debug",
+            "configurePreset": "msvc",
+            "configuration": "Debug"
         }
     ]
 }

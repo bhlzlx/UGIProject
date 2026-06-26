@@ -3,7 +3,9 @@
 #include "vulkan_declare.h"
 #include "ugi_vulkan_private.h"
 #include "ugi_declare.h"
+#ifdef _WIN32
 #include <Windows.h>
+#endif
 
 namespace ugi {
 
@@ -31,7 +33,8 @@ namespace ugi {
         uint32_t                            _imageIndex;
         uint32_t                            _flightIndex;
         VkBool32                            _available;
-        extent_2d_t<uint32_t>                      _size;
+        bool                                _ready;
+        extent_2d_t<uint32_t>               _size;
         //
     private:
         VkSurfaceKHR createSurface( Device* device, void* window );
@@ -45,6 +48,7 @@ namespace ugi {
             , _embedColors{}
             , _embedColorViews{}
             , _dsTexture(nullptr)
+            , _ready(false)
             , _dsv{}
             , _renderPasses{}
             , _imageIndex(0)
@@ -64,6 +68,7 @@ namespace ugi {
         bool present( Device* _device, CommandQueue* graphicsQueue, Semaphore* semaphoreToWait );
         //
         Semaphore* imageAvailSemaphore();
+        bool ready() const { return _ready; }
     };
 
 }

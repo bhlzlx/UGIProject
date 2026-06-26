@@ -49,8 +49,10 @@ else()
         # add_subdirectory( DX11Test )
         add_subdirectory( GaussBlur )
         add_subdirectory(ui)
-        
+        add_subdirectory(PBR)
+
         SET_PROPERTY(TARGET HelloWorld PROPERTY FOLDER "Samples")
         SET_PROPERTY(TARGET Sphere PROPERTY FOLDER "Samples")
+        SET_PROPERTY(TARGET PBR PROPERTY FOLDER "Samples")
     endif()
 endif()

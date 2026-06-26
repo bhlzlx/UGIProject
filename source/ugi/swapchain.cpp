@@ -46,7 +46,8 @@ namespace ugi {
             0, // flag
             (ANativeWindow*)_hwnd
         };
-        rst = vkCreateAndroidSurfaceKHR(m_instance, &surface_create_info, nullptr, &surface);
+        rst = vkCreateAndroidSurfaceKHR(device->instance(), &surface_create_info, nullptr, &surface);
+        printf("[swapchain] createSurface rst=%d surface=%p\n", rst, (void*)surface);
 #elif defined __linux__
         VkXlibSurfaceCreateInfoKHR surface_create_info = {
             VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,  // sType
@@ -54,7 +55,7 @@ namespace ugi {
             0, // flag
             (Display*)_hwnd
         };
-        rst = vkCreateXlibSurfaceKHR(m_instance, &surface_create_info, nullptr, &surface);
+        rst = vkCreateXlibSurfaceKHR(device->instance(), &surface_create_info, nullptr, &surface);
 #endif
         if (rst != VK_SUCCESS){
             return VK_NULL_HANDLE;
@@ -71,10 +72,16 @@ namespace ugi {
         _loadAction = loadAction;
         VkPhysicalDevice _physicalDevice = deviceVulkan->physicalDevice();
         VkDevice _device = deviceVulkan->device();
-        // VkInstance _instance = _deviceVulkan->instance();
-        //
-        _surface = createSurface( deviceVulkan, window );
-        if( !_surface ) {
+
+        // Android: 复用 device 上已创建的 surface (避免重复创建报 VK_ERROR_NATIVE_WINDOW_IN_USE_KHR)
+        _surface = deviceVulkan->descriptor().surface;
+        printf("[swapchain] device surface=%p, wnd=%p\n", (void*)_surface, window);
+        if (!_surface) {
+            _surface = createSurface(deviceVulkan, window);
+            printf("[swapchain] created new surface=%p\n", (void*)_surface);
+        }
+        if (!_surface) {
+            printf("[swapchain] FAILED: no surface\n");
             return false;
         }
         //
@@ -201,6 +208,7 @@ namespace ugi {
 
 
     bool Swapchain::updateSwapchain( Device* device ) {
+        _ready = false;
         VkDevice dvcVk = device->device();
         const CommandQueue* queue = device->graphicsQueues()[0];
         queue->waitIdle();
@@ -300,6 +308,7 @@ namespace ugi {
             };
             _renderPasses[embedImageIndex] = RenderPass::CreateRenderPass( device, renderPassDesc, &_embedColors[embedImageIndex], _dsTexture, ivps, ivps[0]);
         }
+        _ready = true;
         return true;
     }
 

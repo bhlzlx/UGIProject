@@ -11,7 +11,7 @@ namespace ugi {
     static const uint32_t MaxVertexAttribute = 8;
     static const uint32_t MaxVertexBufferBinding = 8;
     static const uint32_t UniformChunkSize = 1024 * 512; // 512KB
-    static const uint32_t MaxFlightCount = 2;
+    static const uint32_t MaxFlightCount = 3;
     static const uint32_t MaxDescriptorCount = 8;
     static const uint32_t MaxArgumentCount = 4;
     static const uint32_t MaxMaterialDescriptorCount = MaxArgumentCount * MaxDescriptorCount;
