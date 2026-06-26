@@ -11,7 +11,7 @@ namespace ugi {
     static const uint32_t MaxVertexAttribute = 8;
     static const uint32_t MaxVertexBufferBinding = 8;
     static const uint32_t UniformChunkSize = 1024 * 512; // 512KB
-    static const uint32_t MaxFlightCount = 3;
+    static const uint32_t MaxFlightCount = 2;
     static const uint32_t MaxDescriptorCount = 8;
     static const uint32_t MaxArgumentCount = 4;
     static const uint32_t MaxMaterialDescriptorCount = MaxArgumentCount * MaxDescriptorCount;
@@ -525,7 +525,7 @@ namespace ugi {
     struct res_descriptor_info_t {
         alignas(4) char name[MaxNameLength] = {};
         alignas(1) uint8_t binding = 0xff;
-        alignas(1) uint8_t dataSize = 0;
+        alignas(4) uint32_t dataSize = 0;
         alignas(1) res_descriptor_type type = res_descriptor_type::InputAttachment;
         alignas(1) shader_stage_t shaderStage = shader_stage_t::ComputeShader;
     };

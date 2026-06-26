@@ -1,4 +1,6 @@
 ﻿#include "HelloWorld.h"
+#include "pipeline_bindings.h"
+#include "hwd_ubo.h"
 #include <cassert>
 #include <ugi/device.h>
 #include <ugi/swapchain.h>
@@ -28,7 +30,7 @@
 namespace ugi {
 
     bool Render::initialize() {
-        auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
+        auto material = _pipeline->createMaterial({BIND_ARGUMENT1, BIND_TRISAMPLER, BIND_TRITEXTURE}, {});
         _uboptor = material->descriptors()[0];
         _samptor = material->descriptors()[1];
         _texptor = material->descriptors()[2];
@@ -83,7 +85,7 @@ namespace ugi {
             ugi::polygon_mode_t::Fill,
             [](void*, CommandBuffer* cb){}
         );
-        auto material = _pipeline->createMaterial({"Argument1", "triSampler", "triTexture"}, {});
+        auto material = _pipeline->createMaterial({BIND_ARGUMENT1, BIND_TRISAMPLER, BIND_TRITEXTURE}, {});
         auto renderable = new Renderable(mesh, material, _pipeline, raster_state_t());
         return renderable;
     }

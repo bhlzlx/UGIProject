@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.ugi.pbr'
+    namespace 'com.kusugawa.ugi'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.ugi.pbr"
+        applicationId "com.kusugawa.ugi"
         minSdk 26          // Vulkan requires API 26+
         targetSdk 34
         versionCode 1

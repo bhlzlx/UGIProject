@@ -16,12 +16,20 @@
 #include <ugi/helper/pipeline_helper.h>
 #include <io/archive.h>
 #include <cstring>
+#include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
+#include "pipeline_bindings.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 namespace ugi {
+
+#ifdef __ANDROID__
+    const int SPHERE_COUNT = 1;
+#else
+    const int SPHERE_COUNT = 8;
+#endif
 
     void CreatePBRSphere(int nstack, int nslice,
                          std::vector<PBRVertex>& verts, std::vector<uint16_t>& idx)
@@ -118,18 +126,18 @@ namespace ugi {
             float m = i / 3.0f;                    // metallic: 0, 0.33, 0.67, 1.0
             float  r = 0.4f;
             glm::vec3 c = glm::mix(glm::vec3(0.9,0.2,0.2), glm::vec3(0.9,0.7,0.3), m);  // red → gold
-            mats.materials[i] = { c, m, r, 1.0f, {0,0} };
+            mats.materials[i] = { c, m, r, 1.0f };
         }
         for (int i = 0; i < 4; ++i) {
             float m = 1.0f;
             float r = 0.1f + i / 3.0f * 0.8f;     // roughness: 0.1, 0.37, 0.63, 0.9
             glm::vec3 c = glm::mix(glm::vec3(0.9,0.7,0.3), glm::vec3(0.5,0.5,0.5), i/3.0f);  // gold → grey
-            mats.materials[i+4] = { c, m, r, 1.0f, {0,0} };
+            mats.materials[i+4] = { c, m, r, 1.0f };
         }
         _mats = mats;
+        printf("[PBR] sizeof(PBRMat)=%zu MaterialUBO=%zu\n", sizeof(PBRMat), sizeof(MaterialUBO));
 
-        // 8 个球体, 每个独立 Material + Renderable
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < SPHERE_COUNT; ++i) {
             auto mesh = Mesh::CreateMesh(
                 dev, _meshAllocator, _ctx->asyncLoadManager(),
                 (uint8_t const*)verts.data(), verts.size() * sizeof(PBRVertex),
@@ -140,45 +148,51 @@ namespace ugi {
 
             // 4 个 descriptor: SceneData(0), ModelData(1), LightData(2), MaterialData(3)
             auto* mtl = _pipeline->createMaterial(
-                {"SceneData", "ModelData", "LightData", "MaterialData", "envSampler", "envTex"}, {}
+                {BIND_SCENEDATA, BIND_MODELDATA, BIND_LIGHTDATA, BIND_MATERIALDATA, BIND_ENVSAMPLER, BIND_ENVTEX}, {}
             );
 
             _spheres.push_back(new Renderable(mesh, mtl, _pipeline, raster_state_t()));
         }
 
-        // 模板 descriptor — 每帧填数据
         _descScene    = _spheres[0]->material()->descriptors()[0];
         _descLight    = _spheres[0]->material()->descriptors()[2];
         _descMaterial = _spheres[0]->material()->descriptors()[3];
-        _descEnvSampler = _spheres[0]->material()->descriptors()[4];
-        _descEnvTex     = _spheres[0]->material()->descriptors()[5];
 
-        // 加载环境贴图
+        // 环境贴图
         {
             auto envFile = arch->openIStream("image/island.png", { comm::ReadFlag::binary });
-            size_t sz = envFile->size();
-            uint8_t* buf = (uint8_t*)malloc(sz);
-            envFile->read(buf, sz);
-            envFile->close();
-            _envTex = CreateTexturePNG(dev, buf, (uint32_t)sz, _ctx->asyncLoadManager(),
-                [](void* res, CommandBuffer* cmd) {
-                    auto* tex = (Texture*)res;
-                    tex->generateMipmap(cmd);
-                    auto* re = cmd->resourceCommandEncoder();
-                    re->imageTransitionBarrier(tex, ResourceAccessType::ShaderRead,
-                        pipeline_stage_t::Bottom, StageAccess::Write,
-                        pipeline_stage_t::FragmentShading, StageAccess::Read, nullptr);
-                    re->endEncode();
-                    tex->markAsUploaded();
+            if (envFile) {
+                size_t sz = envFile->size();
+                uint8_t* buf = (uint8_t*)malloc(sz);
+                envFile->read(buf, sz);
+                envFile->close();
+                auto* envTexPtr = CreateTexturePNG(dev, buf, (uint32_t)sz, _ctx->asyncLoadManager(),
+                    [](void* res, CommandBuffer* cmd) {
+                        auto* tex = (Texture*)res;
+                        tex->generateMipmap(cmd);
+                        auto* re = cmd->resourceCommandEncoder();
+                        re->imageTransitionBarrier(tex, ResourceAccessType::ShaderRead,
+                            pipeline_stage_t::Bottom, StageAccess::Write,
+                            pipeline_stage_t::FragmentShading, StageAccess::Read, nullptr);
+                        re->endEncode();
+                        tex->markAsUploaded();
+                    }
+                );
+                res_descriptor_t descEnvSamp = _spheres[0]->material()->descriptors()[4];
+                res_descriptor_t descEnvTex  = _spheres[0]->material()->descriptors()[5];
+                descEnvSamp.res.samplerState = {};
+                descEnvTex.res.imageView = envTexPtr->defaultView().handle;
+                for (auto* s : _spheres) {
+                    s->material()->updateDescriptor(descEnvSamp);
+                    s->material()->updateDescriptor(descEnvTex);
                 }
-            );
-            _descEnvSampler.res.samplerState = {};
-            _descEnvTex.res.imageView = _envTex->defaultView().handle;
-            for (auto* s : _spheres) {
-                s->material()->updateDescriptor(_descEnvSampler);
-                s->material()->updateDescriptor(_descEnvTex);
             }
         }
+
+        // 加载环境贴图 (暂时禁用 — 测试 Android swapchain 问题)
+        //{
+        //    ...
+        //}
 
         return true;
     }
@@ -193,7 +207,19 @@ namespace ugi {
             _ctx->primaryQueue()->destroyCommandBuffer(dev, cmd);
         });
 
-        static float angle = 0; angle += 0.01f;
+        static auto last = std::chrono::high_resolution_clock::now();
+        static int fpsCounter = 0;
+        static float fpsAccum = 0;
+        auto now  = std::chrono::high_resolution_clock::now();
+        float dt  = std::chrono::duration<float>(now - last).count();
+        last = now;
+        fpsCounter++; fpsAccum += dt;
+        if (fpsAccum >= 1.0f) {
+            printf("[PBR] FPS: %.1f\n", fpsCounter / fpsAccum);
+            fpsCounter = 0; fpsAccum = 0;
+        }
+        static float angle = 0;
+        angle += dt * 2.0f;  // 每秒转 2 弧度 ≈ 115°, 与帧率无关
         auto ua = _ctx->uniformAllocator();
 
         // 固定相机
@@ -219,18 +245,25 @@ namespace ugi {
 
         cmd->beginEncode();
         {
-            // 每帧更新每个球体的 UBO
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < SPHERE_COUNT; ++i) {
                 auto* mtl = _spheres[i]->material();
                 auto  descs = mtl->descriptors();
                 res_descriptor_t descModel = descs[1];
 
+#ifdef __ANDROID__
+                float x = 0.0f, y = 0.0f;
+#else
                 float x = (float)(i % 4) * 2.5f - 3.75f;
                 float y = (i < 4) ? 1.5f : -1.5f;
+#endif
                 ModelUBO mdl;
                 mdl.model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0));
+#ifdef __ANDROID__
+                mdl.materialIndex = 2u;  // 铜色金属 (粗糙度中等, 环境反射明显)
+#else
                 mdl.materialIndex = (uint32_t)i;
-                for (int j = 0; j < 3; ++j) mdl._pad[j] = 0;
+#endif
+
                 ua->allocateForDescriptor(descModel, &mdl);
 
                 mtl->updateDescriptor(_descScene);
@@ -248,7 +281,7 @@ namespace ugi {
             renc->setViewport(0, 0, _width, _height, 0, 1.0f);
             renc->setScissor(0, 0, _width, _height);
             renc->bindPipeline(_pipeline);
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < SPHERE_COUNT; ++i) {
                 _pipeline->applyMaterial(_spheres[i]->material());
                 _pipeline->flushMaterials(cmd);
                 renc->draw(_spheres[i]->mesh(), _spheres[i]->mesh()->indexCount());

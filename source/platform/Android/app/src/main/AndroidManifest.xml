@@ -9,14 +9,14 @@
                   android:required="false" />
 
     <application
-        android:label="UGI PBR"
+        android:label="UGI Examples"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
         android:hasCode="true"
         android:hardwareAccelerated="true">
 
         <activity
             android:name="android.app.NativeActivity"
-            android:label="UGI PBR"
+            android:label="UGI Examples"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="landscape"
             android:exported="true">

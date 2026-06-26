@@ -20,4 +20,5 @@ PRIVATE
 target_include_directories(HelloWorld
 PRIVATE
     ../../common
+    ../../../bin/shaders/triangle
 )

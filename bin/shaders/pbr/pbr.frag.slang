@@ -1,4 +1,4 @@
-// PBR — Cook-Torrance GGX + equirectangular environment map
+// PBR — Blinn-Phong + optional env map
 import pbr_lib;
 
 struct FSInput {
@@ -26,26 +26,22 @@ float4 main(FSInput input) : SV_Target
     float3 H = normalize(V + L);
 
     PBRMat m = materials[input.matIndex];
-    float  r = max(m.roughness, 0.04);
-    float3 F0 = lerp(0.04, m.albedo, m.metallic);
+    float  r = max(m.roughness, 0.05);
 
     float NoL = max(dot(N, L), 0.0);
-    float NoV = max(dot(N, V), 0.0);
     float NoH = max(dot(N, H), 0.0);
-    float VoH = max(dot(V, H), 0.0);
 
-    // Cook-Torrance
-    float  D = D_GGX(NoH, r);
-    float3 F = F_Schlick(F0, VoH);
-    float  G = G_Smith(NoV, NoL, r);
-    float3 spec = (D * F * G) / max(4.0 * NoV * NoL, 0.001);
-    float3 kD = (1.0 - F) * (1.0 - m.metallic);
+    float3 diff = m.albedo * NoL * (1.0 - m.metallic);
 
-    float3 color = (kD * m.albedo / PI + spec) * lightColor * NoL;
-    // 反向补光
-    color += m.albedo / PI * max(dot(N, -L), 0.0) * lightColor * 0.15 * (1.0 - m.metallic);
+    float specPower = lerp(256.0, 4.0, r);
+    float spec      = pow(NoH, specPower);
+    float3 F0       = lerp(0.04, m.albedo, m.metallic);
+    float3 specC    = (F0 + (1.0 - F0) * spec) * spec;
+
+    float3 color = (diff + specC) * lightColor;
     color += m.albedo * ambient * m.ao;
-    // 环境贴图
+
+    // 环境反射 (金属用)
     float3 R = reflect(-V, N);
     float3 env = envTex.Sample(envSampler, envUV(R)).rgb;
     color += env * m.metallic * lerp(0.5, 0.15, r);

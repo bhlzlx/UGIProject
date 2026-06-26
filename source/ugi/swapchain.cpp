@@ -115,11 +115,11 @@ namespace ugi {
             return false;
         }
         //
-        if (surfaceCapabilities.maxImageCount == 0) {
-            createInfo.minImageCount = surfaceCapabilities.minImageCount < MaxFlightCount ? MaxFlightCount : surfaceCapabilities.minImageCount;
-        } else {
-            createInfo.minImageCount = surfaceCapabilities.maxImageCount < MaxFlightCount ? surfaceCapabilities.maxImageCount : MaxFlightCount;
-        }
+        createInfo.minImageCount = MaxFlightCount + 1;  // triple buffering, 避免 Android dequeued buffer 超限
+        if (surfaceCapabilities.maxImageCount > 0 && createInfo.minImageCount > surfaceCapabilities.maxImageCount)
+            createInfo.minImageCount = surfaceCapabilities.maxImageCount;
+        if (createInfo.minImageCount < surfaceCapabilities.minImageCount)
+            createInfo.minImageCount = surfaceCapabilities.minImageCount;
         // 2.
         VkSurfaceFormatKHR desiredFormat = surfaceFormats[0];
         if ((surfaceFormats.size() == 1) && (surfaceFormats[0].format == VK_FORMAT_UNDEFINED)) {

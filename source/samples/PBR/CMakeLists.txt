@@ -20,4 +20,5 @@ PRIVATE
 target_include_directories(PBR
 PRIVATE
     ../../common
+    ../../../bin/shaders/pbr    # ShaderCompiler 生成的 pipeline_bindings.h
 )
