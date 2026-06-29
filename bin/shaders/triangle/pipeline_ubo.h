@@ -6,11 +6,17 @@ using float2 = struct { float x,y; };
 using float3 = struct { float x,y,z; };
 using float4 = struct { float x,y,z,w; };
 using float4x4 = float[16];
+using int2  = struct { int32_t x,y; };
+using int3  = struct { int32_t x,y,z; };
+using int4  = struct { int32_t x,y,z,w; };
+using uint2 = struct { uint32_t x,y; };
+using uint3 = struct { uint32_t x,y,z; };
+using uint4 = struct { uint32_t x,y,z,w; };
 
 // "Argument1"  set=0 bind=0  size=32
 struct Argument1_UBO {
-    float4       col1;
-    float4       col2;
+    float4           col1;
+    float4           col2;
 };
 static_assert(sizeof(Argument1_UBO) == 32, "size mismatch");
 

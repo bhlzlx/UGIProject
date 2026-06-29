@@ -527,7 +527,7 @@ namespace ugi {
         alignas(1) uint8_t binding = 0xff;
         alignas(4) uint32_t dataSize = 0;
         alignas(1) res_descriptor_type type = res_descriptor_type::InputAttachment;
-        alignas(1) shader_stage_t shaderStage = shader_stage_t::ComputeShader;
+        alignas(1) uint8_t stageMask = 0; // VkShaderStageFlags bitmask
     };
 
     struct descriptor_set_info_t {

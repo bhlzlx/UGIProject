@@ -18,7 +18,7 @@ namespace ugi {
                 for( uint32_t j = 0; j<pipDesc.argumentLayouts[i].descriptorCount; ++j) {
                     hasher.hashPOD( pipDesc.argumentLayouts[i].descriptors[j].binding);
                     hasher.hashPOD( pipDesc.argumentLayouts[i].descriptors[j].dataSize);
-                    hasher.hashPOD( pipDesc.argumentLayouts[i].descriptors[j].shaderStage);
+                    hasher.hashPOD( pipDesc.argumentLayouts[i].descriptors[j].stageMask);
                     hasher.hashPOD( pipDesc.argumentLayouts[i].descriptors[j].type);
                 }
             }
@@ -64,7 +64,7 @@ namespace ugi {
                     nativeDescriptor.descriptorCount = 1;
                     nativeDescriptor.pImmutableSamplers = nullptr;
                     //
-                    nativeDescriptor.stageFlags = stageFlagsToVk(universalDescriptor.shaderStage);
+                    nativeDescriptor.stageFlags = universalDescriptor.stageMask; // 直接存 Vk 位掩码
                     nativeDescriptor.descriptorType = descriptorTypeToVk(universalDescriptor.type);
                     //
                     ++groupLayout._descriptorCountTotal; // 用了多少descriptor来个计数！！方便之后更新的时候提供额外的pBufferInfo的时候省内存
