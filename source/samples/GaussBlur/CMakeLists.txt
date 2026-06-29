@@ -22,4 +22,10 @@ PRIVATE
     ${CMAKE_SOURCE_DIR}/source
     ${CMAKE_SOURCE_DIR}/source/common/
     ${CMAKE_SOURCE_DIR}/thirdpart/tweeny/include
+    ${CMAKE_SOURCE_DIR}/bin/shaders/GaussBlur
+)
+
+add_custom_command(TARGET GaussBlur PRE_BUILD
+    COMMAND ${SOLUTION_DIR}/bin/ShaderCompiler.exe "${SOLUTION_DIR}/bin/shaders/GaussBlur"
+    COMMENT "ShaderCompiler: GaussBlur"
 )

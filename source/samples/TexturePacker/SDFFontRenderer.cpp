@@ -1,16 +1,20 @@
 ﻿#include "SDFFontRenderer.h"
 #include "SDFTextureTileManager.h"
-#include <hgl/assets/AssetsSource.h>
+#include "sdf_ubo.h"
+#include "pipeline_bindings.h"
 #include <ugi/device.h>
 #include <ugi/buffer.h>
 #include <ugi/flight_cycle_invoker.h>
 #include <ugi/descriptor_binder.h>
 #include <ugi/pipeline.h>
-#include <ugi/Drawable.h>
+#include <ugi/texture.h>
+#include <ugi/render_components/renderable.h>
+#include <ugi/render_components/mesh.h>
+#include <ugi/render_components/pipeline_material.h>
+#include <ugi/mesh_buffer_allocator.h>
 #include <ugi/uniform_buffer_allocator.h>
 #include <ugi/command_encoder/resource_cmd_encoder.h>
 #include <ugi/command_encoder/render_cmd_encoder.h>
-#include <hgl/io/InputStream.h>
 
 #include <json.hpp>
 
@@ -19,28 +23,30 @@ namespace ugi {
     SDFFontRenderer::SDFFontRenderer()
         : _device(nullptr)
         , _texTileManager(nullptr)
-        , _indicesHandle(0xffffffff)
-        , _effectsHandle(0xffffffff)
-        , _transformsHandle(0xffffffff)
-        , _contextHandle(0xffffffff)
-        , _texArraySamplerHandle(0xffffffff)
-        , _texArrayHandle(0xffffffff)
+        , _descIndices{}
+        , _descEffects{}
+        , _descTransforms{}
+        , _descContext{}
+        , _descSampler{}
+        , _descTexArray{}
     {
     }
     
-    bool SDFFontRenderer::initialize( Device* device, hgl::assets::AssetsSource* assetsSource, const SDFRenderParameter& sdfParam ) {
+    bool SDFFontRenderer::initialize( Device* device, comm::IArchive* archive, GPUAsyncLoadManager* asyncLoader, const SDFRenderParameter& sdfParam ) {
         _device = device;
-        _assetsSource = assetsSource;
-        _resourceManager = new ResourceManager(device);
+        _archive = archive;
+        _asyncLoader = asyncLoader;
+        _meshAllocator = new MeshBufferAllocator();
+        _meshAllocator->initialize(device, 1024 * 256);
         _texTileManager = new SDFTextureTileManager();
         //
         _sdfParameter = sdfParam;
         nlohmann::json js;
-        auto inputStream = assetsSource->Open("./shaders/sdf2d/sdf.json");
+        auto inputStream = archive->openIStream("./shaders/SDF2D/sdf.json", {comm::ReadFlag::binary});
         if(inputStream) {
-            char* configBuffer = new char[inputStream->GetSize()+1];
-            configBuffer[inputStream->GetSize()] = 0;
-            inputStream->ReadFully(configBuffer, inputStream->GetSize());
+            char* configBuffer = new char[inputStream->size()+1];
+            configBuffer[inputStream->size()] = 0;
+            inputStream->read(configBuffer, inputStream->size());
             js = nlohmann::json::parse(configBuffer);
             _sdfParameter.texArraySize = js["textureSize"].get<uint32_t>();
             _sdfParameter.texLayer = js["layer"];
@@ -48,33 +54,32 @@ namespace ugi {
             _sdfParameter.sourceFontSize = js["sourceSize"];
             _sdfParameter.extraSourceBorder = js["extraBorder"];
             _sdfParameter.searchDistance = js["searchDistance"];
-            inputStream->Close();
+            inputStream->close();
         }
 
         // Create Pipeline
-        hgl::io::InputStream* pipelineFile = assetsSource->Open( hgl::UTF8String("/shaders/sdf2d/pipeline.bin"));
-        auto pipelineFileSize = pipelineFile->GetSize();
+        auto pipelineFile = archive->openIStream("/shaders/SDF2D/pipeline.bin", {comm::ReadFlag::binary});
+        auto pipelineFileSize = pipelineFile->size();
         char* pipelineBuffer = (char*)malloc(pipelineFileSize);
-        pipelineFile->ReadFully(pipelineBuffer,pipelineFileSize);
+        pipelineFile->read(pipelineBuffer, pipelineFileSize);
         _pipelineDescription = *(pipeline_desc_t*)pipelineBuffer;
         pipelineBuffer += sizeof(pipeline_desc_t);
-        for( auto& shader : _pipelineDescription.shaders ) {
-            if( shader.spirvData) {
+        for (auto& shader : _pipelineDescription.shaders) {
+            if (shader.spirvData) {
                 shader.spirvData = (uint64_t)pipelineBuffer;
                 pipelineBuffer += shader.spirvSize;
             }
         }
-        //_pipelineDescription.vertexLayout.buffers[2].
-        _pipelineDescription.pologonMode = polygon_mode_t::Fill;
+        // _pipelineDescription.pologonMode = polygon_mode_t::Fill;
         _pipelineDescription.topologyMode = topology_mode_t::TriangleList;
         _pipelineDescription.renderState.cullMode = cull_mode_t::None;
         _pipelineDescription.renderState.blendState.enable = true;
         _pipeline = _device->createGraphicsPipeline(_pipelineDescription);
-        pipelineFile->Close();
+        pipelineFile->close();
         if( !_pipeline) {
             return false;
         }
-        bool rst = _texTileManager->initialize( device, assetsSource, 
+        bool rst = _texTileManager->initialize( device, archive, 
             _sdfParameter.destinationSDFSize, _sdfParameter.texArraySize, _sdfParameter.texLayer, 
             _sdfParameter.sourceFontSize, _sdfParameter.extraSourceBorder, _sdfParameter.searchDistance
         );
@@ -94,7 +99,7 @@ namespace ugi {
         //
     }
     
-    IndexHandle SDFFontRenderer::appendText( float x, float y, SDFChar* text, uint32_t length, const Transform& transform, const Style& style, hgl::RectScope2f& rect ) {
+    IndexHandle SDFFontRenderer::appendText( float x, float y, SDFChar* text, uint32_t length, const Transform& transform, const Style& style, RectScope2f& rect ) {
 
         uint32_t transformIndex = _transforms.size();
         uint32_t styleIndex = _styles.size();
@@ -150,9 +155,10 @@ namespace ugi {
                 { {posLeft, posBottom}, {uvLeft, uvBottom} },
             };
             
-            uint16_t baseIndex = _meshIBO.size()? _meshIBO.back()+1:0;
+            uint16_t baseIndex = _meshIBO.empty() ? 0u : (uint16_t)(_meshIBO.back() + 1);
             uint16_t indices[6] = {
-                baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
+                (uint16_t)(baseIndex + 0u), (uint16_t)(baseIndex + 1u), (uint16_t)(baseIndex + 2u),
+                (uint16_t)(baseIndex + 0u), (uint16_t)(baseIndex + 2u), (uint16_t)(baseIndex + 3u),
             };
             for( auto index : indices ) {
                 _meshIBO.push_back(index);
@@ -172,7 +178,7 @@ namespace ugi {
 
     IndexHandle SDFFontRenderer::appendTextReuseTransform( 
         float x, float y, SDFChar* text, uint32_t length, 
-        IndexHandle reuseHandle, const Style& style, hgl::RectScope2f& rect
+        IndexHandle reuseHandle, const Style& style, RectScope2f& rect
     ) {
 
         rect.SetLeft(x);
@@ -213,9 +219,10 @@ namespace ugi {
                 { {posLeft, posBottom}, {uvLeft, uvBottom} },
             };
             
-            uint16_t baseIndex = _meshIBO.size()? _meshIBO.back()+1:0;
+            uint16_t baseIndex = _meshIBO.empty() ? 0u : (uint16_t)(_meshIBO.back() + 1);
             uint16_t indices[6] = {
-                baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
+                (uint16_t)(baseIndex + 0u), (uint16_t)(baseIndex + 1u), (uint16_t)(baseIndex + 2u),
+                (uint16_t)(baseIndex + 0u), (uint16_t)(baseIndex + 2u), (uint16_t)(baseIndex + 3u),
             };
             for( auto index : indices ) {
                 _meshIBO.push_back(index);
@@ -234,7 +241,7 @@ namespace ugi {
 
     IndexHandle SDFFontRenderer::appendTextReuseStyle ( 
         float x, float y, SDFChar* text, uint32_t length, 
-        IndexHandle reuseHandle, const Transform& transform, hgl::RectScope2f& rect
+        IndexHandle reuseHandle, const Transform& transform, RectScope2f& rect
     ) {
         uint32_t transformIndex = _transforms.size();
         _transforms.push_back(transform);
@@ -275,9 +282,10 @@ namespace ugi {
                 { {posLeft, posBottom}, {uvLeft, uvBottom} },
             };
             
-            uint16_t baseIndex = _meshIBO.size()? _meshIBO.back()+1:0;
+            uint16_t baseIndex = _meshIBO.empty() ? 0u : (uint16_t)(_meshIBO.back() + 1);
             uint16_t indices[6] = {
-                baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
+                (uint16_t)(baseIndex + 0u), (uint16_t)(baseIndex + 1u), (uint16_t)(baseIndex + 2u),
+                (uint16_t)(baseIndex + 0u), (uint16_t)(baseIndex + 2u), (uint16_t)(baseIndex + 3u),
             };
             for( auto index : indices ) {
                 _meshIBO.push_back(index);
@@ -295,7 +303,7 @@ namespace ugi {
 
     IndexHandle SDFFontRenderer::appendTextReuse ( 
         float x, float y, SDFChar* text, uint32_t length, 
-        IndexHandle reuseHandle, hgl::RectScope2f& rect
+        IndexHandle reuseHandle, RectScope2f& rect
     ) {
         rect.SetLeft(x);
         for( uint32_t i = 0; i<length; ++i ) {
@@ -331,9 +339,10 @@ namespace ugi {
                 { {posLeft, posBottom}, {uvLeft, uvBottom} },
             };
             
-            uint16_t baseIndex = _meshIBO.size()? _meshIBO.back()+1:0;
+            uint16_t baseIndex = _meshIBO.empty() ? 0u : (uint16_t)(_meshIBO.back() + 1);
             uint16_t indices[6] = {
-                baseIndex + 0u, baseIndex + 1u, baseIndex + 2u, baseIndex + 0u, baseIndex + 2u, baseIndex + 3u, 
+                (uint16_t)(baseIndex + 0u), (uint16_t)(baseIndex + 1u), (uint16_t)(baseIndex + 2u),
+                (uint16_t)(baseIndex + 0u), (uint16_t)(baseIndex + 2u), (uint16_t)(baseIndex + 3u),
             };
             for( auto index : indices ) {
                 _meshIBO.push_back(index);
@@ -368,45 +377,35 @@ namespace ugi {
         //
 
         SDFFontDrawData* drawData = new SDFFontDrawData();
-        // 主要就是设置矩阵
-        drawData->_argumentGroup = _pipeline->createArgumentGroup();
-        if( 0xffffffff == _indicesHandle) {
-            _indicesHandle = drawData->_argumentGroup->GetDescriptorHandle("Indices", _pipelineDescription);
-        }
-        if( 0xffffffff == _effectsHandle) {
-            _effectsHandle = drawData->_argumentGroup->GetDescriptorHandle("Effects", _pipelineDescription);
-        }
-        if( 0xffffffff == _transformsHandle) {
-            _transformsHandle = drawData->_argumentGroup->GetDescriptorHandle("Transforms", _pipelineDescription);
-        }
-        if( 0xffffffff == _contextHandle) {
-            _contextHandle = drawData->_argumentGroup->GetDescriptorHandle("Context", _pipelineDescription);
-        }
-
-        if( 0xffffffff == _texArraySamplerHandle) {
-            _texArraySamplerHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArraySampler", _pipelineDescription);
-        }
-        if( 0xffffffff == _texArrayHandle) {
-            _texArrayHandle = drawData->_argumentGroup->GetDescriptorHandle("TexArray", _pipelineDescription);
-        }
-        res_descriptor_t descriptor;
-        descriptor.type = res_descriptor_type::Sampler;
-        descriptor.sampler.mag = TextureFilter::Linear;
-        descriptor.sampler.mip = TextureFilter::Linear;
-        descriptor.sampler.min = TextureFilter::Linear;
-        descriptor.handle = _texArraySamplerHandle;
-        drawData->_argumentGroup->updateDescriptor(descriptor);
-        descriptor.handle = _texArrayHandle;
-        descriptor.type = res_descriptor_type::Image;
-        descriptor.texture = _texTileManager->texture();
-        drawData->_argumentGroup->updateDescriptor(descriptor);
-        // Mesh数据
-        drawData->_drawable = _device->createDrawable(_pipelineDescription);
-        drawData->_drawable->setIndexBuffer( ibo, 0 );      // 
-        drawData->_drawable->setVertexBuffer( vbo, 0, 0 );  // position
-        drawData->_drawable->setVertexBuffer( vbo, 1, 8 );  // uv
-        drawData->_vertexBuffer = vbo;
-        drawData->_indexBuffer = ibo;
+        auto material = _pipeline->createMaterial(
+            {BIND_INDICES,BIND_EFFECTS,BIND_TRANSFORMS,BIND_CONTEXT,BIND_TEXARRAYSAMPLER,BIND_TEXARRAY}, {});
+        auto descs = material->descriptors();
+        _descIndices    = descs[0];
+        _descEffects    = descs[1];
+        _descTransforms = descs[2];
+        _descContext    = descs[3];
+        _descSampler    = descs[4];
+        _descTexArray   = descs[5];
+        // Sampler
+        _descSampler.type = res_descriptor_type::Sampler;
+        _descSampler.res.samplerState.mag = TextureFilter::Linear;
+        _descSampler.res.samplerState.mip = TextureFilter::Linear;
+        _descSampler.res.samplerState.min = TextureFilter::Linear;
+        material->updateDescriptor(_descSampler);
+        _descTexArray.type = res_descriptor_type::Image;
+        _descTexArray.res.imageView = _texTileManager->texture()->defaultView().handle;
+        material->updateDescriptor(_descTexArray);
+        // Mesh + Renderable (HelloWorld 模式)
+        auto mesh = Mesh::CreateMesh(
+            _device, _meshAllocator, _asyncLoader,
+            (uint8_t const*)_meshVBO.data(), _meshVBO.size() * sizeof(FontMeshVertex),
+            _meshIBO.data(), _meshIBO.size(),
+            _pipelineDescription.vertexLayout,
+            _pipelineDescription.topologyMode,
+            polygon_mode_t::Fill,
+            [](void*, CommandBuffer*){}
+        );
+        drawData->_renderable = new Renderable(mesh, material, _pipeline, raster_state_t());
         drawData->_indexCount = (uint32_t)_meshIBO.size();
         drawData->_indices = std::move(_indices);
         drawData->_styles = std::move(_styles);
@@ -423,46 +422,49 @@ namespace ugi {
             buffer_subres_t ibStagingSubRes = { item.vertexBuffer->size(), item.indexBuffer->size() };
             resEncoder->updateBuffer( item.vertexBuffer, item.stagingBuffer, &vbSubRes, &vbStagingSubRes );
             resEncoder->updateBuffer( item.indexBuffer, item.stagingBuffer, &ibSubRes, &ibStagingSubRes );
-            // 回收 staging buffer
-            _resourceManager->trackResource(item.stagingBuffer);
+            _device->cycleInvoker().postCallable([device = _device, buf = item.stagingBuffer]() {
+                device->destroyBuffer(buf);
+            });
             //
         }
         _updateItems.clear();
-        _texTileManager->tickResource(resEncoder, _resourceManager) ;
+        _texTileManager->tickResource(resEncoder, _device);
     }
 
     void SDFFontRenderer::prepareResource( ResourceCommandEncoder* resourceEncoder, SDFFontDrawData** drawDatas, uint32_t drawDataCount, UniformAllocator* uniformAllocator ) {
+        for (uint32_t i = 0; i < drawDataCount; ++i) {
+            auto* drawData = drawDatas[i];
+            auto* mtl = drawData->_renderable->material();
 
-        for( uint32_t i = 0; i<drawDataCount; ++i ) {
-            auto drawData = drawDatas[i];
-            res_descriptor_t descriptor;
-            descriptor.handle = _indicesHandle;
-            descriptor.bufferRange = sizeof(IndexHandle) * 1024;
-            uniformAllocator->allocateForDescriptor(descriptor, drawData->_indices);
-            drawData->_argumentGroup->updateDescriptor(descriptor);
+            if (!drawData->_indices.empty()) {
+                auto ubo = uniformAllocator->allocate(sizeof(IndexHandle) * drawData->_indices.size());
+                memcpy(ubo.ptr, drawData->_indices.data(), ubo.size);
+                _descIndices.res.buffer.buffer = ubo.buffer;
+                _descIndices.res.buffer.offset = ubo.offset;
+                _descIndices.res.buffer.size   = (uint32_t)ubo.size;
+                mtl->updateDescriptor(_descIndices);
+            }
+            if (!drawData->_styles.empty()) {
+                auto ubo = uniformAllocator->allocate(sizeof(Style) * drawData->_styles.size());
+                memcpy(ubo.ptr, drawData->_styles.data(), ubo.size);
+                _descEffects.res.buffer.buffer = ubo.buffer;
+                _descEffects.res.buffer.offset = ubo.offset;
+                _descEffects.res.buffer.size   = (uint32_t)ubo.size;
+                mtl->updateDescriptor(_descEffects);
+            }
+            if (!drawData->_transforms.empty()) {
+                auto ubo = uniformAllocator->allocate(sizeof(Transform) * drawData->_transforms.size());
+                memcpy(ubo.ptr, drawData->_transforms.data(), ubo.size);
+                _descTransforms.res.buffer.buffer = ubo.buffer;
+                _descTransforms.res.buffer.offset = ubo.offset;
+                _descTransforms.res.buffer.size   = (uint32_t)ubo.size;
+                mtl->updateDescriptor(_descTransforms);
+            }
 
-            descriptor.handle = _effectsHandle;
-            descriptor.bufferRange = sizeof(Style) * 256;
-            uniformAllocator->allocateForDescriptor(descriptor, drawData->_styles);
-            drawData->_argumentGroup->updateDescriptor(descriptor);
-            drawData->_argumentGroup->prepairResource(resourceEncoder);
-
-            descriptor.handle = _transformsHandle;
-            descriptor.bufferRange = sizeof(Transform) * 256;
-            uniformAllocator->allocateForDescriptor(descriptor, drawData->_transforms);
-            drawData->_argumentGroup->updateDescriptor(descriptor);
-            drawData->_argumentGroup->prepairResource(resourceEncoder);
-
-            struct {
-                float width, height;
-            } contextSize = {(float)_width, (float)_height };
-            descriptor.handle = _contextHandle;
-            descriptor.bufferRange = sizeof(contextSize);
-            uniformAllocator->allocateForDescriptor(descriptor, contextSize);
-            drawData->_argumentGroup->updateDescriptor(descriptor);
-            drawData->_argumentGroup->prepairResource(resourceEncoder);
+            float contextSize[2] = { (float)_width, (float)_height };
+            uniformAllocator->allocateForDescriptor(_descContext, contextSize);
+            mtl->updateDescriptor(_descContext);
         }
-
     }
 
     void SDFFontRenderer::draw( RenderCommandEncoder* renderEncoder, SDFFontDrawData** drawDatas, uint32_t drawDataCount ) {
@@ -470,10 +472,10 @@ namespace ugi {
         renderEncoder->bindPipeline(_pipeline);
         for (size_t i = 0; i < drawDataCount; i++) {
             auto drawData = drawDatas[i];
-            // 2. bind argument group
-            renderEncoder->bindArgumentGroup(drawData->_argumentGroup);
-            // 3. draw
-            renderEncoder->drawIndexed( drawData->_drawable, 0, drawData->_indexCount, 0);
+            // 2. bind + draw
+            _pipeline->applyMaterial(drawData->_renderable->material());
+            _pipeline->flushMaterials(renderEncoder->commandBuffer());
+            renderEncoder->draw(drawData->_renderable->mesh(), drawData->_indexCount);
         }
     }
 

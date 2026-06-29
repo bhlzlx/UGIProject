@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <ugi/ugi_declare.h>
+#include <io/archive.h>
 #include <cstdint>
 #include <unordered_map>
 #include <queue>
@@ -85,7 +86,7 @@ namespace ugi {
         };
     private:
         Device*                                         _device;
-        hgl::assets::AssetsSource*                      _assetsSource;
+        comm::IArchive*                      _archive;
         Texture*                                        _texArray;
         uint32_t                                        _cellSize;
         uint32_t                                        _position;
@@ -118,11 +119,11 @@ namespace ugi {
     public:
         SDFTextureTileManager();
         // === 
-        bool initialize( Device* device,  hgl::assets::AssetsSource* assetsSource, uint32_t cellSize, uint32_t textureWidth, uint32_t arrayLayer, uint32_t sourceFontSize, uint32_t extraBorder, uint32_t searchDistance );
+        bool initialize( Device* device, comm::IArchive* archive, uint32_t cellSize, uint32_t textureWidth, uint32_t arrayLayer, uint32_t sourceFontSize, uint32_t extraBorder, uint32_t searchDistance );
         GlyphInfo* allocateGlyph();
         GlyphInfo* getGlyph( GlyphKey glyph );
 
-        void tickResource( ResourceCommandEncoder* encoder, ResourceManager* resourceManager );
+        void tickResource( ResourceCommandEncoder* encoder, Device* device );
 
         Texture* texture();
     };

@@ -4,34 +4,57 @@
 // Slang types — 替换为你的数学库 (glm / hgl / custom)
 using float2 = struct { float x,y; };
 using float3 = struct { float x,y,z; };
+using float4 = struct { float x,y,z,w; };
 using float4x4 = float[16];
+using int2  = struct { int32_t x,y; };
+using int3  = struct { int32_t x,y,z; };
+using int4  = struct { int32_t x,y,z,w; };
+using uint2 = struct { uint32_t x,y; };
+using uint3 = struct { uint32_t x,y,z; };
+using uint4 = struct { uint32_t x,y,z,w; };
 
-// "ModelData"  set=0 bind=1  size=68
-struct ModelData_UBO {
-    float4x4     model;
-    uint32_t     materialIndex;
+// nested struct type
+struct MaterialData_39_41 {
+    float3           albedo;
+    float            metallic;
+    float            roughness;
+    float            ao;
+    uint8_t _endPad[8];
 };
-static_assert(sizeof(ModelData_UBO) == 68, "size mismatch");
 
-// "SceneData"  set=0 bind=0  size=76
+// nested struct type
+struct MaterialData_39 {
+    MaterialData_39_41 data[8];
+};
+
+// "SceneData"  set=0 bind=0  size=80
 struct SceneData_UBO {
-    float4x4     viewProj;
-    float3       cameraPos;
+    float4x4         viewProj;
+    float3           cameraPos;
+    uint8_t _endPad[4];
 };
-static_assert(sizeof(SceneData_UBO) == 76, "size mismatch");
+static_assert(sizeof(SceneData_UBO) == 80, "size mismatch");
+
+// "ModelData"  set=0 bind=1  size=80
+struct ModelData_UBO {
+    float4x4         model;
+    uint32_t         materialIndex;
+    uint8_t _endPad[12];
+};
+static_assert(sizeof(ModelData_UBO) == 80, "size mismatch");
 
 // "LightData"  set=0 bind=2  size=32
 struct LightData_UBO {
-    float3       lightDir;
+    float3           lightDir;
     uint8_t _pad1[4];
-    float3       lightColor;
-    float        ambient;
+    float3           lightColor;
+    float            ambient;
 };
 static_assert(sizeof(LightData_UBO) == 32, "size mismatch");
 
 // "MaterialData"  set=0 bind=3  size=256
 struct MaterialData_UBO {
-    uint8_t     materials[256];
+    MaterialData_39  materials;
 };
 static_assert(sizeof(MaterialData_UBO) == 256, "size mismatch");
 

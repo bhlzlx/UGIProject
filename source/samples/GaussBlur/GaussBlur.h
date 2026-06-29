@@ -5,15 +5,12 @@
 #include <ugi/ugi_declare.h>
 #include <ugi/ugi_types.h>
 #include <vector>
+#include "gauss_ubo.h"
 
 namespace ugi {
 
-    struct GaussBlurParameter {
-        float       direction[2];
-        uint32_t    radius;
-        uint32_t    padding;
-        float       gaussDistribution[12];
-    };
+    // 改用 gauss_ubo.h 里的 BlurParameter (80字节 std140)
+    using GaussBlurParameter = BlurParameter;
 
     std::vector<float> GenerateGaussDistribution( float sigma ) {
         sigma = sigma > 0 ? sigma : -sigma;  

@@ -22,3 +22,9 @@ PRIVATE
     ../../common
     ../../../bin/shaders/pbr    # ShaderCompiler 生成的 pipeline_bindings.h
 )
+
+# 自动编译 shader
+add_custom_command(TARGET PBR PRE_BUILD
+    COMMAND ${SOLUTION_DIR}/bin/ShaderCompiler.exe "${SOLUTION_DIR}/bin/shaders/pbr"
+    COMMENT "ShaderCompiler: PBR"
+)

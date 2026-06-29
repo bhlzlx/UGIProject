@@ -1,7 +1,8 @@
 {
-	"shaderModule" : { 
-		"vert":"sdf2d.vert", 
-		"frag":"sdf2d.frag"
-    },
-    "combineVertex" : true
+	"shaderModule" : {
+		"vert":"sdf2d.vert.slang",
+		"frag":"sdf2d.frag.slang"
+	},
+	"importPath": ["."],
+	"combineVertex" : true
 }

@@ -363,7 +363,8 @@ namespace ugi {
         vkGetPhysicalDeviceFeatures( physicalDevice, &features);
 
         const char * deviceExts[] = {
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME
         };
         //
         VkDeviceCreateInfo deviceCreateInfo = {
@@ -374,7 +375,7 @@ namespace ugi {
             deviceQueueCreateInfos.data(), // const VkDeviceQueueCreateInfo     *pQueueCreateInfos
             0,//1,// deviceLayers.size(),//0,
             nullptr,//&mgdLayer,//deviceLayers.data(),// nullptr,
-            1, // uint32_t enabledExtensionCount
+            2, // uint32_t enabledExtensionCount
             &deviceExts[0], // const char * const *ppEnabledExtensionNames
             &features
         };

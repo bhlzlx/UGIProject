@@ -1,22 +1,18 @@
 ﻿#pragma once
 
-#include <hgl/math/Vector.h>
 #include <ugi/ugi_declare.h>
 #include <ugi/ugi_types.h>
-#include <hgl/type/RectScope.h>
+#include <glm/glm.hpp>
 #include <map>
-
-/*
-    因为变换这种数据重复率太高了，一般不会有
-*/
-
-namespace hgl {
-    namespace assets {
-        class AssetsSource;
-    }
-}
+#include <io/archive.h>
+#include <ugi/mesh_buffer_allocator.h>
+#include <ugi/asyncload/gpu_asyncload_manager.h>
+#include <ugi/render_components/renderable.h>
+#include <ugi/render_components/mesh.h>
 
 namespace ugi {
+
+struct RectScope2f { float left=0, right=0; void SetLeft(float l){left=l;} void SetRight(float r){right=r;} float GetRight()const{return right;} float GetCenterX()const{return (left+right)*0.5f;} };
 
     struct SDFRenderParameter {
         uint32_t texArraySize : 16;
@@ -30,8 +26,8 @@ namespace ugi {
     class SDFTextureTileManager;
 
     struct FontMeshVertex {
-        hgl::Vector2f position;
-        hgl::Vector2f uv;
+        glm::vec2 position;
+        glm::vec2 uv;
     };
 
     struct IndexHandle {
@@ -70,58 +66,59 @@ namespace ugi {
     };
 
     struct Transform {
-        hgl::Vector3f col1;
-        hgl::Vector3f col2;
-        hgl::Vector2f padding;
-        Transform( const hgl::Vector3f& c1, const hgl::Vector3f& c2 )
+        glm::vec3 col1;
+        glm::vec3 col2;
+        glm::vec2 padding;
+        Transform( const glm::vec3& c1, const glm::vec3& c2 )
             : col1(c1)
-            , col2(c2) {
+            , col2(c2)
+            , padding(0.0f, 0.0f) {
         }
         //
         bool operator < ( const Transform& other ) const {
             return memcmp( this, &other, sizeof(Transform)) < 0;
         }
 
-        static Transform createTransform( const hgl::Vector2f& offset ) {
+        static Transform createTransform( const glm::vec2& offset ) {
             return Transform(
-                hgl::Vector3f( 1.0f, 0.0f, offset.x),
-                hgl::Vector3f( 0.0f, 1.0f, offset.y)
+                glm::vec3( 1.0f, 0.0f, offset.x),
+                glm::vec3( 0.0f, 1.0f, offset.y)
             );
         }
 
-        static Transform createTransform( const hgl::Vector2f& anchor, const hgl::Vector2f& scale ) {
+        static Transform createTransform( const glm::vec2& anchor, const glm::vec2& scale ) {
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
             return Transform( 
-                hgl::Vector3f(a, 0, -a*x + x),
-                hgl::Vector3f(0, b, -b*y + y)
+                glm::vec3(a, 0, -a*x + x),
+                glm::vec3(0, b, -b*y + y)
             );
         }
 
-        static Transform createTransform( const hgl::Vector2f& anchor, float radian ){
+        static Transform createTransform( const glm::vec2& anchor, float radian ){
             float cosValue = cos(radian); float sinValue = sin(radian);
             float x = anchor.x; float y = anchor.y;
             return Transform(
-                hgl::Vector3f(cosValue, -sinValue, -cosValue*x + sinValue*y + x),
-                hgl::Vector3f(sinValue, cosValue,  -sinValue*x - cosValue*y + y)
+                glm::vec3(cosValue, -sinValue, -cosValue*x + sinValue*y + x),
+                glm::vec3(sinValue, cosValue,  -sinValue*x - cosValue*y + y)
             );
         }
         
-        static Transform createTransform(const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float rotation ) {
+        static Transform createTransform(const glm::vec2& anchor, const glm::vec2& scale, float rotation ) {
             float cosValue = cos(rotation); float sinValue = sin(rotation);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
             return Transform(
-                hgl::Vector3f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x),
-                hgl::Vector3f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y)
+                glm::vec3(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x),
+                glm::vec3(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y)
             );
         }
 
 
-        static Transform createTransform( const hgl::Vector2f& anchor, const hgl::Vector2f& scale, float radian, const hgl::Vector2f& offset ) {
+        static Transform createTransform( const glm::vec2& anchor, const glm::vec2& scale, float radian, const glm::vec2& offset ) {
             float cosValue = cos(radian); float sinValue = sin(radian);
             float a = scale.x; float b = scale.y; float x = anchor.x; float y = anchor.y;
             Transform rst = Transform(
-                hgl::Vector3f(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x),
-                hgl::Vector3f(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y)
+                glm::vec3(a*cosValue, -a*sinValue, -a*cosValue*x + a*sinValue*y + x),
+                glm::vec3(b*sinValue, b*cosValue,  -b*sinValue*x - b*cosValue*y + y)
             );
             rst.col1.z += offset.x;
             rst.col2.z += offset.y;
@@ -136,7 +133,7 @@ namespace ugi {
         Buffer*             _vertexBuffer;
         Buffer*             _indexBuffer;
         Buffer*             _texArrIndexBuffer;
-        Drawable*           _drawable;
+        Renderable*         _renderable;
         uint32_t            _indexCount;
         //
         std::vector<IndexHandle>        _indices;
@@ -148,7 +145,7 @@ namespace ugi {
             , _vertexBuffer( nullptr )
             , _indexBuffer( nullptr )
             , _texArrIndexBuffer( nullptr )
-            , _drawable( nullptr )
+            , _renderable( nullptr )
             , _indexCount(0)
         {
         }
@@ -180,19 +177,19 @@ namespace ugi {
     class SDFFontRenderer {
     private:
         Device*                     _device;
-        GraphicsPipeline*                   _pipeline;
-        pipeline_desc_t         _pipelineDescription;
-        hgl::assets::AssetsSource*  _assetsSource;
+        GraphicsPipeline*           _pipeline;
+        MeshBufferAllocator*        _meshAllocator;
+        GPUAsyncLoadManager*        _asyncLoader;
+        pipeline_desc_t             _pipelineDescription;
+        comm::IArchive*             _archive;
         SDFTextureTileManager*      _texTileManager;
-        ResourceManager*            _resourceManager;
         //
-        uint32_t                    _indicesHandle;         // "Indices"
-        uint32_t                    _effectsHandle;         // "Effects"
-        uint32_t                    _transformsHandle;      // "Transforms"
-        uint32_t                    _contextHandle;         // "Context"
-        //
-        uint32_t                    _texArraySamplerHandle; // "TexArraySampler"
-        uint32_t                    _texArrayHandle;        // "TexArray"
+        res_descriptor_t            _descIndices;
+        res_descriptor_t            _descEffects;
+        res_descriptor_t            _descTransforms;
+        res_descriptor_t            _descContext;
+        res_descriptor_t            _descSampler;
+        res_descriptor_t            _descTexArray;
 
         uint32_t                    _width;
         uint32_t                    _height;
@@ -216,24 +213,24 @@ namespace ugi {
         std::vector<BufferUpdateItem> _updateItems;
     public:
         SDFFontRenderer();
-        bool initialize( Device* device, hgl::assets::AssetsSource* assetsSource, const SDFRenderParameter& sdfParam );
+        bool initialize( Device* device, comm::IArchive* archive, GPUAsyncLoadManager* asyncLoader, const SDFRenderParameter& sdfParam );
         void resize( uint32_t width, uint32_t height );
         //==== Build functions
         void beginBuild();
         // 这个接口默认会给分配一个新的 style/transform index位以及数据uint32_t元
-        IndexHandle appendText( float x, float y, SDFChar* text,  length, const Transform& transform, const Style& style, hgl::RectScope2f& rect );
+        IndexHandle appendText( float x, float y, SDFChar* text,  uint32_t length, const Transform& transform, const Style& style, RectScope2f& rect );
         // 这个接口是用来重用的
         IndexHandle appendTextReuseTransform( 
             float x, float y, SDFChar* text, uint32_t length,
-            IndexHandle resuseHandle, const Style& style, hgl::RectScope2f& rect
+            IndexHandle resuseHandle, const Style& style, RectScope2f& rect
         );
         IndexHandle appendTextReuseStyle ( 
             float x, float y, SDFChar* text, uint32_t length, 
-            IndexHandle resuseHandle, const Transform& transform, hgl::RectScope2f& rect
+            IndexHandle resuseHandle, const Transform& transform, RectScope2f& rect
         );
         IndexHandle appendTextReuse ( 
             float x, float y, SDFChar* text, uint32_t length, 
-            IndexHandle resuseHandle, hgl::RectScope2f& rect
+            IndexHandle resuseHandle, RectScope2f& rect
         );
 
         SDFFontDrawData* endBuild();

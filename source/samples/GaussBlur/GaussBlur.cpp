@@ -1,4 +1,6 @@
 ﻿#include "GaussBlur.h"
+#include "pipeline_bindings.h"
+#include "gauss_ubo.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <cmath>
@@ -76,7 +78,7 @@ namespace ugi {
         for(uint32_t i = 0; i<2; ++i) {
             blurTextures_[i] = device->createTexture(texture_->desc(), ResourceAccessType::ShaderReadWrite);
             blurImageViews_[i] = blurTextures_[i]->createImageView(device, image_view_param_t{});
-            blurMaterials_[i]= pipeline_->createMaterial({"InputImage", "OutputImage", "BlurParameter"},{});
+            blurMaterials_[i]= pipeline_->createMaterial({BIND_INPUTIMAGE, BIND_OUTPUTIMAGE, BIND_BLURPARAMETER},{});
         }
         // update materials, except uniform buffer
         for(uint32_t i = 0; i<2; ++i) {
@@ -91,7 +93,7 @@ namespace ugi {
     }
 
     void GaussBlurTest::tick() {
-        renderContext_->onPreTick();
+        if (!renderContext_->onPreTick()) return;
         auto device = renderContext_->device();
         auto queue = renderContext_->primaryQueue();
         auto cmdbuf = queue->createCommandBuffer(device, ugi::CmdbufType::Transient);
@@ -136,7 +138,7 @@ namespace ugi {
                     { 1.0f, 0.0f }, (uint32_t)distributions.size()/2+1, 0,
                     {},
                 };
-                memcpy(parameter.gaussDistribution, distributions.data()+distributions.size()/2, (distributions.size()/2+1)*sizeof(float) );
+                memcpy(parameter.gauss, distributions.data()+distributions.size()/2, (distributions.size()/2+1)*sizeof(float) );
 
                 for(auto i = 0; i<2; ++i) { // update uniform buffer
                     if(i == 1) {

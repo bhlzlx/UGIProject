@@ -1,5 +1,6 @@
 {
-	"shaderModule" : { 
-		"comp":"GaussBlur.comp"
-    }
+	"shaderModule" : {
+		"comp":"GaussBlur.comp.slang"
+	},
+	"importPath": ["."]
 }

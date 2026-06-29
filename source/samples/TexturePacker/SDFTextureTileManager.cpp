@@ -5,6 +5,7 @@
 #include <ugi/flight_cycle_invoker.h>    
 #include <ugi/command_encoder/resource_cmd_encoder.h>
 #include <ugi/command_buffer.h>
+#include <ugi/resource.h>
 
 namespace ugi {
 
@@ -102,9 +103,9 @@ namespace ugi {
     }
 
 
-    bool SDFTextureTileManager::initialize( Device* device, hgl::assets::AssetsSource* assetsSource, uint32_t cellSize, uint32_t texSize, uint32_t arrayLayer, uint32_t sourceFontSize, uint32_t extraBorder, uint32_t searchDistance ) {
+    bool SDFTextureTileManager::initialize( Device* device, comm::IArchive* archive, uint32_t cellSize, uint32_t texSize, uint32_t arrayLayer, uint32_t sourceFontSize, uint32_t extraBorder, uint32_t searchDistance ) {
         _device = device;
-        _assetsSource = assetsSource;
+        _archive = archive;
         _sourceFontSize = sourceFontSize;
         _extraBorder = extraBorder;
         _searchDistance = searchDistance;
@@ -137,13 +138,13 @@ namespace ugi {
         //
         {
             // 初始化一个字体（先写死，做个测试）
-            // auto inputStream = _assetsSource->Open(hgl::UTF8String("hwzhsong.ttf"));
-            auto inputStream = _assetsSource->Open(hgl::UTF8String("msyahei.ttf"));
+            // auto inputStream = _archive->openIStream("hwzhsong.ttf"));
+            auto inputStream = _archive->openIStream("image/msyahei.ttf", {comm::ReadFlag::binary});
             _fontTable.emplace_back();
             FontInfo& fontInfo = _fontTable.back();
-            auto size = inputStream->GetSize();
+            auto size = inputStream->size();
             uint8_t* data = new uint8_t[size];
-            inputStream->ReadFully(data, size);
+            inputStream->read(data, size);
             int error = stbtt_InitFont(&fontInfo.stbTtfInfo, data, 0);
             stbtt_GetFontBoundingBox(&fontInfo.stbTtfInfo, &fontInfo.x0, &fontInfo.y0, &fontInfo.x1, &fontInfo.y1);
             fontInfo.maxHeight = fontInfo.y1 - fontInfo.y0;
@@ -335,8 +336,7 @@ namespace ugi {
         // do nothing
     }
 
-    void SDFTextureTileManager::tickResource( ResourceCommandEncoder* encoder, ResourceManager* resourceManager ) {
-        resourceManager->tick();
+    void SDFTextureTileManager::tickResource( ResourceCommandEncoder* encoder, Device* device ) {
         if(_cachedTileItems.size()) {
             size_t stagingBufferSize = this->_sdfBitmapBuffer.size();
             auto stagingBuffer = _device->createBuffer( BufferType::StagingBuffer, stagingBufferSize );
@@ -356,8 +356,9 @@ namespace ugi {
                 offsets.push_back(item.bufferOffset);
             }
             encoder->updateImage( _texArray, stagingBuffer, regions.data(), offsets.data(), (uint32_t)regions.size() );
-            //
-            resourceManager->trackResource(stagingBuffer);
+            device->cycleInvoker().postCallable([device, stagingBuffer]() {
+                device->destroyBuffer(stagingBuffer);
+            });
             _cachedTileItems.clear();
         }
     }
