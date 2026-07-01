@@ -24,6 +24,6 @@ PRIVATE
 )
 
 add_custom_command(TARGET HelloWorld PRE_BUILD
-    COMMAND ${SOLUTION_DIR}/bin/ShaderCompiler.exe "${SOLUTION_DIR}/bin/shaders/triangle"
+    COMMAND $<TARGET_FILE:ShaderCompiler> "${SOLUTION_DIR}/bin/shaders/triangle"
     COMMENT "ShaderCompiler: HelloWorld"
 )

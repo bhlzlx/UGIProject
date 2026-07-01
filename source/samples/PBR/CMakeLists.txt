@@ -25,6 +25,6 @@ PRIVATE
 
 # 自动编译 shader
 add_custom_command(TARGET PBR PRE_BUILD
-    COMMAND ${SOLUTION_DIR}/bin/ShaderCompiler.exe "${SOLUTION_DIR}/bin/shaders/pbr"
+    COMMAND $<TARGET_FILE:ShaderCompiler> "${SOLUTION_DIR}/bin/shaders/pbr"
     COMMENT "ShaderCompiler: PBR"
 )

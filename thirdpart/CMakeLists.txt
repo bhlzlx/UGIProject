@@ -18,3 +18,9 @@ add_subdirectory( glm )
 # add_subdirectory( tracy )
 add_subdirectory( entt )
 add_subdirectory( LightWeightCommon )
+
+# SPIRV-Reflect for ShaderCompiler
+set(SPIRV_REFLECT_EXECUTABLE OFF CACHE BOOL "" FORCE)
+set(SPIRV_REFLECT_STATIC_LIB ON CACHE BOOL "" FORCE)
+set(SPIRV_REFLECT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+add_subdirectory( SPIRV-Reflect )

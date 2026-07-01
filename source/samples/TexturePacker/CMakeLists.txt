@@ -23,7 +23,7 @@ PRIVATE
 )
 
 add_custom_command(TARGET SDFTest PRE_BUILD
-    COMMAND ${SOLUTION_DIR}/bin/ShaderCompiler.exe "${SOLUTION_DIR}/bin/shaders/SDF2D"
+    COMMAND $<TARGET_FILE:ShaderCompiler> "${SOLUTION_DIR}/bin/shaders/SDF2D"
     COMMENT "ShaderCompiler: SDFTest"
 )
 

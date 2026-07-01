@@ -26,6 +26,6 @@ PRIVATE
 )
 
 add_custom_command(TARGET GaussBlur PRE_BUILD
-    COMMAND ${SOLUTION_DIR}/bin/ShaderCompiler.exe "${SOLUTION_DIR}/bin/shaders/GaussBlur"
+    COMMAND $<TARGET_FILE:ShaderCompiler> "${SOLUTION_DIR}/bin/shaders/GaussBlur"
     COMMENT "ShaderCompiler: GaussBlur"
 )
