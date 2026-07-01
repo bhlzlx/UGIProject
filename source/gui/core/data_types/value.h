@@ -41,6 +41,10 @@ namespace gui {
             : type_(ValueType::MouseEvent)
             , ival((int64_t(evt)))
         {}
+        Value(UIEvent evt)
+            : type_(ValueType::Int)
+            , ival((int64_t(evt)))
+        {}
 
         template<class T>
         requires std::integral<T>

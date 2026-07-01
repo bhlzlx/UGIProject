@@ -79,9 +79,13 @@ namespace gui {
 
         Object* addChild(Object* child);
         Object* addChildAt(Object* child, uint32_t index);
+        Object* getChildAt(int index) const;
 
         void removeChild(Object* child);
         void removeChildAt(uint32_t index);
+
+    protected:
+        virtual void onSizeChanged() override;
 private:
         void setChildIndex(Object* child, uint32_t idx);
         uint32_t setChildIndex_(Object* child, uint32_t oldIdx, uint32_t idx);

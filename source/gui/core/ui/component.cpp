@@ -310,6 +310,18 @@ namespace gui {
     void Component::removeChildAt(uint32_t index) {
     }
 
+    Object* Component::getChildAt(int index) const {
+        if (index >= 0 && index < (int)children_.size())
+            return children_[index];
+        return nullptr;
+    }
+
+    void Component::onSizeChanged() {
+        Object::onSizeChanged();
+        // relations 更新已在 Object::setSize/setWidth/setHeight 中处理
+        // 此处可添加未来滚动面板更新等逻辑
+    }
+
 
     /**
      * @brief 

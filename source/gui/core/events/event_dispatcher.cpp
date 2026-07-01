@@ -2,15 +2,6 @@
 
 namespace gui {
 
-    // namespace {
-    //     comm::NamePool EventNamePool;
-    // }
-
-    // comm::Name GetEventName(char const* name) {
-    //     auto rst = EventNamePool.getName(name);
-    //     return rst;
-    // }
-
     EventContext::EventContext(Value event, EventDispatcher* sender, void* data)
         : event_(event)
         , sender_(sender->getHandle())
@@ -41,7 +32,6 @@ namespace gui {
     void EventDispatcher::removeEventListener(Value event, EventTag tag) {
         for(auto it = callbackItems_.begin(); it != callbackItems_.end();) {
             auto& itemPtr= *it;
-            auto tag = itemPtr->tag;
             if(itemPtr->event == event && (!tag || itemPtr->tag == tag)) {
                 if(itemPtr->dispatching) {
                     itemPtr->callback = {};
@@ -50,6 +40,8 @@ namespace gui {
                     delete itemPtr;
                     it = callbackItems_.erase(it);
                 }
+            } else {
+                ++it;
             }
         }
     }
@@ -77,11 +69,42 @@ namespace gui {
             return false;
         }
         EventContext ctx(event, this, data);
-        return true;
+
+        // 复制一份 callback 列表，防止在 dispatch 过程中列表被修改
+        std::vector<EventCallbackItem*> itemsCopy = callbackItems_;
+        bool result = false;
+        for(auto item : itemsCopy) {
+            if(item->event == event && item->callback) {
+                item->dispatching = 1;
+                item->callback(&ctx);
+                item->dispatching = 0;
+                result = true;
+            }
+        }
+
+        // 清理在 dispatch 过程中被标记删除的 callback
+        for(auto it = callbackItems_.begin(); it != callbackItems_.end();) {
+            auto item = *it;
+            if(item->dispatching == 0 && !item->callback) {
+                delete item;
+                it = callbackItems_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+
+        return result;
+    }
+
+    bool EventDispatcher::bubbleEvent(Value event, void* data, std::vector<uint8_t> const& buffer) {
+        // 先 dispatch 自己
+        dispatchEvent(event, data, Value());
+        // bubble 到父节点需要 DisplayObject 链，暂不实现
+        return false;
     }
 
     void EventDispatcher::clearEventListeners() {
-        for(auto iter = callbackItems_.begin(); iter != callbackItems_.end(); ++iter) {
+        for(auto iter = callbackItems_.begin(); iter != callbackItems_.end();) {
             auto item = *iter;
             if(item->dispatching) {
                 item->callback = nullptr;
@@ -92,4 +115,5 @@ namespace gui {
             }
         }
     }
+
 }

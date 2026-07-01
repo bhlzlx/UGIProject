@@ -17,6 +17,8 @@ namespace gui {
     enum class UIEvent {
         AddedToStage,
         RemoveFromStage,
+        PositionChanged,
+        SizeChanged,
     };
 
 

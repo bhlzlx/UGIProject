@@ -32,6 +32,7 @@ PRIVATE
     core/display_objects/container.cpp
     # ui
     core/ui/stage.cpp
+    core/ui/ui_content_scaler.cpp
     core/ui/root.cpp
     core/ui/component.cpp
     core/controller.cpp

@@ -194,15 +194,90 @@ namespace gui {
         });
     }
 
-    void updateTransfroms() {
-        reg.view<dispcomp::transform_dirty, dispcomp::final_visible, NGraphics>().each([](entt::entity ett, NGraphics& graphics) {
-            DisplayObject obj = ett;
-            auto& transform = obj.getBasicTransfrom();
-            auto mat = glm::translate(glm::mat4(1.0f), glm::vec3(transform.position.x, transform.position.y, 0));
-            graphics.args.transfrom = mat;
+    // 构建单个 entity 的局部变换矩阵
+    // M = T(pos) * R(rot) * Skew(skew) * S(scale) * T(-pivot * size)
+    glm::mat4 buildLocalMatrix(entt::entity ett) {
+        glm::mat4 mat(1.0f);
+
+        if (!reg.any_of<dispcomp::basic_transfrom>(ett)) {
+            return mat;
+        }
+
+        auto& transform = reg.get<dispcomp::basic_transfrom>(ett);
+
+        // 1. Pivot: 把 pivot 点移到原点
+        mat = glm::translate(mat, glm::vec3(
+            -transform.pivot.x * transform.size.x,
+            -transform.pivot.y * transform.size.y,
+            0.0f));
+
+        // 2. Scale
+        if (reg.any_of<dispcomp::scale>(ett)) {
+            auto& sc = reg.get<dispcomp::scale>(ett);
+            mat = glm::scale(mat, glm::vec3(sc.val.x, sc.val.y, 1.0f));
+        }
+
+        // 3. Skew
+        if (reg.any_of<dispcomp::skew>(ett)) {
+            auto& sk = reg.get<dispcomp::skew>(ett);
+            if (sk.val.x != 0.0f || sk.val.y != 0.0f) {
+                glm::mat4 shearMat(1.0f);
+                shearMat[1][0] = sk.val.x;
+                shearMat[0][1] = sk.val.y;
+                mat = mat * shearMat;
+            }
+        }
+
+        // 4. Rotation 绕 Z 轴
+        if (reg.any_of<dispcomp::rotation>(ett)) {
+            auto& rot = reg.get<dispcomp::rotation>(ett);
+            mat = glm::rotate(mat, rot.val, glm::vec3(0.0f, 0.0f, 1.0f));
+        }
+
+        // 5. Translation
+        mat = glm::translate(mat, glm::vec3(transform.position.x, transform.position.y, 0.0f));
+
+        return mat;
+    }
+
+    // 递归更新变换树，累积父节点的世界矩阵
+    void updateTransformRecursive(entt::entity ett, glm::mat4 const& parentWorld) {
+        if (!reg.any_of<dispcomp::final_visible>(ett)) {
+            return;
+        }
+
+        // 局部矩阵
+        glm::mat4 localMat = buildLocalMatrix(ett);
+
+        // 世界矩阵 = 父世界矩阵 * 局部矩阵
+        glm::mat4 worldMat = parentWorld * localMat;
+
+        // 如果此 entity 有渲染内容，写入世界矩阵
+        if (reg.any_of<NGraphics>(ett)) {
+            auto& graphics = reg.get<NGraphics>(ett);
+            graphics.args.transfrom = worldMat;
             graphics.args.color = glm::vec4(1.f, 1.f, 1.f, 1.f);
-            reg.remove<dispcomp::transform_dirty>(ett);
-        });
+        }
+
+        reg.remove<dispcomp::transform_dirty>(ett);
+
+        // 递归子节点
+        if (reg.any_of<dispcomp::children>(ett)) {
+            auto& children = reg.get<dispcomp::children>(ett).val;
+            for (auto child : children) {
+                updateTransformRecursive(child, worldMat);
+            }
+        }
+    }
+
+    void updateTransfroms() {
+        auto stage = Stage::Instance();
+        auto root = stage->defaultRoot();
+        if (!root) return;
+        entt::entity rootEntity = root->getDisplayObject();
+        if (rootEntity == entt::null) return;
+
+        updateTransformRecursive(rootEntity, glm::mat4(1.0f));
     }
 
     void commitBatchNode(entt::entity ett) {

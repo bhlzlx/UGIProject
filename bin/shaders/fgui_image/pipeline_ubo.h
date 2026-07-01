@@ -6,16 +6,34 @@ using float2 = struct { float x,y; };
 using float3 = struct { float x,y,z; };
 using float4 = struct { float x,y,z,w; };
 using float4x4 = float[16];
+using int2  = struct { int32_t x,y; };
+using int3  = struct { int32_t x,y,z; };
+using int4  = struct { int32_t x,y,z,w; };
+using uint2 = struct { uint32_t x,y; };
+using uint3 = struct { uint32_t x,y,z; };
+using uint4 = struct { uint32_t x,y,z,w; };
+
+// nested struct type
+struct args_28_30 {
+    float4x4         transform;
+    float4           color;
+    float4           props;
+};
+
+// nested struct type
+struct args_28 {
+    args_28_30       data[512];
+};
 
 // "global"  set=1 bind=0  size=64
 struct global_UBO {
-    float4x4     vp;
+    float4x4         vp;
 };
 static_assert(sizeof(global_UBO) == 64, "size mismatch");
 
 // "args"  set=0 bind=0  size=49152
 struct args_UBO {
-    uint8_t     imageDatas[49152];
+    args_28          imageDatas;
 };
 static_assert(sizeof(args_UBO) == 49152, "size mismatch");
 

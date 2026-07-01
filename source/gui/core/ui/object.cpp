@@ -18,7 +18,7 @@ namespace gui {
 
     }
     void Object::onSizeChanged() {
-
+        dispatchEvent(UIEvent::SizeChanged, nullptr, Value());
     }
     void Object::onScaleChanged() {
 
@@ -27,7 +27,7 @@ namespace gui {
 
     }
     void Object::onPositionChanged() {
-
+        dispatchEvent(UIEvent::PositionChanged, nullptr, Value());
     }
     void Object::onAlphaChanged() {
 
@@ -51,7 +51,7 @@ namespace gui {
         buffer->skip(5);
         id_ = buffer->read<csref>();
         name_ = buffer->read<csref>();
-        float f1, f2, f3, f4;
+        float f1, f2, f3;
         f1 = buffer->read<int>();
         f2 = buffer->read<int>();
         if(buffer->version >= 7) {
@@ -65,6 +65,9 @@ namespace gui {
             rawSize_.height = buffer->read<int>();
             setSize(rawSize_);
         }
+        // 记录初始大小 (initWidth/initHeight)
+        initSize_ = size_;
+
         if(buffer->read<bool>()) {//
             minSize_.width = buffer->read<int>();
             maxSize_.width = buffer->read<int>();
@@ -147,6 +150,11 @@ namespace gui {
     }
 
     void Object::setPixelSnapping(bool val) {
+        pixelSnapping_ = val;
+    }
+
+    bool Object::pixelSnapping() const {
+        return pixelSnapping_;
     }
 
     bool Object::inContainer() const {
@@ -159,14 +167,75 @@ namespace gui {
         }
     }
 
-    void Object::setPosition( glm::vec3 const& val) {
-        position_ = val;
-        dispobj_.setPosition(val);
+    // ---- Position ----
+
+    float Object::xMin() const {
+        if (pivotAsAnchor_)
+            return position_.x - pivot_.x * size_.width;
+        else
+            return position_.x;
     }
 
-    void Object::setSize(Size2D<float> const& size) {
-        dispobj_.setSize(size);
+    float Object::yMin() const {
+        if (pivotAsAnchor_)
+            return position_.y - pivot_.y * size_.height;
+        else
+            return position_.y;
     }
+
+    void Object::setXMin(float val) {
+        float offset = (pivotAsAnchor_ ? pivot_.x : 0.0f) * size_.width;
+        position_.x = val + offset;
+        dispobj_.setPosition({position_.x, position_.y});
+    }
+
+    void Object::setYMin(float val) {
+        float offset = (pivotAsAnchor_ ? pivot_.y : 0.0f) * size_.height;
+        position_.y = val + offset;
+        dispobj_.setPosition({position_.x, position_.y});
+    }
+
+    void Object::setPosition(glm::vec3 const& val) {
+        position_ = val;
+        dispobj_.setPosition({val.x, val.y});
+        onPositionChanged();
+    }
+
+    // ---- Size ----
+
+    void Object::setSizeDirectly(Size2D<float> const& sz) {
+        size_ = sz;
+        dispobj_.setSize({sz.width, sz.height});
+    }
+
+    void Object::setSize(Size2D<float> const& sz) {
+        float dw = sz.width - size_.width;
+        float dh = sz.height - size_.height;
+        if (dw == 0 && dh == 0) return;
+        setSizeDirectly(sz);
+        relations_.onOwnerSizeChanged(dw, dh, false);
+        onSizeChanged();
+    }
+
+    void Object::setWidth(float val) {
+        float dw = val - size_.width;
+        if (dw == 0) return;
+        size_.width = val;
+        dispobj_.setSize({size_.width, size_.height});
+        relations_.onOwnerSizeChanged(dw, 0, false);
+        onSizeChanged();
+    }
+
+    void Object::setHeight(float val) {
+        float dh = val - size_.height;
+        if (dh == 0) return;
+        size_.height = val;
+        dispobj_.setSize({size_.width, size_.height});
+        relations_.onOwnerSizeChanged(0, dh, false);
+        onSizeChanged();
+    }
+
+    // ---- Pivot / Scale / Skew ----
 
     void Object::setPivot(glm::vec2 const& pivot, bool asAnchor) {
         pivot_ = pivot;
@@ -191,6 +260,27 @@ namespace gui {
 
     void Object::setGrayed(bool val) {
         grayed_ = val;
+    }
+
+    bool Object::grayed() const {
+        return grayed_;
+    }
+
+    void Object::center(bool restraint) {
+        if (parent_) {
+            setPosition({
+                (parent_->width() - size_.width) * 0.5f,
+                (parent_->height() - size_.height) * 0.5f,
+                position_.z
+            });
+        }
+    }
+
+    void Object::makeFullScreen() {
+        if (parent_) {
+            setSize({parent_->width(), parent_->height()});
+            setPosition({0, 0, position_.z});
+        }
     }
 
 }

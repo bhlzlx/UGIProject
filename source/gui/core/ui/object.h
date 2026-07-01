@@ -29,6 +29,8 @@ namespace gui {
     class Object : public EventDispatcher {
         friend class ObjectFactory;
         friend class Component;
+        friend class RelationItem;
+        friend class Relations;
     protected:
         std::string     id_;
         std::string     name_;
@@ -36,6 +38,7 @@ namespace gui {
         glm::vec3       position_;
         Size2D<float>   rawSize_;
         Size2D<float>   size_;
+        Size2D<float>   initSize_;      // 构造时的初始大小 (= FairyGUI initWidth/initHeight)
         Size2D<float>   minSize_;
         Size2D<float>   maxSize_;
 
@@ -140,8 +143,20 @@ protected:
         float width() const { return size_.width; }
         float height() const { return size_.height; }
 
-        void setWidth(float val) { size_.width = val; }
-        void setHeight(float val) { size_.height = val; }
+        void setWidth(float val);
+        void setHeight(float val);
+
+        // 原始未约束尺寸 (当前实现中 = 约束后尺寸，因为约束未强制)
+        float rawWidth() const { return size_.width; }
+        float rawHeight() const { return size_.height; }
+
+        // 设计时的原始尺寸 (从包数据读取)
+        float sourceWidth() const { return rawSize_.width; }
+        float sourceHeight() const { return rawSize_.height; }
+
+        // 构造时的初始尺寸 (= FairyGUI initWidth/initHeight)
+        float initWidth() const { return initSize_.width; }
+        float initHeight() const { return initSize_.height; }
 
         void center(bool restraint = false);
         void makeFullScreen();
@@ -179,6 +194,8 @@ protected:
 
         bool touchable() const { return touchable_; }
         void setTouchable(bool val) { touchable_ = val; }
+
+        Component* parent() const { return parent_; }
 
         DisplayObject getDisplayObject() const {
             return dispobj_;

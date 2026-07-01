@@ -2,6 +2,7 @@
 #include "../events/event_dispatcher.h"
 #include <core/declare.h>
 #include <vector>
+#include <glm/glm.hpp>
 #include "utils/byte_buffer.h"
 
 namespace gui {
@@ -14,31 +15,33 @@ namespace gui {
 
     class RelationItem {
     private:
-        Object*                         dst_;         // 被布局影响的对象
+        Object*                         owner_;         // 被布局影响的对象 (dst)
         Object*                         target_;        // 布局系统监听的对象
         std::vector<RelationInfo>       infos_;
-        Point2D<float>                  targetPos_;
-        Size2D<float>                   targetSize_;
+        Point2D<float>                  targetPos_;     // 缓存 target 的上次位置
+        Size2D<float>                   targetSize_;    // 缓存 target 的上次大小
     public:
+        RelationItem(Object* owner);
+
+        Object* owner() const { return owner_; }
+
         void setTarget(Object* ptr);
         Object* getTarget() const {
             return target_;
-        }
-        Object* getOwner() const {
-            return dst_;
         }
 
         void add(RelationType type, bool usePercent);
         void internalAdd(RelationType type, bool usePercent);
         void remove(RelationType type);
         void copyFrom(RelationItem const& src);
+        void dispose();
         bool isEmpty() const;
-        void applyOnSelfSizeChanged(float width, float height, bool applyPivot);
+        void applyOnSelfSizeChanged(float dWidth, float dHeight, bool applyPivot);
     private:
-        void applyOnXYChanged(Object* target, RelationInfo const& info, glm::vec2 diff);
-        void applyOnSizeChanged(Object* target, RelationInfo const& info);
-        void registEventListener(Object* target);
-        void unregistEventListener(Object* target);
+        void applyOnXYChanged(RelationInfo const& info, float dx, float dy);
+        void applyOnSizeChanged(RelationInfo const& info);
+        void addRefTarget(Object* target);
+        void releaseRefTarget(Object* target);
 
         void onTargetXYChanged(EventContext* context);
         void onTargetSizeChanged(EventContext* context);
@@ -46,23 +49,23 @@ namespace gui {
 
     class Relations {
     private:
-        Object*                     handling_;
         Object*                     owner_;
         std::vector<RelationItem*>  items_;
     public:
+        Object*                     handling = nullptr;
+
         Relations(Object* owner);
         ~Relations();
 
         void add(Object* target, RelationType type, bool usePercent = false);
-        void remove(Object* target, RelationType* type);
-        bool contains(Object* target);
+        void remove(Object* target, RelationType type);
+        bool contains(Object* target) const;
         void clearFor(Object* target);
         void clearAll();
         void copyFrom(Relations const& other);
-        void onOwnSizeChanged(glm::vec2 size, bool applyPivot);
+        void onOwnerSizeChanged(float dWidth, float dHeight, bool applyPivot);
         bool isEmpty() const;
-        void setup(ByteBuffer buffer, bool parentToChild);
-        Object* handling() const { return handling_; }
+        void setup(ByteBuffer& buffer, bool parentToChild);
     };
 
 }

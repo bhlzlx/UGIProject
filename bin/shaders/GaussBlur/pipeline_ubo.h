@@ -6,13 +6,24 @@ using float2 = struct { float x,y; };
 using float3 = struct { float x,y,z; };
 using float4 = struct { float x,y,z,w; };
 using float4x4 = float[16];
+using int2  = struct { int32_t x,y; };
+using int3  = struct { int32_t x,y,z; };
+using int4  = struct { int32_t x,y,z,w; };
+using uint2 = struct { uint32_t x,y; };
+using uint3 = struct { uint32_t x,y,z; };
+using uint4 = struct { uint32_t x,y,z,w; };
+
+// nested struct type
+struct BlurParameter_47 {
+    float4           data[4];
+};
 
 // "BlurParameter"  set=0 bind=2  size=80
 struct BlurParameter_UBO {
-    float2       dir;
-    uint32_t     radius;
+    float2           dir;
+    uint32_t         radius;
     uint8_t _pad2[4];
-    uint8_t     gauss[64];
+    BlurParameter_47 gauss;
 };
 static_assert(sizeof(BlurParameter_UBO) == 80, "size mismatch");
 
