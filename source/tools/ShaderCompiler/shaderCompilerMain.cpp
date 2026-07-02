@@ -54,7 +54,7 @@ static bool RunSlangC(const std::string& sourceFile,
     std::ostringstream cmd;
 
     // 基础命令
-    cmd << "slangc \"" << sourceFile << "\"";
+    cmd << SLANGC_PATH " \"" << sourceFile << "\"";
 
     // include 路径
     for (auto& p : includePaths) {
@@ -151,7 +151,7 @@ static bool CompileSlangShader(const std::string& mainFile,
         if (!found.empty()) {
             // 模块编译命令
             std::ostringstream cmd;
-            cmd << "slangc \"" << found << "\" -target none -o \"" << found << ".slang-module\"";
+            cmd << SLANGC_PATH " \"" << found << "\" -target none -o \"" << found << ".slang-module\"";
             for (auto& p : importPaths) cmd << " -I \"" << p << "\"";
             cmd << " 2>&1";
             printf("  [slangc:lib] %s\n", cmd.str().c_str());
@@ -171,7 +171,7 @@ static bool CompileSlangShader(const std::string& mainFile,
     // 3. 用 -r 链接预编译模块 (如果有的话)
     //    如果某个模块没找到, slangc 会从 import + -I 回退
     std::ostringstream cmd;
-    cmd << "slangc \"" << mainFile << "\"";
+    cmd << SLANGC_PATH " \"" << mainFile << "\"";
     for (auto& p : importPaths) cmd << " -I \"" << p << "\"";
     cmd << " -target spirv";
     if (!profile.empty()) cmd << " -profile " << profile;

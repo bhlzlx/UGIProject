@@ -138,8 +138,8 @@ protected:
     public:
         float x() const { return position_.x; }
         float y() const { return position_.y; }
-        void setX(float v) { position_.x = v; }
-        void setY(float v) { position_.y = v; }
+        void setX(float v);
+        void setY(float v);
 
         glm::vec2 position() const { return position_; }
 

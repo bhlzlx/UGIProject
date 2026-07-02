@@ -14,7 +14,7 @@ using uint3 = struct { uint32_t x,y,z; };
 using uint4 = struct { uint32_t x,y,z,w; };
 
 // nested struct type
-struct args_28_30 {
+struct args_28_29 {
     float4x4         transform;
     float4           color;
     float4           props;
@@ -22,7 +22,7 @@ struct args_28_30 {
 
 // nested struct type
 struct args_28 {
-    args_28_30       data[512];
+    args_28_29       data[512];
 };
 
 // "global"  set=1 bind=0  size=64

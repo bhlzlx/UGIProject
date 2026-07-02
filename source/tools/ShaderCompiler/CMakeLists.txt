@@ -17,8 +17,8 @@ PRIVATE
     spirv-reflect-static
 )
 
-if(MSVC)
-    target_compile_options(ShaderCompiler PRIVATE /utf-8)
-endif()
+target_compile_definitions(ShaderCompiler PRIVATE
+    SLANGC_PATH="${SOLUTION_DIR}/bin/slang/slangc.exe"
+)
 
 set_target_properties(ShaderCompiler PROPERTIES FOLDER "Tools")

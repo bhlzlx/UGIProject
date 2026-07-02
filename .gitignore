@@ -10,7 +10,10 @@
 /out/*
 /vsproj/*
 /bin/.vs
+/bin/slang
 /source/thirdpart/glm
+
+*.bytes
 
 # Shader artifacts (ShaderCompiler 生成)
 /bin/shaders/**/*.spv

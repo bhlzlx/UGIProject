@@ -37,7 +37,7 @@ namespace ugi {
         _fontRenderer = new SDFFontRenderer();
         _fontRenderer->initialize(_ctx->device(), arch, _ctx->asyncLoadManager(), sdfParam);
 
-        char16_t textArray[][64] = {
+        const char16_t textArray[][64] = {
             u".找不到路径，", u"因为该路径不存在。", u"全英雄选择", u"testgoogle..."
         };
         Style styleArray[5] = {

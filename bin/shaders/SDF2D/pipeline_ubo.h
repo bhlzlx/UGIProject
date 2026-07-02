@@ -14,7 +14,7 @@ using uint3 = struct { uint32_t x,y,z; };
 using uint4 = struct { uint32_t x,y,z,w; };
 
 // nested struct type
-struct Transforms_100_102 {
+struct Transforms_100_101 {
     float            col11;
     float            col12;
     float            col13;
@@ -26,11 +26,11 @@ struct Transforms_100_102 {
 
 // nested struct type
 struct Transforms_100 {
-    Transforms_100_102 data[256];
+    Transforms_100_101 data[256];
 };
 
 // nested struct type
-struct Effects_66_68 {
+struct Effects_66_67 {
     uint32_t         colorMask;
     uint32_t         effectColor;
     uint32_t         type;
@@ -39,7 +39,7 @@ struct Effects_66_68 {
 
 // nested struct type
 struct Effects_66 {
-    Effects_66_68    data[256];
+    Effects_66_67    data[256];
 };
 
 // nested struct type

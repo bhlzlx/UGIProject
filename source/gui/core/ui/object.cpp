@@ -191,6 +191,14 @@ namespace gui {
         dispobj_.setPosition({position_.x, position_.y});
     }
 
+    void Object::setX(float v) {
+        setPosition({v, position_.y, position_.z});
+    }
+
+    void Object::setY(float v) {
+        setPosition({position_.x, v, position_.z});
+    }
+
     void Object::setPosition(glm::vec3 const& val) {
         position_ = val;
         dispobj_.setPosition({val.x, val.y});
