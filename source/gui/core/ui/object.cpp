@@ -54,18 +54,14 @@ namespace gui {
         float f1, f2, f3;
         f1 = buffer->read<int>();
         f2 = buffer->read<int>();
-        if(buffer->version >= 7) {
-            f3 = buffer->read<int>();
-        } else {
-            f3 = 0;
-        }
+        f3 = 0;
         setPosition({f1, f2, f3}); // set position
         if(buffer->read<bool>()) {
-            rawSize_.width = buffer->read<int>();
-            rawSize_.height = buffer->read<int>();
-            setSize(rawSize_);
+            sourceSize_.width = buffer->read<int>();
+            sourceSize_.height = buffer->read<int>();
+            setSize(sourceSize_);
         }
-        // 记录初始大小 (initWidth/initHeight)
+        // 记录初始大小 (= FairyGUI initWidth/initHeight)
         initSize_ = size_;
 
         if(buffer->read<bool>()) {//
@@ -204,7 +200,8 @@ namespace gui {
     // ---- Size ----
 
     void Object::setSizeDirectly(Size2D<float> const& sz) {
-        size_ = sz;
+        rawSize_ = sz;    // _rawWidth/_rawHeight — 未约束的请求值
+        size_ = sz;       // _width/_height — 约束后的实际值 (当前无 min/max 约束)
         dispobj_.setSize({sz.width, sz.height});
     }
 
@@ -220,6 +217,7 @@ namespace gui {
     void Object::setWidth(float val) {
         float dw = val - size_.width;
         if (dw == 0) return;
+        rawSize_.width = val;
         size_.width = val;
         dispobj_.setSize({size_.width, size_.height});
         relations_.onOwnerSizeChanged(dw, 0, false);
@@ -229,6 +227,7 @@ namespace gui {
     void Object::setHeight(float val) {
         float dh = val - size_.height;
         if (dh == 0) return;
+        rawSize_.height = val;
         size_.height = val;
         dispobj_.setSize({size_.width, size_.height});
         relations_.onOwnerSizeChanged(0, dh, false);

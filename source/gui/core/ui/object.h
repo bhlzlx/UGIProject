@@ -36,9 +36,10 @@ namespace gui {
         std::string     name_;
         ObjectType      type_;
         glm::vec3       position_;
-        Size2D<float>   rawSize_;
-        Size2D<float>   size_;
-        Size2D<float>   initSize_;      // 构造时的初始大小 (= FairyGUI initWidth/initHeight)
+        Size2D<float>   sourceSize_;    // = FairyGUI sourceWidth/sourceHeight，设计蓝图尺寸，永不变
+        Size2D<float>   size_;          // = FairyGUI _width/_height，约束后的实际尺寸
+        Size2D<float>   rawSize_;       // = FairyGUI _rawWidth/_rawHeight，未约束的请求值
+        Size2D<float>   initSize_;      // = FairyGUI initWidth/initHeight，构造完成时的快照
         Size2D<float>   minSize_;
         Size2D<float>   maxSize_;
 
@@ -73,17 +74,26 @@ namespace gui {
     public:
         Object()
             : EventDispatcher()
+            , type_(ObjectType::Component)   // 默认 Component，子类各自覆盖
             , position_{}
-            , rawSize_{}
+            , sourceSize_{}
             , size_{}
+            , rawSize_{}
+            , initSize_{}
+            , minSize_{}
+            , maxSize_{}
+            , packageItem_(nullptr)
             , scale_{}
             , pivot_{}
+            , skew_{}
             , alpha_(1.0f)
             , rotation_(0.0f)
             , pivotAsAnchor_(0)
             , visible_(1)
+            , touchable_(1)
             , grayed_(0)
             , finalGrayed_(0)
+            , underConstruct_(0)
             , internalVisible_(1)
             , handlingController_(0)
             , draggable_(0)
@@ -94,6 +104,7 @@ namespace gui {
             , sortingOrder_(0)
             , group_(nullptr)
             , sizePercentInGroup_(1.0f)
+            , data_()
         {}
 
         ~Object();
@@ -146,15 +157,15 @@ protected:
         void setWidth(float val);
         void setHeight(float val);
 
-        // 原始未约束尺寸 (当前实现中 = 约束后尺寸，因为约束未强制)
-        float rawWidth() const { return size_.width; }
-        float rawHeight() const { return size_.height; }
+        // 原始未约束尺寸 (= FairyGUI _rawWidth/_rawHeight)
+        float rawWidth() const { return rawSize_.width; }
+        float rawHeight() const { return rawSize_.height; }
 
-        // 设计时的原始尺寸 (从包数据读取)
-        float sourceWidth() const { return rawSize_.width; }
-        float sourceHeight() const { return rawSize_.height; }
+        // 设计时的蓝图尺寸 (= FairyGUI sourceWidth/sourceHeight)
+        float sourceWidth() const { return sourceSize_.width; }
+        float sourceHeight() const { return sourceSize_.height; }
 
-        // 构造时的初始尺寸 (= FairyGUI initWidth/initHeight)
+        // 构造完成时的快照 (= FairyGUI initWidth/initHeight)
         float initWidth() const { return initSize_.width; }
         float initHeight() const { return initSize_.height; }
 
@@ -196,6 +207,9 @@ protected:
         void setTouchable(bool val) { touchable_ = val; }
 
         Component* parent() const { return parent_; }
+
+        Relations& relations() { return relations_; }
+        Relations const& relations() const { return relations_; }
 
         DisplayObject getDisplayObject() const {
             return dispobj_;

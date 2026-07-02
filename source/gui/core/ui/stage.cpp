@@ -7,7 +7,7 @@
 namespace gui {
 
     void Stage::initialize() {
-        this->ui2dRoot_ = (Root*)ObjectFactory::CreateObject(ObjectType::Root);
+        ui2dRoot_ = (Root*)ObjectFactory::CreateObject(ObjectType::Root);
     }
 
     void Stage::setScreenSize(uint32_t width, uint32_t height) {

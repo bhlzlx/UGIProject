@@ -96,6 +96,9 @@ namespace ugi {
         auto root = stage->defaultRoot();
         gui::Object* uiobj = uipack->createObject("test");
         root->addChild(uiobj);
+        uiobj->relations().add(root, gui::RelationType::Width);
+        uiobj->relations().add(root, gui::RelationType::Height);
+
         return true;
     }
 
@@ -149,6 +152,10 @@ namespace ugi {
         _renderContext->onResize(width, height);
         _width = width;
         _height = height;
+
+        auto stage = gui::Stage::Instance();
+        auto root = stage->defaultRoot();
+        root->setSize(gui::Size2D<float>(width, height));
 
         vp = CreateVPMat(glm::vec2(width, height), 45.f);
         // vp = CreateVPMat2(glm::vec2(width, height));

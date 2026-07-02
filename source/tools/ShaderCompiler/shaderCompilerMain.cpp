@@ -10,6 +10,8 @@
 #include <sstream>
 #include <fstream>
 #include <set>
+#include <sys/stat.h>
+#include <filesystem>
 
 std::array<std::vector<uint32_t>, (uint32_t)ugi::ShaderModuleType::ComputeShader+1 >  SPIRV_DATA;
 
@@ -380,6 +382,34 @@ int main( int argc, char** argv ) {
     }
     std::string assetRoot = argv[1];
     assetRoot.append("/");
+
+    // ---- 增量编译检查: 源文件未变则跳过 ----
+    {
+        auto fileMtime = [](const std::string& path) -> int64_t {
+            struct stat st;
+            if (stat(path.c_str(), &st) == 0) return (int64_t)st.st_mtime;
+            return 0;
+        };
+        std::string binPath = assetRoot + "pipeline.bin";
+        int64_t binTime = fileMtime(binPath);
+        if (binTime > 0) {
+            int64_t newestSrc = 0;
+            // 检查 pipeline.json
+            newestSrc = std::max(newestSrc, fileMtime(assetRoot + "pipeline.json"));
+            // 检查所有 .slang 文件
+            std::error_code ec;
+            for (auto& entry : std::filesystem::directory_iterator(assetRoot, ec)) {
+                auto& path = entry.path();
+                if (path.extension() == ".slang") {
+                    newestSrc = std::max(newestSrc, fileMtime(path.string()));
+                }
+            }
+            if (newestSrc > 0 && binTime >= newestSrc) {
+                printf("[ShaderCompiler] up to date — skipping\n");
+                return 0;
+            }
+        }
+    }
 
     std::string configPath = assetRoot + "pipeline.json";
     nlohmann::json js;

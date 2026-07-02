@@ -9,7 +9,7 @@ namespace gui {
 
     void Image::constructFromResource() {
         auto contentItem = this->packageItem_->getBranch();
-        rawSize_ = {(float)contentItem->width_, (float)contentItem->height_};
+        sourceSize_ = {(float)contentItem->width_, (float)contentItem->height_};
         contentItem = contentItem->getHighSolution();
         contentItem->load();
         NTexture* tex = contentItem->texture_;
@@ -23,7 +23,7 @@ namespace gui {
         auto &graphics = reg.get_or_emplace<NGraphics>(dispobj_);
         graphics.texture = contentItem->texture_->handle();
         //
-        setSize(rawSize_);
+        setSize(sourceSize_);
     }
 
     void Image::setupBeforeAdd(ByteBuffer& buffer, int startPos) {

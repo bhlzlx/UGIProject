@@ -12,9 +12,10 @@
 /bin/.vs
 /source/thirdpart/glm
 
-# Shader artifacts
+# Shader artifacts (ShaderCompiler 生成)
 /bin/shaders/**/*.spv
 /bin/shaders/**/*.slang-module
+/bin/shaders/**/pipeline.bin
 
 # Android
 /source/platform/Android/.gradle/

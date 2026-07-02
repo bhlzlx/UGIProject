@@ -41,11 +41,17 @@ namespace gui {
             , children_()
             , controllers_()
             , transitions_()
+            , root_()
+            , container_()
             , buildingDisplayList_(false)
             , margin_()
             , traceBounds_(false)
             , boundsChanged_(false)
             , childrenRenderOrder_(ChildrenRenderOrder::Ascent)
+            , apexIndex_(0)
+            , alignOffset_{}
+            , clipSoftness_{}
+            , applyingController_(nullptr)
             , sortingChildCount_(0)
             , asBatchNode_(false)
         {

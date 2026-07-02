@@ -30,9 +30,10 @@ namespace gui {
         ByteBuffer buff = packageItem->rawData_;
         buff.seekToBlock(0, ComponentBlocks::Props);
         //
-        rawSize_.width = buff.read<int>();
-        rawSize_.height = buff.read<int>();
-        setSize(rawSize_);
+        sourceSize_.width = buff.read<int>();
+        sourceSize_.height = buff.read<int>();
+        setSize(sourceSize_);
+        initSize_ = size_;  // = FairyGUI: initWidth = sourceWidth; initHeight = sourceHeight;
         if(buff.read<bool>()) {
             minSize_.width = buff.read<int>();
             maxSize_.width = buff.read<int>();

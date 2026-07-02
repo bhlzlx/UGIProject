@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="800,600">
   <displayList>
-    <image id="n0_t8i7" name="n0" src="t8i71" fileName="img/ushio.png" xy="81,42"/>
+    <image id="n0_t8i7" name="n0" src="t8i71" fileName="img/ushio.png" xy="47,37" size="128,128">
+      <relation target="" sidePair="left-left,top-top"/>
+    </image>
   </displayList>
 </component>
