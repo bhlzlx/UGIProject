@@ -32,6 +32,8 @@ namespace gui {
 
         ~Image() {}
 
+        virtual void setSize(Size2D<float> const& size) override;
+
         virtual void createDisplayObject() override;
         virtual void constructFromResource() override;
         virtual void setupBeforeAdd(ByteBuffer& buffer, int startPos = 0) override;

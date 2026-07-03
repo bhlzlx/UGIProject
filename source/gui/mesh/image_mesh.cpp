@@ -18,7 +18,7 @@ namespace gui {
             }
             auto& trans = obj.getBasicTransfrom();
             imageMesh.desc.size = trans.size;
-            glm::vec2  uvbackup[2]; 
+            glm::vec2  uvbackup[2];
             uvbackup[0] = imageMesh.desc.uv[0];
             uvbackup[1] = imageMesh.desc.uv[1];
             switch(imageMesh.ext.flip) {

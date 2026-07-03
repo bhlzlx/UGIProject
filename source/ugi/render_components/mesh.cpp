@@ -54,18 +54,19 @@ namespace ugi {
         mesh->topologyMode_ = topologyMode;
         mesh->polygonMode_ = polygonMode;
         mesh->indexCount_ = indexCount;
+        auto ibSize = sizeof(uint16_t) * indexCount;
+        auto alloc = allocator->alloc(vbSize+ibSize);
+        mesh->buffer_ = alloc.first;
+
         mesh->attriCount_ = layout.bufferCount;
-        mesh->iboffset_ = vbSize;
+        mesh->iboffset_ = alloc.second.offset + vbSize;
         for(auto i = 0; i<layout.bufferCount; ++i) {
-            mesh->attriOffsets_[i] = layout.buffers[i].offset;
+            mesh->attriOffsets_[i] = alloc.second.offset + layout.buffers[i].offset;
         }
         CommandQueue* transferQueue = device->transferQueues()[0];
         auto cb = transferQueue->createCommandBuffer(device, CmdbufType::Transient);
         //
-        auto ibSize = sizeof(uint16_t) * indexCount;
         Buffer* stagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, vbSize + ibSize);
-        auto alloc = allocator->alloc(vbSize+ibSize);
-        mesh->buffer_ = alloc.first;
         auto mapPtr = (uint8_t*)stagingBuffer->map(device);
         memcpy(mapPtr, vb, vbSize);
         memcpy(mapPtr + vbSize, indice, ibSize);

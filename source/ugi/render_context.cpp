@@ -4,6 +4,7 @@
 #include <ugi/texture.h>
 #include <ugi/command_buffer.h>
 #include <ugi/asyncload/gpu_asyncload_manager.h>
+#include <ugi/gpu_retire_manager.h>
 #include <ugi/descriptor_set_allocator.h>
 #include <ugi/swapchain.h>
 #include <ugi/uniform_buffer_allocator.h>
@@ -60,6 +61,7 @@ namespace ugi {
         _device->cycleInvoker().tick();
         _descriptorSetAllocator->tick();
         _uniformAllocator->tick();
+        GPURetireManager::Instance()->onFrameTick();
         //
         auto cb = _graphicsQueue->createCommandBuffer(_device, CmdbufType::Transient);
         cb->beginEncode(); {

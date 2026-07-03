@@ -32,6 +32,7 @@
 // #include "gui/render/render_data.h"
 // #include "gui/render/ui_image_render.h"
 #include "gui.h"
+#include "gui/debug/debug_server.h"
 
 #include <glm/ext.hpp>
 
@@ -61,7 +62,8 @@ namespace ugi {
         return projMat * viewMat;
     }
 
-    bool HelloWorld::initialize( void* _wnd, comm::IArchive* arch) {
+    bool FGUIDemo::initialize( void* _wnd, comm::IArchive* arch) {
+        _arch = arch;
         auto pipelineFile = arch->openIStream("/shaders/fgui_image/pipeline.bin", {comm::ReadFlag::binary});
         PipelineHelper ppl = PipelineHelper::FromIStream(pipelineFile);
         pipelineFile->close();
@@ -87,24 +89,16 @@ namespace ugi {
         auto device = _renderContext->device();
         _render = gui::UIImageRender::Instance();
         _render->initialize(device, pipeline, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
-        gui::Package::archive_ = comm::CreateFSArchive(arch->rootPath() + "/test/bytes");
-        auto uipack = gui::Package::AddPackage("test");
-        uipack->loadAllAssets();
         //
-        auto stage = gui::Stage::Instance();
-        stage->initialize();
-        auto root = stage->defaultRoot();
-        gui::Object* uiobj = uipack->createObject("test");
-        root->addChild(uiobj);
-        uiobj->relations().add(root, gui::RelationType::Width);
-        uiobj->relations().add(root, gui::RelationType::Height);
-
+        // Start debug TCP server for widget tree inspection
+        gui::DebugServer::Instance().start();
+        //
         return true;
     }
 
     glm::mat4 vp;
 
-    void HelloWorld::tick() {
+    void FGUIDemo::tick() {
         if (!_renderContext->onPreTick()) return;
         _render->tick();
         //
@@ -148,33 +142,50 @@ namespace ugi {
         _renderContext->onPostTick();
     }
         
-    void HelloWorld::resize(uint32_t width, uint32_t height) {
+    void FGUIDemo::resize(uint32_t width, uint32_t height) {
         _renderContext->onResize(width, height);
         _width = width;
         _height = height;
 
-        auto stage = gui::Stage::Instance();
-        auto root = stage->defaultRoot();
-        root->setSize(gui::Size2D<float>(width, height));
+        gui::Size2D<float> wndSize(width, height);
+        
+        if(!stage_) {
+            gui::Package::archive_ = comm::CreateFSArchive(_arch->rootPath() + "/test/bytes");
+            auto uipack = gui::Package::AddPackage("test");
+            stage_ = gui::Stage::Instance();
+            stage_->initialize();
+            auto root = stage_->defaultRoot();
+            gui::Object* uiobj = uipack->createObject("test");
+            uipack->loadAllAssets();
+            uiobj->setSize(wndSize);
+            root->setSize(wndSize);
+            root->addChild(uiobj);
+            uiobj->relations().add(root, gui::RelationType::Width);
+            uiobj->relations().add(root, gui::RelationType::Height);
+        } else {
+            auto root = stage_->defaultRoot();
+            root->setSize(wndSize);
+        }
 
         vp = CreateVPMat(glm::vec2(width, height), 45.f);
         // vp = CreateVPMat2(glm::vec2(width, height));
     }
 
-    void HelloWorld::release() {
+    void FGUIDemo::release() {
+        gui::DebugServer::Instance().stop();
     }
 
-    const char * HelloWorld::title() {
+    const char * FGUIDemo::title() {
         return "ui api demo";
     }
         
-    uint32_t HelloWorld::rendererType() {
+    uint32_t FGUIDemo::rendererType() {
         return 0;
     }
 
 }
 
-ugi::HelloWorld theapp;
+ugi::FGUIDemo theapp;
 
 UGIApplication* GetApplication() {
     return &theapp;

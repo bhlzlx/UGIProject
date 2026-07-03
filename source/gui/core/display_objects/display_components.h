@@ -63,7 +63,7 @@ namespace gui {
 
         struct transform_dirty {}; // 变换更新
 
-        struct batch_node_dirty {}; // batch node 需要更新树结构了
+        struct batch_need_rebuild {}; // batch node 需要更新树结构了
 
         struct batch_dirty {}; // 需要重新构建 batch 信息
 

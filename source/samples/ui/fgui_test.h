@@ -8,23 +8,21 @@
 #include <gui/render/ui_image_render.h>
 
 #include <gui/core/package.h>
+#include <gui/core/ui/stage.h>
 
 namespace ugi {
 
-    class HelloWorld : public UGIApplication {
+    class FGUIDemo : public UGIApplication {
     private:
         void*                           _hwnd;                                             //
         StandardRenderContext*          _renderContext; //
+        comm::IArchive*                 _arch;
         gui::UIImageRender*             _render;
         // sample resources
-        ugi::Texture*                   _textures[2];
-        ugi::image_view_t               _imageViews[2];
-        ugi::sampler_state_t            _samplerState;                                     //
-        //
-        uint32_t                        _flightIndex;                                      // flight index
-        //
         float                           _width;
         float                           _height;
+
+        gui::Stage*                      stage_;
         //
         gui::ui_render_batches_t        _imageBatches;
     public:

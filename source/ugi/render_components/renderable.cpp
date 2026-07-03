@@ -4,6 +4,7 @@
 #include <command_buffer.h>
 #include <vulkan_function_declare.h>
 #include <ugi/render_components/pipeline_material.h>
+#include <ugi/gpu_retire_manager.h>
 
 namespace ugi {
     
@@ -42,6 +43,12 @@ namespace ugi {
         pipeline_->setRasterizationState(rasterState_);
         pipeline_->bind(encoder);
         // vkCmdDrawIndexed(*encoder->commandBuffer(), mesh_->indexCount(), 1, 0, )
+    }
+
+    void Renderable::release() {
+        GPURetireManager::Instance()->retire([this] {
+            delete this;
+        });
     }
 
     Renderable::~Renderable() {

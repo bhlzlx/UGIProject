@@ -5,7 +5,7 @@
 namespace ugi {
 
     /**
-     * @brief 
+     * @brief
      *  Mesh & Pipeline & Pipeline Material
      *
     */
@@ -25,6 +25,11 @@ namespace ugi {
         GraphicsPipeline const* pipeline() const;
         //
         void draw(RenderCommandEncoder* encoder);
+
+        /// <summary>
+        /// 延迟销毁——通过 GPURetireManager 等待 GPU 完成后真释放
+        /// </summary>
+        void release();
 
         ~Renderable();
     };

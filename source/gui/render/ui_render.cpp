@@ -20,7 +20,6 @@ namespace gui {
     }
 
     void DestroyRenderBatches(ui_render_batches_t const& batch) {
-        // 其实这里最好写成延迟销毁，以后再改
         switch(batch.type) {
             case gui::RenderItemType::Image: {
                 auto render = UIImageRender::Instance();

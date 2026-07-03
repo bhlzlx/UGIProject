@@ -44,7 +44,7 @@ namespace ugi {
         void tick();
     };
 
-    class HelloWorld : public UGIApplication {
+    class FGUIDemo : public UGIApplication {
     private:
         void*                           _hwnd;                                             //
         StandardRenderContext*          _renderContext; //

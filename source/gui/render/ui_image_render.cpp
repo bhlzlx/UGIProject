@@ -194,7 +194,7 @@ namespace gui {
 
     void UIImageRender::destroyRenderBatch(gui::ui_render_batches_t batches) {
         for(auto batch: batches.batches) {
-            delete batch->renderable;
+            batch->renderable->release();
             delete batch;
         }
         batches.batches.clear();

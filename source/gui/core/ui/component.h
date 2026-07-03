@@ -83,6 +83,8 @@ namespace gui {
         void asBatchNode(bool batch);
 
 
+        int numChildren() const { return (int)children_.size(); }
+
         Object* addChild(Object* child);
         Object* addChildAt(Object* child, uint32_t index);
         Object* getChildAt(int index) const;

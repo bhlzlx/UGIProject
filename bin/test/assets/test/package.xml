@@ -2,7 +2,8 @@
 <packageDescription id="beauv2sr">
   <resources>
     <component id="ocyx0" name="test.xml" path="/" exported="true"/>
-    <image id="wqox1" name="tomoya.jpg" path="/img/" scale9grid="160,160,320,320"/>
+    <image id="n4502" name="frame.png" path="/"/>
+    <image id="n4503" name="ushio.png" path="/"/>
   </resources>
   <publish name="test" path="./bytes" packageCount="2"/>
 </packageDescription>

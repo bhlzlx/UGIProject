@@ -138,33 +138,40 @@ namespace gui {
     };
 
     enum class RelationType {
+        // X 轴位置关系
         LeftLeft,
         LeftCenter,
         LeftRight,
         CenterCenter,
-        RightRight,
-        RightCenter,
         RightLeft,
+        RightCenter,
+        RightRight,
+
+        // Y 轴位置关系
+        TopTop,
+        TopMiddle,
+        TopBottom,
+        MiddleMiddle,
+        BottomTop,
+        BottomMiddle,
+        BottomBottom,
+
+        // 大小关系
         Width,
+        Height,
+
+        // X 轴扩展关系 (拉伸)
         LeftExtLeft,
         LeftExtRight,
         RightExtLeft,
         RightExtRight,
-        //
-        TopTop,
-        TopMiddle,
-        TopBotton,
-        MiddleMiddel,
-        BottomTop,
-        BottomMiddle,
-        BottomBottom,
-        //
-        Height,
-        //
+
+        // Y 轴扩展关系 (拉伸)
         TopExtTop,
         TopExtBottom,
         BottomExtTop,
         BottomExtBottom,
+
         Size,
     };
 

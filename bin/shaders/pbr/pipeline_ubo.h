@@ -14,7 +14,7 @@ using uint3 = struct { uint32_t x,y,z; };
 using uint4 = struct { uint32_t x,y,z,w; };
 
 // nested struct type
-struct MaterialData_39_41 {
+struct MaterialData_39_40 {
     float3           albedo;
     float            metallic;
     float            roughness;
@@ -24,7 +24,7 @@ struct MaterialData_39_41 {
 
 // nested struct type
 struct MaterialData_39 {
-    MaterialData_39_41 data[8];
+    MaterialData_39_40 data[8];
 };
 
 // "SceneData"  set=0 bind=0  size=80

@@ -63,7 +63,7 @@ namespace gui {
         //
         reg.emplace_or_replace<dispcomp::visible_dirty>(child);
         reg.emplace_or_replace<dispcomp::transform_dirty>(child);
-        reg.emplace_or_replace<dispcomp::batch_node_dirty>(child);
+        reg.emplace_or_replace<dispcomp::batch_need_rebuild>(child);
     }
 
     void DisplayObject::removeChild(DisplayObject child) {

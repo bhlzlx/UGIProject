@@ -89,7 +89,7 @@ namespace ugi {
         return renderable;
     }
 
-    bool HelloWorld::initialize( void* _wnd, comm::IArchive* arch) {
+    bool FGUIDemo::initialize( void* _wnd, comm::IArchive* arch) {
         auto pipelineFile = arch->openIStream("/shaders/triangle/pipeline.bin", {comm::ReadFlag::binary});
         PipelineHelper ppl = PipelineHelper::FromIStream(pipelineFile);
         pipelineFile->close();
@@ -160,7 +160,7 @@ namespace ugi {
         return true;
     }
 
-    void HelloWorld::tick() {
+    void FGUIDemo::tick() {
         _renderContext->onPreTick();
         _render->tick();
         Device* device = _renderContext->device();
@@ -217,26 +217,26 @@ namespace ugi {
         _renderContext->onPostTick();
     }
         
-    void HelloWorld::resize(uint32_t width, uint32_t height) {
+    void FGUIDemo::resize(uint32_t width, uint32_t height) {
         _renderContext->onResize(width, height);
         _width = width;
         _height = height;
     }
 
-    void HelloWorld::release() {
+    void FGUIDemo::release() {
     }
 
-    const char * HelloWorld::title() {
+    const char * FGUIDemo::title() {
         return "HelloWorld";
     }
         
-    uint32_t HelloWorld::rendererType() {
+    uint32_t FGUIDemo::rendererType() {
         return 0;
     }
 
 }
 
-ugi::HelloWorld theapp;
+ugi::FGUIDemo theapp;
 
 UGIApplication* GetApplication() {
     return &theapp;

@@ -83,7 +83,7 @@ namespace gui {
         if (usePercent
             || type == RelationType::LeftCenter || type == RelationType::CenterCenter
             || type == RelationType::RightCenter
-            || type == RelationType::TopMiddle || type == RelationType::MiddleMiddel
+            || type == RelationType::TopMiddle || type == RelationType::MiddleMiddle
             || type == RelationType::BottomMiddle) {
             owner_->setPixelSnapping(true);
         }
@@ -145,7 +145,7 @@ namespace gui {
                     owner_->setX(ox - (1.0f - (applyPivot ? owner_->pivot().x : 0)) * dWidth);
                     break;
 
-                case RelationType::MiddleMiddel:
+                case RelationType::MiddleMiddle:
                     owner_->setY(oy - (0.5f - (applyPivot ? owner_->pivot().y : 0)) * dHeight);
                     break;
 
@@ -180,8 +180,8 @@ namespace gui {
 
             case RelationType::TopTop:
             case RelationType::TopMiddle:
-            case RelationType::TopBotton:
-            case RelationType::MiddleMiddel:
+            case RelationType::TopBottom:
+            case RelationType::MiddleMiddle:
             case RelationType::BottomTop:
             case RelationType::BottomMiddle:
             case RelationType::BottomBottom:
@@ -337,13 +337,13 @@ namespace gui {
                 else
                     owner_->setY(owner_->y() + delta * (0.5f - pivot));
                 break;
-            case RelationType::TopBotton:
+            case RelationType::TopBottom:
                 if (info.isPercent)
                     owner_->setYMin(pos + (owner_->yMin() - pos) * delta);
                 else
                     owner_->setY(owner_->y() + delta * (1.0f - pivot));
                 break;
-            case RelationType::MiddleMiddel:
+            case RelationType::MiddleMiddle:
                 if (info.isPercent)
                     owner_->setYMin(pos + (owner_->yMin() + owner_->rawHeight() * 0.5f - pos) * delta
                                     - owner_->rawHeight() * 0.5f);

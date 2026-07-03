@@ -46,6 +46,8 @@ PRIVATE
     mesh/image_mesh.cpp
 
     gui.cpp
+    # debug
+    debug/debug_server.cpp
 )
 
 target_link_libraries(gui

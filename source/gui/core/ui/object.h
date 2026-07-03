@@ -178,7 +178,7 @@ protected:
         float scaleY() const { return scale_.y; }
         //
         void setPosition( glm::vec3 const& val);
-        void setSize(Size2D<float> const& size);
+        virtual void setSize(Size2D<float> const& size);
         void setPivot( glm::vec2 const& pivot, bool asAnchor = false);
         void setScale(float x, float y);
         void setSkew(float x, float y);
@@ -207,6 +207,10 @@ protected:
         void setTouchable(bool val) { touchable_ = val; }
 
         Component* parent() const { return parent_; }
+
+        ObjectType objectType() const { return type_; }
+        std::string const& id() const { return id_; }
+        std::string const& name() const { return name_; }
 
         Relations& relations() { return relations_; }
         Relations const& relations() const { return relations_; }

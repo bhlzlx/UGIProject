@@ -26,6 +26,12 @@ namespace gui {
         setSize(sourceSize_);
     }
 
+    void Image::setSize(Size2D<float> const& size) {
+        Object::setSize(size);
+        reg.emplace_or_replace<dispcomp::mesh_dirty>(dispobj_);
+        reg.emplace_or_replace<dispcomp::batch_dirty>(dispobj_);
+    }
+
     void Image::setupBeforeAdd(ByteBuffer& buffer, int startPos) {
         Object::setupBeforeAdd(buffer, startPos);
         buffer.seekToBlock(startPos, ObjectBlocks::FillInfo);

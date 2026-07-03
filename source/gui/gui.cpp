@@ -72,21 +72,21 @@ namespace gui {
     }
 
     void updateBatchNodes() {
-        // 先处理非batch_node节点，通知它的batch node
-        reg.view<dispcomp::batch_node_dirty, dispcomp::final_visible>(entt::exclude<dispcomp::batch_node>).each([=](entt::entity ett) {
+        // 先处理非batch_node节点，通知它的batch node要更新batch树结构
+        reg.view<dispcomp::batch_dirty, dispcomp::final_visible>(entt::exclude<dispcomp::batch_node>).each([=](entt::entity ett) {
             DisplayObject obj(ett);
             auto p = obj.parent();
             while(!isBatchNode(p)) {
                 p = p.parent();
             }
-            reg.remove<dispcomp::batch_node_dirty>(ett);
+            reg.remove<dispcomp::batch_dirty>(ett);
             if(!isBatchNode(p)) { // 它必须是一个batch_node
                 return;
             }
-            reg.emplace_or_replace<dispcomp::batch_node_dirty>(p);
+            reg.emplace_or_replace<dispcomp::batch_need_rebuild>(p);
         });
-        // 处理batch node
-        reg.view<dispcomp::batch_node, dispcomp::batch_node_dirty, dispcomp::final_visible>().each([=](entt::entity ett, dispcomp::batch_node& batchNode) {
+        // 处理batch node，更新batch树结构
+        reg.view<dispcomp::final_visible, dispcomp::batch_node, dispcomp::batch_dirty>().each([=](entt::entity ett, dispcomp::batch_node& batchNode) {
             batchNode.children.clear();
             batchNode.batchNodes.clear();
             travalBatchNode(ett, [&batchNode, parent_batch = ett](entt::entity ett) {
@@ -97,10 +97,11 @@ namespace gui {
                 reg.emplace_or_replace<dispcomp::parent_batch>(ett, parent_batch, -1); // 更新当前的parent batch
             });
             //
-            reg.remove<dispcomp::batch_node_dirty>(ett);
+            reg.remove<dispcomp::batch_dirty>(ett);
             // 树结构更新了，自然需要重新构建batch数据
-            reg.emplace_or_replace<dispcomp::batch_dirty>(ett);
+            reg.emplace_or_replace<dispcomp::batch_need_rebuild>(ett);
         });
+        // 现在所在需要重新构建batch数据的batch node都标记好了
     }
 
     struct material_batch_desc_t {
@@ -112,8 +113,8 @@ namespace gui {
         }
     };
 
-    void updateDirtyBatches() {
-        reg.view<dispcomp::final_visible, dispcomp::batch_dirty, dispcomp::batch_node>().each([](entt::entity ett, dispcomp::batch_node& batchNode) {
+    void rebuildBatches() {
+        reg.view<dispcomp::final_visible, dispcomp::batch_need_rebuild, dispcomp::batch_node>().each([](entt::entity ett, dispcomp::batch_node& batchNode) {
             material_batch_desc_t material;
             std::vector<ui_render_batches_t> batches;
             //
@@ -126,6 +127,7 @@ namespace gui {
                     case RenderItemType::None:
                     case RenderItemType::Image: {
                         auto batch = BuildImageRenderBatches(renderItems, args, material.texture);
+                        batch.batchNode = ett;
                         batches.push_back(batch);
                         break;
                     }
@@ -186,11 +188,11 @@ namespace gui {
                 }
             }
             if(batches.size()) {
-                dispcomp::batch_data& batch = reg.emplace_or_replace<dispcomp::batch_data>(ett);
-                batch.batches = std::move(batches);
+                dispcomp::batch_data& batchData = reg.emplace_or_replace<dispcomp::batch_data>(ett);
+                batchData.batches = std::move(batches);
             }
             // 重建了，就不是脏的了
-            reg.remove<dispcomp::batch_dirty>(ett);
+            reg.remove<dispcomp::batch_need_rebuild>(ett);
         });
     }
 
@@ -285,7 +287,7 @@ namespace gui {
         if(!batchData) {
             return;
         }
-        for(auto batch: batchData->batches) {
+        for(auto& batch: batchData->batches) {
             if(batch.type != RenderItemType::SubBatch) {
                 CommitRenderBatch(batch);
             } else {
@@ -305,9 +307,9 @@ namespace gui {
         updateVisible(); // 更新可见性
         updateTransfroms();
         updateImageMesh(); // 有必要就更新mesh
-        updateBatchNodes();
-        updateDirtyBatches(); // 更新batch节点的 batch 数据
-        commitRenderBatches(); // 按渲染顺序提交 batch 
+        updateBatchNodes(); // 更新batch树结构，为重建batch数据做准备，
+        rebuildBatches(); // 更新batch节点的 batch 数据
+        commitRenderBatches(); // 按渲染顺序提交 batch
     }
     
 }
