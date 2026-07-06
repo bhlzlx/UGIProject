@@ -23,7 +23,7 @@ namespace gui {
     };
     #pragma pack(pop)
 
-    struct image_desc_t {
+    struct texture_block_t {
         glm::vec2   size;
         glm::vec2   uv[2];
     };

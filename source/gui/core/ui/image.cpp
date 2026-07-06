@@ -14,11 +14,13 @@ namespace gui {
         contentItem->load();
         NTexture* tex = contentItem->texture_;
         auto const& uvRc = tex->uvRc();
-        auto& image_mesh = reg.get_or_emplace<dispcomp::image_mesh>(dispobj_);
-        image_mesh.desc.uv[0] = uvRc.base;
-        image_mesh.desc.uv[1] = { uvRc.right(), uvRc.bottom() };
-        image_mesh.grid9 = contentItem->scale9Grid_;
-        image_mesh.scaleByTile = contentItem->scaledByTile_;
+        auto& image_desc_t = reg.get_or_emplace<dispcomp::image_desc_t>(dispobj_);
+        image_desc_t.textureBlock.uv[0] = uvRc.base;
+        image_desc_t.textureBlock.uv[1] = { uvRc.right(), uvRc.bottom() };
+        image_desc_t.textureBlock.size.x = contentItem->width_;
+        image_desc_t.textureBlock.size.y = contentItem->height_;
+        image_desc_t.grid9 = contentItem->scale9Grid_;
+        image_desc_t.scaleByTile = contentItem->scaledByTile_;
         //
         auto &graphics = reg.get_or_emplace<NGraphics>(dispobj_);
         graphics.texture = contentItem->texture_->handle();
@@ -35,16 +37,16 @@ namespace gui {
     void Image::setupBeforeAdd(ByteBuffer& buffer, int startPos) {
         Object::setupBeforeAdd(buffer, startPos);
         buffer.seekToBlock(startPos, ObjectBlocks::FillInfo);
-        auto& image_mesh = reg.get_or_emplace<dispcomp::image_mesh>(dispobj_);
+        auto& image_desc_t = reg.get_or_emplace<dispcomp::image_desc_t>(dispobj_);
         if(buffer.read<bool>()) {
-            image_mesh.ext.color = buffer.read<uint32_t>();
+            image_desc_t.ext.color = buffer.read<uint32_t>();
         }
-        image_mesh.ext.flip = buffer.read<FlipType>();
-        image_mesh.ext.fill = buffer.read<FillMethod>();
-        if(image_mesh.ext.fill != FillMethod::None) {
-            image_mesh.ext.fillOrig = buffer.read<FillOrigin>();
-            image_mesh.ext.fillClockwise = buffer.read<bool>();
-            image_mesh.ext.fillAmount = buffer.read<float>();
+        image_desc_t.ext.flip = buffer.read<FlipType>();
+        image_desc_t.ext.fill = buffer.read<FillMethod>();
+        if(image_desc_t.ext.fill != FillMethod::None) {
+            image_desc_t.ext.fillOrig = buffer.read<FillOrigin>();
+            image_desc_t.ext.fillClockwise = buffer.read<bool>();
+            image_desc_t.ext.fillAmount = buffer.read<float>();
         }
     }
 
@@ -57,7 +59,7 @@ namespace gui {
     void Image::createDisplayObject() {
         Object::createDisplayObject();
         reg.emplace_or_replace<dispcomp::mesh_dirty>(dispobj_);
-        reg.emplace_or_replace<dispcomp::image_mesh>(dispobj_);
+        reg.emplace_or_replace<dispcomp::image_desc_t>(dispobj_);
     }
 
 }

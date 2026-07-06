@@ -81,7 +81,7 @@ namespace ugi {
         _renderContext = StandardRenderContext::Instance();
         _renderContext->initialize(_wnd, descriptor, arch);
         ppldesc.renderState.cullMode = cull_mode_t::None;
-        ppldesc.renderState.blendState.enable = false;
+        ppldesc.renderState.blendState.enable = true;
         auto pipeline = _renderContext->device()->createGraphicsPipeline(ppldesc);
         auto bufferAllocator = new MeshBufferAllocator();
         bufferAllocator->initialize(_renderContext->device(), 1024);
@@ -150,25 +150,32 @@ namespace ugi {
         gui::Size2D<float> wndSize(width, height);
         
         if(!stage_) {
+            // 配置 UIContentScaler
+            auto& scaler = *gui::UIContentScaler::Instance();
+            scaler.scaleMode = gui::UIContentScaler::ScaleMode::ScaleWithScreenSize;
+            scaler.screenMatchMode = gui::UIContentScaler::ScreenMatchMode::MatchWidthOrHeight;
+            scaler.designResolutionX = 800;
+            scaler.designResolutionY = 600;
+
             gui::Package::archive_ = comm::CreateFSArchive(_arch->rootPath() + "/test/bytes");
             auto uipack = gui::Package::AddPackage("test");
             stage_ = gui::Stage::Instance();
-            stage_->initialize();
+            stage_->initialize(scaler.designResolutionX, scaler.designResolutionY);
+
             auto root = stage_->defaultRoot();
             gui::Object* uiobj = uipack->createObject("test");
             uipack->loadAllAssets();
-            uiobj->setSize(wndSize);
-            root->setSize(wndSize);
             root->addChild(uiobj);
             uiobj->relations().add(root, gui::RelationType::Width);
             uiobj->relations().add(root, gui::RelationType::Height);
-        } else {
-            auto root = stage_->defaultRoot();
-            root->setSize(wndSize);
         }
 
+        stage_->setScreenSize(width, height);
         vp = CreateVPMat(glm::vec2(width, height), 45.f);
-        // vp = CreateVPMat2(glm::vec2(width, height));
+        //vp = CreateVPMat2(glm::vec2(width, height));
+        // float logicalW = stage_->screenWidth() / gui::UIContentScaler::Instance()->scaleFactor;
+        // float logicalH = stage_->screenHeight() / gui::UIContentScaler::Instance()->scaleFactor;
+        // vp = CreateVPMat(glm::vec2(logicalW, logicalH), 45.f);
     }
 
     void FGUIDemo::release() {

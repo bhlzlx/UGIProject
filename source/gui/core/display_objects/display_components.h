@@ -6,7 +6,7 @@
 // #include "display_object.h"
 #include "render/render_data.h"
 #include <vector>
-
+#include <memory>
 #include <entt/src/entt/entt.hpp>
 
 namespace gui {
@@ -48,11 +48,12 @@ namespace gui {
             bool                fillClockwise;
         };
 
-        struct image_mesh {
-            image_desc_t desc;
-            Rect<float>* grid9;
-            bool         scaleByTile;
-            image_ext    ext;
+        struct image_desc_t {
+            texture_block_t     textureBlock;
+            // std::unique_ptr<Rect<float>> grid9;
+            Rect<float> const*  grid9;
+            bool                scaleByTile;
+            image_ext           ext;
         };
 
         struct font_mesh {};
@@ -80,7 +81,7 @@ namespace gui {
         };
 
         // 因为基础变换基本所有的控件都会有，所以组合成一起了
-        struct basic_transfrom {
+        struct basic_transform {
             glm::vec2 position;
             glm::vec2 size;
             glm::vec2 pivot;

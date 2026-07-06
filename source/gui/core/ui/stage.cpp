@@ -6,21 +6,22 @@
 
 namespace gui {
 
-    void Stage::initialize() {
+    void Stage::initialize(float width, float height) {
         ui2dRoot_ = (Root*)ObjectFactory::CreateObject(ObjectType::Root);
+        ui2dRoot_->setSize(gui::Size2D<float>(width, height));
     }
 
     void Stage::setScreenSize(uint32_t width, uint32_t height) {
         screenWidth_ = (float)width;
         screenHeight_ = (float)height;
-        contentScaler_.applyChange(screenWidth_, screenHeight_);
+        UIContentScaler::Instance()->applyChange(screenWidth_, screenHeight_);
         applyContentScaleFactor();
     }
 
     void Stage::applyContentScaleFactor() {
         if (!ui2dRoot_) return;
 
-        float sf = contentScaler_.scaleFactor;
+        float sf = UIContentScaler::Instance()->scaleFactor;
         // root 的逻辑尺寸 = 屏幕尺寸 / scaleFactor
         // root 的渲染缩放 = scaleFactor
         // 这样所有子节点在设计像素坐标系下工作

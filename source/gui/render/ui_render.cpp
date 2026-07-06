@@ -5,11 +5,6 @@
 
 namespace gui {
 
-    image_item_t* CreateImageItem(dispcomp::image_mesh const& mesh) {
-        auto render = UIImageRender::Instance();
-        return render->createImageItem(mesh.desc);
-    }
-
     ui_render_batches_t BuildImageRenderBatches(std::vector<void*> const& items, std::vector<ui_inst_data_t*> const& args, ugi::Texture* texture) {
         auto render = UIImageRender::Instance();
         std::vector<image_render_data_t> datas;

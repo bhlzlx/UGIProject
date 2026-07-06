@@ -96,19 +96,19 @@ namespace gui {
     }
 
     void DisplayObject::setPosition(glm::vec2 const& pos) {
-        auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
+        auto& trans = reg.get_or_emplace<dispcomp::basic_transform>(entity_);
         trans.position = pos;
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
 
     void DisplayObject::setSize(glm::vec2 const& val) {
-        auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
+        auto& trans = reg.get_or_emplace<dispcomp::basic_transform>(entity_);
         trans.size = val;
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
 
     void DisplayObject::setPivot(glm::vec2 const& val) {
-        auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
+        auto& trans = reg.get_or_emplace<dispcomp::basic_transform>(entity_);
         trans.pivot = val;
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
     }
@@ -143,8 +143,8 @@ namespace gui {
         markBatchDirty(entity_);
     }
 
-    dispcomp::basic_transfrom& DisplayObject::getBasicTransfrom() const {
-        auto& trans = reg.get_or_emplace<dispcomp::basic_transfrom>(entity_);
+    dispcomp::basic_transform& DisplayObject::getBasicTransfrom() const {
+        auto& trans = reg.get_or_emplace<dispcomp::basic_transform>(entity_);
         return trans;
     }
 

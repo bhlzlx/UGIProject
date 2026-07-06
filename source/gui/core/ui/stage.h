@@ -12,27 +12,20 @@ namespace gui {
     private:
         Root*                   ui2dRoot_;
         std::set<Root*>         ui3dRoots_;
-        UIContentScaler         contentScaler_;
         float                   screenWidth_ = 0;
         float                   screenHeight_ = 0;
         //
         Stage()
             : ui2dRoot_(nullptr)
             , ui3dRoots_{}
-            , contentScaler_{}
         {
         }
     public:
-        void initialize();
+        void initialize(float width, float height);
 
         Root* defaultRoot() const {
             return ui2dRoot_;
         }
-
-        /// <summary>
-        /// 获取 UIContentScaler 的引用，用于配置缩放模式
-        /// </summary>
-        UIContentScaler& contentScaler() { return contentScaler_; }
 
         /// <summary>
         /// 设置屏幕/窗口尺寸，触发 scaleFactor 重算并应用到 UI

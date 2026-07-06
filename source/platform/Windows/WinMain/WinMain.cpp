@@ -123,7 +123,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     frameThicknessY = GetSystemMetrics(SM_CYSIZEFRAME);
 
     RECT wndRc = {
-        0, 0, 640, 480
+        0, 0, 1366, 720
     };
 
     AdjustWindowRect( &wndRc, WS_OVERLAPPEDWINDOW, TRUE);

@@ -31,7 +31,7 @@ namespace ugi {
         virtual void release();
         virtual void tick();
         virtual const char * title();
-        virtual uint32_t rendererType();
+        virtual uint32_t rendererType() ;
     };
 
 }

@@ -201,11 +201,11 @@ namespace gui {
     glm::mat4 buildLocalMatrix(entt::entity ett) {
         glm::mat4 mat(1.0f);
 
-        if (!reg.any_of<dispcomp::basic_transfrom>(ett)) {
+        if (!reg.any_of<dispcomp::basic_transform>(ett)) {
             return mat;
         }
 
-        auto& transform = reg.get<dispcomp::basic_transfrom>(ett);
+        auto& transform = reg.get<dispcomp::basic_transform>(ett);
 
         // 1. Pivot: 把 pivot 点移到原点
         mat = glm::translate(mat, glm::vec3(
@@ -276,10 +276,14 @@ namespace gui {
         auto stage = Stage::Instance();
         auto root = stage->defaultRoot();
         if (!root) return;
-        entt::entity rootEntity = root->getDisplayObject();
-        if (rootEntity == entt::null) return;
+        // entt::entity rootEntity = root->getDisplayObject();
+        // if (rootEntity == entt::null) return;
 
-        updateTransformRecursive(rootEntity, glm::mat4(1.0f));
+        reg.view<dispcomp::final_visible, dispcomp::transform_dirty>().each([](entt::entity ett) {
+            updateTransformRecursive(ett, glm::mat4(1.0f));
+            //reg.emplace_or_replace<dispcomp::batch_dirty>(ett);
+        });
+
     }
 
     void commitBatchNode(entt::entity ett) {

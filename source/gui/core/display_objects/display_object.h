@@ -65,7 +65,7 @@ namespace gui {
         void setScale(glm::vec2 val);
 
         dispcomp::parent_batch& getParentBatch() const;
-        dispcomp::basic_transfrom& getBasicTransfrom() const;
+        dispcomp::basic_transform& getBasicTransfrom() const;
 
         /**
          * @brief Set the Child Index object

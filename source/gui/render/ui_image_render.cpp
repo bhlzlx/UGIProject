@@ -120,7 +120,7 @@ namespace gui {
         return renderable;
     }
 
-    image_item_t* UIImageRender::createImageItem(image_desc_t const& desc) {
+    image_item_t* UIImageRender::createImageItem(texture_block_t const& desc) {
         std::vector<image_vertex_t> vertices = {
             {{0, 0, 0}, 0xffffffff, {desc.uv[0]}, 0},
             {{desc.size.x, 0, 0}, 0xffffffff,  {desc.uv[1].x, desc.uv[0].y},0},
@@ -135,7 +135,7 @@ namespace gui {
     }
 
     image_item_t* UIImageRender::createImageItem(image_9grid_desc_t const& desc) {
-        return createImageItem(image_desc_t{desc.size, {desc.uv[0], desc.uv[1]}});
+        return createImageItem(texture_block_t{desc.size, {desc.uv[0], desc.uv[1]}});
     }
 
     gui::ui_render_batches_t UIImageRender::buildImageRenderBatch(std::vector<image_render_data_t> const& renderDatas, ugi::Texture* texture) {

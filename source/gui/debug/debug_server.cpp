@@ -71,7 +71,7 @@ namespace gui {
     }
 
     static const char* componentIcon(std::string const& name) {
-        if (name == "basic_transfrom") return "📐";
+        if (name == "basic_transform") return "📐";
         if (name == "children")        return "👶";
         if (name == "parent")          return "👆";
         if (name == "parent_batch")    return "📦";
@@ -85,7 +85,7 @@ namespace gui {
         if (name == "scale")           return "📏";
         if (name == "rotation")        return "🔄";
         if (name == "owner")           return "🔗";
-        if (name == "image_mesh")      return "🖼";
+        if (name == "image_desc_t")      return "🖼";
         if (name == "image_ext")       return "🎭";
         return "🔹";
     }
@@ -279,10 +279,10 @@ const TYPE_ICON = {
     Group:'📁', Graph:'📈', Loader:'⏳', Loader3D:'🧊', Tree:'🌲'
 };
 const COMP_NAMES = {
-    'basic_transfrom':'tf','children':'ch','parent':'pa','parent_batch':'pb',
+    'basic_transform':'tf','children':'ch','parent':'pa','parent_batch':'pb',
     'batch_node':'bn','batch_data':'bd','graphics':'gfx','visible':'vis',
     'final_visible':'fv','is_root':'root','skew':'sk','scale':'sc',
-    'rotation':'rot','owner':'own','image_mesh':'mesh','image_ext':'ext',
+    'rotation':'rot','owner':'own','image_desc_t':'mesh','image_ext':'ext',
     'transform_dirty':'Δtf','batch_node_dirty':'Δbn','batch_dirty':'Δbd',
     'visible_dirty':'Δvis','mesh_dirty':'Δmesh','font_mesh':'fnt'
 };
@@ -961,12 +961,12 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
         if (reg.any_of<dispcomp::batch_node>(entity))      comps.push_back("batch_node");
         if (reg.any_of<dispcomp::batch_data>(entity))      comps.push_back("batch_data");
         if (reg.any_of<dispcomp::graphics>(entity))        comps.push_back("graphics");
-        if (reg.any_of<dispcomp::basic_transfrom>(entity)) comps.push_back("basic_transfrom");
+        if (reg.any_of<dispcomp::basic_transform>(entity)) comps.push_back("basic_transform");
         if (reg.any_of<dispcomp::skew>(entity))            comps.push_back("skew");
         if (reg.any_of<dispcomp::scale>(entity))           comps.push_back("scale");
         if (reg.any_of<dispcomp::rotation>(entity))        comps.push_back("rotation");
         if (reg.any_of<dispcomp::owner>(entity))           comps.push_back("owner");
-        if (reg.any_of<dispcomp::image_mesh>(entity))      comps.push_back("image_mesh");
+        if (reg.any_of<dispcomp::image_desc_t>(entity))      comps.push_back("image_desc_t");
         if (reg.any_of<dispcomp::image_ext>(entity))       comps.push_back("image_ext");
         if (reg.any_of<dispcomp::font_mesh>(entity))       comps.push_back("font_mesh");
         if (reg.any_of<dispcomp::transform_dirty>(entity)) comps.push_back("transform_dirty");
@@ -983,9 +983,9 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
         }
         ss << "]";
 
-        // ---- basic_transfrom ----
-        if (reg.any_of<dispcomp::basic_transfrom>(entity)) {
-            auto& tf = reg.get<dispcomp::basic_transfrom>(entity);
+        // ---- basic_transform ----
+        if (reg.any_of<dispcomp::basic_transform>(entity)) {
+            auto& tf = reg.get<dispcomp::basic_transform>(entity);
             ss << ",\"position\":{\"x\":" << tf.position.x << ",\"y\":" << tf.position.y << "}";
             ss << ",\"size\":{\"width\":" << tf.size.x << ",\"height\":" << tf.size.y << "}";
             ss << ",\"pivot\":{\"x\":" << tf.pivot.x << ",\"y\":" << tf.pivot.y << "}";
