@@ -22,7 +22,7 @@ namespace gui {
         image_desc_t.grid9 = contentItem->scale9Grid_;
         image_desc_t.scaleByTile = contentItem->scaledByTile_;
         //
-        auto &graphics = reg.get_or_emplace<NGraphics>(dispobj_);
+        auto &graphics = reg.get_or_emplace<item_resource_t>(dispobj_);
         graphics.texture = contentItem->texture_->handle();
         //
         setSize(sourceSize_);

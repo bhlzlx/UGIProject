@@ -24,6 +24,6 @@ namespace gui {
 
     DisplayObject getParent(entt::entity ett);
 
-    NGraphics* getGraphics(entt::entity ett);
+    item_resource_t* getRenderResource(entt::entity ett);
 
 }

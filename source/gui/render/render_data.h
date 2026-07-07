@@ -44,7 +44,7 @@ namespace gui {
     };
 
     // shader uniform buffer desc
-    struct ui_inst_data_t {
+    struct item_args_t {
         glm::mat4   transfrom;
         glm::vec4   color;// rgb, alpha
         glm::vec4   props; // gray, hdr
@@ -58,7 +58,8 @@ namespace gui {
 
     struct image_render_data_t {
         image_item_t const*         item;
-        ui_inst_data_t const*       args;
+        item_args_t const*       args;
+        entt::entity                entity;     // 所属 ECS entity，draw 时查 registry 读 args
     };
 
     struct ui_render_batch_t {
@@ -66,7 +67,7 @@ namespace gui {
         ugi::res_descriptor_t           argsDetor;
         ugi::res_descriptor_t           samplerDetor;
         ugi::res_descriptor_t           textureDetor;
-        std::vector<ui_inst_data_t>     args;
+        std::vector<entt::entity>       argEntities;  // args 所属 entity，draw 时从 registry 读
         ugi::sampler_state_t            sampler;
         Handle                          texture; // 是 raw texture，原生的，不是NTexture
     };
@@ -88,14 +89,14 @@ namespace gui {
     struct font_render_data_t {
     };
 
-    struct opaque_render_item_t {
+    struct opaque_item_mesh_t {
         RenderItemType  type;
         void*           item;
     };
 
-    struct NGraphics { // 它其实是一个控件持有的渲染数据
-        opaque_render_item_t    renderItem;     // mesh data
-        ui_inst_data_t          args;           // 一个控件的参数，矩阵，透明度，灰度等
+    struct item_resource_t { // 它其实是一个控件持有的渲染数据
+        opaque_item_mesh_t      meshData;       // mesh data
+        item_args_t             args;           // 一个控件的参数，矩阵，透明度，灰度等
         Handle                  texture;        // texture
     };
 

@@ -133,6 +133,9 @@ namespace gui {
         reg.emplace_or_replace<dispcomp::visible>(dispobj_);
         reg.emplace_or_replace<dispcomp::visible_dirty>(dispobj_);
         reg.emplace_or_replace<dispcomp::transform_dirty>(dispobj_);
+        // 初始化渲染参数默认值
+        auto& gfx = reg.get_or_emplace<item_resource_t>(dispobj_);
+        gfx.args.color = glm::vec4(1.f, 1.f, 1.f, alpha_);
     }
 
     void Object::setVisible(bool val) {
@@ -250,11 +253,16 @@ namespace gui {
 
     void Object::setAlpha(float val) {
         alpha_ = val;
-        // dispobj_.
+        if (dispobj_ && reg.any_of<item_resource_t>(dispobj_)) {
+            reg.get<item_resource_t>(dispobj_).args.color.a = val;
+        }
     }
 
     void Object::setGrayed(bool val) {
         grayed_ = val;
+        if (dispobj_ && reg.any_of<item_resource_t>(dispobj_)) {
+            reg.get<item_resource_t>(dispobj_).args.props.x = val ? 1.0f : 0.0f;
+        }
     }
 
     bool Object::grayed() const {

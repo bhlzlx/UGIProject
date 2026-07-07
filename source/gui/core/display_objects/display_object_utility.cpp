@@ -54,9 +54,9 @@ namespace gui {
         }
     }
 
-    NGraphics* getGraphics(entt::entity ett) {
-        if(reg.any_of<NGraphics>(ett)) {
-            return &reg.get<NGraphics>(ett);
+    item_resource_t* getRenderResource(entt::entity ett) {
+        if(reg.any_of<item_resource_t>(ett)) {
+            return &reg.get<item_resource_t>(ett);
         }
         return nullptr;
     }

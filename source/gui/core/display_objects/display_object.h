@@ -64,8 +64,10 @@ namespace gui {
         void setSkew(glm::vec2 val);
         void setScale(glm::vec2 val);
 
-        dispcomp::parent_batch& getParentBatch() const;
+        dispcomp::item_batch_info& getParentBatch() const;
         dispcomp::basic_transform& getBasicTransfrom() const;
+
+        bool isBatchNode() const;
 
         /**
          * @brief Set the Child Index object

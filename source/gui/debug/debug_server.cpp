@@ -957,10 +957,10 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
         if (reg.any_of<dispcomp::final_visible>(entity))   comps.push_back("final_visible");
         if (reg.any_of<dispcomp::children>(entity))        comps.push_back("children");
         if (reg.any_of<dispcomp::parent>(entity))          comps.push_back("parent");
-        if (reg.any_of<dispcomp::parent_batch>(entity))    comps.push_back("parent_batch");
+        if (reg.any_of<dispcomp::item_batch_info>(entity))    comps.push_back("parent_batch");
         if (reg.any_of<dispcomp::batch_node>(entity))      comps.push_back("batch_node");
         if (reg.any_of<dispcomp::batch_data>(entity))      comps.push_back("batch_data");
-        if (reg.any_of<dispcomp::graphics>(entity))        comps.push_back("graphics");
+        if (reg.any_of<item_resource_t>(entity))        comps.push_back("graphics");
         if (reg.any_of<dispcomp::basic_transform>(entity)) comps.push_back("basic_transform");
         if (reg.any_of<dispcomp::skew>(entity))            comps.push_back("skew");
         if (reg.any_of<dispcomp::scale>(entity))           comps.push_back("scale");
@@ -1005,25 +1005,25 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
         }
 
         // ---- parent_batch ----
-        if (reg.any_of<dispcomp::parent_batch>(entity)) {
-            auto& pb = reg.get<dispcomp::parent_batch>(entity);
-            ss << ",\"parentBatch\":\"" << entityIdStr(pb.val) << "\"";
+        if (reg.any_of<dispcomp::item_batch_info>(entity)) {
+            auto& pb = reg.get<dispcomp::item_batch_info>(entity);
+            ss << ",\"parentBatch\":\"" << entityIdStr(pb.batchEntity) << "\"";
             ss << ",\"instIndex\":" << pb.instIndex;
         }
 
         // ---- graphics ----
-        if (reg.any_of<dispcomp::graphics>(entity)) {
-            auto& gfx = reg.get<dispcomp::graphics>(entity);
+        if (reg.any_of<item_resource_t>(entity)) {
+            auto& gfx = reg.get<item_resource_t>(entity);
             ss << ",\"hasGraphics\":true";
             const char* rtype = "None";
-            switch (gfx.graphics.renderItem.type) {
+            switch (gfx.meshData.type) {
             case RenderItemType::Image: rtype = "Image"; break;
             case RenderItemType::Font:  rtype = "Font";  break;
             case RenderItemType::None:  rtype = "None";  break;
             default: rtype = "?"; break;
             }
             ss << ",\"renderType\":\"" << rtype << "\"";
-            ss << ",\"hasTexture\":" << (gfx.graphics.texture ? "true" : "false");
+            ss << ",\"hasTexture\":" << (gfx.texture ? "true" : "false");
         } else {
             ss << ",\"hasGraphics\":false";
         }

@@ -77,8 +77,14 @@ namespace gui {
             return;
         }
         for(auto batch: batches.batches) {
-            auto ubo = _uniformAllocator->allocate(batch->args.size()*sizeof(ui_inst_data_t));
-            memcpy(ubo.ptr, batch->args.data(), ubo.size);
+            auto ubo = _uniformAllocator->allocate(batch->argEntities.size() * sizeof(item_args_t));
+            auto* dst = (item_args_t*)ubo.ptr;
+            for (size_t i = 0; i < batch->argEntities.size(); ++i) {
+                auto ett = batch->argEntities[i];
+                if (reg.any_of<item_resource_t>(ett)) {
+                    dst[i] = reg.get<item_resource_t>(ett).args;
+                }
+            }
             batch->argsDetor.res.buffer.buffer = ubo.buffer;
             batch->argsDetor.res.buffer.offset = ubo.offset;
             batch->argsDetor.res.buffer.size = ubo.size;
@@ -115,6 +121,9 @@ namespace gui {
             ugi::polygon_mode_t::Fill,
             [](void*, ugi::CommandBuffer* cb){}
         );
+        if (!mesh) {
+            return nullptr;
+        }
         auto material = _pipeline->createMaterial({"args", "image_sampler", "image_tex"}, {});
         auto renderable = new ugi::Renderable(mesh, material, _pipeline, ugi::raster_state_t());
         return renderable;
@@ -141,26 +150,24 @@ namespace gui {
     gui::ui_render_batches_t UIImageRender::buildImageRenderBatch(std::vector<image_render_data_t> const& renderDatas, ugi::Texture* texture) {
         std::vector<image_vertex_t> vertices;
         std::vector<uint16_t> indices;
-        std::vector<ui_inst_data_t> args;
+        std::vector<entt::entity> argEntities;
         ui_render_batches_t batches;
-        // orgnize the batch data
-        int counter = 0;
-        for(auto renderData : renderDatas) {
+
+        for(auto const& renderData : renderDatas) {
             auto indicesPos = indices.size();
             auto indexBase = vertices.size();
             vertices.insert(vertices.end(), renderData.item->vertices.begin(), renderData.item->vertices.end());
             indices.insert(indices.end(), renderData.item->indices.begin(), renderData.item->indices.end());
-            // update index
             for(auto i = indicesPos; i < indices.size(); ++i) {
                 indices[i] += indexBase;
             }
-            // update vertex inst index
             for(auto i = indexBase; i < vertices.size(); ++i) {
-                vertices[i].instIndex = args.size();
+                vertices[i].instIndex = (uint32_t)argEntities.size();
             }
-            args.push_back(*renderData.args);
-            if(args.size() >= 512) {
+            argEntities.push_back(renderData.entity);
+            if(argEntities.size() >= 512) {
                 auto renderable = createRenderable((const uint8_t*)vertices.data(), vertices.size() * sizeof(image_vertex_t), indices.data(), indices.size());
+                if (!renderable) { argEntities.clear(); indices.clear(); vertices.clear(); continue; }
                 auto ubo = renderable->material()->descriptors()[0];
                 auto sampler = renderable->material()->descriptors()[1];
                 auto tex = renderable->material()->descriptors()[2];
@@ -168,16 +175,16 @@ namespace gui {
                 sampler.res.samplerState = ugi::sampler_state_t();
                 renderable->material()->updateDescriptor(tex);
                 renderable->material()->updateDescriptor(sampler);
-                ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(args), ugi::sampler_state_t{}, texture};
+                ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(argEntities), ugi::sampler_state_t{}, texture};
                 batches.batches.push_back(batch);
-                //
-                args.clear();
+                argEntities.clear();
                 indices.clear();
                 vertices.clear();
             }
         }
-        if(args.size()) {
+        if(argEntities.size()) {
             auto renderable = createRenderable((const uint8_t*)vertices.data(), vertices.size() * sizeof(image_vertex_t), indices.data(), indices.size());
+            if (!renderable) return batches;
             auto ubo = renderable->material()->descriptors()[0];
             auto sampler = renderable->material()->descriptors()[1];
             auto tex = renderable->material()->descriptors()[2];
@@ -185,7 +192,7 @@ namespace gui {
             sampler.res.samplerState = ugi::sampler_state_t();
             renderable->material()->updateDescriptor(tex);
             renderable->material()->updateDescriptor(sampler);
-            ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(args), ugi::sampler_state_t{}, texture};
+            ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(argEntities), ugi::sampler_state_t{}, texture};
             batches.batches.push_back(batch);
         }
         batches.type = RenderItemType::Image;

@@ -15,28 +15,51 @@ namespace gui {
 
     namespace dispcomp {
 
+        // component 有这个组件
         struct children {
             std::vector<entt::entity> val;
         };
 
+        // 除root以外所有控件都有这个组件
         struct parent {
             entt::entity val;
         };
 
-        struct parent_batch {
-            entt::entity    val; // 父batch
-            int             instIndex; // 此元件的inst数据索引
-        };
-
+        // batch节点有这个组件（batch节点是一种特殊的节点，子级的mesh合批的数据存到它这里）
+        // 真正显示用来简化遍历的数据结构
         struct batch_node {
-            std::vector<entt::entity> children;
-            std::vector<entt::entity> batchNodes;
+            std::vector<entt::entity> children;         // 按显示顺序排列的子节点，遇batch_node就停止向下遍历，只存子batch_node本身
+            std::vector<entt::entity> batchNodes;       // 子batch_node节点
         };
 
+        // batch节点有这个组件
         struct batch_data {
             std::vector<ui_render_batches_t> batches;
         };
 
+        // batch节点需要更新构建mesh了（原因有很多，比如子级重排，mesh更新）
+        struct batch_need_rebuild {}; 
+
+        // 一般是item的mesh需要重新构建
+        struct batch_dirty {}; 
+
+        // 普通可显示的item有这个组件
+        struct item_batch_info {
+            entt::entity    batchEntity;    // 所属batch节点
+            int             batchIdx;       // 第几个 ui_render_batch_t (512个inst切一次)
+            int             instIndex;      // batch 内 args 的第几个位置
+        };
+
+        // root 节点有这个组件
+        struct is_root {};
+
+        // 所属object的引用，用来获取object指针
+        struct owner {
+            Handle val;
+        };
+
+        // 普通可显示的item有这个组件
+        // image/font/shape 都有这个组件
         struct mesh_dirty {};
 
         struct image_ext {
@@ -50,35 +73,16 @@ namespace gui {
 
         struct image_desc_t {
             texture_block_t     textureBlock;
-            // std::unique_ptr<Rect<float>> grid9;
             Rect<float> const*  grid9;
             bool                scaleByTile;
             image_ext           ext;
         };
 
-        struct font_mesh {};
-
-        struct polygon_mesh {};
-
-        struct is_root {};
-
         struct transform_dirty {}; // 变换更新
-
-        struct batch_need_rebuild {}; // batch node 需要更新树结构了
-
-        struct batch_dirty {}; // 需要重新构建 batch 信息
-
-        struct owner {
-            Handle val;
-        };
 
         struct visible {}; // 控件本身的可见性
         struct final_visible {}; // 最终提交相关的可见性
         struct visible_dirty {}; // 可见性是不是需要重计算
-
-        struct graphics {
-            NGraphics graphics;
-        };
 
         // 因为基础变换基本所有的控件都会有，所以组合成一起了
         struct basic_transform {
@@ -99,6 +103,11 @@ namespace gui {
         struct rotation {
             float val;
         };
+
+        struct font_mesh {};
+
+        struct polygon_mesh {};
+
 
     }
 }

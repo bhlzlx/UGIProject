@@ -5,11 +5,11 @@
 
 namespace gui {
 
-    ui_render_batches_t BuildImageRenderBatches(std::vector<void*> const& items, std::vector<ui_inst_data_t*> const& args, ugi::Texture* texture) {
+    ui_render_batches_t BuildImageRenderBatches(std::vector<void*> const& items, std::vector<item_args_t*> const& args, std::vector<entt::entity> const& entities, ugi::Texture* texture) {
         auto render = UIImageRender::Instance();
         std::vector<image_render_data_t> datas;
         for(size_t i = 0; i<items.size(); ++i) {
-            datas.push_back({(image_item_t*)items[i], args[i]});
+            datas.push_back({(image_item_t*)items[i], args[i], entities[i]});
         }
         return render->buildImageRenderBatch(datas, texture);
     }

@@ -186,16 +186,19 @@ protected:
         void setGrayed(bool val);
         void setVisible(bool);
 
-        void setScaleX(float val) { scale_.x = val; }
-        void setScaleY(float val) { scale_.y = val; }
+        void setScaleX(float val) { setScale(val, scale_.y); }
+        void setScaleY(float val) { setScale(scale_.x, val); }
 
         float skewX() const { return skew_.x; }
         float skewY() const { return skew_.y; }
-        void setSkewX(float val) { skew_.x = val; }
-        void setSkewY(float val) { skew_.y = val; }
+        void setSkewX(float val) { setSkew(val, skew_.y); }
+        void setSkewY(float val) { setSkew(skew_.x, val); }
 
         float rotation() const { return rotation_; }
-        void setRotation(float val) { rotation_ = val; }
+        void setRotation(float val) {
+            rotation_ = val;
+            if (dispobj_) dispobj_.setRotation(val);
+        }
 
         float alpha() const { return alpha_; }
 

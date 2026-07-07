@@ -153,14 +153,14 @@ image_item_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
 void updateImageMesh()
 {
     reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::image_desc_t>().each([](auto ett, dispcomp::image_desc_t& imageDesc) {
-        NGraphics* graphics = &reg.get_or_emplace<NGraphics>(ett);
-        graphics->renderItem.type = RenderItemType::Image;
-        if (graphics->renderItem.item) {
-            delete (image_item_t*)graphics->renderItem.item;
+        item_resource_t* graphics = &reg.get_or_emplace<item_resource_t>(ett);
+        graphics->meshData.type = RenderItemType::Image;
+        if (graphics->meshData.item) {
+            delete (image_item_t*)graphics->meshData.item;
         }
         auto& trans = reg.get<dispcomp::basic_transform>(ett);
         auto* item = new image_item_t(std::move(createImageMesh(imageDesc, trans)));
-        graphics->renderItem.item = item;
+        graphics->meshData.item = item;
         reg.remove<dispcomp::mesh_dirty>(ett);
     });
 }

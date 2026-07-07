@@ -37,9 +37,6 @@ namespace gui {
     }
 
     void updateVisible() {
-        auto stage = Stage::Instance();
-        auto root = stage->defaultRoot();
-        //
         reg.view<dispcomp::visible_dirty>().each([](auto ett) {
             bool isRoot = false;
             isRoot = reg.any_of<dispcomp::is_root>(ett);
@@ -54,6 +51,14 @@ namespace gui {
                 }
             }
             reg.remove<dispcomp::visible_dirty>(ett);
+        });
+    }
+
+    void updateBatchNodeTree() {
+        reg.view<dispcomp::final_visible, dispcomp::batch_dirty>().each([](auto ett) {
+            DisplayObject obj(ett);
+            auto parent = obj.parent();
+            parent.
         });
     }
 
@@ -94,7 +99,7 @@ namespace gui {
                 if(isBatchNode(ett)) {
                     batchNode.batchNodes.push_back(ett);
                 }
-                reg.emplace_or_replace<dispcomp::parent_batch>(ett, parent_batch, -1); // 更新当前的parent batch
+                reg.emplace_or_replace<dispcomp::item_batch_info>(ett, parent_batch, -1); // 更新当前的parent batch
             });
             //
             reg.remove<dispcomp::batch_dirty>(ett);
@@ -119,14 +124,15 @@ namespace gui {
             std::vector<ui_render_batches_t> batches;
             //
             std::vector<void*> renderItems;
-            std::vector<ui_inst_data_t*> args;
+            std::vector<item_args_t*> args;
+            std::vector<entt::entity> entities;
 
             auto breakBatchFn = [&]() {
                 if(renderItems.size()) {
                     switch (material.renderType) {
                     case RenderItemType::None:
                     case RenderItemType::Image: {
-                        auto batch = BuildImageRenderBatches(renderItems, args, material.texture);
+                        auto batch = BuildImageRenderBatches(renderItems, args, entities, material.texture);
                         batch.batchNode = ett;
                         batches.push_back(batch);
                         break;
@@ -139,6 +145,7 @@ namespace gui {
                 }
                 renderItems.clear();
                 args.clear();
+                entities.clear();
             };
 
             for(auto child: batchNode.children) {
@@ -148,7 +155,7 @@ namespace gui {
                 DisplayObject obj(child);
                 auto& parentBatch = obj.getParentBatch(); // 一定存在
                 if(!isBatchNode(child)) {
-                    auto graphics = getGraphics(child);
+                    auto graphics = getRenderResource(child);
                     if(!graphics) { // 没有渲染内容，跳过，像普通的component
                         continue;
                     }
@@ -160,14 +167,16 @@ namespace gui {
                     if(!tex) {
                         tex = Package::EmptyTexture();
                     }
-                    if(!material.compatible(graphics->renderItem.type, tex) && renderItems.size()) {
+                    if(!material.compatible(graphics->meshData.type, tex) && renderItems.size()) {
                         breakBatchFn();
                     }
-                    material.renderType = graphics->renderItem.type;
+                    material.renderType = graphics->meshData.type;
                     material.texture = tex;
-                    renderItems.push_back((void*)graphics->renderItem.item);
+                    renderItems.push_back((void*)graphics->meshData.item);
                     args.push_back(&graphics->args);
-                    parentBatch.instIndex = args.size() - 1; // 更新索引
+                    entities.push_back(child);
+                    parentBatch.instIndex = (int)args.size() - 1; // 更新索引
+                    parentBatch.batchIdx  = (int)batches.size();  // 当前所在 sub-batch
                 } else {
                     breakBatchFn(); // 遇到batch_root也强行中断
                     material.renderType = RenderItemType::None;
@@ -196,27 +205,24 @@ namespace gui {
         });
     }
 
-    // 构建单个 entity 的局部变换矩阵
-    // M = T(pos) * R(rot) * Skew(skew) * S(scale) * T(-pivot * size)
+    // M = T(pos) * R(rot) * Skew(skew) * S(scale) * P(-pivot*size)
+    // glm::translate/rotate/scale 都是左乘: glm::foo(M, x) = M * Foo(x)
+    // 所以从最后一步开始构建，确保顶点先做 Pivot → Scale → Skew → Rotate → Translate
     glm::mat4 buildLocalMatrix(entt::entity ett) {
-        glm::mat4 mat(1.0f);
-
         if (!reg.any_of<dispcomp::basic_transform>(ett)) {
-            return mat;
+            return glm::mat4(1.0f);
         }
 
         auto& transform = reg.get<dispcomp::basic_transform>(ett);
 
-        // 1. Pivot: 把 pivot 点移到原点
-        mat = glm::translate(mat, glm::vec3(
-            -transform.pivot.x * transform.size.x,
-            -transform.pivot.y * transform.size.y,
-            0.0f));
+        // 1. Translation (最外层: 最后作用于顶点)
+        glm::mat4 mat = glm::translate(glm::mat4(1.0f),
+            glm::vec3(transform.position.x, transform.position.y, 0.0f));
 
-        // 2. Scale
-        if (reg.any_of<dispcomp::scale>(ett)) {
-            auto& sc = reg.get<dispcomp::scale>(ett);
-            mat = glm::scale(mat, glm::vec3(sc.val.x, sc.val.y, 1.0f));
+        // 2. Rotation 绕 Z 轴
+        if (reg.any_of<dispcomp::rotation>(ett)) {
+            auto& rot = reg.get<dispcomp::rotation>(ett);
+            mat = glm::rotate(mat, rot.val, glm::vec3(0.0f, 0.0f, 1.0f));
         }
 
         // 3. Skew
@@ -230,14 +236,17 @@ namespace gui {
             }
         }
 
-        // 4. Rotation 绕 Z 轴
-        if (reg.any_of<dispcomp::rotation>(ett)) {
-            auto& rot = reg.get<dispcomp::rotation>(ett);
-            mat = glm::rotate(mat, rot.val, glm::vec3(0.0f, 0.0f, 1.0f));
+        // 4. Scale
+        if (reg.any_of<dispcomp::scale>(ett)) {
+            auto& sc = reg.get<dispcomp::scale>(ett);
+            mat = glm::scale(mat, glm::vec3(sc.val.x, sc.val.y, 1.0f));
         }
 
-        // 5. Translation
-        mat = glm::translate(mat, glm::vec3(transform.position.x, transform.position.y, 0.0f));
+        // 5. Pivot (最内层: 最先作用于顶点)
+        mat = glm::translate(mat, glm::vec3(
+            -transform.pivot.x * transform.size.x,
+            -transform.pivot.y * transform.size.y,
+            0.0f));
 
         return mat;
     }
@@ -255,10 +264,9 @@ namespace gui {
         glm::mat4 worldMat = parentWorld * localMat;
 
         // 如果此 entity 有渲染内容，写入世界矩阵
-        if (reg.any_of<NGraphics>(ett)) {
-            auto& graphics = reg.get<NGraphics>(ett);
+        if (reg.any_of<item_resource_t>(ett)) {
+            auto& graphics = reg.get<item_resource_t>(ett);
             graphics.args.transfrom = worldMat;
-            graphics.args.color = glm::vec4(1.f, 1.f, 1.f, 1.f);
         }
 
         reg.remove<dispcomp::transform_dirty>(ett);
@@ -273,17 +281,9 @@ namespace gui {
     }
 
     void updateTransfroms() {
-        auto stage = Stage::Instance();
-        auto root = stage->defaultRoot();
-        if (!root) return;
-        // entt::entity rootEntity = root->getDisplayObject();
-        // if (rootEntity == entt::null) return;
-
-        reg.view<dispcomp::final_visible, dispcomp::transform_dirty>().each([](entt::entity ett) {
+        reg.view<dispcomp::transform_dirty, dispcomp::final_visible>().each([](entt::entity ett) {
             updateTransformRecursive(ett, glm::mat4(1.0f));
-            //reg.emplace_or_replace<dispcomp::batch_dirty>(ett);
         });
-
     }
 
     void commitBatchNode(entt::entity ett) {
@@ -309,6 +309,7 @@ namespace gui {
 
     void GuiTick() {
         updateVisible(); // 更新可见性
+        updateBatchNodeTree();
         updateTransfroms();
         updateImageMesh(); // 有必要就更新mesh
         updateBatchNodes(); // 更新batch树结构，为重建batch数据做准备，

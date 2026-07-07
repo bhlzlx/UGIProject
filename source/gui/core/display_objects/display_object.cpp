@@ -143,13 +143,17 @@ namespace gui {
         markBatchDirty(entity_);
     }
 
+    bool DisplayObject::isBatchNode() const {
+        return reg.any_of<dispcomp::batch_node>(entity_);
+    }
+
     dispcomp::basic_transform& DisplayObject::getBasicTransfrom() const {
         auto& trans = reg.get_or_emplace<dispcomp::basic_transform>(entity_);
         return trans;
     }
 
-    dispcomp::parent_batch& DisplayObject::getParentBatch() const {
-        auto& parentBatch = reg.get_or_emplace<dispcomp::parent_batch>(entity_);
+    dispcomp::item_batch_info& DisplayObject::getParentBatch() const {
+        auto& parentBatch = reg.get_or_emplace<dispcomp::item_batch_info>(entity_);
         return parentBatch;
     }
 
