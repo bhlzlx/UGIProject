@@ -223,23 +223,11 @@ namespace gui {
     }
 
     void Object::setWidth(float val) {
-        float dw = val - size_.width;
-        if (dw == 0) return;
-        rawSize_.width = val;
-        size_.width = val;
-        dispobj_.setSize({size_.width, size_.height});
-        relations_.onOwnerSizeChanged(dw, 0, false);
-        onSizeChanged();
+        setSize({val, rawSize_.height});
     }
 
     void Object::setHeight(float val) {
-        float dh = val - size_.height;
-        if (dh == 0) return;
-        rawSize_.height = val;
-        size_.height = val;
-        dispobj_.setSize({size_.width, size_.height});
-        relations_.onOwnerSizeChanged(0, dh, false);
-        onSizeChanged();
+        setSize({rawSize_.width, val});
     }
 
     // ---- Pivot / Scale / Skew ----
