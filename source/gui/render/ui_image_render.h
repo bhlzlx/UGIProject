@@ -62,9 +62,6 @@ namespace gui {
         void bind(ugi::RenderCommandEncoder* encoder);
         void draw(ugi::RenderCommandEncoder* enc, ugi::Renderable* renderable);
 
-        image_item_t* createImageItem(texture_block_t const& desc);
-        image_item_t* createImageItem(image_9grid_desc_t const& desc);
-
         gui::ui_render_batches_t buildImageRenderBatch(std::vector<image_render_data_t> const& renderDatas, ugi::Texture* textur);
 
         void destroyRenderBatch(gui::ui_render_batches_t batches);

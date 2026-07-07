@@ -5,24 +5,24 @@
 
 namespace gui {
 
-    ui_render_batches_t BuildImageRenderBatches(std::vector<void*> const& items, std::vector<item_args_t*> const& args, std::vector<entt::entity> const& entities, ugi::Texture* texture) {
+    ui_render_batches_t BuildImageRenderBatches(std::vector<void*> const& items, std::vector<item_args_t*> const& args, ugi::Texture* texture) {
         auto render = UIImageRender::Instance();
         std::vector<image_render_data_t> datas;
         for(size_t i = 0; i<items.size(); ++i) {
-            datas.push_back({(image_item_t*)items[i], args[i], entities[i]});
+            datas.push_back({(image_mesh_t*)items[i], args[i]});
         }
         return render->buildImageRenderBatch(datas, texture);
     }
 
     void DestroyRenderBatches(ui_render_batches_t const& batch) {
         switch(batch.type) {
-            case gui::RenderItemType::Image: {
+            case gui::UIMeshType::Image: {
                 auto render = UIImageRender::Instance();
                 render->destroyRenderBatch(batch);
             }
-            case RenderItemType::None:
-            case RenderItemType::Font:
-            case RenderItemType::SubBatch:
+            case UIMeshType::None:
+            case UIMeshType::Font:
+            case UIMeshType::SubBatch:
               break;
             }
     }
@@ -42,7 +42,7 @@ namespace gui {
         rasterizationState.polygonMode = ugi::polygon_mode_t::Fill;
         for(auto& batch: frameBatches) {
             switch(batch.type) {
-                case gui::RenderItemType::Image: {
+                case gui::UIMeshType::Image: {
                     auto render = UIImageRender::Instance();
                     render->bind(encoder);
                     render->setRasterization(rasterizationState);

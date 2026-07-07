@@ -30,9 +30,9 @@ static void flipUV(glm::vec2& uv, glm::vec2 const& uvMin, glm::vec2 const& uvMax
 }
 
 // ---- build a single quad and append to item ----
-// 顶点顺序: 左上→右上→右下→左下 (Y=0 在顶部, 与原 createImageItem 一致)
+// 顶点顺序: 左上→右上→右下→左下 (Y=0 在顶部)
 static void addQuad(
-    image_item_t& item,
+    image_mesh_t& item,
     glm::vec2 pos, glm::vec2 size,
     glm::vec2 uv0, glm::vec2 uv1,
     uint32_t color, FlipType flip,
@@ -62,9 +62,9 @@ static void addQuad(
 
 // ============= createImageMesh =============
 
-image_item_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic_transform const& trans)
+image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic_transform const& trans)
 {
-    image_item_t item;
+    image_mesh_t item;
 
     float ctrlW = trans.size.x;
     float ctrlH = trans.size.y;
@@ -153,14 +153,14 @@ image_item_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
 void updateImageMesh()
 {
     reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::image_desc_t>().each([](auto ett, dispcomp::image_desc_t& imageDesc) {
-        item_resource_t* graphics = &reg.get_or_emplace<item_resource_t>(ett);
-        graphics->meshData.type = RenderItemType::Image;
-        if (graphics->meshData.item) {
-            delete (image_item_t*)graphics->meshData.item;
+        item_resource_t& graphics = reg.get_or_emplace<item_resource_t>(ett);
+        graphics.meshData.type = UIMeshType::Image;
+        if (graphics.meshData.item) {
+            delete (image_mesh_t*)graphics.meshData.item;
         }
         auto& trans = reg.get<dispcomp::basic_transform>(ett);
-        auto* item = new image_item_t(std::move(createImageMesh(imageDesc, trans)));
-        graphics->meshData.item = item;
+        auto* mesh = new image_mesh_t(std::move(createImageMesh(imageDesc, trans)));
+        graphics.meshData.item = mesh;
         reg.remove<dispcomp::mesh_dirty>(ett);
     });
 }

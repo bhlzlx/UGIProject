@@ -26,4 +26,7 @@ namespace gui {
 
     item_resource_t* getRenderResource(entt::entity ett);
 
+    void syncArgsToBatch(entt::entity entity);
+    void syncDirtyArgs();
+
 }

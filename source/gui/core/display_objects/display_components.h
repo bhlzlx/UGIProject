@@ -79,6 +79,7 @@ namespace gui {
         };
 
         struct transform_dirty {}; // 变换更新
+        struct args_dirty {};      // args 参数更新（transform/alpha/gray等），需同步到 batch cache
 
         struct visible {}; // 控件本身的可见性
         struct final_visible {}; // 最终提交相关的可见性

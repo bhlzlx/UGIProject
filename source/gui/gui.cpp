@@ -55,11 +55,11 @@ namespace gui {
     }
 
     void updateBatchNodeTree() {
-        reg.view<dispcomp::final_visible, dispcomp::batch_dirty>().each([](auto ett) {
-            DisplayObject obj(ett);
-            auto parent = obj.parent();
-            parent.
-        });
+        // reg.view<dispcomp::final_visible, dispcomp::batch_dirty>().each([](auto ett) {
+        //     DisplayObject obj(ett);
+        //     auto parent = obj.parent();
+        //     parent.
+        // });
     }
 
     void travalBatchNode(entt::entity ett, std::function<void(entt::entity)>const& callback) {
@@ -110,10 +110,10 @@ namespace gui {
     }
 
     struct material_batch_desc_t {
-        RenderItemType renderType = RenderItemType::None;
+        UIMeshType renderType = UIMeshType::None;
         ugi::Texture* texture = nullptr; 
         //
-        bool compatible(RenderItemType type, ugi::Texture* tex) const {
+        bool compatible(UIMeshType type, ugi::Texture* tex) const {
             return renderType == type && texture == tex;
         }
     };
@@ -125,27 +125,25 @@ namespace gui {
             //
             std::vector<void*> renderItems;
             std::vector<item_args_t*> args;
-            std::vector<entt::entity> entities;
 
             auto breakBatchFn = [&]() {
                 if(renderItems.size()) {
                     switch (material.renderType) {
-                    case RenderItemType::None:
-                    case RenderItemType::Image: {
-                        auto batch = BuildImageRenderBatches(renderItems, args, entities, material.texture);
+                    case UIMeshType::None:
+                    case UIMeshType::Image: {
+                        auto batch = BuildImageRenderBatches(renderItems, args, material.texture);
                         batch.batchNode = ett;
                         batches.push_back(batch);
                         break;
                     }
-                    case RenderItemType::Font:
+                    case UIMeshType::Font:
                     break;
-                    case RenderItemType::SubBatch:
+                    case UIMeshType::SubBatch:
                     break;
                     }
                 }
                 renderItems.clear();
                 args.clear();
-                entities.clear();
             };
 
             for(auto child: batchNode.children) {
@@ -174,16 +172,15 @@ namespace gui {
                     material.texture = tex;
                     renderItems.push_back((void*)graphics->meshData.item);
                     args.push_back(&graphics->args);
-                    entities.push_back(child);
                     parentBatch.instIndex = (int)args.size() - 1; // 更新索引
                     parentBatch.batchIdx  = (int)batches.size();  // 当前所在 sub-batch
                 } else {
                     breakBatchFn(); // 遇到batch_root也强行中断
-                    material.renderType = RenderItemType::None;
+                    material.renderType = UIMeshType::None;
                     material.texture = nullptr;
                     //
                     ui_render_batches_t subBatch;
-                    subBatch.type = RenderItemType::SubBatch;
+                    subBatch.type = UIMeshType::SubBatch;
                     subBatch.batchNode = child;
                     batches.push_back(subBatch); // 子batch让它自己去管自己
                 }
@@ -267,6 +264,7 @@ namespace gui {
         if (reg.any_of<item_resource_t>(ett)) {
             auto& graphics = reg.get<item_resource_t>(ett);
             graphics.args.transfrom = worldMat;
+            reg.emplace_or_replace<dispcomp::args_dirty>(ett);
         }
 
         reg.remove<dispcomp::transform_dirty>(ett);
@@ -292,7 +290,7 @@ namespace gui {
             return;
         }
         for(auto& batch: batchData->batches) {
-            if(batch.type != RenderItemType::SubBatch) {
+            if(batch.type != UIMeshType::SubBatch) {
                 CommitRenderBatch(batch);
             } else {
                 commitBatchNode(batch.batchNode);
@@ -314,6 +312,7 @@ namespace gui {
         updateImageMesh(); // 有必要就更新mesh
         updateBatchNodes(); // 更新batch树结构，为重建batch数据做准备，
         rebuildBatches(); // 更新batch节点的 batch 数据
+        syncDirtyArgs(); // 将 args_dirty 实体的参数同步到 batch cache
         commitRenderBatches(); // 按渲染顺序提交 batch
     }
     

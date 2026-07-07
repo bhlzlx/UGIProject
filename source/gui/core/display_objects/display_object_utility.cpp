@@ -65,5 +65,31 @@ namespace gui {
         reg.emplace_or_replace<dispcomp::batch_dirty>(ett);
     }
 
-    
+    void syncArgsToBatch(entt::entity entity) {
+        if (!reg.any_of<dispcomp::item_batch_info>(entity) ||
+            !reg.any_of<item_resource_t>(entity)) {
+            return;
+        }
+        auto& info = reg.get<dispcomp::item_batch_info>(entity);
+        if (info.batchIdx < 0) return;
+
+        auto* batchData = getBatchData(info.batchEntity);
+        if (!batchData || info.batchIdx >= (int)batchData->batches.size()) return;
+
+        auto& batches_t = batchData->batches[info.batchIdx];
+        int subIdx = info.instIndex / 512;
+        int idxInSub = info.instIndex % 512;
+        if (subIdx >= (int)batches_t.batches.size()) return;
+
+        batches_t.batches[subIdx]->cachedArgs[idxInSub] =
+            reg.get<item_resource_t>(entity).args;
+    }
+
+    void syncDirtyArgs() {
+        reg.view<dispcomp::args_dirty>().each([](entt::entity entity) {
+            syncArgsToBatch(entity);
+            reg.remove<dispcomp::args_dirty>(entity);
+        });
+    }
+
 }

@@ -255,6 +255,7 @@ namespace gui {
         alpha_ = val;
         if (dispobj_ && reg.any_of<item_resource_t>(dispobj_)) {
             reg.get<item_resource_t>(dispobj_).args.color.a = val;
+            reg.emplace_or_replace<dispcomp::args_dirty>(dispobj_);
         }
     }
 
@@ -262,6 +263,7 @@ namespace gui {
         grayed_ = val;
         if (dispobj_ && reg.any_of<item_resource_t>(dispobj_)) {
             reg.get<item_resource_t>(dispobj_).args.props.x = val ? 1.0f : 0.0f;
+            reg.emplace_or_replace<dispcomp::args_dirty>(dispobj_);
         }
     }
 

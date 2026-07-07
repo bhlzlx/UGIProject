@@ -38,7 +38,7 @@ namespace gui {
      * @brief 
      * 这里也应该是内存数据，其实就是mesh数据
      */
-    struct image_item_t { 
+    struct image_mesh_t { 
         std::vector<image_vertex_t> vertices;
         std::vector<uint16_t>       indices;
     };
@@ -57,9 +57,8 @@ namespace gui {
     };
 
     struct image_render_data_t {
-        image_item_t const*         item;
-        item_args_t const*       args;
-        entt::entity                entity;     // 所属 ECS entity，draw 时查 registry 读 args
+        image_mesh_t const*         item;
+        item_args_t const*          args;
     };
 
     struct ui_render_batch_t {
@@ -67,12 +66,12 @@ namespace gui {
         ugi::res_descriptor_t           argsDetor;
         ugi::res_descriptor_t           samplerDetor;
         ugi::res_descriptor_t           textureDetor;
-        std::vector<entt::entity>       argEntities;  // args 所属 entity，draw 时从 registry 读
+        std::vector<item_args_t>        cachedArgs;   // args 缓存，build 时从 registry 拷贝，draw 时直接 memcpy
         ugi::sampler_state_t            sampler;
         Handle                          texture; // 是 raw texture，原生的，不是NTexture
     };
 
-    enum class RenderItemType {
+    enum class UIMeshType {
         None,
         Image,
         Font,
@@ -80,7 +79,7 @@ namespace gui {
     };
 
     struct ui_render_batches_t {
-        RenderItemType                  type;
+        UIMeshType                  type;
         std::vector<ui_render_batch_t*> batches;
         entt::entity                    batchNode;
         bool prepared() const;
@@ -90,7 +89,7 @@ namespace gui {
     };
 
     struct opaque_item_mesh_t {
-        RenderItemType  type;
+        UIMeshType      type;
         void*           item;
     };
 

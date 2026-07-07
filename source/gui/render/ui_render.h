@@ -4,7 +4,7 @@
 
 namespace gui {
 
-    ui_render_batches_t BuildImageRenderBatches(std::vector<void*> const& items, std::vector<ui_inst_data_t*> const& args, ugi::Texture* tex);
+    ui_render_batches_t BuildImageRenderBatches(std::vector<void*> const& items, std::vector<item_args_t*> const& args, ugi::Texture* texture);
     //
     void DestroyRenderBatches(ui_render_batches_t const& batch);
 

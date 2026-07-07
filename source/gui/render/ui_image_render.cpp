@@ -24,6 +24,7 @@
 
 // #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+#include <cstring>
 
 namespace gui {
 
@@ -72,19 +73,13 @@ namespace gui {
     }
 
     void UIImageRender::drawBatch(ui_render_batches_t batches, ugi::RenderCommandEncoder* encoder) {
-        if(batches.type != RenderItemType::Image) {
+        if(batches.type != UIMeshType::Image) {
             assert(false);
             return;
         }
         for(auto batch: batches.batches) {
-            auto ubo = _uniformAllocator->allocate(batch->argEntities.size() * sizeof(item_args_t));
-            auto* dst = (item_args_t*)ubo.ptr;
-            for (size_t i = 0; i < batch->argEntities.size(); ++i) {
-                auto ett = batch->argEntities[i];
-                if (reg.any_of<item_resource_t>(ett)) {
-                    dst[i] = reg.get<item_resource_t>(ett).args;
-                }
-            }
+            auto ubo = _uniformAllocator->allocate(batch->cachedArgs.size() * sizeof(item_args_t));
+            memcpy(ubo.ptr, batch->cachedArgs.data(), ubo.size);
             batch->argsDetor.res.buffer.buffer = ubo.buffer;
             batch->argsDetor.res.buffer.offset = ubo.offset;
             batch->argsDetor.res.buffer.size = ubo.size;
@@ -129,28 +124,11 @@ namespace gui {
         return renderable;
     }
 
-    image_item_t* UIImageRender::createImageItem(texture_block_t const& desc) {
-        std::vector<image_vertex_t> vertices = {
-            {{0, 0, 0}, 0xffffffff, {desc.uv[0]}, 0},
-            {{desc.size.x, 0, 0}, 0xffffffff,  {desc.uv[1].x, desc.uv[0].y},0},
-            {{desc.size.x, desc.size.y, 0}, 0xffffffff, {desc.uv[1]}, 0},
-            {{0, desc.size.y, 0}, 0xffffffff, {desc.uv[0].x, desc.uv[1].y}, 0}
-        };
-        std::vector<uint16_t> indices = {0, 1, 2, 0, 2, 3};
-        auto item = new image_item_t;
-        item->vertices = std::move(vertices);
-        item->indices = std::move(indices);
-        return item;
-    }
-
-    image_item_t* UIImageRender::createImageItem(image_9grid_desc_t const& desc) {
-        return createImageItem(texture_block_t{desc.size, {desc.uv[0], desc.uv[1]}});
-    }
 
     gui::ui_render_batches_t UIImageRender::buildImageRenderBatch(std::vector<image_render_data_t> const& renderDatas, ugi::Texture* texture) {
         std::vector<image_vertex_t> vertices;
         std::vector<uint16_t> indices;
-        std::vector<entt::entity> argEntities;
+        std::vector<item_args_t> cachedArgs;
         ui_render_batches_t batches;
 
         for(auto const& renderData : renderDatas) {
@@ -162,12 +140,12 @@ namespace gui {
                 indices[i] += indexBase;
             }
             for(auto i = indexBase; i < vertices.size(); ++i) {
-                vertices[i].instIndex = (uint32_t)argEntities.size();
+                vertices[i].instIndex = (uint32_t)cachedArgs.size();
             }
-            argEntities.push_back(renderData.entity);
-            if(argEntities.size() >= 512) {
+            cachedArgs.push_back(*renderData.args);
+            if(cachedArgs.size() >= 512) {
                 auto renderable = createRenderable((const uint8_t*)vertices.data(), vertices.size() * sizeof(image_vertex_t), indices.data(), indices.size());
-                if (!renderable) { argEntities.clear(); indices.clear(); vertices.clear(); continue; }
+                if (!renderable) { cachedArgs.clear(); indices.clear(); vertices.clear(); continue; }
                 auto ubo = renderable->material()->descriptors()[0];
                 auto sampler = renderable->material()->descriptors()[1];
                 auto tex = renderable->material()->descriptors()[2];
@@ -175,14 +153,14 @@ namespace gui {
                 sampler.res.samplerState = ugi::sampler_state_t();
                 renderable->material()->updateDescriptor(tex);
                 renderable->material()->updateDescriptor(sampler);
-                ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(argEntities), ugi::sampler_state_t{}, texture};
+                ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(cachedArgs), ugi::sampler_state_t{}, texture};
                 batches.batches.push_back(batch);
-                argEntities.clear();
+                cachedArgs.clear();
                 indices.clear();
                 vertices.clear();
             }
         }
-        if(argEntities.size()) {
+        if(cachedArgs.size()) {
             auto renderable = createRenderable((const uint8_t*)vertices.data(), vertices.size() * sizeof(image_vertex_t), indices.data(), indices.size());
             if (!renderable) return batches;
             auto ubo = renderable->material()->descriptors()[0];
@@ -192,10 +170,10 @@ namespace gui {
             sampler.res.samplerState = ugi::sampler_state_t();
             renderable->material()->updateDescriptor(tex);
             renderable->material()->updateDescriptor(sampler);
-            ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(argEntities), ugi::sampler_state_t{}, texture};
+            ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(cachedArgs), ugi::sampler_state_t{}, texture};
             batches.batches.push_back(batch);
         }
-        batches.type = RenderItemType::Image;
+        batches.type = UIMeshType::Image;
         return batches;
     }
 

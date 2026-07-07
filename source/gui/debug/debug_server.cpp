@@ -1017,9 +1017,9 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
             ss << ",\"hasGraphics\":true";
             const char* rtype = "None";
             switch (gfx.meshData.type) {
-            case RenderItemType::Image: rtype = "Image"; break;
-            case RenderItemType::Font:  rtype = "Font";  break;
-            case RenderItemType::None:  rtype = "None";  break;
+            case UIMeshType::Image: rtype = "Image"; break;
+            case UIMeshType::Font:  rtype = "Font";  break;
+            case UIMeshType::None:  rtype = "None";  break;
             default: rtype = "?"; break;
             }
             ss << ",\"renderType\":\"" << rtype << "\"";
