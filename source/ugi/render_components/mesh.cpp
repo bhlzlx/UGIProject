@@ -56,6 +56,10 @@ namespace ugi {
         mesh->indexCount_ = indexCount;
         auto ibSize = sizeof(uint16_t) * indexCount;
         auto alloc = allocator->alloc(vbSize+ibSize);
+        if (alloc.first == mesh_buffer_handle_invalid || !alloc.second.buffer || alloc.second.offset == ~0u) {
+            delete mesh;
+            return nullptr;
+        }
         mesh->buffer_ = alloc.first;
 
         mesh->attriCount_ = layout.bufferCount;
@@ -67,6 +71,11 @@ namespace ugi {
         auto cb = transferQueue->createCommandBuffer(device, CmdbufType::Transient);
         //
         Buffer* stagingBuffer = device->createBuffer(ugi::BufferType::StagingBuffer, vbSize + ibSize);
+        if (!stagingBuffer) {
+            allocator->free(alloc.first);
+            delete mesh;
+            return nullptr;
+        }
         auto mapPtr = (uint8_t*)stagingBuffer->map(device);
         memcpy(mapPtr, vb, vbSize);
         memcpy(mapPtr + vbSize, indice, ibSize);
@@ -83,7 +92,15 @@ namespace ugi {
         }
         cb->endEncode();
         // submit command buffer to transfer queue
-        auto fence = device->createFence(); { 
+        auto fence = device->createFence();
+        if (!fence) {
+            transferQueue->destroyCommandBuffer(device, cb);
+            device->destroyBuffer(stagingBuffer);
+            allocator->free(alloc.first);
+            delete mesh;
+            return nullptr;
+        }
+        {
             QueueSubmitInfo submitInfo(&cb, 1, nullptr, 0, nullptr, 0);
             QueueSubmitBatchInfo submitBatch(&submitInfo, 1, fence);
             transferQueue->submitCommandBuffers(submitBatch);

@@ -12,7 +12,8 @@ namespace ugi {
         if(size<poolSize_) {
             size = poolSize_;
         }
-        size = (size+127)&(~127);
+        // 用 TLSF 自身逻辑反推实际需要的最小池大小，已内含 segment 对齐
+        size = (uint32_t)comm::tlsf::Pool::AlignedPoolSize(size);
         VkBufferCreateInfo bufferInfo = {}; {
             bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             bufferInfo.flags = 0;
@@ -83,8 +84,7 @@ namespace ugi {
                 return { mesh_buffer_handle_invalid, {} };
             }
             auto offset = bufferBlocks_.back().scheduler.alloc(size);
-            alloc =  {bufferBlocks_.back().buffer, offset, size};
-            blockIndex = bufferBlocks_.size() - 1;
+            alloc =  {bufferBlocks_.back().buffer, offset, size, (uint32_t)(bufferBlocks_.size() - 1)};
         }
         mesh_buffer_handle_t id = allocID_();
         bufferAllocs_[id] = alloc;

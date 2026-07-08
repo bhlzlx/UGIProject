@@ -212,6 +212,7 @@ namespace ugi {
             auto resEnc = cb->resourceCommandEncoder();
             resEnc->imageTransitionBarrier(this, ResourceAccessType::TransferDestination, pipeline_stage_t::Top, StageAccess::Read, pipeline_stage_t::Transfer, StageAccess::Write, nullptr);
             resEnc->copyBufferToImage(this->_image, this->_aspectFlags, staging->buffer(), regions, offsets, count);
+            resEnc->imageTransitionBarrier(this, ResourceAccessType::ShaderRead, pipeline_stage_t::Transfer, StageAccess::Write, pipeline_stage_t::FragmentShading, StageAccess::Read, nullptr);
             resEnc->endEncode();
         }
         cb->endEncode();
