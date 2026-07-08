@@ -1,0 +1,8 @@
+{
+    "shaderModule" : {
+        "vert":"fgui_text.vert.slang",
+        "frag":"fgui_text.frag.slang"
+    },
+    "importPath": ["."],
+    "combineVertex" : true
+}

@@ -93,10 +93,4 @@ namespace gui {
         void*           item;
     };
 
-    struct item_resource_t { // 它其实是一个控件持有的渲染数据
-        opaque_item_mesh_t      meshData;       // mesh data
-        item_args_t             args;           // 一个控件的参数，矩阵，透明度，灰度等
-        Handle                  texture;        // texture
-    };
-
 }

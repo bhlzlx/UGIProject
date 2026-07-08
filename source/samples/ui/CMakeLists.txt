@@ -25,5 +25,6 @@ PRIVATE
 
 add_custom_command(TARGET ui PRE_BUILD
     COMMAND $<TARGET_FILE:ShaderCompiler> "${SOLUTION_DIR}/bin/shaders/fgui_image"
+    COMMAND $<TARGET_FILE:ShaderCompiler> "${SOLUTION_DIR}/bin/shaders/fgui_text"
     COMMENT "ShaderCompiler: ui"
 )

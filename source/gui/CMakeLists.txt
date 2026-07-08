@@ -20,6 +20,7 @@ PRIVATE
     core/events/event_dispatcher.cpp
     core/events/input_event.cpp
     core/input_handler.cpp
+    core/font_manager.cpp
     core/package.cpp
     core/package_item.cpp
     core/gui_context.cpp
@@ -35,12 +36,14 @@ PRIVATE
     core/ui/ui_content_scaler.cpp
     core/ui/root.cpp
     core/ui/component.cpp
+    core/ui/g_text_field.cpp
     core/controller.cpp
     core/ui/object.cpp
     core/ui/object_factory.cpp
     core/ui/image.cpp
     core/ui/children.cpp
     render/ui_image_render.cpp
+    render/text_sdf_render.cpp
     render/ui_render.cpp
 
     mesh/image_mesh.cpp

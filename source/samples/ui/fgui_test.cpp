@@ -29,6 +29,7 @@
 
 #include "gui/core/package.h"
 #include "render/ui_render.h"
+#include "render/text_sdf_render.h"
 // #include "gui/render/render_data.h"
 // #include "gui/render/ui_image_render.h"
 #include "gui.h"
@@ -89,7 +90,23 @@ namespace ugi {
         auto device = _renderContext->device();
         _render = gui::UIImageRender::Instance();
         _render->initialize(device, pipeline, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
-        //
+
+        // Text SDF pipeline
+        {
+            auto textPipelineFile = arch->openIStream("/shaders/fgui_text/pipeline.bin", {comm::ReadFlag::binary});
+            PipelineHelper textPpl = PipelineHelper::FromIStream(textPipelineFile);
+            textPipelineFile->close();
+            auto textDesc = textPpl.desc();
+            textDesc.topologyMode = topology_mode_t::TriangleList;
+            textDesc.renderState.cullMode = cull_mode_t::None;
+            textDesc.renderState.blendState.enable = true;
+            auto textPipeline = device->createGraphicsPipeline(textDesc);
+            auto textBufferAllocator = new MeshBufferAllocator();
+            textBufferAllocator->initialize(device, 1024);
+            gui::TextSDFRender::Instance()->initialize(device, textPipeline,
+                textBufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
+        }
+
         // Start debug TCP server for widget tree inspection
         gui::DebugServer::Instance().start();
         //
@@ -101,6 +118,7 @@ namespace ugi {
     void FGUIDemo::tick() {
         if (!_renderContext->onPreTick()) return;
         _render->tick();
+        gui::TextSDFRender::Instance()->tick();
         //
         Device* device = _renderContext->device();
         IRenderPass* mainRenderPass = _renderContext->mainFramebuffer();
@@ -108,6 +126,20 @@ namespace ugi {
         device->cycleInvoker().postCallable([this, device, cmdbuf](){
             _renderContext->primaryQueue()->destroyCommandBuffer(device, cmdbuf);
         });
+        // game logic
+        {
+            if(stage_) {
+                static float angle = 0;
+                angle += 0.1f;
+                auto root = stage_->defaultRoot();
+                auto test = (gui::Component*)root->getChildAt(0);
+                auto child = test->getChildAt(1);
+                if (child) {
+                    child->setRotation(angle);
+                }
+            }
+        }
+
         cmdbuf->beginEncode(); {
             //
             renderpass_clearval_t clearValues;

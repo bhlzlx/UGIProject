@@ -66,7 +66,7 @@ namespace gui {
 
         void destroyRenderBatch(gui::ui_render_batches_t batches);
 
-        void drawBatch(ui_render_batches_t batches, ugi::RenderCommandEncoder* encoder);
+        void drawBatch(ui_render_batches_t batches, glm::mat4 const& batchWorld, ugi::RenderCommandEncoder* encoder);
 
         void tick();
     };

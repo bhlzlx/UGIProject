@@ -61,21 +61,31 @@ namespace gui {
         enc->draw(renderable->mesh(), renderable->mesh()->indexCount());
     }
 
+    struct GlobalUBO {
+        glm::mat4 vp;
+        glm::mat4 batchWorld;
+    };
+
     void UIImageRender::setVP(glm::mat4 const& vp) {
-        auto ubo = _uniformAllocator->allocate(sizeof(glm::mat4));
-        memcpy(ubo.ptr, &vp, ubo.size);
-        _globalMat.res.buffer.buffer = ubo.buffer;
-        _globalMat.res.buffer.offset = ubo.offset;
-        _globalMat.res.buffer.size = ubo.size;
-        _globalMtl->updateDescriptor(_globalMat);
-        //
-        _pipeline->applyMaterial(_globalMtl);
+        _vp = vp;  // 只缓存，draw 时才分配 UBO
     }
 
-    void UIImageRender::drawBatch(ui_render_batches_t batches, ugi::RenderCommandEncoder* encoder) {
+    void UIImageRender::drawBatch(ui_render_batches_t batches, glm::mat4 const& batchWorld, ugi::RenderCommandEncoder* encoder) {
         if(batches.type != UIMeshType::Image) {
             assert(false);
             return;
+        }
+        // 一次性分配 global UBO（vp + batchWorld）
+        {
+            auto ubo = _uniformAllocator->allocate(sizeof(GlobalUBO));
+            auto* g = (GlobalUBO*)ubo.ptr;
+            g->vp = _vp;
+            g->batchWorld = batchWorld;
+            _globalMat.res.buffer.buffer = ubo.buffer;
+            _globalMat.res.buffer.offset = ubo.offset;
+            _globalMat.res.buffer.size = ubo.size;
+            _globalMtl->updateDescriptor(_globalMat);
+            _pipeline->applyMaterial(_globalMtl);
         }
         for(auto batch: batches.batches) {
             auto ubo = _uniformAllocator->allocate(batch->cachedArgs.size() * sizeof(item_args_t));

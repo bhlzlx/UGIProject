@@ -95,37 +95,48 @@ namespace gui {
         parent.removeChild(*this);
     }
 
+    static void markArgsNeedSync(entt::entity e, uint8_t mask) {
+        auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(e);
+        s.mask |= mask;
+    }
+
     void DisplayObject::setPosition(glm::vec2 const& pos) {
         auto& trans = reg.get_or_emplace<dispcomp::basic_transform>(entity_);
         trans.position = pos;
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
+        markArgsNeedSync(entity_, dispcomp::Asm_Transform);
     }
 
     void DisplayObject::setSize(glm::vec2 const& val) {
         auto& trans = reg.get_or_emplace<dispcomp::basic_transform>(entity_);
         trans.size = val;
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
+        markArgsNeedSync(entity_, dispcomp::Asm_Transform);
     }
 
     void DisplayObject::setPivot(glm::vec2 const& val) {
         auto& trans = reg.get_or_emplace<dispcomp::basic_transform>(entity_);
         trans.pivot = val;
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
+        markArgsNeedSync(entity_, dispcomp::Asm_Transform);
     }
 
     void DisplayObject::setRotation(float val) {
         reg.emplace_or_replace<dispcomp::rotation>(entity_, val);
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
+        markArgsNeedSync(entity_, dispcomp::Asm_Transform);
     }
 
     void DisplayObject::setSkew(glm::vec2 val) {
         reg.emplace_or_replace<dispcomp::skew>(entity_, val);
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
+        markArgsNeedSync(entity_, dispcomp::Asm_Transform);
     }
 
     void DisplayObject::setScale(glm::vec2 val) {
         reg.emplace_or_replace<dispcomp::scale>(entity_, val);
         reg.emplace_or_replace<dispcomp::transform_dirty>(entity_);
+        markArgsNeedSync(entity_, dispcomp::Asm_Transform);
     }
 
     void DisplayObject::setChildIndex(DisplayObject child, uint32_t index) {

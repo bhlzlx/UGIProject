@@ -152,8 +152,8 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
 
 void updateImageMesh()
 {
-    reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::image_desc_t>().each([](auto ett, dispcomp::image_desc_t& imageDesc) {
-        item_resource_t& graphics = reg.get_or_emplace<item_resource_t>(ett);
+    reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::image_desc_t>().each([](entt::entity ett, dispcomp::image_desc_t& imageDesc) {
+        dispcomp::item_render_data& graphics = reg.get_or_emplace<dispcomp::item_render_data>(ett);
         graphics.meshData.type = UIMeshType::Image;
         if (graphics.meshData.item) {
             delete (image_mesh_t*)graphics.meshData.item;

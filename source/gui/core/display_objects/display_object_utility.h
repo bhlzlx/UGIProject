@@ -24,9 +24,15 @@ namespace gui {
 
     DisplayObject getParent(entt::entity ett);
 
-    item_resource_t* getRenderResource(entt::entity ett);
+    dispcomp::item_render_data* getRenderResource(entt::entity ett);
 
     void syncArgsToBatch(entt::entity entity);
     void syncDirtyArgs();
+
+    /// 处理所有需要重算 local-to-batch 矩阵的 item，更新 gfx.args.transfrom
+    void updateItemTransforms();
+
+    glm::mat4 buildLocalMatrix(entt::entity ett);
+    glm::mat4 accumulateLocalToBatch(entt::entity item, entt::entity batch);
 
 }

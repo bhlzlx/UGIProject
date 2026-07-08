@@ -37,11 +37,14 @@ namespace gui {
             std::vector<ui_render_batches_t> batches;
         };
 
-        // batch节点需要更新构建mesh了（原因有很多，比如子级重排，mesh更新）
-        struct batch_need_rebuild {}; 
+        // batch节点需要更新构建mesh了
+        struct batch_need_rebuild {};
+        struct batch_dirty {};
 
-        // 一般是item的mesh需要重新构建
-        struct batch_dirty {}; 
+        // batch 节点缓存的局部矩阵，transform_dirty 时重算
+        struct batch_local_matrix {
+            glm::mat4 mat;
+        };
 
         // 普通可显示的item有这个组件
         struct item_batch_info {
@@ -58,7 +61,13 @@ namespace gui {
             Handle val;
         };
 
-        // 普通可显示的item有这个组件
+        // 普通可显示的 item 都有这个组件，持有渲染所需的数据
+        struct item_render_data {
+            opaque_item_mesh_t      meshData;
+            item_args_t             args;
+            Handle                  texture;
+        };
+
         // image/font/shape 都有这个组件
         struct mesh_dirty {};
 
@@ -78,8 +87,18 @@ namespace gui {
             image_ext           ext;
         };
 
-        struct transform_dirty {}; // 变换更新
-        struct args_dirty {};      // args 参数更新（transform/alpha/gray等），需同步到 batch cache
+        struct transform_dirty {};
+
+        // args 需要同步到 batch cache 的标记 + 位掩码
+        enum ArgsSyncMask : uint8_t {
+            Asm_Transform  = 1 << 0,  // local-to-batch 矩阵需重算
+            Asm_Color      = 1 << 1,  // color (alpha/tint) 需同步
+            Asm_Props      = 1 << 2,  // props (gray/hdr) 需同步
+            Asm_All        = Asm_Transform | Asm_Color | Asm_Props,
+        };
+        struct args_need_sync {
+            uint8_t mask = 0;
+        };
 
         struct visible {}; // 控件本身的可见性
         struct final_visible {}; // 最终提交相关的可见性

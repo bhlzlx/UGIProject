@@ -9,6 +9,7 @@
 #include "mesh/image_mesh.h"
 #include "render/render_data.h"
 #include "render/ui_render.h"
+#include "render/text_sdf_render.h"
 #include "texture.h"
 #include <vector>
 
@@ -54,12 +55,45 @@ namespace gui {
         });
     }
 
+    void travalBatchNode(entt::entity ett, std::function<void(entt::entity)>const& callback);
+
+    // 向上遍历找所属 batch_node 并标记 batch_need_rebuild
+    static void markBatchNeedRebuild(entt::entity ett) {
+        auto p = getParent(ett);
+        while (p && !isBatchNode(p)) {
+            p = getParent(p);
+        }
+        if (isBatchNode(p)) {
+            reg.emplace_or_replace<dispcomp::batch_need_rebuild>(p);
+        }
+    }
+
     void updateBatchNodeTree() {
-        // reg.view<dispcomp::final_visible, dispcomp::batch_dirty>().each([](auto ett) {
-        //     DisplayObject obj(ett);
-        //     auto parent = obj.parent();
-        //     parent.
-        // });
+        // Step 1: 有 batch_dirty 的非 batch_node → 找父 batch_node → 标记 batch_need_rebuild
+        reg.view<dispcomp::batch_dirty, dispcomp::final_visible>(entt::exclude<dispcomp::batch_node>).each([&](entt::entity ett) {
+            markBatchNeedRebuild(ett);
+            reg.remove<dispcomp::batch_dirty>(ett);
+        });
+
+        // Step 2: 有 batch_dirty 的 batch_node → 重建 children / batchNodes 列表
+        reg.view<dispcomp::final_visible, dispcomp::batch_node, dispcomp::batch_dirty>().each([&](entt::entity ett, dispcomp::batch_node& bn) {
+            bn.children.clear();
+            bn.batchNodes.clear();
+            travalBatchNode(ett, [&](entt::entity child) {
+                bn.children.push_back(child);
+                if (isBatchNode(child)) {
+                    bn.batchNodes.push_back(child);
+                }
+                reg.emplace_or_replace<dispcomp::item_batch_info>(child, ett, -1);
+                // 结构变化 → 所有 item 标记需要重算 local-to-batch
+                if (reg.any_of<dispcomp::item_render_data>(child)) {
+                    auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(child);
+                    s.mask |= dispcomp::Asm_Transform;
+                }
+            });
+            reg.remove<dispcomp::batch_dirty>(ett);
+            reg.emplace_or_replace<dispcomp::batch_need_rebuild>(ett);
+        });
     }
 
     void travalBatchNode(entt::entity ett, std::function<void(entt::entity)>const& callback) {
@@ -74,39 +108,6 @@ namespace gui {
                 }
             }
         }
-    }
-
-    void updateBatchNodes() {
-        // 先处理非batch_node节点，通知它的batch node要更新batch树结构
-        reg.view<dispcomp::batch_dirty, dispcomp::final_visible>(entt::exclude<dispcomp::batch_node>).each([=](entt::entity ett) {
-            DisplayObject obj(ett);
-            auto p = obj.parent();
-            while(!isBatchNode(p)) {
-                p = p.parent();
-            }
-            reg.remove<dispcomp::batch_dirty>(ett);
-            if(!isBatchNode(p)) { // 它必须是一个batch_node
-                return;
-            }
-            reg.emplace_or_replace<dispcomp::batch_need_rebuild>(p);
-        });
-        // 处理batch node，更新batch树结构
-        reg.view<dispcomp::final_visible, dispcomp::batch_node, dispcomp::batch_dirty>().each([=](entt::entity ett, dispcomp::batch_node& batchNode) {
-            batchNode.children.clear();
-            batchNode.batchNodes.clear();
-            travalBatchNode(ett, [&batchNode, parent_batch = ett](entt::entity ett) {
-                batchNode.children.push_back(ett);
-                if(isBatchNode(ett)) {
-                    batchNode.batchNodes.push_back(ett);
-                }
-                reg.emplace_or_replace<dispcomp::item_batch_info>(ett, parent_batch, -1); // 更新当前的parent batch
-            });
-            //
-            reg.remove<dispcomp::batch_dirty>(ett);
-            // 树结构更新了，自然需要重新构建batch数据
-            reg.emplace_or_replace<dispcomp::batch_need_rebuild>(ett);
-        });
-        // 现在所在需要重新构建batch数据的batch node都标记好了
     }
 
     struct material_batch_desc_t {
@@ -136,8 +137,12 @@ namespace gui {
                         batches.push_back(batch);
                         break;
                     }
-                    case UIMeshType::Font:
-                    break;
+                    case UIMeshType::Font: {
+                        auto batch = BuildTextRenderBatches(renderItems, args, material.texture);
+                        batch.batchNode = ett;
+                        batches.push_back(batch);
+                        break;
+                    }
                     case UIMeshType::SubBatch:
                     break;
                     }
@@ -172,6 +177,8 @@ namespace gui {
                     material.texture = tex;
                     renderItems.push_back((void*)graphics->meshData.item);
                     args.push_back(&graphics->args);
+                    // rebuild 已同步全部 args，后续 syncDirtyArgs 可跳过此 item
+                    reg.remove<dispcomp::args_need_sync>(child);
                     parentBatch.instIndex = (int)args.size() - 1; // 更新索引
                     parentBatch.batchIdx  = (int)batches.size();  // 当前所在 sub-batch
                 } else {
@@ -202,117 +209,48 @@ namespace gui {
         });
     }
 
-    // M = T(pos) * R(rot) * Skew(skew) * S(scale) * P(-pivot*size)
-    // glm::translate/rotate/scale 都是左乘: glm::foo(M, x) = M * Foo(x)
-    // 所以从最后一步开始构建，确保顶点先做 Pivot → Scale → Skew → Rotate → Translate
-    glm::mat4 buildLocalMatrix(entt::entity ett) {
-        if (!reg.any_of<dispcomp::basic_transform>(ett)) {
-            return glm::mat4(1.0f);
-        }
-
-        auto& transform = reg.get<dispcomp::basic_transform>(ett);
-
-        // 1. Translation (最外层: 最后作用于顶点)
-        glm::mat4 mat = glm::translate(glm::mat4(1.0f),
-            glm::vec3(transform.position.x, transform.position.y, 0.0f));
-
-        // 2. Rotation 绕 Z 轴
-        if (reg.any_of<dispcomp::rotation>(ett)) {
-            auto& rot = reg.get<dispcomp::rotation>(ett);
-            mat = glm::rotate(mat, rot.val, glm::vec3(0.0f, 0.0f, 1.0f));
-        }
-
-        // 3. Skew
-        if (reg.any_of<dispcomp::skew>(ett)) {
-            auto& sk = reg.get<dispcomp::skew>(ett);
-            if (sk.val.x != 0.0f || sk.val.y != 0.0f) {
-                glm::mat4 shearMat(1.0f);
-                shearMat[1][0] = sk.val.x;
-                shearMat[0][1] = sk.val.y;
-                mat = mat * shearMat;
-            }
-        }
-
-        // 4. Scale
-        if (reg.any_of<dispcomp::scale>(ett)) {
-            auto& sc = reg.get<dispcomp::scale>(ett);
-            mat = glm::scale(mat, glm::vec3(sc.val.x, sc.val.y, 1.0f));
-        }
-
-        // 5. Pivot (最内层: 最先作用于顶点)
-        mat = glm::translate(mat, glm::vec3(
-            -transform.pivot.x * transform.size.x,
-            -transform.pivot.y * transform.size.y,
-            0.0f));
-
-        return mat;
-    }
-
-    // 递归更新变换树，累积父节点的世界矩阵
-    void updateTransformRecursive(entt::entity ett, glm::mat4 const& parentWorld) {
-        if (!reg.any_of<dispcomp::final_visible>(ett)) {
-            return;
-        }
-
-        // 局部矩阵
-        glm::mat4 localMat = buildLocalMatrix(ett);
-
-        // 世界矩阵 = 父世界矩阵 * 局部矩阵
-        glm::mat4 worldMat = parentWorld * localMat;
-
-        // 如果此 entity 有渲染内容，写入世界矩阵
-        if (reg.any_of<item_resource_t>(ett)) {
-            auto& graphics = reg.get<item_resource_t>(ett);
-            graphics.args.transfrom = worldMat;
-            reg.emplace_or_replace<dispcomp::args_dirty>(ett);
-        }
-
-        reg.remove<dispcomp::transform_dirty>(ett);
-
-        // 递归子节点
-        if (reg.any_of<dispcomp::children>(ett)) {
-            auto& children = reg.get<dispcomp::children>(ett).val;
-            for (auto child : children) {
-                updateTransformRecursive(child, worldMat);
-            }
-        }
-    }
-
-    void updateTransfroms() {
-        reg.view<dispcomp::transform_dirty, dispcomp::final_visible>().each([](entt::entity ett) {
-            updateTransformRecursive(ett, glm::mat4(1.0f));
-        });
-    }
-
-    void commitBatchNode(entt::entity ett) {
+    void commitBatchNode(entt::entity ett, glm::mat4 const& parentWorld) {
         auto batchData = getBatchData(ett);
         if(!batchData) {
             return;
         }
+        glm::mat4 localMat(1.0f);
+        if (reg.any_of<dispcomp::batch_local_matrix>(ett)) {
+            localMat = reg.get<dispcomp::batch_local_matrix>(ett).mat;
+        }
+        glm::mat4 batchWorld = parentWorld * localMat;
         for(auto& batch: batchData->batches) {
             if(batch.type != UIMeshType::SubBatch) {
-                CommitRenderBatch(batch);
+                CommitRenderBatch(batch, batchWorld);
             } else {
-                commitBatchNode(batch.batchNode);
+                commitBatchNode(batch.batchNode, batchWorld);
             }
         }
+    }
+
+    void updateLocalMatrix() {
+        reg.view<dispcomp::transform_dirty, dispcomp::batch_node>().each([](entt::entity ett, dispcomp::batch_node&) {
+            auto& cache = reg.get_or_emplace<dispcomp::batch_local_matrix>(ett);
+            cache.mat = buildLocalMatrix(ett);
+            reg.remove<dispcomp::transform_dirty>(ett);
+        });
     }
 
     void commitRenderBatches() {
         ClearFrameBatchCache();
         auto stage = Stage::Instance();
         auto root = stage->defaultRoot();
-        commitBatchNode(root->getDisplayObject());
+        commitBatchNode(root->getDisplayObject(), glm::mat4(1.0f));
     }
 
     void GuiTick() {
         updateVisible(); // 更新可见性
-        updateBatchNodeTree();
-        updateTransfroms();
+        updateBatchNodeTree(); // 维护 batch_node 树结构，传播 dirty 标记
         updateImageMesh(); // 有必要就更新mesh
-        updateBatchNodes(); // 更新batch树结构，为重建batch数据做准备，
-        rebuildBatches(); // 更新batch节点的 batch 数据
-        syncDirtyArgs(); // 将 args_dirty 实体的参数同步到 batch cache
+        updateLocalMatrix(); // batch node 自身矩阵有变化时重算缓存
+        updateItemTransforms(); // item 的 Asm_Transform → 重算 local-to-batch 矩阵
+        rebuildBatches(); // 重建 batch → 新缓存 + 新索引
+        syncDirtyArgs(); // 用新索引同步 args_dirty 到 batch cache（上一行才建好的）
         commitRenderBatches(); // 按渲染顺序提交 batch
     }
     

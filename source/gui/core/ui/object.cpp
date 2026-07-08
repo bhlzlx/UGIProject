@@ -134,7 +134,7 @@ namespace gui {
         reg.emplace_or_replace<dispcomp::visible_dirty>(dispobj_);
         reg.emplace_or_replace<dispcomp::transform_dirty>(dispobj_);
         // 初始化渲染参数默认值
-        auto& gfx = reg.get_or_emplace<item_resource_t>(dispobj_);
+        auto& gfx = reg.get_or_emplace<dispcomp::item_render_data>(dispobj_);
         gfx.args.color = glm::vec4(1.f, 1.f, 1.f, alpha_);
     }
 
@@ -253,17 +253,19 @@ namespace gui {
 
     void Object::setAlpha(float val) {
         alpha_ = val;
-        if (dispobj_ && reg.any_of<item_resource_t>(dispobj_)) {
-            reg.get<item_resource_t>(dispobj_).args.color.a = val;
-            reg.emplace_or_replace<dispcomp::args_dirty>(dispobj_);
+        if (dispobj_ && reg.any_of<dispcomp::item_render_data>(dispobj_)) {
+            reg.get<dispcomp::item_render_data>(dispobj_).args.color.a = val;
+            auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(dispobj_);
+            s.mask |= dispcomp::Asm_Color;
         }
     }
 
     void Object::setGrayed(bool val) {
         grayed_ = val;
-        if (dispobj_ && reg.any_of<item_resource_t>(dispobj_)) {
-            reg.get<item_resource_t>(dispobj_).args.props.x = val ? 1.0f : 0.0f;
-            reg.emplace_or_replace<dispcomp::args_dirty>(dispobj_);
+        if (dispobj_ && reg.any_of<dispcomp::item_render_data>(dispobj_)) {
+            reg.get<dispcomp::item_render_data>(dispobj_).args.props.x = val ? 1.0f : 0.0f;
+            auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(dispobj_);
+            s.mask |= dispcomp::Asm_Props;
         }
     }
 
