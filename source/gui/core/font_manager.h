@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <unordered_map>
+#include <list>
 #include <string>
 #include <functional>
 #include <stb_truetype.h>
@@ -41,6 +42,19 @@ namespace gui {
         bool operator==(GlyphKey const& o) const { return fontID == o.fontID && charCode == o.charCode; }
     };
 
+} // namespace gui
+
+// std::hash 特化 — 必须在 FontManager 类定义之前，否则 unordered_map<GlyphKey,...> 会先隐式实例化主模板
+namespace std {
+    template<> struct hash<gui::GlyphKey> {
+        size_t operator()(gui::GlyphKey const& k) const noexcept {
+            return (uint32_t(k.fontID) << 16) | k.charCode;
+        }
+    };
+}
+
+namespace gui {
+
     /// 字体度量信息
     struct FontMetrics {
         int ascent  = 0;    // 基线到顶
@@ -77,8 +91,12 @@ namespace gui {
         };
         std::vector<FontData>               _fonts;
 
-        // 字形缓存
-        std::unordered_map<uint32_t, GlyphInfo> _glyphs;  // key = GlyphKey打包
+        // 字形缓存 (LRU, 最多 1024 个)
+        static constexpr size_t                kMaxCacheSize = 1024;
+        using LruEntry = std::pair<GlyphKey, GlyphInfo>;
+        using LruIter  = std::list<LruEntry>::iterator;
+        std::list<LruEntry>                   _lruList;    // front = MRU, back = LRU
+        std::unordered_map<GlyphKey, LruIter> _glyphCache; // key → 在 _lruList 中的位置
 
         // 图集 tile 分配
         uint32_t _tilesPerRow = 0;
@@ -88,13 +106,13 @@ namespace gui {
         // 待上传 CPU 缓冲
         std::vector<uint8_t>                 _uploadBuffer;
         struct UploadItem {
-            uint32_t bufferOffset;
-            GlyphInfo* glyph;
+            uint32_t  bufferOffset;
+            GlyphInfo glyph;  // 值语义，生命周期随 vector
         };
         std::vector<UploadItem>              _pendingUploads;
 
-        // 字形 SDF 生成
-        GlyphInfo* generateGlyph(int fontID, uint32_t charCode);
+        // 字形 SDF 生成，成功返回 true 并填充 outInfo
+        bool generateGlyph(int fontID, uint32_t charCode, GlyphInfo& outInfo);
         void signedDistanceField(uint8_t* src, int sw, int sh,
                                  uint8_t* dst, int dw, int dh);
         bool uploadPending(ugi::Device* device);
@@ -126,13 +144,4 @@ namespace gui {
         FontMetrics getMetrics(int fontID, float fontSize) const;
     };
 
-}
-
-// std::hash 特化
-namespace std {
-    template<> struct hash<gui::GlyphKey> {
-        size_t operator()(gui::GlyphKey const& k) const noexcept {
-            return (uint32_t(k.fontID) << 16) | k.charCode;
-        }
-    };
 }

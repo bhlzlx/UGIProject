@@ -51,6 +51,7 @@ VSOutput main(VSInput input)
     float g = float((input.packedColor >>  8) & 0xffu) / 255.0;
     float b = float( input.packedColor        & 0xffu) / 255.0;
     output.color = float4(r, g, b, a);
+    output.color = output.color * imageDatas[idx].color;
 
     output.props = imageDatas[idx].props;
 

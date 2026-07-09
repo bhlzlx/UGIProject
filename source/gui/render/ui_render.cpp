@@ -79,8 +79,10 @@ namespace gui {
     }
 
     void SetVPMat(glm::mat4 const& vp) {
-        auto render = UIImageRender::Instance();
-        render->setVP(vp);
+        auto imageRender = UIImageRender::Instance();
+        imageRender->setVP(vp);
+        auto textRender = TextSDFRender::Instance();
+        textRender->setVP(vp);
     }
 
 }

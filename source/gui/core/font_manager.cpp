@@ -56,24 +56,37 @@ namespace gui {
     }
 
     GlyphInfo FontManager::getGlyph(int fontID, uint32_t charCode) {
-        GlyphKey key = { (uint16_t)fontID, (uint16_t)charCode };
-        uint32_t k = (uint32_t(key.fontID) << 16) | key.charCode;
-        auto it = _glyphs.find(k);
-        if (it != _glyphs.end()) {
-            return it->second;
+        GlyphKey key{uint16_t(fontID), uint16_t(charCode)};
+
+        // 命中缓存 → 移到 LRU 最前
+        auto it = _glyphCache.find(key);
+        if (it != _glyphCache.end()) {
+            _lruList.splice(_lruList.begin(), _lruList, it->second);
+            return it->second->second;
         }
-        auto* info = generateGlyph(fontID, charCode);
-        if (info) {
-            _glyphs[k] = *info;
-            GlyphInfo result = *info;
-            delete info;
-            return result;
+
+        // 未命中 → stb 生成 SDF
+        GlyphInfo info;
+        if (!generateGlyph(fontID, charCode, info)) {
+            return GlyphInfo{};
         }
-        return GlyphInfo{};
+
+        // 缓存满了 → 淘汰最久未使用的
+        if (_glyphCache.size() >= kMaxCacheSize) {
+            auto& lruEntry = _lruList.back();
+            _glyphCache.erase(lruEntry.first);
+            _lruList.pop_back();
+        }
+
+        // 插入缓存 (最前 = MRU)
+        _lruList.emplace_front(key, info);
+        _glyphCache[key] = _lruList.begin();
+
+        return info;
     }
 
-    GlyphInfo* FontManager::generateGlyph(int fontID, uint32_t charCode) {
-        if (fontID < 0 || fontID >= (int)_fonts.size()) return nullptr;
+    bool FontManager::generateGlyph(int fontID, uint32_t charCode, GlyphInfo& outInfo) {
+        if (fontID < 0 || fontID >= (int)_fonts.size()) return false;
 
         auto& font = _fonts[fontID];
         float fontSize = (float)_cfg.sdfSourceSize * _cfg.dpi / 72.0f;
@@ -97,7 +110,7 @@ namespace gui {
         auto sdfBuf = stbtt_GetCodepointSDF(&font.info, scale * rs, charCode,
             (int)_cfg.extraBorder, 128, (float)_cfg.searchDistance / rs,
             &bmpW, &bmpH, &offX, &offY);
-        if (!sdfBuf) return nullptr;
+        if (!sdfBuf) return false;
 
         // 分配 tile
         uint32_t tileIdx = _nextTile++;
@@ -108,7 +121,7 @@ namespace gui {
 
         if (layer >= _cfg.maxLayers) {
             stbtt_FreeSDF(sdfBuf, nullptr);
-            return nullptr;
+            return false;
         }
 
         // CPU 缓冲区暂存，记录给 tickUpload 用
@@ -118,29 +131,28 @@ namespace gui {
         memcpy(_uploadBuffer.data() + bufOff, sdfBuf, copySize);
         stbtt_FreeSDF(sdfBuf, nullptr);
 
-        auto* gi = new GlyphInfo{};
-        gi->glyphIndex     = tileIdx;
-        gi->bitmapWidth    = bmpW;
-        gi->bitmapHeight   = bmpH;
-        gi->bitmapLayer    = layer;
-        gi->bitmapOffsetX  = (int32_t)(col * _cfg.tileSize);
-        gi->bitmapOffsetY  = (int32_t)(row * _cfg.tileSize);
+        outInfo.glyphIndex     = tileIdx;
+        outInfo.bitmapWidth    = bmpW;
+        outInfo.bitmapHeight   = bmpH;
+        outInfo.bitmapLayer    = layer;
+        outInfo.bitmapOffsetX  = (int32_t)(col * _cfg.tileSize);
+        outInfo.bitmapOffsetY  = (int32_t)(row * _cfg.tileSize);
 
-        gi->bitmapBearingX = (float)offX;
-        gi->bitmapBearingY = (float)offY;
-        gi->bitmapAdvance  = (float)(advance + (int)_cfg.extraBorder) * scale * ratio;
-        gi->SDFScale       = ratio;
+        outInfo.bitmapBearingX = (float)offX;
+        outInfo.bitmapBearingY = (float)offY;
+        outInfo.bitmapAdvance  = (float)(advance + (int)_cfg.extraBorder) * scale * ratio;
+        outInfo.SDFScale       = ratio;
 
         float texSize = (float)_cfg.atlasSize;
-        gi->texU = (col * _cfg.tileSize) / texSize;
-        gi->texV = (row * _cfg.tileSize) / texSize;
-        gi->texW = (float)bmpW / texSize;
-        gi->texH = (float)bmpH / texSize;
+        outInfo.texU = (col * _cfg.tileSize) / texSize;
+        outInfo.texV = (row * _cfg.tileSize) / texSize;
+        outInfo.texW = (float)bmpW / texSize;
+        outInfo.texH = (float)bmpH / texSize;
 
-        // 记下给 tickUpload，等上传完再 delete
-        _pendingUploads.push_back({bufOff, gi});
+        // 记下给 tickUpload，值语义，生命周期随 vector
+        _pendingUploads.push_back({bufOff, outInfo});
 
-        return gi;
+        return true;
     }
 
     void FontManager::tickUpload(ugi::Device* device) {
@@ -156,16 +168,15 @@ namespace gui {
         std::vector<uint32_t> offsets;
         std::vector<ugi::image_region_t> regions;
         for (auto& up : _pendingUploads) {
-            auto* gi = up.glyph;
+            auto& gi = up.glyph;
             ugi::image_region_t r;
             r.mipLevel    = 0;
-            r.arrayIndex  = gi->bitmapLayer;
+            r.arrayIndex  = gi.bitmapLayer;
             r.arrayCount  = 1;
-            r.offset      = { gi->bitmapOffsetX, gi->bitmapOffsetY, 0 };
-            r.extent      = { gi->bitmapWidth, gi->bitmapHeight, 1 };
+            r.offset      = { gi.bitmapOffsetX, gi.bitmapOffsetY, 0 };
+            r.extent      = { gi.bitmapWidth, gi.bitmapHeight, 1 };
             regions.push_back(r);
             offsets.push_back(up.bufferOffset);
-            delete gi;  // GlyphInfo 已拷贝到 _glyphs map，临时对象释放
         }
 
         // 用 transfer queue 执行上传
