@@ -29,10 +29,12 @@ namespace gui {
             case gui::UIMeshType::Image: {
                 auto render = UIImageRender::Instance();
                 render->destroyRenderBatch(batch);
+                break;
             }
             case UIMeshType::Font: {
                 auto render = TextSDFRender::Instance();
                 render->destroyRenderBatch(batch);
+                break;
             }
             case UIMeshType::None:
             case UIMeshType::SubBatch:
@@ -52,8 +54,8 @@ namespace gui {
 
     void DrawRenderBatches(ugi::RenderCommandEncoder* encoder) {
         ugi::raster_state_t rasterizationState;
-        rasterizationState.polygonMode = ugi::polygon_mode_t::Line;
-        // rasterizationState.polygonMode = ugi::polygon_mode_t::Fill;
+        // rasterizationState.polygonMode = ugi::polygon_mode_t::Line;
+        rasterizationState.polygonMode = ugi::polygon_mode_t::Fill;
         for(auto& fb: frameBatches) {
             switch(fb.batch.type) {
                 case gui::UIMeshType::Image: {

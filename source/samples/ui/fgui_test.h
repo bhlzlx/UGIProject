@@ -23,6 +23,7 @@ namespace ugi {
         float                           _height;
 
         gui::Stage*                      stage_;
+        int                              _defaultFontID = -1;
         //
         gui::ui_render_batches_t        _imageBatches;
     public:

@@ -17,24 +17,21 @@ namespace gui {
 
     private:
         std::string     text_;
-        int             fontID_     = -1;   // FontManager 中的字体索引
+        int             fontID_     = -1;
         float           fontSize_   = 12.0f;
         uint32_t        color_      = 0xffffffff;
         AutoSize        autoSize_   = AutoSize::None;
         bool            singleLine_ = true;
-        float           textWidth_  = 0;    // 排版结果的实际像素宽
-        float           textHeight_ = 0;    // 排版结果的实际像素高
+        float           textWidth_  = 0;
+        float           textHeight_ = 0;
 
-        bool            textDirty_  = true;
+        void syncTextDesc();  // 同步属性到 ECS text_desc_t
 
     protected:
         void onSizeChanged() override;
 
     public:
         GTextField();
-
-        /// 重建文字 mesh (外部可调用)
-        void updateTextMesh();
         ~GTextField();
 
         virtual void constructFromResource() override {}

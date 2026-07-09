@@ -30,6 +30,8 @@
 #include "gui/core/package.h"
 #include "render/ui_render.h"
 #include "render/text_sdf_render.h"
+#include "gui/core/font_manager.h"
+#include "gui/core/ui/g_text_field.h"
 // #include "gui/render/render_data.h"
 // #include "gui/render/ui_image_render.h"
 #include "gui.h"
@@ -107,6 +109,29 @@ namespace ugi {
                 textBufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
         }
 
+        // FontManager 初始化 + 加载字体
+        {
+            gui::FontManager::Config fontCfg;
+            fontCfg.sdfSourceSize  = 64;
+            fontCfg.extraBorder    = 8;
+            fontCfg.searchDistance = 8;
+            fontCfg.tileSize       = 64;
+            fontCfg.atlasSize      = 1024;
+            fontCfg.maxLayers      = 4;
+            auto* fm = gui::FontManager::Instance();
+            fm->initialize(device, _renderContext->asyncLoadManager(), fontCfg);
+
+            auto fontArch = comm::CreateFSArchive(_arch->rootPath());
+            auto fontStream = fontArch->openIStream("hwzhsong.ttf", {comm::ReadFlag::binary});
+            if (fontStream) {
+                std::vector<uint8_t> ttf(fontStream->size());
+                fontStream->read(ttf.data(), fontStream->size());
+                fontStream->close();
+                int fid = fm->addFont(ttf.data(), ttf.size());
+                if (fid >= 0) _defaultFontID = fid;
+            }
+        }
+
         // Start debug TCP server for widget tree inspection
         gui::DebugServer::Instance().start();
         //
@@ -119,6 +144,7 @@ namespace ugi {
         if (!_renderContext->onPreTick()) return;
         _render->tick();
         gui::TextSDFRender::Instance()->tick();
+        gui::FontManager::Instance()->tickUpload(_renderContext->device());
         //
         Device* device = _renderContext->device();
         IRenderPass* mainRenderPass = _renderContext->mainFramebuffer();
@@ -200,6 +226,16 @@ namespace ugi {
             root->addChild(uiobj);
             uiobj->relations().add(root, gui::RelationType::Width);
             uiobj->relations().add(root, gui::RelationType::Height);
+
+            // 测试 GTextField
+            if (_defaultFontID >= 0) {
+                auto* txt = new gui::GTextField();
+                txt->setFontID(_defaultFontID);
+                txt->setFontSize(24.0f);
+                txt->setText("Hello SDF Text!");
+                txt->setPosition({50, 50, 0});
+                root->addChild(txt);
+            }
         }
 
         stage_->setScreenSize(width, height);

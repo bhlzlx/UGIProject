@@ -9,6 +9,7 @@ namespace gui {
     /// 支持普通/九宫/平铺三种模式，flip UV 已内置
     /// </summary>
     image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic_transform const& trans);
+    image_mesh_t createTextMesh(dispcomp::text_desc_t const& desc);
 
     void updateImageMesh();
 

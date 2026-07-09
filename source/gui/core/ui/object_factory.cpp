@@ -4,6 +4,7 @@
 #include <core/ui/component.h>
 #include "image.h"
 #include "root.h"
+#include "g_text_field.h"
 
 namespace gui {
 
@@ -20,7 +21,10 @@ namespace gui {
         case ObjectType::Graph:
         case ObjectType::Loader:
         case ObjectType::Group:
-        case ObjectType::Text:
+        case ObjectType::Text: {
+            obj = new GTextField();
+            break;
+        }
         case ObjectType::RichText:
         case ObjectType::InputText:
         case ObjectType::Component: {
@@ -63,6 +67,11 @@ namespace gui {
     Object* ObjectFactory::CreateObject(ObjectType type) {
         Object* obj = nullptr;
         switch(type) {
+            case ObjectType::Text: {
+                obj = new GTextField();
+                obj->createDisplayObject();
+                return obj;
+            }
             case ObjectType::Component: {
                 obj = new Component();
                 obj->createDisplayObject();

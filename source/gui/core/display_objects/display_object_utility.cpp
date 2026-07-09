@@ -131,12 +131,6 @@ namespace gui {
         if (info.batchIdx < 0) return;
 
         auto& gfx = reg.get<dispcomp::item_render_data>(entity);
-        auto& sync = reg.get<dispcomp::args_need_sync>(entity);
-        // 矩阵已由 updateItemTransforms 处理，这里只做拷贝
-        if (!sync.mask) {
-            reg.remove<dispcomp::args_need_sync>(entity);
-            return;
-        }
 
         auto* batchData = getBatchData(info.batchEntity);
         if (!batchData || info.batchIdx >= (int)batchData->batches.size()) return;

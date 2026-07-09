@@ -175,8 +175,10 @@ namespace gui {
                     }
                     material.renderType = graphics->meshData.type;
                     material.texture = tex;
-                    renderItems.push_back((void*)graphics->meshData.item);
-                    args.push_back(&graphics->args);
+                    if(graphics->meshData.item) {
+                        renderItems.push_back((void*)graphics->meshData.item);
+                        args.push_back(&graphics->args);
+                    }
                     // rebuild 已同步全部 args，后续 syncDirtyArgs 可跳过此 item
                     reg.remove<dispcomp::args_need_sync>(child);
                     parentBatch.instIndex = (int)args.size() - 1; // 更新索引

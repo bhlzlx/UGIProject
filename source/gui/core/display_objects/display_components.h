@@ -87,6 +87,13 @@ namespace gui {
             image_ext           ext;
         };
 
+        struct text_desc_t {
+            std::string text;
+            int         fontID      = -1;
+            float       fontSize    = 12.0f;
+            uint32_t    color       = 0xffffffff;
+        };
+
         struct transform_dirty {};
 
         // args 需要同步到 batch cache 的标记 + 位掩码
@@ -96,8 +103,9 @@ namespace gui {
             Asm_Props      = 1 << 2,  // props (gray/hdr) 需同步
             Asm_All        = Asm_Transform | Asm_Color | Asm_Props,
         };
+
         struct args_need_sync {
-            uint8_t mask = 0;
+            uint8_t mask;
         };
 
         struct visible {}; // 控件本身的可见性

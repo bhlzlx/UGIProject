@@ -2,6 +2,7 @@
 #include "core/display_objects/display_components.h"
 #include "core/display_objects/display_object.h"
 #include "core/ui/ui_content_scaler.h"
+#include "core/font_manager.h"
 #include "render/render_data.h"
 #include "render/ui_render.h"
 // #include "ui_image_render.h"
@@ -148,20 +149,95 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
     return item;
 }
 
-// ============= updateImageMesh =============
+    // ============= createTextMesh =============
 
-void updateImageMesh()
-{
-    reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::image_desc_t>().each([](entt::entity ett, dispcomp::image_desc_t& imageDesc) {
-        dispcomp::item_render_data& graphics = reg.get_or_emplace<dispcomp::item_render_data>(ett);
-        graphics.meshData.type = UIMeshType::Image;
-        if (graphics.meshData.item) {
-            delete (image_mesh_t*)graphics.meshData.item;
+    image_mesh_t createTextMesh(dispcomp::text_desc_t const& desc) {
+        image_mesh_t mesh;
+
+        auto* fm = FontManager::Instance();
+        if (!fm || desc.fontID < 0 || desc.text.empty()) return mesh;
+
+        auto metrics = fm->getMetrics(desc.fontID, desc.fontSize);
+        float sfScale = metrics.scale;
+        float sdfSrcSize = (float)fm->config().sdfSourceSize;
+
+        float penX = 0;
+        float penY = (float)metrics.ascent * sfScale;
+        float lineH = (float)(metrics.ascent - metrics.descent + metrics.lineGap) * sfScale;
+        uint32_t color = desc.color;
+
+        for (size_t i = 0; i < desc.text.size(); ++i) {
+            uint32_t ch = (uint8_t)desc.text[i];
+            if ((ch & 0x80u) && i + 1 < desc.text.size()) {
+                uint32_t ch2 = (uint8_t)desc.text[i+1];
+                if ((ch & 0xE0u) == 0xC0u) { ch = ((ch & 0x1Fu) << 6) | (ch2 & 0x3Fu); i++; }
+                else if ((ch & 0xF0u) == 0xE0u && i + 2 < desc.text.size()) {
+                    uint32_t ch3 = (uint8_t)desc.text[i+2];
+                    ch = ((ch & 0x0Fu) << 12) | ((ch2 & 0x3Fu) << 6) | (ch3 & 0x3Fu); i += 2;
+                }
+            }
+            if (ch == '\n') { penX = 0; penY += lineH; continue; }
+            if (ch == '\r') continue;
+
+            auto gi = fm->getGlyph(desc.fontID, ch);
+            if (gi.bitmapWidth == 0) continue;
+
+            float gScale = desc.fontSize / (gi.SDFScale * sdfSrcSize);
+            float qx = penX + gi.bitmapBearingX * gScale;
+            float qy = penY + gi.bitmapBearingY * gScale;
+            float qw = (float)gi.bitmapWidth  * gScale;
+            float qh = (float)gi.bitmapHeight * gScale;
+
+            uint16_t base = (uint16_t)mesh.vertices.size();
+            mesh.vertices.push_back({{qx, qy, 0}, color, {gi.texU, gi.texV}, 0});
+            mesh.vertices.push_back({{qx+qw, qy, 0}, color, {gi.texU+gi.texW, gi.texV}, 0});
+            mesh.vertices.push_back({{qx+qw, qy+qh, 0}, color, {gi.texU+gi.texW, gi.texV+gi.texH}, 0});
+            mesh.vertices.push_back({{qx, qy+qh, 0}, color, {gi.texU, gi.texV+gi.texH}, 0});
+            mesh.indices.insert(mesh.indices.end(), {base, (uint16_t)(base+1), (uint16_t)(base+2),
+                                                      base, (uint16_t)(base+2), (uint16_t)(base+3)});
+            penX += gi.bitmapAdvance * gScale;
         }
-        auto& trans = reg.get<dispcomp::basic_transform>(ett);
-        auto* mesh = new image_mesh_t(std::move(createImageMesh(imageDesc, trans)));
-        graphics.meshData.item = mesh;
-        reg.remove<dispcomp::mesh_dirty>(ett);
-    });
-}
+        return mesh;
+    }
+
+    // ============= updateImageMesh =============
+
+    void updateImageMesh()
+    {
+        // Image
+        reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::image_desc_t>().each([](entt::entity ett, dispcomp::image_desc_t& imageDesc) {
+            dispcomp::item_render_data& graphics = reg.get_or_emplace<dispcomp::item_render_data>(ett);
+            graphics.meshData.type = UIMeshType::Image;
+            if (graphics.meshData.item) {
+                delete (image_mesh_t*)graphics.meshData.item;
+            }
+            auto& trans = reg.get<dispcomp::basic_transform>(ett);
+            auto* mesh = new image_mesh_t(std::move(createImageMesh(imageDesc, trans)));
+            graphics.meshData.item = mesh;
+            graphics.args.transfrom = glm::mat4(1.0f);
+            auto& sync = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
+            sync.mask |= dispcomp::Asm_Transform;
+            reg.remove<dispcomp::mesh_dirty>(ett);
+        });
+
+        // Text
+        reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::text_desc_t>().each([](entt::entity ett, dispcomp::text_desc_t& textDesc) {
+            dispcomp::item_render_data& graphics = reg.get_or_emplace<dispcomp::item_render_data>(ett);
+            graphics.meshData.type = UIMeshType::Font;
+            if (graphics.meshData.item) {
+                delete (image_mesh_t*)graphics.meshData.item;
+                graphics.meshData.item = nullptr;
+            }
+            auto* fm = FontManager::Instance();
+            if (fm) {
+                graphics.texture = fm->sdfTexture()->handle();
+            }
+            image_mesh_t mesh = createTextMesh(textDesc);
+            if(mesh.vertices.size()) {
+                auto* meshItem = new image_mesh_t(std::move(mesh));
+                graphics.meshData.item = meshItem;
+            }
+            reg.remove<dispcomp::mesh_dirty>(ett);
+        });
+    }
 }
