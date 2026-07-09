@@ -1,0 +1,5 @@
+- [Architecture](architecture.md) — 项目结构、ECS 设计
+- [GUI Pipeline](gui-pipeline.md) — 渲染管线、GuiTick 流程
+- [Transform System](transform-system.md) — 变换矩阵、batch 系统
+- [Text SDF](text-sdf.md) — Text Pipeline + FontManager（当前未完成）
+- [Known Issues](known-issues.md) — 待修 bug 和注意事项
