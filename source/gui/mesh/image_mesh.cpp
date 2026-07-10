@@ -250,8 +250,8 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
             if(mesh.vertices.size()) {
                 auto* meshItem = new image_mesh_t(std::move(mesh));
                 graphics.meshData.item = meshItem;
-                graphics.args.props.x = 0.08f;  // SDF base smoothing, 字号大时不够就再加
-                graphics.args.props.y = textDesc.fontSize / sdfSrcSize;  // 字号越大平滑范围越宽
+                graphics.args.props.x = 0.05f;
+                graphics.args.props.y = sdfSrcSize / textDesc.fontSize;
                 auto& bounds = reg.get_or_emplace<dispcomp::text_bounds>(ett);
                 bounds.width  = textW;
                 bounds.height = textH;

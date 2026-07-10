@@ -108,12 +108,12 @@ namespace gui {
                 auto sampler = renderable->material()->descriptors()[1];
                 auto tex = renderable->material()->descriptors()[2];
                 tex.res.imageView = texture->defaultView().handle;
-                sampler.res.samplerState = ugi::sampler_state_t();
+                sampler.res.samplerState = ugi::sampler_state_t{ .min = ugi::TextureFilter::Linear, .mag = ugi::TextureFilter::Linear };
                 renderable->material()->updateDescriptor(tex);
                 renderable->material()->updateDescriptor(sampler);
                 ui_render_batch_t* batch = new ui_render_batch_t {
                     renderable, ubo, sampler, tex, std::move(cachedArgs),
-                    ugi::sampler_state_t{}, texture
+                    ugi::sampler_state_t{ .min = ugi::TextureFilter::Linear, .mag = ugi::TextureFilter::Linear }, texture
                 };
                 batches.batches.push_back(batch);
                 cachedArgs.clear(); indices.clear(); vertices.clear();
@@ -127,12 +127,12 @@ namespace gui {
             auto sampler = renderable->material()->descriptors()[1];
             auto tex = renderable->material()->descriptors()[2];
             tex.res.imageView = texture->defaultView().handle;
-            sampler.res.samplerState = ugi::sampler_state_t();
+            sampler.res.samplerState = ugi::sampler_state_t{ .min = ugi::TextureFilter::Linear, .mag = ugi::TextureFilter::Linear };
             renderable->material()->updateDescriptor(tex);
             renderable->material()->updateDescriptor(sampler);
             ui_render_batch_t* batch = new ui_render_batch_t {
                 renderable, ubo, sampler, tex, std::move(cachedArgs),
-                ugi::sampler_state_t{}, texture
+                ugi::sampler_state_t{ .min = ugi::TextureFilter::Linear, .mag = ugi::TextureFilter::Linear }, texture
             };
             batches.batches.push_back(batch);
         }

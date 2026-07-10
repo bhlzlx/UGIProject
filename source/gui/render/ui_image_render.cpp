@@ -160,10 +160,14 @@ namespace gui {
                 auto sampler = renderable->material()->descriptors()[1];
                 auto tex = renderable->material()->descriptors()[2];
                 tex.res.imageView = texture->defaultView().handle;
-                sampler.res.samplerState = ugi::sampler_state_t();
+                constexpr ugi::sampler_state_t kLinearSampler = {
+                    .min = ugi::TextureFilter::Linear,
+                    .mag = ugi::TextureFilter::Linear
+                };
+                sampler.res.samplerState = kLinearSampler;
                 renderable->material()->updateDescriptor(tex);
                 renderable->material()->updateDescriptor(sampler);
-                ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(cachedArgs), ugi::sampler_state_t{}, texture};
+                ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(cachedArgs), kLinearSampler, texture};
                 batches.batches.push_back(batch);
                 cachedArgs.clear();
                 indices.clear();
@@ -177,10 +181,13 @@ namespace gui {
             auto sampler = renderable->material()->descriptors()[1];
             auto tex = renderable->material()->descriptors()[2];
             tex.res.imageView = texture->defaultView().handle;
-            sampler.res.samplerState = ugi::sampler_state_t();
+            constexpr ugi::sampler_state_t kLinearSampler = {
+                .min = ugi::TextureFilter::Linear, .mag = ugi::TextureFilter::Linear
+            };
+            sampler.res.samplerState = kLinearSampler;
             renderable->material()->updateDescriptor(tex);
             renderable->material()->updateDescriptor(sampler);
-            ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(cachedArgs), ugi::sampler_state_t{}, texture};
+            ui_render_batch_t* batch = new ui_render_batch_t { renderable, ubo, sampler, tex, std::move(cachedArgs), kLinearSampler, texture};
             batches.batches.push_back(batch);
         }
         batches.type = UIMeshType::Image;
