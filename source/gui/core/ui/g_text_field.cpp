@@ -101,9 +101,9 @@ namespace gui {
         if (ett != entt::null && reg.any_of<dispcomp::item_render_data>(ett)) {
             auto& gfx = reg.get<dispcomp::item_render_data>(ett);
             gfx.args.color = glm::vec4(
-                float((color >> 16) & 0xff) / 255.f,
-                float((color >> 8) & 0xff) / 255.f,
                 float(color & 0xff) / 255.f,
+                float((color >> 8) & 0xff) / 255.f,
+                float((color >> 16) & 0xff) / 255.f,
                 float((color >> 24) & 0xff) / 255.f
             );
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(ett);

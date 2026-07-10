@@ -88,6 +88,11 @@ namespace gui {
         Object* addChild(Object* child);
         Object* addChildAt(Object* child, uint32_t index);
         Object* getChildAt(int index) const;
+        Object* getChildByID(std::string const& id) const;
+        Object* getChild(std::string const& name) const;
+
+        Controller* getController(std::string const& name) const;
+        Transition* getTransition(std::string const& name) const;
 
         void removeChild(Object* child);
         void removeChildAt(uint32_t index);

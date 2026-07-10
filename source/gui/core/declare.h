@@ -35,9 +35,9 @@ namespace gui {
         union {
             struct {
             #if BIG_ENDIAN
-                uint8_t r, g, b, a; // #rgba
+                uint8_t a, b, g, r;
             #else
-                uint8_t a, b, g, r; // #rgba
+                uint8_t r, g, b, a;
             #endif
             };
             uint32_t val;

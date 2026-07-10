@@ -5,6 +5,7 @@
 #include "image.h"
 #include "root.h"
 #include "g_text_field.h"
+#include "g_button.h"
 
 namespace gui {
 
@@ -25,6 +26,10 @@ namespace gui {
             obj = new GTextField();
             break;
         }
+        case ObjectType::Button: {
+            obj = new GButton();
+            break;
+        }
         case ObjectType::RichText:
         case ObjectType::InputText:
         case ObjectType::Component: {
@@ -33,7 +38,6 @@ namespace gui {
         }
         case ObjectType::List:
         case ObjectType::Label:
-        case ObjectType::Button:
         case ObjectType::ComboBox:
         case ObjectType::ProgressBar:
         case ObjectType::Slider:

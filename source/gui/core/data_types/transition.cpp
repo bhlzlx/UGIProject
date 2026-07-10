@@ -41,4 +41,13 @@ namespace gui {
         return;
     }
 
+    void Transition::play(int times, float delay) {
+        // TODO: 完整实现
+        playing_ = true;
+    }
+
+    void Transition::stop() {
+        playing_ = false;
+    }
+
 }

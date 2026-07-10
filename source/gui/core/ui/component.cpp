@@ -208,6 +208,34 @@ namespace gui {
         controller->runActions();
     }
 
+    Object* Component::getChildByID(std::string const& id) const {
+        for (auto* child : children_) {
+            if (child->id_ == id) return child;
+        }
+        return nullptr;
+    }
+
+    Object* Component::getChild(std::string const& name) const {
+        for (auto* child : children_) {
+            if (child->name_ == name) return child;
+        }
+        return nullptr;
+    }
+
+    Controller* Component::getController(std::string const& name) const {
+        for (auto* c : controllers_) {
+            if (c->name_ == name) return c;
+        }
+        return nullptr;
+    }
+
+    Transition* Component::getTransition(std::string const& name) const {
+        for (auto& t : transitions_) {
+            if (t.name() == name) return const_cast<Transition*>(&t);
+        }
+        return nullptr;
+    }
+
     void Component::applyAllControllers() {
         int cnt = controllers_.size();
         for(int i = 0; i<cnt; ++i) {

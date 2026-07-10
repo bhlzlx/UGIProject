@@ -37,6 +37,7 @@ PRIVATE
     core/ui/root.cpp
     core/ui/component.cpp
     core/ui/g_text_field.cpp
+    core/ui/g_button.cpp
     core/controller.cpp
     core/ui/object.cpp
     core/ui/object_factory.cpp

@@ -50,6 +50,7 @@ namespace gui {
             AutoStopDisabled = 2,
             AutoStopAtEnd = 4,
         };
+        std::string const& name() const { return name_; }
     private:
         std::string                         name_;
         Component*                          owner_;
@@ -84,6 +85,9 @@ namespace gui {
         }
 
         void setup(ByteBuffer& buffer);
+
+        void play(int times = 1, float delay = 0);
+        void stop();
 
     private:
         void play_();
