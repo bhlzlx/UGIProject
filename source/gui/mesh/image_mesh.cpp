@@ -1,6 +1,7 @@
 #include "image_mesh.h"
 #include "core/display_objects/display_components.h"
 #include "core/display_objects/display_object.h"
+#include "core/display_objects/display_object_utility.h"
 #include "core/ui/ui_content_scaler.h"
 #include "core/font_manager.h"
 #include "render/render_data.h"
@@ -151,8 +152,11 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
 
     // ============= createTextMesh =============
 
-    image_mesh_t createTextMesh(dispcomp::text_desc_t const& desc) {
+    image_mesh_t createTextMesh(dispcomp::text_desc_t const& desc,
+                                 dispcomp::basic_transform const& trans,
+                                 float& outWidth, float& outHeight) {
         image_mesh_t mesh;
+        outWidth = 0; outHeight = 0;
 
         auto* fm = FontManager::Instance();
         if (!fm || desc.fontID < 0 || desc.text.empty()) return mesh;
@@ -164,7 +168,8 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
         float penX = 0;
         float penY = (float)metrics.ascent * sfScale;
         float lineH = (float)(metrics.ascent - metrics.descent + metrics.lineGap) * sfScale;
-        uint32_t color = desc.color;
+        uint32_t color = 0xffffffff;// desc.color;
+        float minX = 0, maxX = 0, minY = 0, maxY = 0;
 
         for (size_t i = 0; i < desc.text.size(); ++i) {
             uint32_t ch = (uint8_t)desc.text[i];
@@ -195,8 +200,14 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
             mesh.vertices.push_back({{qx, qy+qh, 0}, color, {gi.texU, gi.texV+gi.texH}, 0});
             mesh.indices.insert(mesh.indices.end(), {base, (uint16_t)(base+1), (uint16_t)(base+2),
                                                       base, (uint16_t)(base+2), (uint16_t)(base+3)});
+            if (qx < minX) minX = qx;
+            if (qx+qw > maxX) maxX = qx+qw;
+            if (qy < minY) minY = qy;
+            if (qy+qh > maxY) maxY = qy+qh;
             penX += gi.bitmapAdvance * gScale;
         }
+        outWidth  = maxX - minX;
+        outHeight = maxY - minY;
         return mesh;
     }
 
@@ -229,15 +240,56 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
                 graphics.meshData.item = nullptr;
             }
             auto* fm = FontManager::Instance();
+            float sdfSrcSize = fm ? (float)fm->config().sdfSourceSize : 64.0f;
             if (fm) {
                 graphics.texture = fm->sdfTexture()->handle();
             }
-            image_mesh_t mesh = createTextMesh(textDesc);
+            auto& textTrans = reg.get<dispcomp::basic_transform>(ett);
+            float textW, textH;
+            image_mesh_t mesh = createTextMesh(textDesc, textTrans, textW, textH);
             if(mesh.vertices.size()) {
                 auto* meshItem = new image_mesh_t(std::move(mesh));
                 graphics.meshData.item = meshItem;
+                graphics.args.props.x = 0.025f;
+                graphics.args.props.y = sdfSrcSize / textDesc.fontSize;
+                auto& bounds = reg.get_or_emplace<dispcomp::text_bounds>(ett);
+                bounds.width  = textW;
+                bounds.height = textH;
             }
             reg.remove<dispcomp::mesh_dirty>(ett);
+        });
+    }
+
+    // ============= updateTextAlignment =============
+
+    void updateTextAlignment() {
+        // 遍历有 text_bounds 和 text_desc_t 的实体，根据对齐方式调整其显示位置
+        reg.view<dispcomp::text_bounds, dispcomp::text_desc_t>().each([](entt::entity ett,
+                                                                         dispcomp::text_bounds& bounds,
+                                                                         dispcomp::text_desc_t& desc) {
+            auto parent = getParent(ett);
+            if (!parent) return;
+            auto& pTrans = reg.get<dispcomp::basic_transform>(parent.entity());
+
+            float ctrlW = pTrans.size.x;
+            float ctrlH = pTrans.size.y;
+            float textW = bounds.width;
+            float textH = bounds.height;
+
+            float ox = 0, oy = 0;
+            if (desc.align == 1)       ox = (ctrlW - textW) * 0.5f;
+            else if (desc.align == 2)  ox = ctrlW - textW;
+            if (desc.verticalAlign == 1)   oy = (ctrlH - textH) * 0.5f;
+            else if (desc.verticalAlign == 2) oy = ctrlH - textH;
+
+            auto& trans = reg.get<dispcomp::basic_transform>(ett);
+            if (trans.position.x != ox || trans.position.y != oy) {
+                trans.position.x = ox;
+                trans.position.y = oy;
+                reg.emplace_or_replace<dispcomp::transform_dirty>(ett);
+                auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
+                s.mask |= dispcomp::Asm_Transform;
+            }
         });
     }
 }

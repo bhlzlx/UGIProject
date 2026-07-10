@@ -249,6 +249,7 @@ namespace gui {
         updateVisible(); // 更新可见性
         updateBatchNodeTree(); // 维护 batch_node 树结构，传播 dirty 标记
         updateImageMesh(); // 有必要就更新mesh
+        updateTextAlignment(); // 根据 text_bounds 重新计算对齐偏移
         updateLocalMatrix(); // batch node 自身矩阵有变化时重算缓存
         updateItemTransforms(); // item 的 Asm_Transform → 重算 local-to-batch 矩阵
         rebuildBatches(); // 重建 batch → 新缓存 + 新索引

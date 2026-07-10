@@ -89,9 +89,16 @@ namespace gui {
 
         struct text_desc_t {
             std::string text;
-            int         fontID      = -1;
-            float       fontSize    = 12.0f;
-            uint32_t    color       = 0xffffffff;
+            int         fontID        = -1;
+            float       fontSize      = 12.0f;
+            uint32_t    color         = 0xffffffff;
+            uint8_t     align         = 0;  // 0=Left, 1=Center, 2=Right
+            uint8_t     verticalAlign = 0;  // 0=Top, 1=Middle, 2=Bottom
+        };
+
+        struct text_bounds {
+            float width  = 0;
+            float height = 0;
         };
 
         struct transform_dirty {};

@@ -130,12 +130,9 @@ namespace gui {
 
     void Object::createDisplayObject() {
         dispobj_ = DisplayObject::createDisplayObject();
-        reg.emplace_or_replace<dispcomp::visible>(dispobj_);
-        reg.emplace_or_replace<dispcomp::visible_dirty>(dispobj_);
-        reg.emplace_or_replace<dispcomp::transform_dirty>(dispobj_);
-        // 初始化渲染参数默认值
-        auto& gfx = reg.get_or_emplace<dispcomp::item_render_data>(dispobj_);
-        gfx.args.color = glm::vec4(1.f, 1.f, 1.f, alpha_);
+        // // 初始化渲染参数默认值
+        // auto& gfx = reg.get_or_emplace<dispcomp::item_render_data>(dispobj_);
+        // gfx.args.color = glm::vec4(1.f, 1.f, 1.f, alpha_);
     }
 
     void Object::setVisible(bool val) {

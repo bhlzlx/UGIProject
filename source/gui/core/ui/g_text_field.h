@@ -5,27 +5,47 @@
 
 namespace gui {
 
-    /// SDF 文字渲染控件
+    enum class AlignType : uint8_t { Left = 0, Center = 1, Right = 2 };
+    enum class VertAlignType : uint8_t { Top = 0, Middle = 1, Bottom = 2 };
+
+    struct TextFormat {
+        std::string     font;
+        float           fontSize        = 12.0f;
+        uint32_t        color           = 0xffffffff;
+        AlignType       align           = AlignType::Left;
+        VertAlignType   verticalAlign   = VertAlignType::Top;
+        int16_t     lineSpacing     = 0;
+        int16_t     letterSpacing   = 0;
+        bool        underline       = false;
+        bool        italic          = false;
+        bool        bold            = false;
+        bool        strikethrough   = false;
+        uint32_t    outlineColor    = 0;
+        float       outline         = 0;
+        uint32_t    shadowColor     = 0;
+        float       shadowOffsetX   = 0;
+        float       shadowOffsetY   = 0;
+    };
+
     class GTextField : public Object {
     public:
         enum class AutoSize {
-            None,       // 不自动调整大小
-            Both,       // 根据文字内容调整宽高
-            Height,     // 只自动调整高度
-            Shrink,     // 缩小字号以适应宽度
+            None, Both, Height, Shrink
         };
 
     private:
         std::string     text_;
         int             fontID_     = -1;
-        float           fontSize_   = 12.0f;
-        uint32_t        color_      = 0xffffffff;
+        TextFormat      tf_;
         AutoSize        autoSize_   = AutoSize::None;
         bool            singleLine_ = true;
         float           textWidth_  = 0;
         float           textHeight_ = 0;
 
-        void syncTextDesc();  // 同步属性到 ECS text_desc_t
+        DisplayObject   textDispobj_;
+
+        void syncTextDesc();
+        void applyAlignment();
 
     protected:
         void onSizeChanged() override;
@@ -36,19 +56,20 @@ namespace gui {
 
         virtual void constructFromResource() override {}
         virtual void createDisplayObject() override;
+        virtual void setupBeforeAdd(ByteBuffer& buffer, int startPos) override;
+        virtual void setupAfterAdd(ByteBuffer& buffer, int startPos) override;
 
-        // 属性
+        DisplayObject textDisplayObject() const { return textDispobj_; }
+
+        TextFormat const& textFormat() const { return tf_; }
+        TextFormat& textFormat() { return tf_; }
+
         std::string const& text() const { return text_; }
         void setText(std::string const& val);
+        void setColor(uint32_t color);
 
         int fontID() const { return fontID_; }
         void setFontID(int val);
-
-        float fontSize() const { return fontSize_; }
-        void setFontSize(float val);
-
-        uint32_t color() const { return color_; }
-        void setColor(uint32_t val);
 
         AutoSize autoSizeMode() const { return autoSize_; }
         void setAutoSize(AutoSize val);

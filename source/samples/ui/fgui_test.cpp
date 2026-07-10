@@ -227,17 +227,17 @@ namespace ugi {
             uiobj->relations().add(root, gui::RelationType::Width);
             uiobj->relations().add(root, gui::RelationType::Height);
 
-            // 测试 GTextField
-            if (_defaultFontID >= 0) {
-                auto* txt = new gui::GTextField();
-                txt->createDisplayObject();
-                txt->setFontID(_defaultFontID);
-                txt->setFontSize(24.0f);
-                txt->setText("Hello,phantom lancer!");
-                txt->setColor(0xff00ff00);
-                txt->setPosition({50, 50, 0});
-                root->addChild(txt);
-            }
+            // // 测试 GTextField
+            // if (_defaultFontID >= 0) {
+            //     auto* txt = new gui::GTextField();
+            //     txt->createDisplayObject();
+            //     txt->setFontID(_defaultFontID);
+            //     txt->setFontSize(24.0f);
+            //     txt->setText("Hello,phantom lancer!");
+            //     txt->setColor(0xff00ff00);
+            //     txt->setPosition({50, 50, 0});
+            //     root->addChild(txt);
+            // }
         }
 
         stage_->setScreenSize(width, height);

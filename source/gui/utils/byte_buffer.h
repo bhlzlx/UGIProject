@@ -38,6 +38,12 @@ namespace gui {
         Gears = 2,
         Relations = 3,
         FillInfo = 5,
+        TextData = 6,       // GTextField 的文字内容
+    };
+
+    enum class TextFieldBlocks : uint8_t {
+        Style = 5,
+        Text = 6,
     };
 
     // 目测序列化FGUI是按小端存储的

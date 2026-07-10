@@ -10,6 +10,10 @@ namespace gui {
 
     DisplayObject DisplayObject::createDisplayObject() {
         auto entity = reg.create();
+        reg.emplace_or_replace<dispcomp::visible>(entity);
+        reg.emplace_or_replace<dispcomp::visible_dirty>(entity);
+        reg.emplace_or_replace<dispcomp::basic_transform>(entity);
+        reg.emplace_or_replace<dispcomp::transform_dirty>(entity);
         return DisplayObject(entity);
     }
 

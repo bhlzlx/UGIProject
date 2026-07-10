@@ -34,6 +34,8 @@ namespace gui {
 
         virtual void setSize(Size2D<float> const& size) override;
 
+        void setColor(Color4B val);
+
         virtual void createDisplayObject() override;
         virtual void constructFromResource() override;
         virtual void setupBeforeAdd(ByteBuffer& buffer, int startPos = 0) override;
