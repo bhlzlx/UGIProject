@@ -36,15 +36,18 @@ namespace gui {
 
         Controller*     buttonController_   = nullptr;
 
+    public:
         void setState(std::string const& val);
+
+    private:
         void updateState();
-        void initButtonController();
 
     public:
         GButton();
         ~GButton();
 
         virtual void constructFromResource() override;
+        virtual void constructExtension(ByteBuffer& buff) override;
         virtual void setupAfterAdd(ByteBuffer& buffer, int startPos) override;
 
         virtual void onControllerChanged(Controller* ctl) override;

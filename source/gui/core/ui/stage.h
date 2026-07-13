@@ -14,14 +14,20 @@ namespace gui {
         std::set<Root*>         ui3dRoots_;
         float                   screenWidth_ = 0;
         float                   screenHeight_ = 0;
+        Object*                 hoverTarget_ = nullptr;
+        Object*                 pressTarget_ = nullptr;
         //
         Stage()
             : ui2dRoot_(nullptr)
             , ui3dRoots_{}
         {
         }
+        Object* hitTest(glm::vec2 screenPos) const;
     public:
         void initialize(float width, float height);
+        void onMouseDown(glm::vec2 pos);
+        void onMouseUp(glm::vec2 pos);
+        void onMouseMove(glm::vec2 pos);
 
         Root* defaultRoot() const {
             return ui2dRoot_;
@@ -30,7 +36,7 @@ namespace gui {
         /// <summary>
         /// 设置屏幕/窗口尺寸，触发 scaleFactor 重算并应用到 UI
         /// </summary>
-        void setScreenSize(uint32_t width, uint32_t height);
+        void onResize(uint32_t width, uint32_t height);
 
         /// <summary>
         /// 获取当前屏幕宽度

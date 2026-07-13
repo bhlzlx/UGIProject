@@ -69,12 +69,6 @@ namespace gui {
 
         bool isBatchNode() const;
 
-        /**
-         * @brief Set the Child Index object
-         * 其实该改成change child'd index 意思比较准确
-         * @param child this object's child
-         * @param index target index
-         */
         void setChildIndex(DisplayObject child, uint32_t index);
     public:
         static DisplayObject createRootObject();

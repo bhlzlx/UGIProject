@@ -92,6 +92,7 @@ namespace gui {
         Object* getChild(std::string const& name) const;
 
         Controller* getController(std::string const& name) const;
+        Controller* getControllerAt(int index) const;
         Transition* getTransition(std::string const& name) const;
 
         void removeChild(Object* child);

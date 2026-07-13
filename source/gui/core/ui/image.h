@@ -35,6 +35,7 @@ namespace gui {
         virtual void setSize(Size2D<float> const& size) override;
 
         void setColor(Color4B val);
+        void setIcon(std::string const&) {}  // TODO
 
         virtual void createDisplayObject() override;
         virtual void constructFromResource() override;

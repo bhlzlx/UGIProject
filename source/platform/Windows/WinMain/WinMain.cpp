@@ -254,6 +254,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case MK_MBUTTON:
             object->onMouseEvent(UGIApplication::MButtonMouse, UGIApplication::MouseMove, x, y);
             break;
+        default:
+            object->onMouseEvent(UGIApplication::MouseButtonNone, UGIApplication::MouseMove, x, y);
+            break;
         }
         break;
     }
@@ -269,6 +272,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         short x = LOWORD(lParam);
         short y = HIWORD(lParam);
         object->onMouseEvent(UGIApplication::RButtonMouse, UGIApplication::MouseUp, x, y);
+        break;
+    }
+    case WM_LBUTTONDOWN: {
+        short x = LOWORD(lParam);
+        short y = HIWORD(lParam);
+        object->onMouseEvent(UGIApplication::LButtonMouse, UGIApplication::MouseDown, x, y);
+        break;
+    }
+    case WM_LBUTTONUP: {
+        short x = LOWORD(lParam);
+        short y = HIWORD(lParam);
+        object->onMouseEvent(UGIApplication::LButtonMouse, UGIApplication::MouseUp, x, y);
         break;
     }
     default: {

@@ -7,6 +7,7 @@
 #include <core/declare.h>
 #include <core/events/event_dispatcher.h>
 #include <core/data_types/relation.h>
+#include <core/data_types/gear.h>
 #include <utils/byte_buffer.h>
 
 /**
@@ -70,6 +71,7 @@ namespace gui {
         DisplayObject   dispobj_;
 
         Value           data_;
+        std::string     tooltips_;
         //
     public:
         Object()
@@ -134,6 +136,9 @@ protected:
         void updateGear(int index);
         void checkGearDisplay();
         void setSizeDirectly(Size2D<float> const& size);
+
+        static constexpr int kGearCount = 10;
+        GearBase*               gears_[kGearCount] = {};
     private:
     public:
         float x() const { return position_.x; }
@@ -210,6 +215,9 @@ protected:
         void setTouchable(bool val) { touchable_ = val; }
 
         Component* parent() const { return parent_; }
+
+        /// 沿 Object 父链冒泡事件
+        bool bubbleEvent(std::string const& type, void* data = nullptr) override;
 
         ObjectType objectType() const { return type_; }
         std::string const& id() const { return id_; }

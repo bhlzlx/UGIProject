@@ -31,6 +31,7 @@
 #include "render/ui_render.h"
 #include "render/text_sdf_render.h"
 #include "gui/core/font_manager.h"
+#include "gui/core/fairy_gui_context.h"
 #include "gui/core/ui/g_text_field.h"
 // #include "gui/render/render_data.h"
 // #include "gui/render/ui_image_render.h"
@@ -45,26 +46,6 @@
 namespace ugi {
 
     // 生成2D的相机view * projection矩阵
-    glm::mat4 CreateVPMat(glm::vec2 screenSize, float fovy) {
-        glm::vec3 camPos;
-        camPos.z = (screenSize.y / 2) / tan(fovy/2.f/180.f * 3.1415926);
-        camPos.x = screenSize.x / 2;
-        camPos.y = screenSize.y / 2;
-        glm::mat4 viewMat = glm::lookAt(camPos, glm::vec3(camPos.x, camPos.y, 0.f), glm::vec3(0, 1,0)); // view mat
-        glm::mat4 projMat = glm::perspective(glm::radians(fovy), screenSize.x / screenSize.y, 0.1f, camPos.z*2);
-        return projMat * viewMat;
-    }
-
-    glm::mat4 CreateVPMat2(glm::vec2 screenSize) {
-        glm::vec3 camPos;
-        camPos.z = 100;
-        camPos.x = screenSize.x / 2;
-        camPos.y = screenSize.y / 2;
-        glm::mat4 viewMat = glm::lookAt(camPos, glm::vec3(camPos.x, camPos.y, 0.f), glm::vec3(0, 1,0)); // view mat
-        glm::mat4 projMat = glm::ortho(-camPos.x, camPos.x *2, -camPos.y, camPos.y * 2, 0.1f, 105.f);
-        return projMat * viewMat;
-    }
-
     bool FGUIDemo::initialize( void* _wnd, comm::IArchive* arch) {
         _arch = arch;
         auto pipelineFile = arch->openIStream("/shaders/fgui_image/pipeline.bin", {comm::ReadFlag::binary});
@@ -140,6 +121,15 @@ namespace ugi {
 
     glm::mat4 vp;
 
+    void FGUIDemo::onMouseEvent(eMouseButton bt, eMouseEvent event, int x, int y) {
+        switch (event) {
+        case MouseDown: gui::FairyGUIContext::Instance()->onMouseDown(x, y); break;
+        case MouseUp:   gui::FairyGUIContext::Instance()->onMouseUp(x, y);   break;
+        case MouseMove: gui::FairyGUIContext::Instance()->onMouseMove(x, y); break;
+        default: break;
+        }
+    }
+
     void FGUIDemo::tick() {
         if (!_renderContext->onPreTick()) return;
         _render->tick();
@@ -154,15 +144,13 @@ namespace ugi {
         });
         // game logic
         {
-            if(stage_) {
-                static float angle = 0;
-                angle += 0.1f;
-                auto root = stage_->defaultRoot();
-                auto test = (gui::Component*)root->getChildAt(0);
-                auto child = test->getChildAt(1);
-                if (child) {
-                    child->setRotation(angle);
-                }
+            static float angle = 0;
+            angle += 0.1f;
+            auto root = gui::Stage::Instance()->defaultRoot();
+            auto test = (gui::Component*)root->getChildAt(0);
+            auto child = test->getChildAt(1);
+            if (child) {
+                child->setRotation(angle);
             }
         }
 
@@ -187,7 +175,7 @@ namespace ugi {
                 // _render->bind(renderEnc);
                 // _render->drawBatch(_imageBatches, renderEnc);
                 //
-                gui::SetVPMat(vp);
+                gui::SetVPMat(gui::FairyGUIContext::Instance()->vp());
                 gui::DrawRenderBatches(renderEnc);
             }
             renderEnc->endEncode();
@@ -205,10 +193,9 @@ namespace ugi {
         _width = width;
         _height = height;
 
-        gui::Size2D<float> wndSize(width, height);
-        
-        if(!stage_) {
-            // 配置 UIContentScaler
+        static bool uiInitialized = false;
+        if (!uiInitialized) {
+            uiInitialized = true;
             auto& scaler = *gui::UIContentScaler::Instance();
             scaler.scaleMode = gui::UIContentScaler::ScaleMode::ScaleWithScreenSize;
             scaler.screenMatchMode = gui::UIContentScaler::ScreenMatchMode::MatchWidthOrHeight;
@@ -217,35 +204,18 @@ namespace ugi {
 
             gui::Package::archive_ = comm::CreateFSArchive(_arch->rootPath() + "/test/bytes");
             auto uipack = gui::Package::AddPackage("test");
-            stage_ = gui::Stage::Instance();
-            stage_->initialize(scaler.designResolutionX, scaler.designResolutionY);
+            auto* stage = gui::Stage::Instance();
+            stage->initialize(scaler.designResolutionX, scaler.designResolutionY);
 
-            auto root = stage_->defaultRoot();
-            gui::Object* uiobj = uipack->createObject("test");
+            auto* root = stage->defaultRoot();
+            auto* uiobj = uipack->createObject("test");
             uipack->loadAllAssets();
             root->addChild(uiobj);
             uiobj->relations().add(root, gui::RelationType::Width);
             uiobj->relations().add(root, gui::RelationType::Height);
-
-            // // 测试 GTextField
-            // if (_defaultFontID >= 0) {
-            //     auto* txt = new gui::GTextField();
-            //     txt->createDisplayObject();
-            //     txt->setFontID(_defaultFontID);
-            //     txt->setFontSize(24.0f);
-            //     txt->setText("Hello,phantom lancer!");
-            //     txt->setColor(0xff00ff00);
-            //     txt->setPosition({50, 50, 0});
-            //     root->addChild(txt);
-            // }
         }
 
-        stage_->setScreenSize(width, height);
-        vp = CreateVPMat(glm::vec2(width, height), 45.f);
-        //vp = CreateVPMat2(glm::vec2(width, height));
-        // float logicalW = stage_->screenWidth() / gui::UIContentScaler::Instance()->scaleFactor;
-        // float logicalH = stage_->screenHeight() / gui::UIContentScaler::Instance()->scaleFactor;
-        // vp = CreateVPMat(glm::vec2(logicalW, logicalH), 45.f);
+        gui::FairyGUIContext::Instance()->setScreenSize((float)width, (float)height);
     }
 
     void FGUIDemo::release() {

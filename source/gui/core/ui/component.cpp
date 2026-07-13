@@ -229,6 +229,13 @@ namespace gui {
         return nullptr;
     }
 
+    Controller* Component::getControllerAt(int index) const {
+        if (index >= 0 && index < (int)controllers_.size())  {
+            return controllers_[index];
+        }
+        return nullptr;
+    }
+
     Transition* Component::getTransition(std::string const& name) const {
         for (auto& t : transitions_) {
             if (t.name() == name) return const_cast<Transition*>(&t);

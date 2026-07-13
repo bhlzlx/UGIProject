@@ -70,6 +70,7 @@ namespace gui {
 
         int fontID() const { return fontID_; }
         void setFontID(int val);
+        void setFontSize(float val) { tf_.fontSize = val; syncTextDesc(); }
 
         AutoSize autoSizeMode() const { return autoSize_; }
         void setAutoSize(AutoSize val);

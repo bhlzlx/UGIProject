@@ -7,9 +7,6 @@
     <image id="n4_n450" name="n4" src="n4503" fileName="ushio.png" xy="44,37" pivot="0.5,0.5" size="64,64">
       <relation target="n6_v25p" sidePair="rightext-right"/>
     </image>
-    <image id="n12_exat" name="n12" src="exat5" fileName="img/frame.png" xy="182,73" size="367,168"/>
-    <text id="n8_exat" name="n8" xy="182,74" size="366,166" fontSize="45" color="#ffffff" align="center" vAlign="bottom" autoSize="none" text="phantom">
-      <relation target="n12_exat" sidePair="width-width,height-height,left-left,top-top"/>
-    </text>
+    <component id="n13_hs07" name="n13" src="hs076" fileName="btn.xml" xy="44,111"/>
   </displayList>
 </component>

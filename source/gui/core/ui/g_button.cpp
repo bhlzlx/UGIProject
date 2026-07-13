@@ -10,42 +10,55 @@ namespace gui {
         type_ = ObjectType::Button;
     }
 
-    GButton::~GButton() {
-        if (buttonController_) delete buttonController_;
-    }
-
-    void GButton::initButtonController() {
-        if (buttonController_) return;
-        buttonController_ = new Controller();
-        buttonController_->parent_ = this;
-
-        // page order: 0=up, 1=down, 2=over, 3=selectedOver, 4=disabled, 5=selectedDisabled
-        buttonController_->pageNames_.push_back(UP);
-        buttonController_->pageIDs_.push_back("0");
-        buttonController_->pageNames_.push_back(DOWN);
-        buttonController_->pageIDs_.push_back("1");
-        buttonController_->pageNames_.push_back(OVER);
-        buttonController_->pageIDs_.push_back("2");
-        buttonController_->pageNames_.push_back(SELECTED_OVER);
-        buttonController_->pageIDs_.push_back("3");
-        buttonController_->pageNames_.push_back(DISABLED);
-        buttonController_->pageIDs_.push_back("4");
-        buttonController_->pageNames_.push_back(SELECTED_DISABLED);
-        buttonController_->pageIDs_.push_back("5");
-        buttonController_->selectedIndex_ = 0;
-
-        controllers_.push_back(buttonController_);
-    }
+    GButton::~GButton() = default;
 
     void GButton::constructFromResource() {
         Component::constructFromResource();
-        initButtonController();
+        // 按钮的 controller 在 constructFromResource 里已从 .fui 加载，
+        // constructExtension 会找到它并注册事件
+    }
+
+    void GButton::constructExtension(ByteBuffer& buff) {
+        // Extension block (from Component::constructFromResource line 170)
+        buff.seekToBlock(0, ComponentBlocks::Ext);
+
+        mode_ = (ButtonMode)buff.read<uint8_t>();
+        buff.read<csref>();  // sound url, skip
+        buff.read<float>();  // soundVolumeScale
+        int downEffect = buff.read<uint8_t>();
+        float downEffectValue = buff.read<float>();
+        if (downEffect == 2) {
+            setPivot({0.5f, 0.5f}, pivotAsAnchor_);
+        }
+
+        // 从已有的 controllers 中找到 button controller
+        buttonController_ = getController("button");
+
+        titleObject_ = getChild("title");
+        iconObject_  = getChild("icon");
+        if (titleObject_) {
+            auto* txt = dynamic_cast<GTextField*>(titleObject_);
+            if (txt) title_ = txt->text();
+        }
+
+        if (mode_ == ButtonMode::Common)
+            setState(UP);
+
+        // 注册事件监听 (与 C# 对齐)
+        addEventListener("onTouchBegin", [this](EventContext*) { onTouchBegin(); });
+        addEventListener("onClick",      [this](EventContext*) { onTouchEnd(); });
+        addEventListener("onRollOver",   [this](EventContext*) { over_ = true;  updateState(); });
+        addEventListener("onRollOut",    [this](EventContext*) { over_ = false; updateState(); });
     }
 
     void GButton::setupAfterAdd(ByteBuffer& buffer, int startPos) {
         Component::setupAfterAdd(buffer, startPos);
         if (!titleObject_) titleObject_ = getChild("title");
         if (!iconObject_)  iconObject_  = getChild("icon");
+
+        buffer.seekToBlock(startPos, ComponentBlocks::Ext);
+        relatedController_ = getControllerAt(buffer.read<int16_t>());
+        relatedPageId_     = buffer.read<csref>();
     }
 
     void GButton::onControllerChanged(Controller* ctl) {
@@ -56,16 +69,13 @@ namespace gui {
     }
 
     void GButton::setState(std::string const& val) {
-        if (!buttonController_) return;
-        if (buttonController_->hasPage(val))
+        if (buttonController_ && buttonController_->hasPage(val))
             buttonController_->setSelectedPage(val);
     }
 
     void GButton::updateState() {
-        if (!buttonController_) return;
         if (selected_) {
-            if (over_)  setState(SELECTED_OVER);
-            else        setState(UP);  // selected state: "up" for selected
+            setState(over_ ? SELECTED_OVER : UP);
         } else {
             if (down_)  setState(DOWN);
             else if (over_) setState(OVER);
@@ -102,9 +112,7 @@ namespace gui {
         icon_ = val;
         if (iconObject_) {
             auto* img = dynamic_cast<Image*>(iconObject_);
-            if (img) {
-                // TODO: set icon from URL
-            }
+            if (img) { /* TODO: set icon from URL */ }
         }
     }
 
@@ -116,12 +124,10 @@ namespace gui {
     void GButton::onTouchEnd() {
         if (down_) {
             down_ = false;
-            if (changeStateOnClick_) {
-                if (mode_ == ButtonMode::Check) {
-                    setSelected(!selected_);
-                } else if (mode_ == ButtonMode::Radio) {
-                    if (!selected_) setSelected(true);
-                }
+            if (mode_ == ButtonMode::Check) {
+                setSelected(!selected_);
+            } else if (mode_ == ButtonMode::Radio) {
+                if (!selected_) setSelected(true);
             }
         }
         updateState();

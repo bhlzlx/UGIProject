@@ -59,10 +59,10 @@ VSOutput main(VSInput input)
     output.uv = input.uv;
 
     // 解包 RGBA 颜色
-    float a = float((input.packedColor >> 24) & 0xffu) / 255.0;
-    float r = float((input.packedColor >> 16) & 0xffu) / 255.0;
+    float r = float( input.packedColor        & 0xffu) / 255.0;
     float g = float((input.packedColor >>  8) & 0xffu) / 255.0;
-    float b = float( input.packedColor        & 0xffu) / 255.0;
+    float b = float((input.packedColor >> 16) & 0xffu) / 255.0;
+    float a = float((input.packedColor >> 24) & 0xffu) / 255.0;
     output.color = float4(r, g, b, a);
 
     output.props = imageDatas[idx].props;

@@ -46,10 +46,10 @@ VSOutput main(VSInput input)
 
     output.uv = input.uv;
 
-    float a = float((input.packedColor >> 24) & 0xffu) / 255.0;
-    float r = float((input.packedColor >> 16) & 0xffu) / 255.0;
+    float r = float( input.packedColor        & 0xffu) / 255.0;
     float g = float((input.packedColor >>  8) & 0xffu) / 255.0;
-    float b = float( input.packedColor        & 0xffu) / 255.0;
+    float b = float((input.packedColor >> 16) & 0xffu) / 255.0;
+    float a = float((input.packedColor >> 24) & 0xffu) / 255.0;
     output.color = float4(r, g, b, a);
     output.color = output.color * imageDatas[idx].color;
 

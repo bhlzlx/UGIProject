@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="100,20" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="1"/>
+  <displayList>
+    <text id="n3_hs07" name="title" xy="0,0" size="100,20" fontSize="12" color="#cc6600" align="center" vAlign="middle" autoSize="none" singleLine="true" text="hello,world！">
+      <gearColor controller="button" pages="0,1,2,3" values="#cccccc,#000000|#cc6600,#000000|#00ff00,#000000|#99ff00,#000000"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </text>
+  </displayList>
+  <Button/>
+</component>

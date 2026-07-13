@@ -12,6 +12,7 @@ PUBLIC
 target_sources(gui 
 PRIVATE 
     core/data_types/relation.cpp
+    core/data_types/gear.cpp
     core/data_types/transition.cpp
     core/data_types/interpolatable_path.cpp
     core/data_types/tweener.cpp
@@ -20,6 +21,7 @@ PRIVATE
     core/events/event_dispatcher.cpp
     core/events/input_event.cpp
     core/input_handler.cpp
+    core/fairy_gui_context.cpp
     core/font_manager.cpp
     core/package.cpp
     core/package_item.cpp

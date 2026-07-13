@@ -5,6 +5,8 @@
     <image id="n4503" name="ushio.png" path="/"/>
     <image id="v25p4" name="background.png" path="/img/" scale="tile" scale9grid="16,16,32,32"/>
     <image id="exat5" name="frame.png" path="/img/" scale="9grid" scale9grid="16,16,32,32"/>
+    <component id="hs076" name="btn.xml" path="/"/>
+    <component id="hs077" name="Button1.xml" path="/"/>
   </resources>
   <publish name="test" path="./bytes" packageCount="2"/>
 </packageDescription>

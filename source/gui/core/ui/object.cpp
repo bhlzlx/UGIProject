@@ -3,6 +3,7 @@
 #include "core/display_objects/display_components.h"
 #include "utils/byte_buffer.h"
 #include <core/gui_context.h>
+#include <core/controller.h>
 #include <core/ui/component.h>
 
 namespace gui {
@@ -112,10 +113,36 @@ namespace gui {
             buffer->read<float>();
         }
         auto dat = buffer->read<csref>();
-        data_ = Value(std::move(dat)); // user data???
+        data_ = Value(std::move(dat));
+
     }
 
     void Object::setupAfterAdd(ByteBuffer& buffer, int startPos) {
+        // Block 1 (Extra): tooltips + group
+        buffer.seekToBlock(startPos, ObjectBlocks::Extra);
+        auto tips = buffer.read<csref>();
+        if (!tips.empty()) tooltips_ = tips;
+        int groupId = buffer.read<int16_t>();
+        if (groupId >= 0 && parent_) {
+            group_ = (Group*)parent_->getChildAt(groupId);
+        }
+
+        // Block 3 (Gears): gearCount(short) → [nextPos(ushort) + type(byte) + data]...
+        buffer.seekToBlock(startPos, ObjectBlocks::Gears);
+        int gearCnt = buffer.read<int16_t>();
+        for (int i = 0; i < gearCnt; ++i) {
+            int nextPos = buffer.read<uint16_t>();
+            nextPos += buffer.pos();
+            int gearType = buffer.read<uint8_t>();
+            if (gearType >= 0 && gearType < Object::kGearCount) {
+                auto* gear = createGear(gearType, this);
+                if (gear) {
+                    gear->setup(buffer);
+                    gears_[gearType] = gear;
+                }
+            }
+            buffer.setPos(nextPos);
+        }
     }
 
     void Object::internalSetParent(Component* comp) {
@@ -123,9 +150,25 @@ namespace gui {
     }
 
     void Object::handleControllerChanged(Controller* controller) {
-        handlingController_ = true; {
+        handlingController_ = true;
+        for (int i = 0; i < kGearCount; ++i) {
+            if (gears_[i] && gears_[i]->controller() == controller)
+                gears_[i]->apply();
         }
         handlingController_ = false;
+    }
+
+    void Object::updateGear(int index) {
+        if (index >= 0 && index < kGearCount && gears_[index])
+            gears_[index]->updateState();
+    }
+
+    void Object::checkGearDisplay() {
+        if (handlingController_) return;
+        for (int i = 0; i < kGearCount; ++i) {
+            if (gears_[i] && gears_[i]->controller() && gears_[i]->controller()->changing_)
+                gears_[i]->apply();
+        }
     }
 
     void Object::createDisplayObject() {
@@ -161,6 +204,33 @@ namespace gui {
         if(parent_) {
             parent_->removeChild(this);
         }
+    }
+
+    bool Object::bubbleEvent(std::string const& type, void* data) {
+        EventContext ctx(type, this, data);
+
+        // 收集父链 (this → root)
+        std::vector<Object*> chain;
+        Object* cur = this;
+        while (cur) {
+            chain.push_back(cur);
+            cur = cur->parent();
+        }
+
+        // Capture: root → target
+        for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+            if (ctx.isStopped()) return true;
+            auto& bridge = (*it)->getBridge(type);
+            if (!bridge.isEmpty()) bridge.fire(&ctx, true);
+        }
+
+        // Target & Bubble: target → root
+        for (auto* obj : chain) {
+            if (ctx.isStopped()) return true;
+            auto& bridge = obj->getBridge(type);
+            if (!bridge.isEmpty()) bridge.fire(&ctx, false);
+        }
+        return true;
     }
 
     // ---- Position ----

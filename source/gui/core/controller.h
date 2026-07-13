@@ -51,6 +51,7 @@ namespace gui {
     class Controller : public EventDispatcher {
         friend class Component;
         friend class GButton;
+        friend class Object;
     private:
         std::string                  name_;
         Component*                   parent_ = nullptr;

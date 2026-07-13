@@ -10,26 +10,26 @@ namespace gui {
     // ============= ControllerAction =============
 
     void ControllerAction::run(Controller* ctl, std::string const& prevPage, std::string const& curPage) {
-        bool fromOk = fromPages.empty()
-            || std::find(fromPages.begin(), fromPages.end(), prevPage) != fromPages.end();
-        bool toOk = toPages.empty()
-            || std::find(toPages.begin(), toPages.end(), curPage) != toPages.end();
-        if (fromOk && toOk)
+        bool fromOk = std::find(fromPages.begin(), fromPages.end(), prevPage) != fromPages.end();
+        bool toOk = std::find(toPages.begin(), toPages.end(), curPage) != toPages.end();
+        if (fromOk && toOk) {
             enter(ctl);
-        else
+        } else {
             leave(ctl);
+        }
     }
 
     void ControllerAction::setup(ByteBuffer& buffer) {
         int cnt = buffer.read<int16_t>();
         fromPages.resize(cnt);
-        for (int i = 0; i < cnt; ++i)
+        for (int i = 0; i < cnt; ++i) {
             fromPages[i] = buffer.read<csref>();
-
+        }
         cnt = buffer.read<int16_t>();
         toPages.resize(cnt);
-        for (int i = 0; i < cnt; ++i)
+        for (int i = 0; i < cnt; ++i) {
             toPages[i] = buffer.read<csref>();
+        }
     }
 
     ControllerAction* ControllerAction::create(ControllerActionType type) {
@@ -50,12 +50,18 @@ namespace gui {
     }
 
     void ChangePageAction::enter(Controller* ctl) {
-        if (!ctl || !ctl->parent()) return;
+        if (!ctl || !ctl->parent()) {
+            return;
+        }
         auto* target = ctl->parent()->getChildByID(objectId);
-        if (!target) return;
+        if (!target) {
+            return;
+        }
         auto* comp = dynamic_cast<Component*>(target);
         auto* cc = comp ? comp->getController(controllerName) : nullptr;
-        if (cc) cc->setSelectedPage(targetPage);
+        if (cc) {
+            cc->setSelectedPage(targetPage);
+        }
     }
 
     void ChangePageAction::leave(Controller* ctl) {
@@ -126,11 +132,14 @@ namespace gui {
     }
 
     void Controller::runActions() {
-        if (prevIndex_ < 0 || selectedIndex_ < 0) return;
+        if (prevIndex_ < 0 || selectedIndex_ < 0) {
+            return;
+        } 
         std::string prev = (prevIndex_ < (int)pageIDs_.size()) ? pageIDs_[prevIndex_] : "";
         std::string cur  = (selectedIndex_ < (int)pageIDs_.size()) ? pageIDs_[selectedIndex_] : "";
-        for (auto* action : actions_)
+        for (auto* action : actions_) {
             action->run(this, prev, cur);
+        }
     }
 
     void Controller::setup(ByteBuffer& buffer) {

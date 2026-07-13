@@ -22,7 +22,6 @@ namespace ugi {
         float                           _width;
         float                           _height;
 
-        gui::Stage*                      stage_;
         int                              _defaultFontID = -1;
         //
         gui::ui_render_batches_t        _imageBatches;
@@ -31,6 +30,7 @@ namespace ugi {
         virtual void resize( uint32_t _width, uint32_t _height );
         virtual void release();
         virtual void tick();
+        virtual void onMouseEvent(eMouseButton _bt, eMouseEvent _event, int _x, int _y) override;
         virtual const char * title();
         virtual uint32_t rendererType() ;
     };
