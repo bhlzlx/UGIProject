@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="800,600">
+  <controller name="c1" pages="" selected="-1"/>
   <displayList>
-    <image id="n6_v25p" name="n6" src="v25p4" fileName="img/background.png" xy="0,0" size="800,600">
-      <relation target="" sidePair="width-width,height-height,left-left,top-top"/>
-    </image>
-    <image id="n4_n450" name="n4" src="n4503" fileName="ushio.png" xy="44,37" pivot="0.5,0.5" size="64,64">
-      <relation target="n6_v25p" sidePair="rightext-right"/>
-    </image>
-    <component id="n13_hs07" name="n13" src="hs076" fileName="btn.xml" xy="44,111"/>
+    <component id="n3_rtwy" name="n3" src="rtwy2" fileName="Button1.xml" xy="114,69" size="210,87"/>
   </displayList>
 </component>

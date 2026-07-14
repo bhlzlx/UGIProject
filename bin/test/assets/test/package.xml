@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<packageDescription id="beauv2sr">
+<packageDescription id="nelg7u98">
   <resources>
-    <component id="ocyx0" name="test.xml" path="/" exported="true"/>
-    <image id="n4503" name="ushio.png" path="/"/>
-    <image id="v25p4" name="background.png" path="/img/" scale="tile" scale9grid="16,16,32,32"/>
-    <image id="exat5" name="frame.png" path="/img/" scale="9grid" scale9grid="16,16,32,32"/>
-    <component id="hs076" name="btn.xml" path="/"/>
-    <component id="hs077" name="Button1.xml" path="/"/>
+    <component id="h8qp0" name="test.xml" path="/" exported="true"/>
+    <component id="rtwy2" name="Button1.xml" path="/"/>
+    <image id="sf053" name="backgroun_1.png" path="/image/" scale="9grid" scale9grid="58,56,14,16"/>
   </resources>
-  <publish name="test" path="./bytes" packageCount="2"/>
+  <publish name="test"/>
 </packageDescription>
