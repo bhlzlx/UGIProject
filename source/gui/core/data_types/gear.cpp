@@ -25,8 +25,9 @@ namespace gui {
             std::string page = buffer.read<csref>();
             if (!page.empty()) addStatus(page, buffer);
         }
-        if (buffer.read<bool>())
-            addStatus("", buffer);  // default
+        if (buffer.read<bool>()) {
+            addStatus("", buffer);
+        }
         setupTween(buffer);
     }
 
@@ -44,7 +45,7 @@ namespace gui {
 
     void GearDisplay::apply() {
         if (!_controller) return;
-        auto cur = _controller->selectedPage();
+        auto cur = _controller->selectedPageId();
         bool show = false;
         for (auto& p : pages) if (p == cur) { show = true; break; }
         if (pages.empty()) show = true;
@@ -76,14 +77,14 @@ namespace gui {
 
     void GearXY::apply() {
         if (!_controller) return;
-        auto it = _storage.find(_controller->selectedPage());
+        auto it = _storage.find(_controller->selectedPageId());
         auto& v = (it != _storage.end()) ? it->second : _default;
         _owner->setPosition({v.x, v.y, 0});
     }
 
     void GearXY::updateState() {
         if (!_controller) return;
-        auto& v = _storage[_controller->selectedPage()];
+        auto& v = _storage[_controller->selectedPageId()];
         v.x = _owner->x();
         v.y = _owner->y();
     }
@@ -97,14 +98,14 @@ namespace gui {
 
     void GearSize::apply() {
         if (!_controller) return;
-        auto it = _storage.find(_controller->selectedPage());
+        auto it = _storage.find(_controller->selectedPageId());
         auto& v = (it != _storage.end()) ? it->second : _default;
         _owner->setSize({v.w, v.h});
     }
 
     void GearSize::updateState() {
         if (!_controller) return;
-        auto& v = _storage[_controller->selectedPage()];
+        auto& v = _storage[_controller->selectedPageId()];
         v.w = _owner->width();
         v.h = _owner->height();
     }
@@ -112,15 +113,22 @@ namespace gui {
     // ============= GearColor =============
     void GearColor::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
-        v = Color4B(buffer.read<uint32_t>());
+        Color4B color = Color4B(buffer.read<uint32_t>());
+        color.a = 255;
+        Color4B strokeColor = Color4B(buffer.read<uint32_t>());
+        strokeColor.a = 255;
+        v = {color, strokeColor};
     }
 
     void GearColor::apply() {
         if (!_controller) return;
-        auto it = _storage.find(_controller->selectedPage());
+        auto it = _storage.find(_controller->selectedPageId());
         auto c = (it != _storage.end()) ? it->second : _default;
-        if (auto* img = dynamic_cast<Image*>(_owner)) img->setColor(c);
-        else if (auto* txt = dynamic_cast<GTextField*>(_owner)) txt->setColor(c.val);
+        if (auto* img = dynamic_cast<Image*>(_owner)) {
+            img->setColor(c.color);
+        } else if (auto* txt = dynamic_cast<GTextField*>(_owner)) {
+            txt->setColor(c.color);
+        }
     }
 
     // ============= GearLook =============
@@ -133,7 +141,7 @@ namespace gui {
 
     void GearLook::apply() {
         if (!_controller) return;
-        auto it = _storage.find(_controller->selectedPage());
+        auto it = _storage.find(_controller->selectedPageId());
         auto& v = (it != _storage.end()) ? it->second : _default;
         _owner->setAlpha(v.alpha);
         _owner->setRotation(v.rotation);
@@ -148,7 +156,7 @@ namespace gui {
 
     void GearText::apply() {
         if (!_controller) return;
-        auto it = _storage.find(_controller->selectedPage());
+        auto it = _storage.find(_controller->selectedPageId());
         auto& v = (it != _storage.end()) ? it->second : _default;
         if (auto* txt = dynamic_cast<GTextField*>(_owner)) txt->setText(v);
     }
@@ -161,7 +169,7 @@ namespace gui {
 
     void GearIcon::apply() {
         if (!_controller) return;
-        auto it = _storage.find(_controller->selectedPage());
+        auto it = _storage.find(_controller->selectedPageId());
         auto& v = (it != _storage.end()) ? it->second : _default;
         if (auto* img = dynamic_cast<Image*>(_owner)) img->setIcon(v);
     }
@@ -174,7 +182,7 @@ namespace gui {
 
     void GearFontSize::apply() {
         if (!_controller) return;
-        auto it = _storage.find(_controller->selectedPage());
+        auto it = _storage.find(_controller->selectedPageId());
         float v = (it != _storage.end()) ? it->second : _default;
         if (auto* txt = dynamic_cast<GTextField*>(_owner)) txt->setFontSize(v);
     }
@@ -187,9 +195,11 @@ namespace gui {
         case 2: return new GearSize(owner);
         case 3: return new GearLook(owner);
         case 4: return new GearColor(owner);
-        case 5: return new GearText(owner);
-        case 6: return new GearIcon(owner);
-        case 7: return new GearFontSize(owner);
+        case 5: return nullptr; // GearAnimation 暂未实现
+        case 6: return new GearText(owner);
+        case 7: return new GearIcon(owner);
+        case 8: return new GearDisplay2(owner);
+        case 9: return new GearFontSize(owner);
         default: return nullptr;
         }
     }

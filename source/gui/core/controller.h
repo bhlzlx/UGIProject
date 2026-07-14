@@ -79,6 +79,8 @@ namespace gui {
 
         void setSelectedIndex(int index);
         void setSelectedPage(std::string const& name);
+
+        std::string const& selectedPageId() const;
         std::string selectedPage() const;
 
         int pageCount() const { return (int)pageIDs_.size(); }

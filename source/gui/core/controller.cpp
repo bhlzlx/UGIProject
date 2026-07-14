@@ -121,6 +121,12 @@ namespace gui {
             setSelectedIndex(0);
     }
 
+    std::string const& Controller::selectedPageId() const {
+        if (selectedIndex_ < 0 || selectedIndex_ >= (int)pageIDs_.size())
+            return ByteBuffer::EmptyString;
+        return pageIDs_[selectedIndex_];
+    }
+
     std::string Controller::selectedPage() const {
         if (selectedIndex_ < 0 || selectedIndex_ >= (int)pageNames_.size())
             return "";

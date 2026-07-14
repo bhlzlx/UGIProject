@@ -70,10 +70,15 @@ namespace gui {
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
     };
 
+    struct GearColorValue {
+        Color4B color;
+        Color4B strokeColor;
+    };
+
     // ============= GearColor =============
     class GearColor : public GearBase {
-        std::unordered_map<std::string, Color4B> _storage;
-        Color4B _default;
+        std::unordered_map<std::string, GearColorValue> _storage;
+        GearColorValue _default = {};
     public:
         GearColor(Object* owner) : GearBase(owner) {}
         void apply() override;
@@ -113,6 +118,14 @@ namespace gui {
         void apply() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
+    };
+
+    // ============= GearDisplay2 =============
+    // 编辑器的预览模式可见性，运行时行为和 GearDisplay 一样
+    class GearDisplay2 : public GearDisplay {
+    public:
+        GearDisplay2(Object* owner) : GearDisplay(owner) {}
+        void setup(ByteBuffer& buffer) override { GearDisplay::setup(buffer); }
     };
 
     // ============= GearFontSize =============
