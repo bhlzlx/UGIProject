@@ -131,17 +131,15 @@ namespace gui {
         buffer.seekToBlock(startPos, ObjectBlocks::Gears);
         int gearCnt = buffer.read<int16_t>();
         for (int i = 0; i < gearCnt; ++i) {
-            int nextPos = buffer.read<uint16_t>();
-            nextPos += buffer.pos();
-            int gearType = buffer.read<uint8_t>();
+            ByteBuffer gearData = buffer.readBufferBlock();
+            int gearType = gearData.read<uint8_t>();
             if (gearType >= 0 && gearType < Object::kGearCount) {
                 auto* gear = createGear(gearType, this);
                 if (gear) {
-                    gear->setup(buffer);
+                    gear->setup(gearData);
                     gears_[gearType] = gear;
                 }
             }
-            buffer.setPos(nextPos);
         }
     }
 

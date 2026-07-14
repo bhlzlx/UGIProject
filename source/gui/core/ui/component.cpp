@@ -76,7 +76,7 @@ namespace gui {
         Object* obj = nullptr;
         int childCount = buff.read<uint16_t>();
         for(int i = 0; i<childCount; ++i) {
-            auto childData = buff.readShortBuffer();
+            auto childData = buff.readBufferBlock();
             childData.seekToBlock(0, ObjectBlocks::Props);
             auto type = childData.read<ObjectType>();
             std::string itemID = childData.read<csref>();
@@ -112,16 +112,16 @@ namespace gui {
         buff.seekToBlock(0, ComponentBlocks::Children);
         buff.skip(2);
         for(int i = 0; i<childCount; ++i) {
-            ByteBuffer childData = buff.readShortBuffer();
-            childData.seekToBlock(0, ObjectBlocks::Relations);
-            children_[i]->relations_.setup(childData, false);
+            ByteBuffer bufferBlock = buff.readBufferBlock();
+            bufferBlock.seekToBlock(0, ObjectBlocks::Relations);
+            children_[i]->relations_.setup(bufferBlock, false);
         }
         buff.seekToBlock(0, ComponentBlocks::Children);
         buff.skip(2);
         for(int i = 0; i < childCount; ++i) {
-            ByteBuffer childData = buff.readShortBuffer();
+            ByteBuffer bufferBlock = buff.readBufferBlock();
             auto child = children_[i];
-            child->setupAfterAdd(childData);
+            child->setupAfterAdd(bufferBlock);
             child->underConstruct_ = false;
         }
         buff.seekToBlock(0, ComponentBlocks::CustomData);
@@ -148,7 +148,7 @@ namespace gui {
         buff.seekToBlock(0, ComponentBlocks::Transitions);
         auto transitionCount = buff.read<int16_t>();
         for(auto i = 0; i<transitionCount; ++i) {
-            auto transData = buff.readShortBuffer();
+            auto transData = buff.readBufferBlock();
             Transition trans = Transition(this);
             trans.setup(transData);
             transitions_.push_back(std::move(trans));

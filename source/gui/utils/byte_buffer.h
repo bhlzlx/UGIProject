@@ -52,7 +52,6 @@ namespace gui {
         int                         version;
     private:
         uint8_t*                    ptr_;
-        int                         offset_;
         int                         length_;
         int                         position_;
         uint8_t                     ownBuffer_ : 1;
@@ -60,7 +59,6 @@ namespace gui {
     public:
         ByteBuffer() 
             : ptr_(nullptr)
-            , offset_(0)
             , length_(0)
             , position_(0)
             , ownBuffer_(0)
@@ -93,7 +91,6 @@ namespace gui {
         }
         ByteBuffer(uint8_t* ptr, int len)
             : ptr_(ptr)
-            , offset_(0)
             , length_(len)
             , position_(0)
             , ownBuffer_(0)
@@ -101,7 +98,6 @@ namespace gui {
 
         ByteBuffer(int len)
             : ptr_(new uint8_t[len])
-            , offset_(0)
             , length_(ptr_?len:0)
             , position_(0)
             , ownBuffer_(1)
@@ -115,14 +111,13 @@ namespace gui {
         ByteBuffer clone() const {
             auto buff = ByteBuffer(length_);
             memcpy(buff.ptr_, ptr(), length_);
-            buff.offset_ = 0;
             buff.stringTable_ = stringTable_;
             buff.version = version;
             return buff;
         }
 
         uint8_t* ptr() const {
-            return ptr_ + offset_;
+            return ptr_;
         }
 
         ~ByteBuffer() {
@@ -156,10 +151,10 @@ namespace gui {
             #if LITTLE_ENDIAN // 这里需要注意一下大小端问题
             uint8_t* dst = (uint8_t*)&val;
             for(size_t i = 0; i<sizeof(T); ++i) {
-                dst[sizeof(T)-1-i] = ptr_[offset_+position_+i];
+                dst[sizeof(T)-1-i] = ptr_[position_+i];
             }
             #else
-            memcpy(&val, ptr_ + offset_ + position_, sizeof(T));
+            memcpy(&val, ptr() + position_, sizeof(T));
             #endif
             position_ += sizeof(T);
             return val;
@@ -171,7 +166,7 @@ namespace gui {
         //     T val;
         //     for(size_t i = 0; i<sizeof(T); ++i) {
         //         int64_t b;
-        //         memcpy(&b, ptr_ + offset_ + position_ + i, 1);
+        //         memcpy(&b, ptr() + position_ + i, 1);
         //         #
         //     }
         // }
@@ -185,10 +180,16 @@ namespace gui {
         template<>
         inline std::string read<std::string>() {
             std::string val;
-            uint16_t len = read<uint16_t>();
+            int len = read<uint16_t>();
+            if(len < 0) {
+                return EmptyString;
+            }
+            if(!ptr_ || position_ + len > length_) {
+                return EmptyString;
+            }
             if(len) {
                 val.resize(len);
-                memcpy(&val[0], ptr_ + position_ + offset_, len);
+                memcpy(&val[0], ptr() + position_, len);
                 position_ += len;
             }
             return val;
@@ -253,14 +254,15 @@ namespace gui {
 
         template<>
         inline csref read<csref>() {
-            int index = this->read<uint16_t>();
+            uint16_t index = this->read<uint16_t>();
             if(stringTable_->size() > index) {
                 return stringTable_->at(index);
             }
             return EmptyString;
         }
 
-        ByteBuffer readShortBuffer();
+        // 读取一个buffer block块，然后偏移到新buffer的尾部，返回 新bufffer的引用 通常是给子项，或者子成员初始化用
+        ByteBuffer readBufferBlock();
 
     };
 
