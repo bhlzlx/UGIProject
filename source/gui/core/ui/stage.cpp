@@ -69,8 +69,8 @@ namespace gui {
         }
         // 屏幕坐标转 root 局部坐标
         float sf = UIContentScaler::Instance()->scaleFactor;
-        glm::vec2 localPt(screenPos.x / sf, screenPos.y / sf);
-        return hitTestRecursive(ui2dRoot_, localPt);
+        // glm::vec2 localPt(screenPos.x / sf, screenPos.y / sf);
+        return hitTestRecursive(ui2dRoot_, screenPos);
     }
 
     void Stage::onMouseDown(glm::vec2 pos) {
