@@ -1,7 +1,6 @@
 #include "tweener.h"
 #include "../declare.h"
 #include <core/ease/ease.h>
-#include <core/gui_context.h>
 #include <core/data_types/interpolatable_path.h>
 #include <core/ui/object.h>
 
@@ -236,12 +235,61 @@ namespace gui {
 
 
     void Tweener::_init() {
+        delay_ = 0;
+        duration_ = 0;
+        breakpoint_ = -1;
+        easeType_ = EaseType::QuadOut;
+        timeScale_ = 1;
+        easePeriod_ = 0;
+        easeOvershootOrAmplitude_ = 1.70158f;
+        snapping_ = false;
+        repeat_ = 0;
+        yoyo_ = false;
+        valueType_ = TweenValueType::None;
+        started_ = false;
+        paused_ = false;
+        killed_ = false;
+        elapsedTime_ = 0;
+        normalizedTime_ = 0;
+        ended_ = 0;
+        path_ = nullptr;
+        target_ = Handle();
+        propType_ = TweenPropType::None;
+        userdata_ = Userdata();
     }
 
     void Tweener::_reset() {
+        target_ = Handle();
+        propType_ = TweenPropType::None;
+        userdata_ = Userdata();
+        path_ = nullptr;
+        onStart_ = nullptr;
+        onUpdate_ = nullptr;
+        onComplete_ = nullptr;
+        onComplete0_ = nullptr;
     }
 
     void Tweener::_update(float dt) {
+        if (ended_ != 0) { // 可能被 seek 标记为已完成
+            callCompleteCallback();
+            killed_ = true;
+            return;
+        }
+
+        if (timeScale_ != 1.0f)
+            dt *= timeScale_;
+        if (dt == 0)
+            return;
+
+        elapsedTime_ += dt;
+        update();
+
+        if (ended_ != 0) {
+            if (!killed_) {
+                callCompleteCallback();
+                killed_ = true;
+            }
+        }
     }
 
     void Tweener::update() {
@@ -324,7 +372,7 @@ namespace gui {
         } else { // float/vec2/vec3/vec4
             assert(valueType_ > 0 && valueType_ <= 4);
             for(uint32_t i = 0; i<valueType_; ++i) {
-                float fval = startVal.val[i] + (endVal.val[0] - startVal.val[i]) * normalizedTime_;
+                float fval = startVal.val[i] + (endVal.val[i] - startVal.val[i]) * normalizedTime_;
                 if(snapping_) {
                     fval = round(fval);
                 }
@@ -333,24 +381,27 @@ namespace gui {
             }
         }
         //
-        auto objectTable = GetGUIContext()->objectTable();
-        // if(target_ && propType_ != TweenPropType::None) {
-        //     auto obj = objectTable->query(target_);
-        //     if(obj) {
-        //         // setProps
-        //     }
-        // }
-        
+        if (target_ && propType_ != TweenPropType::None) {
+            auto* obj = target_.as<Object>();
+            if (obj) {
+                SetObjectTweenProps(obj, propType_, val);
+            }
+        }
 
+        callUpdateCallback();
     }
 
     void Tweener::callStartCallback() {
+        if (onStart_) onStart_(this);
     }
 
     void Tweener::callUpdateCallback() {
+        if (onUpdate_) onUpdate_(this);
     }
 
     void Tweener::callCompleteCallback() {
+        if (onComplete_) onComplete_(this);
+        if (onComplete0_) onComplete0_();
     }
 
     Tweener::TweenCallback Tweener::OnDelayedPlay;

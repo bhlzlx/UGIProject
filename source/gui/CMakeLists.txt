@@ -16,6 +16,7 @@ PRIVATE
     core/data_types/transition.cpp
     core/data_types/interpolatable_path.cpp
     core/data_types/tweener.cpp
+    core/data_types/tween_manager.cpp
     core/data_types/tween_types.cpp
     core/ease/ease.cpp
     core/events/event_dispatcher.cpp

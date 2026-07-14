@@ -14,6 +14,7 @@
 #include <vector>
 
 #include <core/display_objects/display_object_utility.h>
+#include <core/data_types/tween_manager.h>
 
 /**
  * @brief 
@@ -254,6 +255,7 @@ namespace gui {
         updateItemTransforms(); // item 的 Asm_Transform → 重算 local-to-batch 矩阵
         rebuildBatches(); // 重建 batch → 新缓存 + 新索引
         syncDirtyArgs(); // 用新索引同步 args_dirty 到 batch cache（上一行才建好的）
+        TweenManager::Instance()->update(); // 驱动所有活跃 Tween
         commitRenderBatches(); // 按渲染顺序提交 batch
     }
     
