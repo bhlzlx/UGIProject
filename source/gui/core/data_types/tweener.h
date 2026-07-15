@@ -37,14 +37,12 @@ namespace gui {
 
     void SetObjectTweenProps(Object* target, TweenPropType type, TValue const& val);
 
-    class TweenManager; // fwd
-
     class Tweener {
-        friend class TweenManager;
-        friend class GTween;
     public:
         using TweenCallback = std::function<void(Tweener*)>;
         using TweenCallbackSimple = std::function<void()>;
+        friend class TweenManager;
+        friend class GTween;
     public:
         Tweener();
         ~Tweener();
@@ -75,8 +73,8 @@ namespace gui {
         Handle getTarget() const;
         float getNormalizedTime() const;
         bool isKilled() const { return killed_; }
-        bool isCompleted() const;
         bool allCompleted() const;
+        bool completed() const;
         void seek(float time);
         void kill(bool complete = false);
         Userdata const& getUserData() const;

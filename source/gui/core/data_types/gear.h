@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <core/declare.h>
+#include <core/data_types/tween_types.h>
 #include "utils/byte_buffer.h"
 
 namespace gui {
@@ -10,24 +11,36 @@ namespace gui {
     class Controller;
     class Object;
 
+    struct GearColorValue {
+        Color4B color;
+        Color4B strokeColor;
+    };
+
     /// Gear 基类
     class GearBase {
     protected:
         Object*             _owner = nullptr;
         Controller*         _controller = nullptr;
+        TweenConfig         _tweenConfig;
+        bool                _tweenLocked = false;
         bool                _hasTween = false;
     public:
+        static bool         disableAllTweenEffect;
         GearBase(Object* owner) : _owner(owner) {}
         virtual ~GearBase() = default;
 
         Controller* controller() const { return _controller; }
         void setController(Controller* c) { _controller = c; }
 
+        TweenConfig& tweenConfig() { return _tweenConfig; }
+        TweenConfig const& tweenConfig() const { return _tweenConfig; }
+
         virtual void setup(ByteBuffer& buffer);
         virtual void apply() = 0;
         virtual void updateState() {}
     protected:
         virtual void addStatus(std::string const& page, ByteBuffer& buffer) = 0;
+        virtual void init() = 0;
         void setupTween(ByteBuffer& buffer);
     };
 
@@ -40,6 +53,7 @@ namespace gui {
         void apply() override;
     protected:
         void addStatus(std::string const&, ByteBuffer&) override {}
+        void init() override {}
     };
 
     // ============= GearXY =============
@@ -55,24 +69,26 @@ namespace gui {
         void updateState() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
+        void init() override;
     };
 
     // ============= GearSize =============
+    struct GearSizeValue {
+        float w, h;
+        float scaleX = 1.0f;
+        float scaleY = 1.0f;
+    };
+
     class GearSize : public GearBase {
-        struct Value { float w, h; };
-        std::unordered_map<std::string, Value> _storage;
-        Value _default = {};
+        std::unordered_map<std::string, GearSizeValue> _storage;
+        GearSizeValue _default;
     public:
         GearSize(Object* owner) : GearBase(owner) {}
         void apply() override;
         void updateState() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
-    };
-
-    struct GearColorValue {
-        Color4B color;
-        Color4B strokeColor;
+        void init() override;
     };
 
     // ============= GearColor =============
@@ -84,18 +100,26 @@ namespace gui {
         void apply() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
+        void init() override;
     };
 
     // ============= GearLook =============
+    struct GearLookValue {
+        float alpha = 1.0f;
+        float rotation = 0;
+        bool  grayed = false;
+        bool  touchable = true;
+    };
+
     class GearLook : public GearBase {
-        struct Value { float alpha, rotation, grayed; };
-        std::unordered_map<std::string, Value> _storage;
-        Value _default = {1.0f, 0, 0};
+        std::unordered_map<std::string, GearLookValue> _storage;
+        GearLookValue _default;
     public:
         GearLook(Object* owner) : GearBase(owner) {}
         void apply() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
+        void init() override;
     };
 
     // ============= GearText =============
@@ -107,6 +131,7 @@ namespace gui {
         void apply() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
+        void init() override;
     };
 
     // ============= GearIcon =============
@@ -118,6 +143,7 @@ namespace gui {
         void apply() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
+        void init() override;
     };
 
     // ============= GearDisplay2 =============
@@ -137,6 +163,7 @@ namespace gui {
         void apply() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
+        void init() override;
     };
 
     /// 工厂函数

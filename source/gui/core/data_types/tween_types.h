@@ -29,13 +29,14 @@ namespace gui {
     };
 
     struct TweenConfig {
+        bool        tween = false;
         float       duration;
-        EaseType    easeType;
+        EaseType    easeType = EaseType::QuadOut;
         int         repeat;
         bool        yoyo;
         //
-        TValue*     startValue;
-        TValue*     endValue;
+        TValue*     startValue = nullptr;
+        TValue*     endValue = nullptr;
     };
 
 }

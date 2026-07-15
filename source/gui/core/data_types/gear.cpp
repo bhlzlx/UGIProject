@@ -8,27 +8,51 @@
 
 namespace gui {
 
+    bool GearBase::disableAllTweenEffect = false;
+
     void GearBase::setupTween(ByteBuffer& buffer) {
         if (buffer.read<bool>()) {
             _hasTween = true;
-            buffer.skip(1 + 4 + 4);
+            _tweenConfig.tween = true;
+            _tweenConfig.easeType = EaseType(buffer.read<uint8_t>());
+            _tweenConfig.duration = buffer.read<float>();
+            _tweenConfig.repeat = buffer.read<int>();
         }
     }
 
     void GearBase::setup(ByteBuffer& buffer) {
         int ctlIdx = buffer.read<int16_t>();
-        if (ctlIdx >= 0 && _owner->parent())
+        if (ctlIdx >= 0 && _owner->parent()) {
             _controller = _owner->parent()->getControllerAt(ctlIdx);
+        }
+        init();
+        auto pageCount = buffer.read<int16_t>();
+        while(true) {
+            GearDisplay* display = dynamic_cast<GearDisplay*>(this);
+            if(display) {
+                buffer.readRefStringArray(display->pages, pageCount);
+                break;
+            }
+            GearDisplay2* display2 = dynamic_cast<GearDisplay2*>(this);
+            if(display2) {
+                buffer.readRefStringArray(display2->pages, pageCount);
+                break;
+            }
+            // 普通
+            for (int i = 0; i < pageCount; ++i) {
+                std::string page = buffer.read<csref>();
+                if (!page.empty()) {
+                    addStatus(page, buffer);
+                };
+            }
+            if (buffer.read<bool>()) {
+                addStatus("", buffer);
+            }
+            break;
+        }
 
-        int cnt = buffer.read<int16_t>();
-        for (int i = 0; i < cnt; ++i) {
-            std::string page = buffer.read<csref>();
-            if (!page.empty()) addStatus(page, buffer);
-        }
-        if (buffer.read<bool>()) {
-            addStatus("", buffer);
-        }
         setupTween(buffer);
+        //
     }
 
     // ============= GearDisplay =============
@@ -57,6 +81,18 @@ namespace gui {
         auto& v = page.empty() ? _default : _storage[page];
         v.x  = (float)buffer.read<int>();
         v.y  = (float)buffer.read<int>();
+    }
+
+    void GearXY::init() {
+        if (_owner) {
+            auto* parent = _owner->parent();
+            float pw = parent ? parent->width() : 1.0f;
+            float ph = parent ? parent->height() : 1.0f;
+            _default.x = _owner->x();
+            _default.y = _owner->y();
+            _default.px = _owner->x() / pw;
+            _default.py = _owner->y() / ph;
+        }
     }
 
     void GearXY::setup(ByteBuffer& buffer) {
@@ -90,10 +126,21 @@ namespace gui {
     }
 
     // ============= GearSize =============
+    void GearSize::init() {
+        if (_owner) {
+            _default.w = _owner->width();
+            _default.h = _owner->height();
+            _default.scaleX = _owner->scaleX();
+            _default.scaleY = _owner->scaleY();
+        }
+    }
+
     void GearSize::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
         v.w = (float)buffer.read<int>();
         v.h = (float)buffer.read<int>();
+        v.scaleX = buffer.read<float>();
+        v.scaleY = buffer.read<float>();
     }
 
     void GearSize::apply() {
@@ -101,6 +148,7 @@ namespace gui {
         auto it = _storage.find(_controller->selectedPageId());
         auto& v = (it != _storage.end()) ? it->second : _default;
         _owner->setSize({v.w, v.h});
+        _owner->setScale(v.scaleX, v.scaleY);
     }
 
     void GearSize::updateState() {
@@ -108,9 +156,22 @@ namespace gui {
         auto& v = _storage[_controller->selectedPageId()];
         v.w = _owner->width();
         v.h = _owner->height();
+        v.scaleX = _owner->scaleX();
+        v.scaleY = _owner->scaleY();
     }
 
     // ============= GearColor =============
+    void GearColor::init() {
+        if (_owner) {
+            if (auto* img = dynamic_cast<Image*>(_owner)) {
+                _default.color = img->getColor();
+            } else if (auto* txt = dynamic_cast<GTextField*>(_owner)) {
+                _default.color = Color4B(txt->textFormat().color);
+                _default.strokeColor = Color4B(txt->textFormat().outlineColor);
+            }
+        }
+    }
+
     void GearColor::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
         Color4B color = Color4B(buffer.read<uint32_t>());
@@ -132,11 +193,21 @@ namespace gui {
     }
 
     // ============= GearLook =============
+    void GearLook::init() {
+        if (_owner) {
+            _default.alpha = _owner->alpha();
+            _default.rotation = _owner->rotation();
+            _default.grayed = _owner->grayed();
+            _default.touchable = _owner->touchable();
+        }
+    }
+
     void GearLook::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
         v.alpha    = buffer.read<float>();
         v.rotation = buffer.read<float>();
-        v.grayed   = buffer.read<bool>() ? 1.0f : 0.0f;
+        v.grayed   = buffer.read<bool>();
+        v.touchable= buffer.read<bool>();
     }
 
     void GearLook::apply() {
@@ -145,10 +216,18 @@ namespace gui {
         auto& v = (it != _storage.end()) ? it->second : _default;
         _owner->setAlpha(v.alpha);
         _owner->setRotation(v.rotation);
-        _owner->setGrayed(v.grayed > 0.5f);
+        _owner->setGrayed(v.grayed);
+        _owner->setTouchable(v.touchable);
     }
 
     // ============= GearText =============
+    void GearText::init() {
+        if (_owner) {
+            if (auto* txt = dynamic_cast<GTextField*>(_owner))
+                _default = txt->text();
+        }
+    }
+
     void GearText::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
         v = buffer.read<csref>();
@@ -162,6 +241,13 @@ namespace gui {
     }
 
     // ============= GearIcon =============
+    void GearIcon::init() {
+        if (_owner) {
+            if (auto* img = dynamic_cast<Image*>(_owner))
+                _default = img->getIcon();
+        }
+    }
+
     void GearIcon::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
         v = buffer.read<csref>();
@@ -175,6 +261,14 @@ namespace gui {
     }
 
     // ============= GearFontSize =============
+    void GearFontSize::init() {
+        if (_owner) {
+            // TODO: 处理 GLabel/ GButton 的情况，其 textField 需要从内部获取
+            if (auto* txt = dynamic_cast<GTextField*>(_owner))
+                _default = txt->textFormat().fontSize;
+        }
+    }
+
     void GearFontSize::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
         v = (float)buffer.read<int>();

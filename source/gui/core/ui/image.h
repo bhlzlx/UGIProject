@@ -10,6 +10,7 @@ namespace gui {
     class Image : public Object {
     private:
         Color4B             color_;
+        std::string         icon_;
         FlipType            flip_;
         FillMethod          fillMethod_;
         FillOrigin          fillOrigin_;
@@ -34,8 +35,10 @@ namespace gui {
 
         virtual void setSize(Size2D<float> const& size) override;
 
+        Color4B getColor() const { return color_; }
         void setColor(Color4B val);
-        void setIcon(std::string const&) {}  // TODO
+        std::string const& getIcon() const { return icon_; }
+        void setIcon(std::string const& val) { icon_ = val; }
 
         virtual void createDisplayObject() override;
         virtual void constructFromResource() override;

@@ -227,7 +227,7 @@ namespace gui {
     private:
         T val_;
     public:
-        UnderlyingEnum(T val = 0) : val_(val) {}
+        UnderlyingEnum(T val = (T)0) : val_(val) {}
         UnderlyingEnum(val_type val) : val_((T)val) {}
         operator val_type() const { return (val_type)val_; }
         operator T() const { return val_; }

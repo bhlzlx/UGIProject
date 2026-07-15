@@ -6,6 +6,73 @@
 
 namespace gui {
 
+    Tweener::TweenCallback Tweener::OnDelayedPlay;
+    Tweener::TweenCallback Tweener::OnCheckAllComplete;
+    Tweener::TweenCallback Tweener::OnDelayedPlayItem;
+
+    Tweener::Tweener() {
+        _init();
+    }
+
+    Tweener::~Tweener() = default;
+
+    Tweener* Tweener::_to(float start, float end, float duration) {
+        valueType_ = TweenValueType::Float;
+        startVal.val.x = start;
+        endVal.val.x = end;
+        duration_ = duration;
+        return this;
+    }
+
+    Tweener* Tweener::_to(glm::vec2 const& start, glm::vec2 const& end, float duration) {
+        valueType_ = TweenValueType::Vec2;
+        startVal.setVec2(start);
+        endVal.setVec2(end);
+        duration_ = duration;
+        return this;
+    }
+
+    Tweener* Tweener::_to(glm::vec3 const& start, glm::vec3 const& end, float duration) {
+        valueType_ = TweenValueType::Vec3;
+        startVal.setVec3(start);
+        endVal.setVec3(end);
+        duration_ = duration;
+        return this;
+    }
+
+    Tweener* Tweener::_to(glm::vec4 const& start, glm::vec4 const& end, float duration) {
+        valueType_ = TweenValueType::Vec4;
+        startVal.setVec4(start);
+        endVal.setVec4(end);
+        duration_ = duration;
+        return this;
+    }
+
+    Tweener* Tweener::_to(Color4B const& start, Color4B const& end, float duration) {
+        valueType_ = TweenValueType::Color4B;
+        startVal.setColor4B(start);
+        endVal.setColor4B(end);
+        duration_ = duration;
+        return this;
+    }
+
+    Tweener* Tweener::_to(double start, double end, float duration) {
+        valueType_ = TweenValueType::Double;
+        startVal.d = start;
+        endVal.d = end;
+        duration_ = duration;
+        return this;
+    }
+
+    Tweener* Tweener::_shake(glm::vec2 const& start, float amplitude, float duration) {
+        valueType_ = TweenValueType::Shake;
+        startVal.val.x = start.x;
+        startVal.val.y = start.y;
+        startVal.val.w = amplitude;
+        duration_ = duration;
+        return this;
+    }
+
     void SetObjectTweenProps(Object* target, TweenPropType type, TValue const& val) {
         if (target == nullptr) {
             return;
@@ -128,6 +195,7 @@ namespace gui {
 
     Tweener* Tweener::setTarget(Handle uid, TweenPropType type) {
         target_ = uid;
+        propType_ = type;
         return this;
     }
 
@@ -186,7 +254,7 @@ namespace gui {
         return normalizedTime_;
     }
 
-    bool Tweener::isCompleted() const {
+    bool Tweener::completed() const {
         return 0 != ended_;
     }
 
@@ -403,9 +471,5 @@ namespace gui {
         if (onComplete_) onComplete_(this);
         if (onComplete0_) onComplete0_();
     }
-
-    Tweener::TweenCallback Tweener::OnDelayedPlay;
-    Tweener::TweenCallback Tweener::OnCheckAllComplete;
-    Tweener::TweenCallback Tweener::OnDelayedPlayItem;
 
 }

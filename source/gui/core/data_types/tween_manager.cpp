@@ -92,8 +92,7 @@ namespace gui {
             } else {
                 // 检查 target 是否已销毁
                 if (t->target_) {
-                    auto* obj = t->target_.as<void>();
-                    if (!obj) {
+                    if (!t->target_.as<void*>()) {
                         t->killed_ = true;
                         t->_reset();
                         _pool.push_back(t);
