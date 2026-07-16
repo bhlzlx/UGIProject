@@ -355,4 +355,43 @@ namespace gui {
         }
     }
 
+    bool Object::checkGearController(GearType gearType, Controller* controller) const {
+        if(gears_[gearType] && gears_[gearType]->controller() == controller) {
+            return true;
+        }
+        return false;
+    }
+
+    uint32_t Object::addDisplayLock() {
+        auto displayGearType = GearType(GearIndex::Display);
+        auto* gearDisplay = gears_[displayGearType] ? dynamic_cast<GearDisplay*>(gears_[displayGearType]) : nullptr;
+        if (gearDisplay && gearDisplay->controller() != nullptr) {
+            uint32_t ret = gearDisplay->addLock();
+            checkGearDisplay();
+            return ret;
+        }
+        return 0;
+    }
+
+    void Object::releaseDisplayLock(uint32_t token) {
+        auto* gearDisplay = gears_[0] ? dynamic_cast<GearDisplay*>(gears_[0]) : nullptr;
+        if (gearDisplay && gearDisplay->controller() != nullptr) {
+            gearDisplay->releaseLock(token);
+            checkGearDisplay();
+        }
+    }
+
+    void Object::invalidateBatchingState() {
+        // TODO: 接入渲染合批系统
+    }
+
+    GearBase* Object::getGear(int index) {
+        GearBase* gear = gears_[index];
+        if (gear == nullptr) {
+            gear = createGear(index, this);
+            gears_[index] = gear;
+        }
+        return gear;
+    }
+
 }

@@ -30,6 +30,7 @@ namespace gui {
     class Object : public EventDispatcher {
         friend class ObjectFactory;
         friend class Component;
+        friend class GearBase;
         friend class RelationItem;
         friend class Relations;
     protected:
@@ -56,6 +57,7 @@ namespace gui {
         uint8_t         touchable_:1;
         uint8_t         grayed_:1;
         uint8_t         finalGrayed_:1;
+        uint8_t         gearLocked_:1;       // 防止 Gear apply 递归更新
         uint8_t         underConstruct_:1;
     protected:
         uint8_t         internalVisible_:1;
@@ -95,6 +97,7 @@ namespace gui {
             , touchable_(1)
             , grayed_(0)
             , finalGrayed_(0)
+            , gearLocked_(0)
             , underConstruct_(0)
             , internalVisible_(1)
             , handlingController_(0)
@@ -113,6 +116,7 @@ namespace gui {
 
         void release();
 protected:
+        ObjectType getType() const { return type_; }
         virtual void onInit();
         virtual void onSizeChanged();
         virtual void onScaleChanged();
@@ -173,6 +177,9 @@ protected:
         // 构造完成时的快照 (= FairyGUI initWidth/initHeight)
         float initWidth() const { return initSize_.width; }
         float initHeight() const { return initSize_.height; }
+
+        void lockGear() { gearLocked_ = 1; }
+        void unlockGear() { gearLocked_ = 0; }
 
         void center(bool restraint = false);
         void makeFullScreen();
@@ -255,6 +262,19 @@ protected:
         void removeFromParent();
 
         bool inContainer() const;
+
+        bool checkGearController(GearType gearType, Controller* controller) const;
+
+        uint32_t addDisplayLock();
+
+        /// 参照 C# ReleaseDisplayLock — tween 完成时解锁 GearDisplay
+        void releaseDisplayLock(uint32_t token);
+
+        /// 参照 C# InvalidateBatchingState — 标记渲染合批状态失效
+        void invalidateBatchingState();
+
+        /// 参照 C# GetGear — 懒加载获取/创建指定 index 的 Gear
+        GearBase* getGear(int index);
 
     };
 

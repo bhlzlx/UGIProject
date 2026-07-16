@@ -64,11 +64,11 @@ namespace gui {
         gfx.args.color = glm::vec4(1.f, 1.f, 1.f, alpha_);
     }
 
-    void Image::setColor(Color4B val) {
+    void Image::setColor(glm::vec3 const& val) {
         color_ = val;
         if (dispobj_) {
             auto& gfx = reg.get<dispcomp::item_render_data>(dispobj_);
-            gfx.args.color = glm::vec4(val.r / 255.f, val.g / 255.f, val.b / 255.f, val.a / 255.f);
+            gfx.args.color = glm::vec4(val.x, val.y, val.z, 1.0f);
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(dispobj_);
             s.mask |= dispcomp::Asm_Color;
         }

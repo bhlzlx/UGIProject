@@ -4,12 +4,13 @@
 #include "core/declare.h"
 #include "core/n_texture.h"
 #include "object.h"
+#include "IColorGear.h"
 
 namespace gui {
 
-    class Image : public Object {
+    class Image : public Object, public IColorGear {
     private:
-        Color4B             color_;
+        glm::vec3           color_;
         std::string         icon_;
         FlipType            flip_;
         FillMethod          fillMethod_;
@@ -34,9 +35,8 @@ namespace gui {
         ~Image() {}
 
         virtual void setSize(Size2D<float> const& size) override;
-
-        Color4B getColor() const { return color_; }
-        void setColor(Color4B val);
+        glm::vec3 getColor() const override { return color_; }
+        void setColor(glm::vec3 const& val) override;
         std::string const& getIcon() const { return icon_; }
         void setIcon(std::string const& val) { icon_ = val; }
 
