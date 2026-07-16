@@ -95,20 +95,36 @@ namespace gui {
         syncTextDesc();
     }
 
-    void GTextField::setColor(uint32_t color) {
+
+    void GTextField::setColor(glm::vec3 const& color) {
         tf_.color = color;
         auto ett = textDispobj_.entity();
         if (ett != entt::null && reg.any_of<dispcomp::item_render_data>(ett)) {
             auto& gfx = reg.get<dispcomp::item_render_data>(ett);
-            gfx.args.color = glm::vec4(
-                float(color & 0xff) / 255.f,
-                float((color >> 8) & 0xff) / 255.f,
-                float((color >> 16) & 0xff) / 255.f,
-                float((color >> 24) & 0xff) / 255.f
-            );
+            gfx.args.color.x = color.x;
+            gfx.args.color.y = color.y;
+            gfx.args.color.z = color.z;
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
             s.mask |= dispcomp::Asm_Color;
         }
+    }
+    glm::vec3 GTextField::getColor() const {
+        return tf_.color;
+    }
+    void GTextField::setOutlineColor(glm::vec3 const& color) {
+        tf_.outlineColor = color;
+        auto ett = textDispobj_.entity();
+        if (ett != entt::null && reg.any_of<dispcomp::item_render_data>(ett)) {
+            auto& gfx = reg.get<dispcomp::item_render_data>(ett);
+            // gfx.args.outlineColor.x = color.x;
+            // gfx.args.outlineColor.y = color.y;
+            // gfx.args.outlineColor.z = color.z;
+            auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
+            s.mask |= dispcomp::Asm_Color;
+        }
+    }
+    glm::vec3 GTextField::getOutlineColor() const {
+        return tf_.outlineColor;
     }
 
     void GTextField::onSizeChanged() {
@@ -125,7 +141,8 @@ namespace gui {
         tf_.font          = buffer.read<csref>();
         fontID_           = 0;  // TODO: font name → fontID 查找
         tf_.fontSize      = (float)buffer.read<int16_t>();
-        tf_.color         = buffer.read<uint32_t>();
+        Color4B color4b   = buffer.read<uint32_t>();
+        tf_.color         = color4b;
         tf_.align         = (gui::AlignType)buffer.read<uint8_t>();
         tf_.verticalAlign = (gui::VertAlignType)buffer.read<uint8_t>();
         tf_.lineSpacing   = buffer.read<int16_t>();
@@ -138,12 +155,14 @@ namespace gui {
         singleLine_       = buffer.read<bool>();
 
         if (buffer.read<bool>()) {
-            tf_.outlineColor = buffer.read<uint32_t>();
+            Color4B outlineColor4b = buffer.read<uint32_t>();
+            tf_.outlineColor = outlineColor4b;
             tf_.outline      = buffer.read<float>();
         }
 
         if (buffer.read<bool>()) {
-            tf_.shadowColor   = buffer.read<uint32_t>();
+            Color4B shadowColor4b = buffer.read<uint32_t>();
+            tf_.shadowColor   = shadowColor4b;
             tf_.shadowOffsetX = buffer.read<float>();
             tf_.shadowOffsetY = buffer.read<float>();
         }

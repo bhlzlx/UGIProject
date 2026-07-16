@@ -15,6 +15,8 @@ namespace gui {
             std::string id;
             std::string name;
         };
+    public:
+        static int                                                  constructing_;
     private:
         std::string                                                 id_;
         std::string                                                 name_;
@@ -31,7 +33,6 @@ namespace gui {
         std::vector<std::string>                                    branches_;
         int32_t                                                     branchIndex_;
 
-        int                                                         constructing_;
         // static data
         static std::unordered_map<std::string, Package*>            packageInstByID;
         static std::unordered_map<std::string, Package*>            packageInstByName;

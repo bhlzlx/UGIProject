@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <core/declare.h>
 #include <core/data_types/tween_types.h>
+#include <core/data_types/tweener.h>
+#include <core/ui/IColorGear.h>
 #include "utils/byte_buffer.h"
 
 namespace gui {
@@ -11,9 +13,25 @@ namespace gui {
     class Controller;
     class Object;
 
+    /// 参照 C# Gear 索引
+    enum class GearIndex : int {
+        Display     = 0,
+        XY          = 1,
+        Size        = 2,
+        Look        = 3,
+        Color       = 4,
+        Animation   = 5,
+        Text        = 6,
+        Icon        = 7,
+        Display2    = 8,
+        FontSize    = 9,
+    };
+
+    using GearType = UnderlyingEnum<GearIndex>;
+
     struct GearColorValue {
-        Color4B color;
-        Color4B strokeColor;
+        glm::vec3 color;
+        glm::vec3 strokeColor;
     };
 
     /// Gear 基类
@@ -21,7 +39,7 @@ namespace gui {
     protected:
         Object*             _owner = nullptr;
         Controller*         _controller = nullptr;
-        TweenConfig         _tweenConfig;
+        TweenConfig*        _tweenConfig;
         bool                _tweenLocked = false;
         bool                _hasTween = false;
     public:
@@ -32,8 +50,7 @@ namespace gui {
         Controller* controller() const { return _controller; }
         void setController(Controller* c) { _controller = c; }
 
-        TweenConfig& tweenConfig() { return _tweenConfig; }
-        TweenConfig const& tweenConfig() const { return _tweenConfig; }
+        TweenConfig const* tweenConfig() { return _tweenConfig; }
 
         virtual void setup(ByteBuffer& buffer);
         virtual void apply() = 0;
@@ -48,12 +65,19 @@ namespace gui {
     class GearDisplay : public GearBase {
     public:
         std::vector<std::string> pages;
-        GearDisplay(Object* owner) : GearBase(owner) {}
+        GearDisplay(Object* owner);
         void setup(ByteBuffer& buffer) override;
         void apply() override;
+
+        uint32_t addLock();
+        void releaseLock(uint32_t token);
+        bool connected() const;
     protected:
         void addStatus(std::string const&, ByteBuffer&) override {}
-        void init() override {}
+        void init() override;
+    private:
+        int          _visible = 0;
+        uint32_t     _displayLockToken = 1;
     };
 
     // ============= GearXY =============
@@ -92,15 +116,20 @@ namespace gui {
     };
 
     // ============= GearColor =============
-    class GearColor : public GearBase {
+    class GearColor : public GearBase, public ITweenListener {
         std::unordered_map<std::string, GearColorValue> _storage;
         GearColorValue _default = {};
+        IColorGear*          _colorGear = nullptr;         // init() 中缓存，避免 dynamic_cast
+        IOutlineColorGear*   _outlineColorGear = nullptr;
     public:
         GearColor(Object* owner) : GearBase(owner) {}
         void apply() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;
         void init() override;
+        void onTweenStart(Tweener* tweener) override;
+        void onTweenUpdate(Tweener* tweener) override;
+        void onTweenComplete(Tweener* tweener) override;
     };
 
     // ============= GearLook =============
@@ -148,10 +177,21 @@ namespace gui {
 
     // ============= GearDisplay2 =============
     // 编辑器的预览模式可见性，运行时行为和 GearDisplay 一样
-    class GearDisplay2 : public GearDisplay {
+    class GearDisplay2 : public GearBase {
     public:
-        GearDisplay2(Object* owner) : GearDisplay(owner) {}
-        void setup(ByteBuffer& buffer) override { GearDisplay::setup(buffer); }
+        std::vector<std::string>   pages;
+        int                        condition = 0;
+
+        GearDisplay2(Object* owner);
+        void setup(ByteBuffer& buffer) override;
+        void apply() override;
+
+        bool evaluate(bool connected);
+    protected:
+        void addStatus(std::string const&, ByteBuffer&) override {}
+        void init() override;
+    private:
+        int     _visible = 0;
     };
 
     // ============= GearFontSize =============

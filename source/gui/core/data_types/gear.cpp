@@ -5,6 +5,8 @@
 #include <core/ui/image.h>
 #include <core/controller.h>
 #include <core/display_objects/display_object.h>
+#include <core/package.h>
+#include <core/data_types/tween_manager.h>
 
 namespace gui {
 
@@ -13,10 +15,11 @@ namespace gui {
     void GearBase::setupTween(ByteBuffer& buffer) {
         if (buffer.read<bool>()) {
             _hasTween = true;
-            _tweenConfig.tween = true;
-            _tweenConfig.easeType = EaseType(buffer.read<uint8_t>());
-            _tweenConfig.duration = buffer.read<float>();
-            _tweenConfig.repeat = buffer.read<int>();
+            _tweenConfig = new TweenConfig();
+            _tweenConfig->tween = true;
+            _tweenConfig->easeType = EaseType(buffer.read<uint8_t>());
+            _tweenConfig->duration = buffer.read<float>();
+            _tweenConfig->repeat = buffer.read<int>();
         }
     }
 
@@ -56,6 +59,14 @@ namespace gui {
     }
 
     // ============= GearDisplay =============
+    GearDisplay::GearDisplay(Object* owner) : GearBase(owner) {
+        _displayLockToken = 1;
+    }
+
+    void GearDisplay::init() {
+        pages.clear();
+    }
+
     void GearDisplay::setup(ByteBuffer& buffer) {
         int ctlIdx = buffer.read<int16_t>();
         if (ctlIdx >= 0 && _owner->parent())
@@ -68,12 +79,65 @@ namespace gui {
     }
 
     void GearDisplay::apply() {
-        if (!_controller) return;
-        auto cur = _controller->selectedPageId();
-        bool show = false;
-        for (auto& p : pages) if (p == cur) { show = true; break; }
-        if (pages.empty()) show = true;
-        _owner->setVisible(show);
+        _displayLockToken++;
+        if (_displayLockToken == 0)
+            _displayLockToken = 1;
+
+        if (pages.empty()
+            || std::find(pages.begin(), pages.end(), _controller->selectedPageId()) != pages.end())
+            _visible = 1;
+        else
+            _visible = 0;
+    }
+
+    uint32_t GearDisplay::addLock() {
+        _visible++;
+        return _displayLockToken;
+    }
+
+    void GearDisplay::releaseLock(uint32_t token) {
+        if (token == _displayLockToken)
+            _visible--;
+    }
+
+    bool GearDisplay::connected() const {
+        return _controller == nullptr || _visible > 0;
+    }
+
+    // ============= GearDisplay2 =============
+    GearDisplay2::GearDisplay2(Object* owner) : GearBase(owner) {
+    }
+
+    void GearDisplay2::init() {
+        pages.clear();
+    }
+
+    void GearDisplay2::setup(ByteBuffer& buffer) {
+        int ctlIdx = buffer.read<int16_t>();
+        if (ctlIdx >= 0 && _owner->parent())
+            _controller = _owner->parent()->getControllerAt(ctlIdx);
+        int cnt = buffer.read<int16_t>();
+        pages.resize(cnt);
+        for (int i = 0; i < cnt; ++i)
+            pages[i] = buffer.read<csref>();
+        setupTween(buffer);
+    }
+
+    void GearDisplay2::apply() {
+        if (pages.empty()
+            || std::find(pages.begin(), pages.end(), _controller->selectedPageId()) != pages.end())
+            _visible = 1;
+        else
+            _visible = 0;
+    }
+
+    bool GearDisplay2::evaluate(bool connected) {
+        bool v = _controller == nullptr || _visible > 0;
+        if (condition == 0)
+            v = v && connected;
+        else
+            v = v || connected;
+        return v;
     }
 
     // ============= GearXY =============
@@ -163,11 +227,14 @@ namespace gui {
     // ============= GearColor =============
     void GearColor::init() {
         if (_owner) {
-            if (auto* img = dynamic_cast<Image*>(_owner)) {
-                _default.color = img->getColor();
-            } else if (auto* txt = dynamic_cast<GTextField*>(_owner)) {
-                _default.color = Color4B(txt->textFormat().color);
-                _default.strokeColor = Color4B(txt->textFormat().outlineColor);
+            _colorGear = dynamic_cast<IColorGear*>(_owner);
+            _outlineColorGear = dynamic_cast<IOutlineColorGear*>(_owner);
+
+            if (_colorGear) {
+                _default.color = _colorGear->getColor();
+            }
+            if (_outlineColorGear) {
+                _default.strokeColor = _outlineColorGear->getOutlineColor();
             }
         }
     }
@@ -175,21 +242,72 @@ namespace gui {
     void GearColor::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
         Color4B color = Color4B(buffer.read<uint32_t>());
-        color.a = 255;
         Color4B strokeColor = Color4B(buffer.read<uint32_t>());
-        strokeColor.a = 255;
-        v = {color, strokeColor};
+        v.color = color;
+        v.strokeColor = strokeColor;
     }
 
     void GearColor::apply() {
         if (!_controller) return;
         auto it = _storage.find(_controller->selectedPageId());
-        auto c = (it != _storage.end()) ? it->second : _default;
-        if (auto* img = dynamic_cast<Image*>(_owner)) {
-            img->setColor(c.color);
-        } else if (auto* txt = dynamic_cast<GTextField*>(_owner)) {
-            txt->setColor(c.color);
+        auto& gv = (it != _storage.end()) ? it->second : _default;
+
+        if (_tweenConfig && _tweenConfig->tween && Package::constructing_ == 0 && !disableAllTweenEffect) {
+            // strokeColor 立即生效（不参与 tween）
+            if (_outlineColorGear && gv.strokeColor.a > 0) {
+                _owner->lockGear();
+                _outlineColorGear->setOutlineColor(gv.strokeColor);
+                _owner->unlockGear();
+            }
+
+            // 如果已有 tweener 且目标颜色相同，跳过
+            if (_tweenConfig->tweener) {
+                if (_tweenConfig->tweener->endVal.vec3() == gv.color) {
+                    return;
+                }
+                _tweenConfig->tweener->kill(true);
+                _tweenConfig->tweener.reset();
+            }
+
+            // 颜色不同则启动新 tween
+            if (_colorGear && _colorGear->getColor() != gv.color) {
+                if (_owner->checkGearController(int(GearIndex::Display), _controller))
+                    _tweenConfig->displayLockToken = _owner->addDisplayLock();
+
+                auto* t = GTween::To(_colorGear->getColor(), gv.color, _tweenConfig->duration)
+                    ->setDelay(_tweenConfig->delay)
+                    ->setEase(_tweenConfig->easeType)
+                    ->setListener(this);
+                _tweenConfig->tweener.reset(t);
+            }
+        } else {
+            // 无 tween 时直接设置
+            _owner->lockGear();
+            if (_colorGear) _colorGear->setColor(gv.color);
+            if (_outlineColorGear && gv.strokeColor.a > 0)
+                _outlineColorGear->setOutlineColor(gv.strokeColor);
+            _owner->unlockGear();
         }
+    }
+
+    void GearColor::onTweenStart(Tweener* tweener) {
+    }
+
+    void GearColor::onTweenUpdate(Tweener* tweener) {
+        _owner->lockGear();
+        if (_colorGear) _colorGear->setColor(tweener->val.vec3());
+        _owner->unlockGear();
+
+        _owner->invalidateBatchingState();
+    }
+
+    void GearColor::onTweenComplete(Tweener* tweener) {
+        _tweenConfig->tweener = nullptr; // unique_ptr 会自动释放，这里重置所有权
+        if (_tweenConfig->displayLockToken != 0) {
+            _owner->releaseDisplayLock(_tweenConfig->displayLockToken);
+            _tweenConfig->displayLockToken = 0;
+        }
+        _owner->dispatchEvent("onGearStop", this);
     }
 
     // ============= GearLook =============

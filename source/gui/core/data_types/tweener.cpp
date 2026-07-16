@@ -229,6 +229,11 @@ namespace gui {
         return this;
     }
 
+    Tweener* Tweener::setListener(ITweenListener* listener) {
+        listener_ = listener;
+        return this;
+    }
+
     Tweener* Tweener::setPaused(bool paused) {
         paused_ = paused;
         return this;
@@ -331,6 +336,7 @@ namespace gui {
         propType_ = TweenPropType::None;
         userdata_ = Userdata();
         path_ = nullptr;
+        listener_ = nullptr;
         onStart_ = nullptr;
         onUpdate_ = nullptr;
         onComplete_ = nullptr;
@@ -460,14 +466,17 @@ namespace gui {
     }
 
     void Tweener::callStartCallback() {
+        if (listener_) listener_->onTweenStart(this);
         if (onStart_) onStart_(this);
     }
 
     void Tweener::callUpdateCallback() {
+        if (listener_) listener_->onTweenUpdate(this);
         if (onUpdate_) onUpdate_(this);
     }
 
     void Tweener::callCompleteCallback() {
+        if (listener_) listener_->onTweenComplete(this);
         if (onComplete_) onComplete_(this);
         if (onComplete0_) onComplete0_();
     }

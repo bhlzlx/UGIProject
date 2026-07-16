@@ -37,6 +37,15 @@ namespace gui {
 
     void SetObjectTweenProps(Object* target, TweenPropType type, TValue const& val);
 
+    /// 参照 C# ITweenListener
+    class ITweenListener {
+    public:
+        virtual ~ITweenListener() = default;
+        virtual void onTweenStart(Tweener* tweener) = 0;
+        virtual void onTweenUpdate(Tweener* tweener) = 0;
+        virtual void onTweenComplete(Tweener* tweener) = 0;
+    };
+
     class Tweener {
     public:
         using TweenCallback = std::function<void(Tweener*)>;
@@ -65,6 +74,7 @@ namespace gui {
         Tweener* setStartCallback(TweenCallback const& callback);
         Tweener* setCompleteCallback(TweenCallback const& callback);
         Tweener* setCompleteCallbackSimple(TweenCallbackSimple const& callback);
+        Tweener* setListener(ITweenListener* listener);
         Tweener* setPaused(bool paused);
 
         float getDelay() const;
@@ -126,6 +136,7 @@ namespace gui {
         Userdata            userdata_;
         InterpoPath*        path_;
 
+        ITweenListener*     listener_  = nullptr;  // 参照 C# _listener
         TweenCallback       onUpdate_;
         TweenCallback       onStart_;
         TweenCallback       onComplete_;

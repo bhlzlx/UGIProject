@@ -450,4 +450,6 @@ namespace gui {
     }
 
 
+    int Package::constructing_ = 0;
+
 }

@@ -54,6 +54,21 @@ namespace gui {
         operator uint32_t () const {
             return val;
         }
+        operator glm::vec4() const {
+            return glm::vec4(
+                r / 255.0f,  // 红色通道归一化
+                g / 255.0f,  // 绿色通道归一化  
+                b / 255.0f,  // 蓝色通道归一化
+                a / 255.0f   // 透明度通道归一化
+            );
+        }
+        operator glm::vec3() const {
+            return glm::vec3(
+                r / 255.0f,  // 红色通道归一化
+                g / 255.0f,  // 绿色通道归一化  
+                b / 255.0f  // 蓝色通道归一化
+            );
+        }
     };
 
     struct Color3B {
@@ -84,6 +99,14 @@ namespace gui {
                 memcpy(&val,this,3);
             #endif
             return val;
+        }
+
+        operator glm::vec3() const {
+            return glm::vec3(
+                r / 255.0f,  // 红色通道归一化
+                g / 255.0f,  // 绿色通道归一化  
+                b / 255.0f  // 蓝色通道归一化
+            );
         }
     };
 

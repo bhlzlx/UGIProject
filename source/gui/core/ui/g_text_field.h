@@ -2,6 +2,7 @@
 #include <core/ui/object.h>
 #include <core/font_manager.h>
 #include <string>
+#include "IColorGear.h"
 
 namespace gui {
 
@@ -11,23 +12,23 @@ namespace gui {
     struct TextFormat {
         std::string     font;
         float           fontSize        = 12.0f;
-        uint32_t        color           = 0xffffffff;
+        glm::vec3       color           = {};
         AlignType       align           = AlignType::Left;
         VertAlignType   verticalAlign   = VertAlignType::Top;
-        int16_t     lineSpacing     = 0;
-        int16_t     letterSpacing   = 0;
-        bool        underline       = false;
-        bool        italic          = false;
-        bool        bold            = false;
-        bool        strikethrough   = false;
-        uint32_t    outlineColor    = 0;
-        float       outline         = 0;
-        uint32_t    shadowColor     = 0;
-        float       shadowOffsetX   = 0;
-        float       shadowOffsetY   = 0;
+        int16_t         lineSpacing     = 0;
+        int16_t         letterSpacing   = 0;
+        bool            underline       = false;
+        bool            italic          = false;
+        bool            bold            = false;
+        bool            strikethrough   = false;
+        glm::vec3       outlineColor    = {};
+        float           outline         = 0;
+        glm::vec3       shadowColor     = {};
+        float           shadowOffsetX   = 0;
+        float           shadowOffsetY   = 0;
     };
 
-    class GTextField : public Object {
+    class GTextField : public Object, public IOutlineColorGear {
     public:
         enum class AutoSize {
             None, Both, Height, Shrink
@@ -66,7 +67,11 @@ namespace gui {
 
         std::string const& text() const { return text_; }
         void setText(std::string const& val);
-        void setColor(uint32_t color);
+
+        void setColor(glm::vec3 const& color) override;
+        glm::vec3 getColor() const override;
+        void setOutlineColor(glm::vec3 const& color) override;
+        glm::vec3 getOutlineColor() const override;
 
         int fontID() const { return fontID_; }
         void setFontID(int val);

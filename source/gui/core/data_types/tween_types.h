@@ -1,8 +1,11 @@
 #pragma once
 #include <core/declare.h>
 #include <core/ease/ease_type.h>
+#include <memory>
 
 namespace gui {
+
+    class Tweener;
 
     struct TValue {
         union {
@@ -29,14 +32,14 @@ namespace gui {
     };
 
     struct TweenConfig {
-        bool        tween = false;
-        float       duration;
+        bool        tween   = true;           // 参照 C# GearTweenConfig: 默认 true
         EaseType    easeType = EaseType::QuadOut;
-        int         repeat;
-        bool        yoyo;
-        //
-        TValue*     startValue = nullptr;
-        TValue*     endValue = nullptr;
+        float       duration = 0.3f;         // 参照 C#: 默认 0.3s
+        float       delay    = 0;            // 参照 C#: 默认 0
+        int         repeat   = 0;
+        bool        yoyo     = false;
+        uint32_t    displayLockToken = 0;
+        std::unique_ptr<Tweener>    tweener = nullptr;
     };
 
 }
