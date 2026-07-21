@@ -44,7 +44,13 @@ namespace gui {
         bool                _hasTween = false;
     public:
         static bool         disableAllTweenEffect;
-        GearBase(Object* owner) : _owner(owner) {}
+        GearBase(Object* owner) 
+            : _owner(owner)
+            , _controller(nullptr)
+            , _tweenConfig(nullptr)
+            , _tweenLocked(false)
+            , _hasTween(false)
+        {}
         virtual ~GearBase() = default;
 
         Controller* controller() const { return _controller; }
@@ -122,7 +128,13 @@ namespace gui {
         IColorGear*          _colorGear = nullptr;         // init() 中缓存，避免 dynamic_cast
         IOutlineColorGear*   _outlineColorGear = nullptr;
     public:
-        GearColor(Object* owner) : GearBase(owner) {}
+        GearColor(Object* owner) 
+            : GearBase(owner) 
+            , _storage()
+            , _default()
+            , _colorGear(nullptr)
+            , _outlineColorGear(nullptr)
+        {}
         void apply() override;
     protected:
         void addStatus(std::string const& page, ByteBuffer& buffer) override;

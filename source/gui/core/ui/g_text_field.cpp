@@ -104,6 +104,7 @@ namespace gui {
             gfx.args.color.x = color.x;
             gfx.args.color.y = color.y;
             gfx.args.color.z = color.z;
+            gfx.args.color.w = 1.0f;
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
             s.mask |= dispcomp::Asm_Color;
         }

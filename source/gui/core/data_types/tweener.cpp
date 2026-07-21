@@ -10,7 +10,23 @@ namespace gui {
     Tweener::TweenCallback Tweener::OnCheckAllComplete;
     Tweener::TweenCallback Tweener::OnDelayedPlayItem;
 
-    Tweener::Tweener() {
+    Tweener::Tweener() 
+        : startVal()
+        , endVal()
+        , target_(Handle())
+        , propType_(TweenPropType::None)
+        , valueType_(TweenValueType::None)
+        , delay_(0.0f)
+        , duration_(0.0f)
+        , breakpoint_(0.0f)
+        , easeType_(EaseType::Linear)
+        , easePeriod_(0.3f)
+        , easeOvershootOrAmplitude_(1.70158f)
+        , repeat_(0)
+        , yoyo_(false)
+        , timeScale_(1.0f)
+        , snapping_(false)   
+    {
         _init();
     }
 
@@ -329,6 +345,9 @@ namespace gui {
         target_ = Handle();
         propType_ = TweenPropType::None;
         userdata_ = Userdata();
+        onComplete_ = nullptr;
+        onComplete0_ = nullptr;
+        listener_ = nullptr;
     }
 
     void Tweener::_reset() {

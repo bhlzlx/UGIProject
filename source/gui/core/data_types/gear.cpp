@@ -254,7 +254,7 @@ namespace gui {
 
         if (_tweenConfig && _tweenConfig->tween && Package::constructing_ == 0 && !disableAllTweenEffect) {
             // strokeColor 立即生效（不参与 tween）
-            if (_outlineColorGear && gv.strokeColor.a > 0) {
+            if (_outlineColorGear ) { //&& gv.strokeColor.a > 0
                 _owner->lockGear();
                 _outlineColorGear->setOutlineColor(gv.strokeColor);
                 _owner->unlockGear();
@@ -284,7 +284,7 @@ namespace gui {
             // 无 tween 时直接设置
             _owner->lockGear();
             if (_colorGear) _colorGear->setColor(gv.color);
-            if (_outlineColorGear && gv.strokeColor.a > 0)
+            if (_outlineColorGear) //&& gv.strokeColor.a > 0
                 _outlineColorGear->setOutlineColor(gv.strokeColor);
             _owner->unlockGear();
         }
@@ -302,7 +302,6 @@ namespace gui {
     }
 
     void GearColor::onTweenComplete(Tweener* tweener) {
-        _tweenConfig->tweener = nullptr; // unique_ptr 会自动释放，这里重置所有权
         if (_tweenConfig->displayLockToken != 0) {
             _owner->releaseDisplayLock(_tweenConfig->displayLockToken);
             _tweenConfig->displayLockToken = 0;
