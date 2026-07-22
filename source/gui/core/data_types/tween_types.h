@@ -39,7 +39,7 @@ namespace gui {
         int         repeat   = 0;
         bool        yoyo     = false;
         uint32_t    displayLockToken = 0;
-        std::unique_ptr<Tweener>    tweener = nullptr;
+        Tweener*    tweener = nullptr;
     };
 
 }

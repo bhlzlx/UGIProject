@@ -266,7 +266,7 @@ namespace gui {
                     return;
                 }
                 _tweenConfig->tweener->kill(true);
-                _tweenConfig->tweener.reset();
+                _tweenConfig->tweener = nullptr;
             }
 
             // 颜色不同则启动新 tween
@@ -278,7 +278,7 @@ namespace gui {
                     ->setDelay(_tweenConfig->delay)
                     ->setEase(_tweenConfig->easeType)
                     ->setListener(this);
-                _tweenConfig->tweener.reset(t);
+                _tweenConfig->tweener = t;
             }
         } else {
             // 无 tween 时直接设置
