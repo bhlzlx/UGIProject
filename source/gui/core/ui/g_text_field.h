@@ -12,7 +12,7 @@ namespace gui {
     struct TextFormat {
         std::string     font;
         float           fontSize        = 12.0f;
-        glm::vec3       color           = {};
+        Color4B         color           = {0xFFFFFFFF};  // packed RGBA
         AlignType       align           = AlignType::Left;
         VertAlignType   verticalAlign   = VertAlignType::Top;
         int16_t         lineSpacing     = 0;
@@ -21,9 +21,9 @@ namespace gui {
         bool            italic          = false;
         bool            bold            = false;
         bool            strikethrough   = false;
-        glm::vec3       outlineColor    = {};
+        Color4B         outlineColor    = {0xFFFFFFFF};  // packed RGBA
         float           outline         = 0;
-        glm::vec3       shadowColor     = {};
+        Color4B         shadowColor     = {0xFFFFFFFF};  // packed RGBA
         float           shadowOffsetX   = 0;
         float           shadowOffsetY   = 0;
     };
@@ -68,10 +68,10 @@ namespace gui {
         std::string const& text() const { return text_; }
         void setText(std::string const& val);
 
-        void setColor(glm::vec3 const& color) override;
-        glm::vec3 getColor() const override;
-        void setOutlineColor(glm::vec3 const& color) override;
-        glm::vec3 getOutlineColor() const override;
+        void setColor(Color4B color) override;
+        Color4B getColor() const override;
+        void setOutlineColor(Color4B color) override;
+        Color4B getOutlineColor() const override;
 
         int fontID() const { return fontID_; }
         void setFontID(int val);

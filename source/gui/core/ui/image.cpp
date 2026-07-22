@@ -61,14 +61,14 @@ namespace gui {
         reg.emplace_or_replace<dispcomp::mesh_dirty>(dispobj_);
         reg.emplace_or_replace<dispcomp::image_desc_t>(dispobj_);
         auto& gfx = reg.get_or_emplace<dispcomp::item_render_data>(dispobj_);
-        gfx.args.color = glm::vec4(1.f, 1.f, 1.f, alpha_);
+        gfx.args.colorPacked = color_;   // already packed RGBA
     }
 
-    void Image::setColor(glm::vec3 const& val) {
+    void Image::setColor(Color4B val) {
         color_ = val;
         if (dispobj_) {
             auto& gfx = reg.get<dispcomp::item_render_data>(dispobj_);
-            gfx.args.color = glm::vec4(val.x, val.y, val.z, 1.0f);
+            gfx.args.colorPacked = color_;
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(dispobj_);
             s.mask |= dispcomp::Asm_Color;
         }

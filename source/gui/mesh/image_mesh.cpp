@@ -250,8 +250,8 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
             if(mesh.vertices.size()) {
                 auto* meshItem = new image_mesh_t(std::move(mesh));
                 graphics.meshData.item = meshItem;
-                graphics.args.props.x = 0.05f;
-                graphics.args.props.y = sdfSrcSize / textDesc.fontSize;
+                // TODO: SDF smoothing params (baseSmoothing, sizeScale) need a proper packing location;
+                // currently vertex shader hardcodes props to (0,0,0,0), so smoothing defaults to 0.03.
                 auto& bounds = reg.get_or_emplace<dispcomp::text_bounds>(ett);
                 bounds.width  = textW;
                 bounds.height = textH;

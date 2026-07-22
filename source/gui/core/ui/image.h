@@ -10,7 +10,7 @@ namespace gui {
 
     class Image : public Object, public IColorGear {
     private:
-        glm::vec3           color_;
+        Color4B             color_{0xFFFFFFFF};  // packed RGBA
         std::string         icon_;
         FlipType            flip_;
         FillMethod          fillMethod_;
@@ -21,7 +21,7 @@ namespace gui {
     public:
         Image()
             : Object()
-            , color_(0)
+            , color_(0xFFFFFFFF)
             , flip_(FlipType::None)
             , fillMethod_(FillMethod::None)
             , fillOrigin_(FillOrigin::None)
@@ -35,8 +35,8 @@ namespace gui {
         ~Image() {}
 
         virtual void setSize(Size2D<float> const& size) override;
-        glm::vec3 getColor() const override { return color_; }
-        void setColor(glm::vec3 const& val) override;
+        Color4B getColor() const override { return color_; }
+        void setColor(Color4B val) override;
         std::string const& getIcon() const { return icon_; }
         void setIcon(std::string const& val) { icon_ = val; }
 

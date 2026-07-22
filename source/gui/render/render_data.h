@@ -6,6 +6,7 @@
 #include "ugi_declare.h"
 #include "ugi_types.h"
 #include <glm/glm.hpp>
+#include <algorithm>
 #include <vector>
 #include <entt/entt.hpp>
 
@@ -43,16 +44,45 @@ namespace gui {
         std::vector<uint16_t>       indices;
     };
 
+    inline uint32_t packColorRGBA(glm::vec4 const& color) {
+        auto clampByte = [](float value) -> uint32_t {
+            return static_cast<uint32_t>(std::clamp(int(std::round(value * 255.0f)), 0, 255));
+        };
+        return (clampByte(color.a) << 24)
+            | (clampByte(color.b) << 16)
+            | (clampByte(color.g) << 8)
+            | clampByte(color.r);
+    }
+
+    inline uint32_t packColorRGBA(glm::vec3 const& color, float alpha = 1.0f) {
+        return packColorRGBA(glm::vec4(color, alpha));
+    }
+
+    inline glm::vec4 unpackColorRGBA(uint32_t packed) {
+        return glm::vec4(
+            float(packed & 0xFFu) / 255.0f,
+            float((packed >> 8) & 0xFFu) / 255.0f,
+            float((packed >> 16) & 0xFFu) / 255.0f,
+            float((packed >> 24) & 0xFFu) / 255.0f);
+    }
+
     // shader uniform buffer desc
     struct item_args_t {
         glm::mat4   transfrom;
-        glm::vec4   color;// rgb, alpha
-        glm::vec4   props; // gray, hdr
+        uint32_t    colorPacked = 0; // packed RGBA 8-bit per channel
+        uint32_t    packedProps = 0; // low 8 bits: gray (0..255), next 8 bits: hdr (0..255), rest reserved
+        // packed outline / shadow / effect params — placed here so image items can ignore them
+        uint32_t    outlineColorPacked = 0; // packed RGBA 8-bit per channel
+        uint32_t    packedParamSDF = 0; // low 8 bits: outlineWidth, next 8 bits: shadowOffsetX, next 8 bits: shadowOffsetY, top 8 bits: effectType
+
         void setGray(float gray) {
-            props.x = gray;
+            packedProps = (packedProps & 0xFFFFFF00u) | (uint32_t)(std::clamp(int(std::round(gray * 255.0f)), 0, 255));
         }
         void setHDR(float hdr) {
-            props.y = hdr;
+            packedProps = (packedProps & 0xFFFF00FFu) | ((uint32_t)(std::clamp(int(std::round(hdr * 255.0f)), 0, 255)) << 8);
+        }
+        void setEffectType(int effect) {
+            packedParamSDF = (packedParamSDF & 0x00FFFFFFu) | ((uint32_t)(effect & 0xFFu) << 24);
         }
     };
 

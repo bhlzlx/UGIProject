@@ -12,5 +12,6 @@ struct FSInput {
 
 [shader("fragment")]
 float4 main(FSInput input) : SV_Target {
-    return image_tex.Sample(image_sampler, input.uv);
+    float4 texColor = image_tex.Sample(image_sampler, input.uv);
+    return texColor * input.color;
 }

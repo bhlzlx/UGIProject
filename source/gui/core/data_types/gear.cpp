@@ -241,10 +241,8 @@ namespace gui {
 
     void GearColor::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
-        Color4B color = Color4B(buffer.read<uint32_t>());
-        Color4B strokeColor = Color4B(buffer.read<uint32_t>());
-        v.color = color;
-        v.strokeColor = strokeColor;
+        v.color       = buffer.read<uint32_t>();
+        v.strokeColor = buffer.read<uint32_t>();
     }
 
     void GearColor::apply() {
@@ -262,7 +260,7 @@ namespace gui {
 
             // 如果已有 tweener 且目标颜色相同，跳过
             if (_tweenConfig->tweener) {
-                if (_tweenConfig->tweener->endVal.vec3() == gv.color) {
+                if (_tweenConfig->tweener->endVal.color4B().val == gv.color) {
                     return;
                 }
                 _tweenConfig->tweener->kill(true);
@@ -295,7 +293,7 @@ namespace gui {
 
     void GearColor::onTweenUpdate(Tweener* tweener) {
         _owner->lockGear();
-        if (_colorGear) _colorGear->setColor(tweener->val.vec3());
+        if (_colorGear) _colorGear->setColor(tweener->val.color4B());
         _owner->unlockGear();
 
         _owner->invalidateBatchingState();

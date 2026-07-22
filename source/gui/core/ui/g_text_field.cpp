@@ -4,6 +4,8 @@
 #include "core/font_manager.h"
 #include "utils/byte_buffer.h"
 #include "render/render_data.h"
+#include <algorithm>
+#include <cmath>
 
 namespace gui {
 
@@ -12,6 +14,13 @@ namespace gui {
     }
 
     GTextField::~GTextField() = default;
+
+    static uint32_t packOutlineParams(uint8_t outlineWidth, int8_t shadowOffsetX, int8_t shadowOffsetY, uint8_t effectType) {
+        return (uint32_t)(outlineWidth & 0xFFu)
+            | ((uint32_t)(uint8_t(shadowOffsetX) & 0xFFu) << 8)
+            | ((uint32_t)(uint8_t(shadowOffsetY) & 0xFFu) << 16)
+            | ((uint32_t)(effectType & 0xFFu) << 24);
+    }
 
     void GTextField::syncTextDesc() {
         auto ett = textDispobj_.entity();
@@ -24,6 +33,17 @@ namespace gui {
         desc.align         = (uint8_t)tf_.align;
         desc.verticalAlign = (uint8_t)tf_.verticalAlign;
         setColor(tf_.color);
+        // also update outline/shadow packed params into args UBO
+        if (reg.any_of<dispcomp::item_render_data>(ett)) {
+            auto& gfx = reg.get<dispcomp::item_render_data>(ett);
+            gfx.args.colorPacked = tf_.color;
+            gfx.args.outlineColorPacked = tf_.outlineColor;
+            gfx.args.packedParamSDF = packOutlineParams(
+                (uint8_t)std::clamp((int)std::round(tf_.outline), 0, 255),
+                (int8_t)std::clamp((int)std::round(tf_.shadowOffsetX), -128, 127),
+                (int8_t)std::clamp((int)std::round(tf_.shadowOffsetY), -128, 127),
+                0u);
+        }
         reg.emplace_or_replace<dispcomp::mesh_dirty>(ett);
         reg.emplace_or_replace<dispcomp::batch_dirty>(ett);
         auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
@@ -96,35 +116,36 @@ namespace gui {
     }
 
 
-    void GTextField::setColor(glm::vec3 const& color) {
+    void GTextField::setColor(Color4B color) {
         tf_.color = color;
         auto ett = textDispobj_.entity();
         if (ett != entt::null && reg.any_of<dispcomp::item_render_data>(ett)) {
             auto& gfx = reg.get<dispcomp::item_render_data>(ett);
-            gfx.args.color.x = color.x;
-            gfx.args.color.y = color.y;
-            gfx.args.color.z = color.z;
-            gfx.args.color.w = 1.0f;
+            gfx.args.colorPacked = color;
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
             s.mask |= dispcomp::Asm_Color;
         }
     }
-    glm::vec3 GTextField::getColor() const {
+    Color4B GTextField::getColor() const {
         return tf_.color;
     }
-    void GTextField::setOutlineColor(glm::vec3 const& color) {
+
+    void GTextField::setOutlineColor(Color4B color) {
         tf_.outlineColor = color;
         auto ett = textDispobj_.entity();
         if (ett != entt::null && reg.any_of<dispcomp::item_render_data>(ett)) {
             auto& gfx = reg.get<dispcomp::item_render_data>(ett);
-            // gfx.args.outlineColor.x = color.x;
-            // gfx.args.outlineColor.y = color.y;
-            // gfx.args.outlineColor.z = color.z;
+            gfx.args.outlineColorPacked = color;
+            gfx.args.packedParamSDF = packOutlineParams(
+                (uint8_t)std::clamp((int)std::round(tf_.outline), 0, 255),
+                (int8_t)std::clamp((int)std::round(tf_.shadowOffsetX), -128, 127),
+                (int8_t)std::clamp((int)std::round(tf_.shadowOffsetY), -128, 127),
+                0u);
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
             s.mask |= dispcomp::Asm_Color;
         }
     }
-    glm::vec3 GTextField::getOutlineColor() const {
+    Color4B GTextField::getOutlineColor() const {
         return tf_.outlineColor;
     }
 
@@ -142,8 +163,7 @@ namespace gui {
         tf_.font          = buffer.read<csref>();
         fontID_           = 0;  // TODO: font name → fontID 查找
         tf_.fontSize      = (float)buffer.read<int16_t>();
-        Color4B color4b   = buffer.read<uint32_t>();
-        tf_.color         = color4b;
+        tf_.color          = buffer.read<uint32_t>();
         tf_.align         = (gui::AlignType)buffer.read<uint8_t>();
         tf_.verticalAlign = (gui::VertAlignType)buffer.read<uint8_t>();
         tf_.lineSpacing   = buffer.read<int16_t>();
@@ -156,14 +176,12 @@ namespace gui {
         singleLine_       = buffer.read<bool>();
 
         if (buffer.read<bool>()) {
-            Color4B outlineColor4b = buffer.read<uint32_t>();
-            tf_.outlineColor = outlineColor4b;
+            tf_.outlineColor = buffer.read<uint32_t>();
             tf_.outline      = buffer.read<float>();
         }
 
         if (buffer.read<bool>()) {
-            Color4B shadowColor4b = buffer.read<uint32_t>();
-            tf_.shadowColor   = shadowColor4b;
+            tf_.shadowColor   = buffer.read<uint32_t>();
             tf_.shadowOffsetX = buffer.read<float>();
             tf_.shadowOffsetY = buffer.read<float>();
         }

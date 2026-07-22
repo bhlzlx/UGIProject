@@ -30,8 +30,8 @@ namespace gui {
     using GearType = UnderlyingEnum<GearIndex>;
 
     struct GearColorValue {
-        glm::vec3 color;
-        glm::vec3 strokeColor;
+        Color4B color       = {0xFFFFFFFF};  // packed RGBA
+        Color4B strokeColor = {0xFFFFFFFF};  // packed RGBA
     };
 
     /// Gear 基类

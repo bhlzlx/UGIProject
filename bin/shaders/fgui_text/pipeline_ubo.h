@@ -16,8 +16,10 @@ using uint4 = struct { uint32_t x,y,z,w; };
 // nested struct type
 struct args_31_32 {
     float4x4         transform;
-    float4           color;
-    float4           props;
+    uint32_t         colorPacked;
+    uint32_t         packedProps;
+    uint32_t         outlineColorPacked;
+    uint32_t         packedParamSDF;
 };
 
 // nested struct type
@@ -32,9 +34,9 @@ struct global_UBO {
 };
 static_assert(sizeof(global_UBO) == 128, "size mismatch");
 
-// "args"  set=0 bind=0  size=49152
+// "args"  set=0 bind=0  size=40960
 struct args_UBO {
     args_31          imageDatas;
 };
-static_assert(sizeof(args_UBO) == 49152, "size mismatch");
+static_assert(sizeof(args_UBO) == 40960, "size mismatch");
 

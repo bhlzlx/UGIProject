@@ -319,7 +319,10 @@ namespace gui {
     void Object::setAlpha(float val) {
         alpha_ = val;
         if (dispobj_ && reg.any_of<dispcomp::item_render_data>(dispobj_)) {
-            reg.get<dispcomp::item_render_data>(dispobj_).args.color.a = val;
+            auto& gfx = reg.get<dispcomp::item_render_data>(dispobj_);
+            // repack alpha into colorPacked (top 8 bits)
+            uint8_t a = (uint8_t)std::clamp((int)std::round(val * 255.0f), 0, 255);
+            gfx.args.colorPacked = (gfx.args.colorPacked & 0x00FFFFFFu) | ((uint32_t)a << 24);
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(dispobj_);
             s.mask |= dispcomp::Asm_Color;
         }
@@ -328,7 +331,7 @@ namespace gui {
     void Object::setGrayed(bool val) {
         grayed_ = val;
         if (dispobj_ && reg.any_of<dispcomp::item_render_data>(dispobj_)) {
-            reg.get<dispcomp::item_render_data>(dispobj_).args.props.x = val ? 1.0f : 0.0f;
+            reg.get<dispcomp::item_render_data>(dispobj_).args.setGray(val ? 1.0f : 0.0f);
             auto& s = reg.get_or_emplace<dispcomp::args_need_sync>(dispobj_);
             s.mask |= dispcomp::Asm_Props;
         }
