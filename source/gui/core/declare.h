@@ -34,22 +34,16 @@ namespace gui {
     struct Color4B {
         union {
             struct {
-            #if BIG_ENDIAN
-                uint8_t a, b, g, r;
-            #else
                 uint8_t r, g, b, a;
-            #endif
             };
             uint32_t val;
         };
         Color4B() : val(0xffffffff) {}
-        Color4B(uint32_t ival) : val(ival) {}
+        Color4B(uint32_t ival) {
+            memcpy(this, &ival, sizeof(ival));
+        }
         Color4B(uint8_t rr, uint8_t gg, uint8_t bb, uint8_t aa)
-        #if BIG_ENDIAN
             : r(rr), g(gg), b(bb), a(aa)
-        #else
-            : a(rr), b(gg), g(bb), r(aa)
-        #endif
         {}
         operator uint32_t () const {
             return val;

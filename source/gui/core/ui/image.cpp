@@ -39,7 +39,7 @@ namespace gui {
         buffer.seekToBlock(startPos, ObjectBlocks::FillInfo);
         auto& image_desc_t = reg.get_or_emplace<dispcomp::image_desc_t>(dispobj_);
         if(buffer.read<bool>()) {
-            image_desc_t.ext.color = buffer.read<uint32_t>();
+            image_desc_t.ext.color = buffer.read<Color4B>();
         }
         image_desc_t.ext.flip = buffer.read<FlipType>();
         image_desc_t.ext.fill = buffer.read<FillMethod>();

@@ -163,7 +163,7 @@ namespace gui {
         tf_.font          = buffer.read<csref>();
         fontID_           = 0;  // TODO: font name → fontID 查找
         tf_.fontSize      = (float)buffer.read<int16_t>();
-        tf_.color          = buffer.read<uint32_t>();
+        tf_.color          = buffer.read<Color4B>();
         tf_.align         = (gui::AlignType)buffer.read<uint8_t>();
         tf_.verticalAlign = (gui::VertAlignType)buffer.read<uint8_t>();
         tf_.lineSpacing   = buffer.read<int16_t>();
@@ -176,12 +176,12 @@ namespace gui {
         singleLine_       = buffer.read<bool>();
 
         if (buffer.read<bool>()) {
-            tf_.outlineColor = buffer.read<uint32_t>();
+            tf_.outlineColor = buffer.read<Color4B>();
             tf_.outline      = buffer.read<float>();
         }
 
         if (buffer.read<bool>()) {
-            tf_.shadowColor   = buffer.read<uint32_t>();
+            tf_.shadowColor   = buffer.read<Color4B>();
             tf_.shadowOffsetX = buffer.read<float>();
             tf_.shadowOffsetY = buffer.read<float>();
         }

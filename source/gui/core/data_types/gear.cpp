@@ -241,8 +241,8 @@ namespace gui {
 
     void GearColor::addStatus(std::string const& page, ByteBuffer& buffer) {
         auto& v = page.empty() ? _default : _storage[page];
-        v.color       = buffer.read<uint32_t>();
-        v.strokeColor = buffer.read<uint32_t>();
+        v.color       = buffer.read<Color4B>();
+        v.strokeColor = buffer.read<Color4B>();
     }
 
     void GearColor::apply() {
@@ -293,7 +293,8 @@ namespace gui {
 
     void GearColor::onTweenUpdate(Tweener* tweener) {
         _owner->lockGear();
-        if (_colorGear) _colorGear->setColor(tweener->val.color4B());
+        auto color4B = tweener->val.color4B();
+        if (_colorGear) _colorGear->setColor(color4B);
         _owner->unlockGear();
 
         _owner->invalidateBatchingState();

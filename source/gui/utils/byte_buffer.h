@@ -195,6 +195,16 @@ namespace gui {
             return val;
         }
 
+        template<>
+        inline Color4B read<Color4B>() {
+            Color4B val;
+            val.r = read<uint8_t>();
+            val.g = read<uint8_t>();
+            val.b = read<uint8_t>();
+            val.a = read<uint8_t>();
+            return val;
+        }
+
         /**
          * @brief 
          * 
