@@ -34,6 +34,7 @@ PRIVATE
     core/display_objects/display_object.cpp
     core/display_objects/display_object_utility.cpp
     core/display_objects/container.cpp
+    core/display_objects/shape_disp.cpp
     # ui
     core/ui/stage.cpp
     core/ui/ui_content_scaler.cpp
@@ -41,6 +42,7 @@ PRIVATE
     core/ui/component.cpp
     core/ui/g_text_field.cpp
     core/ui/g_button.cpp
+    core/ui/g_graph.cpp
     core/controller.cpp
     core/ui/object.cpp
     core/ui/object_factory.cpp

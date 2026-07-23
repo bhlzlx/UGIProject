@@ -101,6 +101,19 @@ namespace gui {
             float height = 0;
         };
 
+        // ---- GGraph shape ----
+        struct shape_desc_t {
+            enum Type : uint8_t { None = 0, Rect, Ellipse, Polygon, RegularPolygon };
+            Type                    type        = Type::Rect;
+            float                   lineSize    = 0;
+            Color4B                 lineColor   = {0xFFFFFFFF};
+            Color4B                 fillColor   = {0xFFFFFFFF};
+            std::vector<glm::vec2>  polygonPoints;
+            int                     sides       = 5;
+            float                   startAngle  = 0;   // degrees, rotation of first vertex
+            std::vector<float>      distances;         // per-vertex radius multiplier (0~1)
+        };
+
         struct transform_dirty {};
 
         // args 需要同步到 batch cache 的标记 + 位掩码

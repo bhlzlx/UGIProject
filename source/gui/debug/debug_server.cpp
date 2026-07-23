@@ -91,551 +91,180 @@ namespace gui {
     }
 
     // ---------------------------------------------------------------------------
-    // Embedded HTML page (served at GET /)
+    // Minimal SHA1 (RFC 3174) — used only for WebSocket handshake
+    // ---------------------------------------------------------------------------
+
+    struct Sha1 {
+        uint32_t h[5] = {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
+        uint64_t total = 0;
+        uint8_t  buf[64] = {};
+        int      bufLen = 0;
+
+        void update(void const* data, size_t len) {
+            auto* p = (uint8_t const*)data;
+            total += len;
+            while (len > 0) {
+                int space = 64 - bufLen;
+                int n = (int)(len < (size_t)space ? len : (size_t)space);
+                memcpy(buf + bufLen, p, n);
+                bufLen += n; p += n; len -= n;
+                if (bufLen == 64) { processBlock(); bufLen = 0; }
+            }
+        }
+
+        void finish(uint8_t digest[20]) {
+            uint64_t bits = total * 8;
+            buf[bufLen++] = 0x80;
+            if (bufLen > 56) { while (bufLen < 64) buf[bufLen++] = 0; processBlock(); bufLen = 0; }
+            while (bufLen < 56) buf[bufLen++] = 0;
+            for (int i = 0; i < 8; ++i) buf[56 + i] = (uint8_t)(bits >> (56 - i * 8));
+            processBlock();
+            for (int i = 0; i < 5; ++i)
+                for (int j = 0; j < 4; ++j) digest[i * 4 + j] = (uint8_t)(h[i] >> (24 - j * 8));
+        }
+
+    private:
+        void processBlock() {
+            uint32_t w[80];
+            for (int i = 0; i < 16; ++i) w[i] = ((uint32_t)buf[i*4]<<24)|((uint32_t)buf[i*4+1]<<16)|((uint32_t)buf[i*4+2]<<8)|buf[i*4+3];
+            for (int i = 16; i < 80; ++i) { uint32_t t = w[i-3]^w[i-8]^w[i-14]^w[i-16]; w[i] = (t<<1)|(t>>31); }
+            uint32_t a=h[0], b=h[1], c=h[2], d=h[3], e=h[4];
+            for (int i = 0; i < 80; ++i) {
+                uint32_t f, k;
+                if (i<20)      { f=(b&c)|(~b&d);        k=0x5A827999; }
+                else if (i<40) { f=b^c^d;               k=0x6ED9EBA1; }
+                else if (i<60) { f=(b&c)|(b&d)|(c&d);   k=0x8F1BBCDC; }
+                else           { f=b^c^d;               k=0xCA62C1D6; }
+                uint32_t t = ((a<<5)|(a>>27)) + f + e + k + w[i];
+                e=d; d=c; c=(b<<30)|(b>>2); b=a; a=t;
+            }
+            h[0]+=a; h[1]+=b; h[2]+=c; h[3]+=d; h[4]+=e;
+        }
+    };
+
+    static std::string base64Encode(uint8_t const* data, size_t len) {
+        static const char* tbl = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        std::string out;
+        out.reserve(((len + 2) / 3) * 4);
+        for (size_t i = 0; i < len; i += 3) {
+            uint32_t v = ((uint32_t)data[i] << 16) | ((i+1<len?data[i+1]:0) << 8) | (i+2<len?data[i+2]:0);
+            out += tbl[(v>>18)&0x3F];
+            out += tbl[(v>>12)&0x3F];
+            out += (i+1<len) ? tbl[(v>>6)&0x3F]  : '=';
+            out += (i+2<len) ? tbl[v&0x3F]        : '=';
+        }
+        return out;
+    }
+
+    // ---------------------------------------------------------------------------
+    // WebSocket helpers
+    // ---------------------------------------------------------------------------
+
+    static const char WS_GUID[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+    std::string DebugServer::wsAcceptKey(std::string const& clientKey) {
+        std::string combined = clientKey + WS_GUID;
+        Sha1 sha1;
+        sha1.update(combined.data(), combined.size());
+        uint8_t digest[20];
+        sha1.finish(digest);
+        return base64Encode(digest, 20);
+    }
+
+    void DebugServer::sendWsFrame(uint64_t rawSock, std::string const& payload) {
+        socket_t sock = (socket_t)rawSock;
+        std::vector<uint8_t> frame;
+        frame.reserve(2 + 8 + payload.size());
+        frame.push_back(0x81); // FIN + text opcode
+        size_t len = payload.size();
+        if (len < 126) {
+            frame.push_back((uint8_t)len);
+        } else if (len <= 0xFFFF) {
+            frame.push_back(126);
+            frame.push_back((uint8_t)(len >> 8));
+            frame.push_back((uint8_t)(len));
+        } else {
+            frame.push_back(127);
+            for (int i = 7; i >= 0; --i) frame.push_back((uint8_t)(len >> (i*8)));
+        }
+        frame.insert(frame.end(), payload.begin(), payload.end());
+        send(sock, (char const*)frame.data(), (int)frame.size(), 0);
+    }
+
+    bool DebugServer::tryWsHandshake(uint64_t rawSock, std::string const& request) {
+        // Look for "Upgrade: websocket" header
+        if (request.find("Upgrade: websocket") == std::string::npos)
+            return false;
+
+        // Extract Sec-WebSocket-Key
+        auto pos = request.find("Sec-WebSocket-Key: ");
+        if (pos == std::string::npos) return false;
+        pos += 19;
+        auto end = request.find("\r\n", pos);
+        std::string key = request.substr(pos, end - pos);
+
+        std::string accept = wsAcceptKey(key);
+        std::string response =
+            "HTTP/1.1 101 Switching Protocols\r\n"
+            "Upgrade: websocket\r\n"
+            "Connection: Upgrade\r\n"
+            "Sec-WebSocket-Accept: " + accept + "\r\n"
+            "\r\n";
+        socket_t sock = (socket_t)rawSock;
+        send(sock, response.data(), (int)response.size(), 0);
+
+        // Add to WS client list
+        {
+            std::lock_guard<std::mutex> lock(wsMutex_);
+            wsClients_.push_back(rawSock);
+            printf("[DebugServer] WebSocket client connected (total: %zu)\n", wsClients_.size());
+        }
+        return true;
+    }
+
+    void DebugServer::broadcastToWsClients() {
+        std::string objJson = buildTreeSnapshot();
+        std::string dispJson = buildDisplayTreeSnapshot();
+
+        // Compact JSON: {"object":...,"display":...}
+        std::string payload = "{\"object\":" + objJson + ",\"display\":" + dispJson + "}";
+
+        std::lock_guard<std::mutex> lock(wsMutex_);
+        for (auto it = wsClients_.begin(); it != wsClients_.end(); ) {
+            socket_t sock = (socket_t)*it;
+            // Send a ping-like check: try a 0-byte peek to detect dead socket
+            char dummy;
+            int n = recv(sock, &dummy, 1, MSG_PEEK);
+            if (n == 0 || (n < 0
+#ifdef _WIN32
+                && WSAGetLastError() != WSAEWOULDBLOCK
+#else
+                && errno != EAGAIN && errno != EWOULDBLOCK
+#endif
+            )) {
+                CLOSE_SOCKET(sock);
+                it = wsClients_.erase(it);
+                continue;
+            }
+            sendWsFrame(*it, payload);
+            ++it;
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Simple redirect page (served at GET /)
     // ---------------------------------------------------------------------------
 
     static std::string getHtmlPage() {
-        static const std::string page = []{
-            std::string s;
-            // Part 1: HTML head + CSS
-            s += R"HTML(<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UGI UI Debugger</title>
-<style>
-:root {
-    --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460;
-    --text: #e0e0e0; --text2: #a0a0b0; --accent: #e94560;
-    --accent2: #53a8b6; --border: #2a2a4a; --hover: #1f3060;
-    --type-Component: #ff9800; --type-Image: #4caf50; --type-Text: #2196f3;
-    --type-Button: #e94560; --type-List: #9c27b0; --type-Root: #00bcd4;
-    --type-default: #607d8b; --tab-active: #e94560;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg); color: var(--text);
-    height: 100vh; display: flex; overflow: hidden;
-}
-/* ---- left panel: tree ---- */
-#tree-panel {
-    width: 420px; min-width: 300px; background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; overflow: hidden;
-}
-#tabs {
-    display: flex; background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-}
-#tabs button {
-    flex: 1; padding: 10px 12px; background: none; border: none;
-    color: var(--text2); cursor: pointer; font-size: 12px;
-    font-weight: 600; border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-}
-#tabs button.active {
-    color: var(--tab-active); border-bottom-color: var(--tab-active);
-    background: var(--surface);
-}
-#tabs button:hover:not(.active) { color: var(--text); }
-#tree-toolbar {
-    padding: 8px 12px; display: flex; align-items: center;
-    justify-content: space-between; gap: 8px;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-}
-#tree-toolbar h2 { font-size: 12px; font-weight: 600; white-space: nowrap; }
-#tree-toolbar .controls { display: flex; gap: 4px; align-items: center; }
-#tree-toolbar button {
-    background: var(--hover); border: 1px solid var(--border);
-    color: var(--text); padding: 3px 8px; border-radius: 3px;
-    cursor: pointer; font-size: 11px;
-}
-#tree-toolbar button:hover { background: var(--accent); }
-#auto-refresh { width: 14px; height: 14px; accent-color: var(--accent); }
-#tree-container {
-    flex: 1; overflow: auto; padding: 4px 0;
-}
-.tree-node { user-select: none; cursor: pointer; }
-.tree-row {
-    display: flex; align-items: center; padding: 2px 8px;
-    font-size: 12px; line-height: 22px; white-space: nowrap;
-    border-left: 3px solid transparent;
-}
-.tree-row:hover { background: var(--hover); }
-.tree-row.selected { background: var(--surface2); border-left-color: var(--accent); }
-.tree-toggle {
-    width: 16px; text-align: center; color: var(--text2);
-    font-size: 10px; flex-shrink: 0;
-}
-.tree-toggle.expandable { cursor: pointer; }
-.tree-icon { width: 16px; text-align: center; margin-right: 4px; flex-shrink: 0; }
-.tree-name { font-weight: 500; }
-.tree-type {
-    margin-left: 6px; font-size: 10px; padding: 1px 5px;
-    border-radius: 3px; opacity: 0.85;
-}
-.tree-id {
-    margin-left: auto; color: var(--text2);
-    font-size: 10px; opacity: 0.6;
-}
-.tree-comps {
-    margin-left: auto; color: var(--text2);
-    font-size: 9px; opacity: 0.5; max-width: 120px;
-    overflow: hidden; text-overflow: ellipsis;
-}
-.hidden-node { opacity: 0.45; }
-/* ---- right panel: detail ---- */
-#detail-panel {
-    flex: 1; display: flex; flex-direction: column; overflow: hidden;
-}
-#detail-header {
-    padding: 12px 16px; background: var(--surface2);
-    font-size: 14px; font-weight: 600;
-}
-#detail-content { flex: 1; overflow: auto; padding: 16px; }
-.prop-table { width: 100%; border-collapse: collapse; }
-.prop-table td {
-    padding: 3px 12px; font-size: 11px;
-    border-bottom: 1px solid var(--border);
-}
-.prop-table td:first-child {
-    color: var(--text2); width: 130px; white-space: nowrap;
-}
-.prop-table td:last-child { color: var(--text); word-break: break-all; }
-.prop-section {
-    font-size: 10px; font-weight: 700; color: var(--accent2);
-    text-transform: uppercase; letter-spacing: 1px;
-    margin: 12px 0 4px; padding-bottom: 2px;
-    border-bottom: 1px solid var(--border);
-}
-.comp-tag {
-    display: inline-block; font-size: 10px; padding: 1px 6px;
-    margin: 1px 2px; border-radius: 3px;
-    background: var(--surface2); color: var(--accent2);
-}
-#empty-hint { color: var(--text2); font-size: 14px; text-align: center; margin-top: 80px; }
-.status-bar {
-    padding: 4px 12px; font-size: 10px; color: var(--text2);
-    background: var(--surface2); border-top: 1px solid var(--border);
-    display: flex; justify-content: space-between;
-}
-</style>
-)HTML";
-            // Part 2: HTML body
-            s += R"HTML(
-</head>
-<body>
-
-<div id="tree-panel">
-    <div id="tabs">
-        <button id="tab-object" class="active" onclick="switchTab('object')">🧩 Object Tree</button>
-        <button id="tab-display" onclick="switchTab('display')">🖥 Display Tree</button>
-    </div>
-    <div id="tree-toolbar">
-        <h2 id="tree-title">Object Tree</h2>
-        <div class="controls">
-            <label style="font-size:10px;display:flex;align-items:center;gap:3px;">
-                <input type="checkbox" id="auto-refresh" checked>auto
-            </label>
-            <button onclick="refresh()" title="Refresh (F5)">🔄</button>
-            <button onclick="expandAll()">⊞</button>
-            <button onclick="collapseAll()">⊟</button>
-        </div>
-    </div>
-    <div id="tree-container"></div>
-    <div class="status-bar">
-        <span id="status">Connecting...</span>
-        <span id="node-count"></span>
-    </div>
+        return R"HTML(<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>UGI UI Debugger</title></head>
+<body style="background:#1a1a2e;color:#e0e0e0;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+<div style="text-align:center;">
+<h1>🔧 UGI UI Debugger</h1>
+<p>Open <code>bin/debug/debug.html</code> for the real-time WebSocket viewer.</p>
+<p>HTTP API: <a href="/api/tree" style="color:#e94560;">/api/tree</a> &nbsp;|&nbsp; <a href="/api/display-tree" style="color:#53a8b6;">/api/display-tree</a></p>
 </div>
-
-<div id="detail-panel">
-    <div id="detail-header">📋 Select a node</div>
-    <div id="detail-content">
-        <div id="empty-hint">Click a node in the tree to see its properties</div>
-    </div>
-</div>
-
-<script>
-// ---- state ----
-let objectTree = null;
-let displayTree = null;
-let currentTab = 'object';   // 'object' | 'display'
-let selectedPath = null;
-let collapsed = {};
-let autoRefresh = true;
-
-const TYPE_CLASS = {
-    Component:'type-Component', Image:'type-Image', MovieClip:'type-Image',
-    Text:'type-Text', RichText:'type-Text', InputText:'type-Text',
-    Button:'type-Button', List:'type-List', Root:'type-Root', Label:'type-Label'
-};
-const TYPE_ICON = {
-    Root:'🏠', Component:'📦', Image:'🖼', MovieClip:'🎬', Text:'📝',
-    RichText:'📄', InputText:'✏️', Button:'🔘', List:'📋', Label:'🏷',
-    ComboBox:'📥', ProgressBar:'📊', Slider:'🎚', ScrollBar:'📜',
-    Group:'📁', Graph:'📈', Loader:'⏳', Loader3D:'🧊', Tree:'🌲'
-};
-const COMP_NAMES = {
-    'basic_transform':'tf','children':'ch','parent':'pa','parent_batch':'pb',
-    'batch_node':'bn','batch_data':'bd','graphics':'gfx','visible':'vis',
-    'final_visible':'fv','is_root':'root','skew':'sk','scale':'sc',
-    'rotation':'rot','owner':'own','image_desc_t':'mesh','image_ext':'ext',
-    'transform_dirty':'Δtf','batch_node_dirty':'Δbn','batch_dirty':'Δbd',
-    'visible_dirty':'Δvis','mesh_dirty':'Δmesh','font_mesh':'fnt'
-};
-
-// ---- data fetching ----
-async function fetchTree(endpoint) {
-    const resp = await fetch(endpoint);
-    return await resp.json();
-}
-
-async function refresh() {
-    try {
-        const [obj, disp] = await Promise.all([
-            fetchTree('/api/tree'),
-            fetchTree('/api/display-tree')
-        ]);
-        objectTree = obj;
-        displayTree = disp;
-        document.getElementById('status').textContent =
-            'Updated: ' + new Date().toLocaleTimeString();
-        updateNodeCount();
-        renderTree();
-    } catch(e) {
-        document.getElementById('status').textContent = 'Error — retrying...';
-    }
-}
-
-function updateNodeCount() {
-    const data = currentTab === 'object' ? objectTree : displayTree;
-    document.getElementById('node-count').textContent =
-        'Nodes: ' + countNodes(data);
-}
-
-function countNodes(node) {
-    if (!node) return 0;
-    let n = 1;
-    const kids = node.children || node._children;
-    if (kids) kids.forEach(c => n += countNodes(c));
-    return n;
-}
-
-// ---- tab switching ----
-function switchTab(tab) {
-    currentTab = tab;
-    document.getElementById('tab-object').classList.toggle('active', tab==='object');
-    document.getElementById('tab-display').classList.toggle('active', tab==='display');
-    document.getElementById('tree-title').textContent =
-        tab==='object' ? '🧩 Object Tree' : '🖥 Display Tree';
-    selectedPath = null;
-    document.getElementById('detail-header').textContent = '📋 Select a node';
-    document.getElementById('detail-content').innerHTML =
-        '<div id="empty-hint">Click a node in the tree to see its properties</div>';
-    updateNodeCount();
-    renderTree();
-}
-
-// ---- rendering ----
-function renderTree() {
-    const container = document.getElementById('tree-container');
-    container.innerHTML = '';
-    const data = currentTab === 'object' ? objectTree : displayTree;
-    if (data) {
-        if (currentTab === 'object') {
-            renderObjectNode(container, data, '', 0);
-        } else {
-            renderDisplayNode(container, data, '', 0);
-        }
-    }
-    if (selectedPath) {
-        const row = document.querySelector('[data-path="' + CSS.escape(selectedPath) + '"]');
-        if (row) row.classList.add('selected');
-    }
-}
-
-// ---- Object tree rendering ----
-function renderObjectNode(parent, node, path, depth) {
-    const myPath = path ? path + '/' + depth : '0';
-    const hasKids = node.children && node.children.length > 0;
-    const isCollapsed = collapsed[myPath] === true;
-
-    const div = document.createElement('div');
-    div.className = 'tree-node';
-    const row = document.createElement('div');
-    row.className = 'tree-row';
-    row.setAttribute('data-path', myPath);
-    if (!node.visible) row.classList.add('hidden-node');
-
-    // toggle
-    const toggle = document.createElement('span');
-    toggle.className = 'tree-toggle';
-    if (hasKids) {
-        toggle.classList.add('expandable');
-        toggle.textContent = isCollapsed ? '▶' : '▼';
-        toggle.onclick = (e) => { e.stopPropagation(); collapsed[myPath]=!collapsed[myPath]; renderTree(); };
-    }
-    row.appendChild(toggle);
-
-    // indent via padding
-    row.style.paddingLeft = (depth * 16 + 8) + 'px';
-
-    // icon + name + type + id
-    const icon = document.createElement('span');
-    icon.className = 'tree-icon';
-    icon.textContent = TYPE_ICON[node.type] || '❓';
-    row.appendChild(icon);
-    const nm = document.createElement('span');
-    nm.className = 'tree-name';
-    nm.textContent = node.name || '(unnamed)';
-    row.appendChild(nm);
-    const tb = document.createElement('span');
-    tb.className = 'tree-type ' + (TYPE_CLASS[node.type]||'');
-    tb.textContent = node.type;
-    row.appendChild(tb);
-    if (node.id) {
-        const ids = document.createElement('span');
-        ids.className = 'tree-id';
-        ids.textContent = '#' + node.id;
-        row.appendChild(ids);
-    }
-    row.onclick = () => selectObjectNode(node, myPath, row);
-    div.appendChild(row);
-    parent.appendChild(div);
-    if (hasKids && !isCollapsed) {
-        node.children.forEach((c,i) => renderObjectNode(parent, c, myPath, i));
-    }
-}
-
-// ---- DisplayObject tree rendering ----
-function renderDisplayNode(parent, node, path, depth) {
-    const myPath = path ? path + '/' + depth : '0';
-    const kids = node._children;
-    const hasKids = kids && kids.length > 0;
-    const isCollapsed = collapsed[myPath] === true;
-
-    const div = document.createElement('div');
-    div.className = 'tree-node';
-    const row = document.createElement('div');
-    row.className = 'tree-row';
-    row.setAttribute('data-path', myPath);
-    if (node.visible === false) row.classList.add('hidden-node');
-
-    // toggle
-    const toggle = document.createElement('span');
-    toggle.className = 'tree-toggle';
-    if (hasKids) {
-        toggle.classList.add('expandable');
-        toggle.textContent = isCollapsed ? '▶' : '▼';
-        toggle.onclick = (e) => { e.stopPropagation(); collapsed[myPath]=!collapsed[myPath]; renderTree(); };
-    }
-    row.appendChild(toggle);
-
-    // indent via padding
-    row.style.paddingLeft = (depth * 16 + 8) + 'px';
-
-    // entity ID
-    const eid = document.createElement('span');
-    eid.style.cssText = 'color:var(--accent2);font-size:11px;font-weight:600;margin-right:6px;';
-    eid.textContent = node._entityId;
-    row.appendChild(eid);
-
-    // components as tiny tags
-    if (node._components) {
-        const comps = document.createElement('span');
-        comps.className = 'tree-comps';
-        comps.textContent = node._components.map(c => COMP_NAMES[c]||c).join(' ');
-        row.appendChild(comps);
-    }
-
-    row.onclick = () => selectDisplayNode(node, myPath, row);
-    div.appendChild(row);
-    parent.appendChild(div);
-    if (hasKids && !isCollapsed) {
-        kids.forEach((c,i) => renderDisplayNode(parent, c, myPath, i));
-    }
-}
-)HTML";
-            // Part 3: JS selection + detail + helpers
-            s += R"HTML(
-
-// ---- selection / detail ----
-function selectObjectNode(node, path, row) {
-    document.querySelectorAll('.tree-row.selected').forEach(r => r.classList.remove('selected'));
-    row.classList.add('selected');
-    selectedPath = path;
-    showObjectDetail(node);
-}
-
-function selectDisplayNode(node, path, row) {
-    document.querySelectorAll('.tree-row.selected').forEach(r => r.classList.remove('selected'));
-    row.classList.add('selected');
-    selectedPath = path;
-    showDisplayDetail(node);
-}
-
-function showObjectDetail(node) {
-    document.getElementById('detail-header').textContent =
-        '🧩 ' + (node.type||'?') + ' — ' + (node.name||'(unnamed)');
-    const ct = document.getElementById('detail-content');
-    let h = '';
-    h += sec('Identity');
-    h += tbl([
-        ['Type','<b>'+(node.type||'')+'</b>'],['Name',esc(node.name)],['ID',esc(node.id)]
-    ]);
-    h += sec('Geometry');
-    h += tbl([
-        ['Position',fmt(node.x)+', '+fmt(node.y)],
-        ['Size',fmt(node.width)+' × '+fmt(node.height)],
-        ['Source Size',fmt(node.sourceWidth)+' × '+fmt(node.sourceHeight)],
-        ['Raw Size',fmt(node.rawWidth)+' × '+fmt(node.rawHeight)],
-        ['Init Size',fmt(node.initWidth)+' × '+fmt(node.initHeight)]
-    ]);
-    h += sec('Transform');
-    h += tbl([
-        ['Scale',fmt(node.scaleX)+', '+fmt(node.scaleY)],
-        ['Skew',fmt(node.skewX)+', '+fmt(node.skewY)],
-        ['Pivot',fmt(node.pivotX)+', '+fmt(node.pivotY)+(node.pivotAsAnchor?' (anchor)':'')],
-        ['Rotation',fmt(node.rotation)+' rad'],
-        ['Alpha',fmt(node.alpha)]
-    ]);
-    h += sec('Flags');
-    h += tbl([
-        ['Visible',flag(node.visible)],
-        ['Touchable',flag(node.touchable)],
-        ['Grayed',flag(node.grayed)],
-        ['SortingOrder',node.sortingOrder!=null?node.sortingOrder:'—']
-    ]);
-    ct.innerHTML = h;
-}
-
-function showDisplayDetail(node) {
-    document.getElementById('detail-header').textContent =
-        '🖥 ' + (node._entityId||'?') + ' — ECS Entity';
-    const ct = document.getElementById('detail-content');
-    let h = '';
-
-    // components list
-    h += sec('Components (' + (node._components?node._components.length:0) + ')');
-    h += '<div style="margin:4px 0;">';
-    if (node._components) {
-        node._components.forEach(c => {
-            h += '<span class="comp-tag">' + esc(c) + '</span>';
-        });
-    }
-    h += '</div>';
-
-    // basic transform
-    if (node.position || node.size || node.pivot) {
-        h += sec('Basic Transform');
-        h += tbl([
-            ['Position',fmt(node.position?.x)+', '+fmt(node.position?.y)],
-            ['Size',fmt(node.size?.width)+' × '+fmt(node.size?.height)],
-            ['Pivot',fmt(node.pivot?.x)+', '+fmt(node.pivot?.y)]
-        ]);
-    }
-    // visibility
-    h += sec('Visibility');
-    h += tbl([
-        ['Visible',flag(node.visible)],
-        ['Final Visible',flag(node.finalVisible)],
-        ['Is Root',flag(node.isRoot)]
-    ]);
-    // batch
-    if (node.isBatchNode !== undefined || node.parentBatch !== undefined) {
-        h += sec('Batch');
-        h += tbl([
-            ['Is Batch Node',flag(node.isBatchNode)],
-            ['Parent Batch',node.parentBatch||'—'],
-            ['Inst Index',node.instIndex!=null?node.instIndex:'—'],
-            ['Batch Children',node.batchChildren!=null?node.batchChildren:'—'],
-            ['Sub Batch Nodes',node.subBatchNodes!=null?node.subBatchNodes:'—']
-        ]);
-    }
-    // graphics
-    if (node.hasGraphics) {
-        h += sec('Graphics');
-        h += tbl([
-            ['Render Type',node.renderType||'—'],
-            ['Has Texture',flag(node.hasTexture)]
-        ]);
-    }
-    // transform
-    if (node.scale || node.skew || node.rotation !== undefined) {
-        h += sec('Transform');
-        h += tbl([
-            ['Scale',node.scale?fmt(node.scale.x)+', '+fmt(node.scale.y):'—'],
-            ['Skew',node.skew?fmt(node.skew.x)+', '+fmt(node.skew.y):'—'],
-            ['Rotation',node.rotation!=null?fmt(node.rotation)+' rad':'—']
-        ]);
-    }
-    // dirty flags
-    const dirties = ['transform_dirty','batch_node_dirty','batch_dirty','visible_dirty','mesh_dirty'];
-    const activeDirties = dirties.filter(d => node[d]);
-    if (activeDirties.length > 0) {
-        h += sec('Dirty Flags');
-        h += '<div style="margin:4px 0;">';
-        activeDirties.forEach(d => { h += '<span class="comp-tag" style="color:#ff9800;">'+esc(d)+'</span>'; });
-        h += '</div>';
-    }
-    ct.innerHTML = h;
-}
-
-// ---- helpers ----
-function sec(title) { return '<div class="prop-section">'+esc(title)+'</div>'; }
-function tbl(rows) {
-    let s = '<table class="prop-table">';
-    rows.forEach(r => { s += '<tr><td>'+esc(r[0])+'</td><td>'+r[1]+'</td></tr>'; });
-    return s + '</table>';
-}
-function flag(v) { return (v?'🟢 true':'🔴 false'); }
-function fmt(v) {
-    if (v==null) return '—';
-    if (Number.isInteger(v)) return String(v);
-    if (typeof v === 'number') return parseFloat(v.toFixed(3)).toString();
-    return String(v);
-}
-function esc(s) {
-    if (!s) return '—';
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ---- expand/collapse ----
-function expandAll() {
-    collapsed = {};
-    renderTree();
-}
-function collapseAll() {
-    const data = currentTab === 'object' ? objectTree : displayTree;
-    walk(data, '0');
-    function walk(node, path) {
-        if (!node) return;
-        const kids = node.children || node._children;
-        if (kids && kids.length > 0) {
-            collapsed[path] = true;
-            kids.forEach((c,i) => walk(c, path+'/'+i));
-        }
-    }
-    renderTree();
-}
-
-// ---- init ----
-document.getElementById('auto-refresh').onchange = function() { autoRefresh = this.checked; };
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'F5') { e.preventDefault(); refresh(); }
-});
-refresh();
-setInterval(function() { if (autoRefresh) refresh(); }, 2000);
-</script>
-</body>
-</html>
-)HTML";
-            return s;
-        }();
-        return page;
+</body></html>)HTML";
     }
 
     // ---------------------------------------------------------------------------
@@ -759,37 +388,145 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
     }
 
     // ---------------------------------------------------------------------------
-    // Background accept loop
+    // Receive & unmask a WebSocket text frame from client
+    // Returns the unmasked payload, or empty string on error/close.
+    // ---------------------------------------------------------------------------
+
+    static std::string recvWsFrame(socket_t sock) {
+        uint8_t hdr[2];
+        int n = recv(sock, (char*)hdr, 2, 0);
+        if (n <= 0) return {};
+
+        bool fin   = (hdr[0] & 0x80) != 0;
+        int opcode = hdr[0] & 0x0F;
+        bool masked = (hdr[1] & 0x80) != 0;
+
+        // Close frame → return empty to signal disconnect
+        if (opcode == 0x8) return {};
+
+        uint64_t payLen = hdr[1] & 0x7F;
+        if (payLen == 126) {
+            uint8_t ext[2];
+            if (recv(sock, (char*)ext, 2, 0) != 2) return {};
+            payLen = ((uint64_t)ext[0] << 8) | ext[1];
+        } else if (payLen == 127) {
+            uint8_t ext[8];
+            if (recv(sock, (char*)ext, 8, 0) != 8) return {};
+            payLen = 0;
+            for (int i = 0; i < 8; ++i) payLen = (payLen << 8) | ext[i];
+        }
+
+        // Read mask key (required for client→server)
+        uint8_t mask[4] = {};
+        if (masked) {
+            if (recv(sock, (char*)mask, 4, 0) != 4) return {};
+        }
+
+        // Read payload
+        if (payLen > 65536) return {}; // sanity limit
+        std::vector<uint8_t> payload((size_t)payLen);
+        size_t total = 0;
+        while (total < payLen) {
+            n = recv(sock, (char*)payload.data() + total, (int)(payLen - total), 0);
+            if (n <= 0) return {};
+            total += n;
+        }
+
+        // Unmask
+        if (masked) {
+            for (size_t i = 0; i < (size_t)payLen; ++i)
+                payload[i] ^= mask[i & 3];
+        }
+
+        return std::string(payload.begin(), payload.end());
+    }
+
+    // ---------------------------------------------------------------------------
+    // Background accept loop (select-based, non-blocking)
     // ---------------------------------------------------------------------------
 
     void DebugServer::workerLoop() {
         while (running_.load(std::memory_order_acquire)) {
-            sockaddr_in clientAddr{};
-#ifdef _WIN32
-            int addrLen = sizeof(clientAddr);
-#else
-            socklen_t addrLen = sizeof(clientAddr);
-#endif
-            socket_t clientSock = accept((socket_t)listenSocket_,
-                                         (sockaddr*)&clientAddr, &addrLen);
+            fd_set readSet;
+            FD_ZERO(&readSet);
+            socket_t listenSock = (socket_t)listenSocket_;
+            FD_SET(listenSock, &readSet);
+            socket_t maxSock = listenSock;
 
-            if (!running_.load(std::memory_order_acquire)) {
-                if (clientSock != INVALID_SOCKET_VAL) {
-                    CLOSE_SOCKET(clientSock);
+            // Add WebSocket clients to the read set
+            {
+                std::lock_guard<std::mutex> lock(wsMutex_);
+                for (auto raw : wsClients_) {
+                    socket_t s = (socket_t)raw;
+                    FD_SET(s, &readSet);
+                    if (s > maxSock) maxSock = s;
                 }
-                break;
             }
 
-            if (clientSock == INVALID_SOCKET_VAL) {
-                continue;
+            timeval tv = {0, 100000}; // 100 ms
+            int ret = select((int)maxSock + 1, &readSet, nullptr, nullptr, &tv);
+
+            if (ret > 0) {
+                // New connection?
+                if (FD_ISSET(listenSock, &readSet)) {
+                    sockaddr_in clientAddr{};
+#ifdef _WIN32
+                    int addrLen = sizeof(clientAddr);
+#else
+                    socklen_t addrLen = sizeof(clientAddr);
+#endif
+                    socket_t clientSock = accept(listenSock, (sockaddr*)&clientAddr, &addrLen);
+                    if (clientSock != INVALID_SOCKET_VAL) {
+                        handleClient(clientSock);
+                    }
+                }
+
+                // Handle WebSocket client messages
+                {
+                    std::lock_guard<std::mutex> lock(wsMutex_);
+                    for (auto it = wsClients_.begin(); it != wsClients_.end(); ) {
+                        socket_t s = (socket_t)*it;
+                        if (FD_ISSET(s, &readSet)) {
+                            std::string msg = recvWsFrame(s);
+                            if (msg.empty()) {
+                                // Client disconnected or sent close frame
+                                CLOSE_SOCKET(s);
+                                it = wsClients_.erase(it);
+                                printf("[DebugServer] WebSocket client disconnected (total: %zu)\n", wsClients_.size());
+                                continue;
+                            }
+                            // Handle commands
+                            if (msg == "tree") {
+                                sendWsFrame(*it, buildTreeSnapshot());
+                            } else if (msg == "display") {
+                                sendWsFrame(*it, buildDisplayTreeSnapshot());
+                            } else if (msg == "both") {
+                                std::string payload = "{\"object\":" + buildTreeSnapshot()
+                                                    + ",\"display\":" + buildDisplayTreeSnapshot() + "}";
+                                sendWsFrame(*it, payload);
+                            }
+                        }
+                        ++it;
+                    }
+                }
             }
 
-            handleClient(clientSock);
+            // Broadcast pending push (for pushUpdate() calls)
+            if (pushPending_.exchange(false, std::memory_order_acquire)) {
+                broadcastToWsClients();
+            }
+        }
+
+        // Close all remaining WS clients on shutdown
+        {
+            std::lock_guard<std::mutex> lock(wsMutex_);
+            for (auto raw : wsClients_) CLOSE_SOCKET((socket_t)raw);
+            wsClients_.clear();
         }
     }
 
     // ---------------------------------------------------------------------------
-    // Per-client handler — detects HTTP vs plain-text protocol
+    // Per-client handler — detects HTTP vs WebSocket vs plain-text protocol
     // ---------------------------------------------------------------------------
 
     void DebugServer::handleClient(uint64_t rawSock) {
@@ -805,15 +542,20 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
 
         std::string request(buf, n);
 
-        // Detect HTTP vs plain text
+        // Detect HTTP (includes WebSocket upgrade)
         if (request.rfind("GET ", 0) == 0 || request.rfind("POST ", 0) == 0) {
-            // ---- HTTP mode ----
             size_t sp1 = request.find(' ');
             size_t sp2 = request.find(' ', sp1 + 1);
             std::string path = (sp1 != std::string::npos && sp2 != std::string::npos)
                                  ? request.substr(sp1 + 1, sp2 - sp1 - 1)
                                  : "/";
 
+            // ---- WebSocket upgrade? ----
+            if (path == "/ws" && tryWsHandshake(rawSock, request)) {
+                return; // Socket stays open, handled by broadcast
+            }
+
+            // ---- HTTP mode ----
             std::string response;
             if (path == "/" || path == "/index.html") {
                 response = httpResponse(200, "text/html", getHtmlPage());
@@ -849,7 +591,16 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
             }
         }
 
+        // Only close non-WS sockets (WS sockets were kept open by tryWsHandshake)
         CLOSE_SOCKET(sock);
+    }
+
+    // ---------------------------------------------------------------------------
+    // pushUpdate — called from render thread to request a broadcast
+    // ---------------------------------------------------------------------------
+
+    void DebugServer::pushUpdate() {
+        pushPending_.store(true, std::memory_order_release);
     }
 
     // ---------------------------------------------------------------------------
@@ -875,6 +626,8 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
         ss << "\"type\":\"" << objectTypeToString(obj->objectType()) << "\"";
         ss << ",\"name\":\"" << escapeJson(obj->name()) << "\"";
         ss << ",\"id\":\""   << escapeJson(obj->id())   << "\"";
+        auto dobj = obj->getDisplayObject();
+        ss << ",\"_entityVal\":" << (dobj ? (uint64_t)entt::to_integral(dobj.entity()) : 0ULL);
 
         // ---- geometry ----
         ss << ",\"x\":"         << obj->x();
@@ -947,6 +700,7 @@ setInterval(function() { if (autoRefresh) refresh(); }, 2000);
 
         // ---- entity identity ----
         ss << "\"_entityId\":\"" << entityIdStr(entity) << "\"";
+        ss << ",\"_entityVal\":" << (uint64_t)entt::to_integral(entity);
 
         // ---- collect component names ----
         std::vector<std::string> comps;

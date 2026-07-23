@@ -12,6 +12,7 @@ namespace gui {
     image_mesh_t createTextMesh(dispcomp::text_desc_t const& desc,
                                  dispcomp::basic_transform const& trans,
                                  float& outWidth, float& outHeight);
+    image_mesh_t createShapeMesh(dispcomp::shape_desc_t const& desc, dispcomp::basic_transform const& trans);
 
     void updateImageMesh();
     void updateTextAlignment();

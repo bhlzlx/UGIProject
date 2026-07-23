@@ -10,7 +10,7 @@
 namespace gui {
 
     class DisplayObject : public EventDispatcher {
-    private:
+    protected:
         entt::entity        entity_;
     public:
         DisplayObject(entt::entity entity = entt::null)

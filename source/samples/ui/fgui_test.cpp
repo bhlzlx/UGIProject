@@ -113,6 +113,8 @@ namespace ugi {
             }
         }
 
+        gui::Package::InitPackageModule(_arch);
+
         // Start debug TCP server for widget tree inspection
         gui::DebugServer::Instance().start();
         //

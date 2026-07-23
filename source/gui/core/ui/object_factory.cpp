@@ -6,6 +6,7 @@
 #include "root.h"
 #include "g_text_field.h"
 #include "g_button.h"
+#include "g_graph.h"
 
 namespace gui {
 
@@ -19,7 +20,10 @@ namespace gui {
         }
         case ObjectType::MovieClip:
         case ObjectType::Swf:
-        case ObjectType::Graph:
+        case ObjectType::Graph: {
+            obj = new GGraph();
+            break;
+        }
         case ObjectType::Loader:
         case ObjectType::Group:
         case ObjectType::Text: {
@@ -85,6 +89,11 @@ namespace gui {
                 obj = new Root();
                 obj->createDisplayObject();
                 break;
+            }
+            case ObjectType::Graph: {
+                obj = new GGraph();
+                obj->createDisplayObject();
+                return obj;
             }
             default: {
                 return nullptr;

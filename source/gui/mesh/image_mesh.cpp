@@ -258,6 +258,234 @@ image_mesh_t createImageMesh(dispcomp::image_desc_t const& desc, dispcomp::basic
             }
             reg.remove<dispcomp::mesh_dirty>(ett);
         });
+
+        // Shape (GGraph)
+        reg.view<dispcomp::mesh_dirty, dispcomp::final_visible, dispcomp::shape_desc_t>().each([](entt::entity ett, dispcomp::shape_desc_t& shapeDesc) {
+            dispcomp::item_render_data& graphics = reg.get_or_emplace<dispcomp::item_render_data>(ett);
+            graphics.meshData.type = UIMeshType::Image;
+            if (graphics.meshData.item) {
+                delete (image_mesh_t*)graphics.meshData.item;
+                graphics.meshData.item = nullptr;
+            }
+            auto& trans = reg.get<dispcomp::basic_transform>(ett);
+            auto mesh = createShapeMesh(shapeDesc, trans);
+            if (mesh.vertices.size()) {
+                graphics.meshData.item = new image_mesh_t(std::move(mesh));
+            }
+            graphics.args.transfrom = glm::mat4(1.0f);
+            auto& sync = reg.get_or_emplace<dispcomp::args_need_sync>(ett);
+            sync.mask |= dispcomp::Asm_Transform;
+            reg.remove<dispcomp::mesh_dirty>(ett);
+        });
+    }
+
+    // ============= createShapeMesh =============
+
+    image_mesh_t createShapeMesh(dispcomp::shape_desc_t const& desc, dispcomp::basic_transform const& trans) {
+        image_mesh_t m;
+        float w = trans.size.x, h = trans.size.y;
+        if (w <= 0 || h <= 0) return m;
+        uint32_t fillC = desc.fillColor;
+        uint32_t lineC = desc.lineColor;
+        float    ls    = desc.lineSize;
+
+        auto addQuad = [&](float x0, float y0, float x1, float y1,
+                           float x2, float y2, float x3, float y3, uint32_t c) {
+            uint16_t base = (uint16_t)m.vertices.size();
+            m.vertices.insert(m.vertices.end(), {
+                {{x0, y0, 0}, c, {0, 0}, 0},
+                {{x1, y1, 0}, c, {0, 0}, 0},
+                {{x2, y2, 0}, c, {0, 0}, 0},
+                {{x3, y3, 0}, c, {0, 0}, 0},
+            });
+            m.indices.insert(m.indices.end(), {base, (uint16_t)(base+1), (uint16_t)(base+2),
+                                               base, (uint16_t)(base+2), (uint16_t)(base+3)});
+        };
+
+        switch (desc.type) {
+        case dispcomp::shape_desc_t::Type::None:
+            break;
+        case dispcomp::shape_desc_t::Type::Rect: {
+            if (ls > 0) {
+                float hw = ls * 0.5f;
+                float iw = w - ls;
+                float ih = h - ls;
+                // center fill
+                if (iw > 0 && ih > 0) {
+                    addQuad(hw, hw, w - hw, hw, w - hw, h - hw, hw, h - hw, fillC);
+                }
+                // 4 border strips (avoid corner overlap)
+                if (ls > 0) {
+                    addQuad(0, 0,  w, 0,  w, hw,  0, hw,       lineC);          // top
+                    addQuad(0, h-hw, w, h-hw, w, h,  0, h,       lineC);          // bottom
+                    addQuad(0, hw,  hw, hw,  hw, h-hw, 0, h-hw, lineC);          // left
+                    addQuad(w-hw, hw, w, hw,  w, h-hw, w-hw, h-hw, lineC);       // right
+                }
+            } else {
+                addQuad(0, 0, w, 0, w, h, 0, h, fillC);
+            }
+            break;
+        }
+        case dispcomp::shape_desc_t::Type::Ellipse: {
+            float cx = w * 0.5f, cy = h * 0.5f;
+            float rx = cx, ry = cy;
+            constexpr int segs = 32;
+
+            if (ls > 0 && rx > ls && ry > ls) {
+                // ring: quads between outer and inner ellipse
+                float irx = rx - ls, iry = ry - ls;
+                for (int i = 0; i < segs; ++i) {
+                    float a0 = (float)i       / (float)segs * 3.14159265f * 2.0f;
+                    float a1 = (float)(i + 1) / (float)segs * 3.14159265f * 2.0f;
+                    float cos0 = cosf(a0), sin0 = sinf(a0);
+                    float cos1 = cosf(a1), sin1 = sinf(a1);
+                    // outer ring (lineColor), inner ring (fillColor) — use lineColor for entire ring
+                    addQuad(
+                        cx + cos0 * rx, cy + sin0 * ry,
+                        cx + cos1 * rx, cy + sin1 * ry,
+                        cx + cos1 * irx, cy + sin1 * iry,
+                        cx + cos0 * irx, cy + sin0 * iry,
+                        lineC);
+                }
+                // center fill
+                uint16_t ci = (uint16_t)m.vertices.size();
+                m.vertices.push_back({{cx, cy, 0}, fillC, {0, 0}, 0});
+                for (int i = 0; i <= segs; ++i) {
+                    float a = (float)i / (float)segs * 3.14159265f * 2.0f;
+                    m.vertices.push_back({{cx + cosf(a) * irx, cy + sinf(a) * iry, 0}, fillC, {0, 0}, 0});
+                }
+                for (int i = 0; i < segs; ++i)
+                    m.indices.insert(m.indices.end(), {ci, (uint16_t)(ci+i+1), (uint16_t)(ci+i+2)});
+            } else {
+                // solid ellipse
+                uint16_t ci = (uint16_t)m.vertices.size();
+                m.vertices.push_back({{cx, cy, 0}, fillC, {0, 0}, 0});
+                for (int i = 0; i <= segs; ++i) {
+                    float a = (float)i / (float)segs * 3.14159265f * 2.0f;
+                    m.vertices.push_back({{cx + cosf(a) * rx, cy + sinf(a) * ry, 0}, fillC, {0, 0}, 0});
+                }
+                for (int i = 0; i < segs; ++i)
+                    m.indices.insert(m.indices.end(), {ci, (uint16_t)(ci+i+1), (uint16_t)(ci+i+2)});
+            }
+            break;
+        }
+        case dispcomp::shape_desc_t::Type::RegularPolygon: {
+            int n = desc.sides;
+            if (n < 3) break;
+            float cx = w * 0.5f, cy = h * 0.5f;
+            float radius = (std::min)(cx, cy);
+            float startRad = desc.startAngle * 3.14159265f / 180.0f;
+            float angleDelta = 3.14159265f * 2.0f / (float)n;
+            bool hasDist = desc.distances.size() >= (size_t)n;
+
+            if (ls > 0 && radius > ls) {
+                // ring: quads between outer (dist*radius) and inner (dist*radius - ls)
+                for (int i = 0; i < n; ++i) {
+                    float d0 = hasDist ? desc.distances[i] : 1.0f;
+                    float d1 = hasDist ? desc.distances[(i+1)%n] : 1.0f;
+                    float a0 = startRad + (float)i     * angleDelta;
+                    float a1 = startRad + (float)(i+1) * angleDelta;
+                    float r0o = d0 * radius;
+                    float r1o = d1 * radius;
+                    float r0i = (std::max)(0.0f, r0o - ls);
+                    float r1i = (std::max)(0.0f, r1o - ls);
+                    float cos0 = cosf(a0), sin0 = sinf(a0);
+                    float cos1 = cosf(a1), sin1 = sinf(a1);
+                    addQuad(
+                        cx + cos0 * r0o, cy + sin0 * r0o,
+                        cx + cos1 * r1o, cy + sin1 * r1o,
+                        cx + cos1 * r1i, cy + sin1 * r1i,
+                        cx + cos0 * r0i, cy + sin0 * r0i,
+                        lineC);
+                }
+                // center fill: fan from center to inner vertices
+                uint16_t ci = (uint16_t)m.vertices.size();
+                m.vertices.push_back({{cx, cy, 0}, fillC, {0, 0}, 0});
+                for (int i = 0; i <= n; ++i) {
+                    float d = hasDist ? desc.distances[i % n] : 1.0f;
+                    float r = (std::max)(0.0f, d * radius - ls);
+                    float a = startRad + (float)(i % n) * angleDelta;
+                    m.vertices.push_back({{cx + cosf(a) * r, cy + sinf(a) * r, 0}, fillC, {0, 0}, 0});
+                }
+                for (int i = 0; i < n; ++i)
+                    m.indices.insert(m.indices.end(), {ci, (uint16_t)(ci+i+1), (uint16_t)(ci+i+2)});
+            } else {
+                // solid regular polygon: fan from center
+                uint16_t ci = (uint16_t)m.vertices.size();
+                m.vertices.push_back({{cx, cy, 0}, fillC, {0, 0}, 0});
+                for (int i = 0; i <= n; ++i) {
+                    float d = hasDist ? desc.distances[i % n] : 1.0f;
+                    float a = startRad + (float)(i % n) * angleDelta;
+                    m.vertices.push_back({{cx + cosf(a) * d * radius, cy + sinf(a) * d * radius, 0}, fillC, {0, 0}, 0});
+                }
+                for (int i = 0; i < n; ++i)
+                    m.indices.insert(m.indices.end(), {ci, (uint16_t)(ci+i+1), (uint16_t)(ci+i+2)});
+            }
+            break;
+        }
+        case dispcomp::shape_desc_t::Type::Polygon: {
+            auto const& pts = desc.polygonPoints;
+            if (pts.size() < 3) break;
+            size_t n = pts.size();
+
+            if (ls > 0) {
+                // border: quads along each edge, offset inward/outward by half lineSize
+                float hw = ls * 0.5f;
+                for (size_t i = 0; i < n; ++i) {
+                    size_t j = (i + 1) % n;
+                    glm::vec2 p0 = pts[i];
+                    glm::vec2 p1 = pts[j];
+                    glm::vec2 edge = p1 - p0;
+                    float len = glm::length(edge);
+                    if (len < 0.0001f) continue;
+                    glm::vec2 dir = edge / len;
+                    glm::vec2 nrm(-dir.y, dir.x);  // perpendicular
+                    // outer vertices offset outward
+                    float ox0 = p0.x + nrm.x * hw, oy0 = p0.y + nrm.y * hw;
+                    float ox1 = p1.x + nrm.x * hw, oy1 = p1.y + nrm.y * hw;
+                    // inner vertices offset inward
+                    float ix0 = p0.x - nrm.x * hw, iy0 = p0.y - nrm.y * hw;
+                    float ix1 = p1.x - nrm.x * hw, iy1 = p1.y - nrm.y * hw;
+                    addQuad(ox0, oy0, ox1, oy1, ix1, iy1, ix0, iy0, lineC);
+                }
+                // center fill (original polygon, shrunk by half lineSize)
+                std::vector<glm::vec2> innerPts(n);
+                for (size_t i = 0; i < n; ++i) {
+                    // simple inward offset: move each vertex along its angle bisector
+                    size_t prev = (i + n - 1) % n;
+                    size_t next = (i + 1) % n;
+                    glm::vec2 e1 = glm::normalize(pts[i] - pts[prev]);
+                    glm::vec2 e2 = glm::normalize(pts[next] - pts[i]);
+                    glm::vec2 bisector = e1 + e2;
+                    float bisLen = glm::length(bisector);
+                    if (bisLen < 0.0001f) {
+                        // collinear edges: use perpendicular
+                        bisector = glm::vec2(-e1.y, e1.x);
+                        bisLen = 1.0f;
+                    }
+                    glm::vec2 inNrm = bisector / bisLen;
+                    // dot with edge normal to determine sign
+                    glm::vec2 edgeNrm(-e1.y, e1.x);
+                    float scale = hw / glm::dot(inNrm, edgeNrm);
+                    innerPts[i] = pts[i] - inNrm * scale;
+                }
+                uint16_t base = (uint16_t)m.vertices.size();
+                for (auto& p : innerPts)
+                    m.vertices.push_back({{p.x, p.y, 0}, fillC, {0, 0}, 0});
+                for (size_t i = 1; i + 1 < n; ++i)
+                    m.indices.insert(m.indices.end(), {base, (uint16_t)(base+i), (uint16_t)(base+i+1)});
+            } else {
+                // solid polygon
+                uint16_t base = (uint16_t)m.vertices.size();
+                for (auto& p : pts)
+                    m.vertices.push_back({{p.x, p.y, 0}, fillC, {0, 0}, 0});
+                for (size_t i = 1; i + 1 < n; ++i)
+                    m.indices.insert(m.indices.end(), {base, (uint16_t)(base+i), (uint16_t)(base+i+1)});
+            }
+            break;
+        }
+        }
+        return m;
     }
 
     // ============= updateTextAlignment =============

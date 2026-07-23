@@ -2,21 +2,26 @@
 
 #include <atomic>
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include <entt/src/entt/entity/fwd.hpp>
 
 namespace gui {
 
     /// <summary>
-    /// TCP/HTTP debug server for widget tree inspection.
+    /// TCP/HTTP/WebSocket debug server for widget tree inspection.
     /// Runs in a background thread so it never blocks the UI/render loop.
     ///
     /// HTTP (browser):
-    ///   GET /              → interactive tree viewer page
+    ///   GET /              → simple redirect page
     ///   GET /api/tree      → JSON: logical Object tree
     ///   GET /api/display-tree → JSON: ECS DisplayObject tree
+    ///
+    /// WebSocket (browser — open bin/debug/debug.html):
+    ///   ws://localhost:9876/ws  → real-time tree updates (JSON push)
     ///
     /// Plain-text protocol (telnet / nc):
     ///   TREE   → JSON snapshot of the logical Object tree
@@ -39,12 +44,22 @@ namespace gui {
         /// Whether the server is currently listening.
         bool isRunning() const { return running_.load(std::memory_order_relaxed); }
 
+        /// Request a push update to all connected WebSocket clients.
+        /// Thread-safe — call from any thread (typically the render thread).
+        void pushUpdate();
+
         /// Convenience: get or create the single global instance.
         static DebugServer& Instance();
 
     private:
         void workerLoop();
         void handleClient(uint64_t clientSocket);
+
+        // WebSocket helpers
+        std::string wsAcceptKey(std::string const& clientKey);
+        void        sendWsFrame(uint64_t sock, std::string const& payload);
+        bool        tryWsHandshake(uint64_t sock, std::string const& request);
+        void        broadcastToWsClients();
 
         // Logical Object tree
         std::string buildTreeSnapshot();
@@ -56,10 +71,14 @@ namespace gui {
 
         std::string escapeJson(std::string const& s);
 
-        std::thread     worker_;
-        uint64_t        listenSocket_;   // SOCKET on Windows
-        std::atomic<bool> running_;
-        uint16_t        port_;
+        std::thread             worker_;
+        uint64_t                listenSocket_;   // SOCKET on Windows
+        std::atomic<bool>       running_;
+        std::atomic<bool>       pushPending_{false};
+        uint16_t                port_;
+
+        std::mutex              wsMutex_;
+        std::vector<uint64_t>   wsClients_;      // raw SOCKET values
     };
 
 } // namespace gui
