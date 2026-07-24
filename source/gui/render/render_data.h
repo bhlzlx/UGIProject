@@ -69,7 +69,7 @@ namespace gui {
     // shader uniform buffer desc
     struct item_args_t {
         glm::mat4   transfrom;
-        uint32_t    colorPacked = 0; // packed RGBA 8-bit per channel
+        uint32_t    colorPacked = 0xFFFFFFFF; // packed RGBA 8-bit per channel (white/opaque default)
         uint32_t    packedProps = 0; // low 8 bits: gray (0..255), next 8 bits: hdr (0..255), rest reserved
         // packed outline / shadow / effect params — placed here so image items can ignore them
         uint32_t    outlineColorPacked = 0; // packed RGBA 8-bit per channel

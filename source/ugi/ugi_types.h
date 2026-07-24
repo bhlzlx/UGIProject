@@ -400,6 +400,9 @@ namespace ugi {
         alignas(1) blend_factor_t srcFactor = blend_factor_t::SourceAlpha;
         alignas(1) blend_factor_t dstFactor = blend_factor_t::InvertSourceAlpha;
         alignas(1) blend_operation_t op = blend_operation_t::Add;
+        // Separate alpha blend factors — default mirrors color for backward compat
+        alignas(1) blend_factor_t srcAlphaFactor = blend_factor_t::SourceAlpha;
+        alignas(1) blend_factor_t dstAlphaFactor = blend_factor_t::InvertSourceAlpha;
     };
 
     struct stencil_state_t {

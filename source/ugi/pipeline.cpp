@@ -102,12 +102,13 @@ namespace ugi {
         VkPipelineColorBlendAttachmentState& colorAttachmentBlendState = pipeline._attachmnetBlendState[0]; {
             colorAttachmentBlendState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
             colorAttachmentBlendState.blendEnable = pipelineDescription.renderState.blendState.enable;
-            colorAttachmentBlendState.alphaBlendOp = blendOpToVk(pipelineDescription.renderState.blendState.op);
             colorAttachmentBlendState.colorBlendOp = blendOpToVk(pipelineDescription.renderState.blendState.op);
-            colorAttachmentBlendState.dstAlphaBlendFactor = blendFactorToVk(pipelineDescription.renderState.blendState.dstFactor);
-            colorAttachmentBlendState.dstColorBlendFactor = blendFactorToVk(pipelineDescription.renderState.blendState.dstFactor);
-            colorAttachmentBlendState.srcAlphaBlendFactor = blendFactorToVk(pipelineDescription.renderState.blendState.srcFactor);
             colorAttachmentBlendState.srcColorBlendFactor = blendFactorToVk(pipelineDescription.renderState.blendState.srcFactor);
+            colorAttachmentBlendState.dstColorBlendFactor = blendFactorToVk(pipelineDescription.renderState.blendState.dstFactor);
+            // Alpha blend: use separate factors (defaults match color for backward compat)
+            colorAttachmentBlendState.alphaBlendOp = blendOpToVk(pipelineDescription.renderState.blendState.op);
+            colorAttachmentBlendState.srcAlphaBlendFactor = blendFactorToVk(pipelineDescription.renderState.blendState.srcAlphaFactor);
+            colorAttachmentBlendState.dstAlphaBlendFactor = blendFactorToVk(pipelineDescription.renderState.blendState.dstAlphaFactor);
             colorAttachmentBlendState.colorWriteMask = pipelineDescription.renderState.writeMask;
             //
             pipeline._attachmnetBlendState[1] = pipeline._attachmnetBlendState[0];

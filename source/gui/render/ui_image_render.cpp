@@ -28,6 +28,27 @@
 
 namespace gui {
 
+    void UIImageRender::initialize(ugi::Device* device, comm::IArchive* archive, ugi::MeshBufferAllocator* msalloc, ugi::UniformAllocator* uniformAllocator, ugi::GPUAsyncLoadManager* asyncLoaderManager, const char* pipelinePath) {
+        _device = device;
+        _bufferAllocator = msalloc;
+        _uniformAllocator = uniformAllocator;
+        _asyncLoadManager = asyncLoaderManager;
+
+        // Read and create pipeline internally
+        auto pipelineFile = archive->openIStream(pipelinePath, {comm::ReadFlag::binary});
+        auto ppl = ugi::PipelineHelper::FromIStream(pipelineFile);
+        pipelineFile->close();
+        auto ppldesc = ppl.desc();
+        ppldesc.topologyMode = ugi::topology_mode_t::TriangleList;
+        ppldesc.renderState.cullMode = ugi::cull_mode_t::None;
+        ppldesc.renderState.blendState.enable = true;
+        ppldesc.renderState.blendState.srcAlphaFactor = ugi::blend_factor_t::SourceAlpha;
+        ppldesc.renderState.blendState.dstAlphaFactor = ugi::blend_factor_t::DestinationAlpha;
+        _pipeline = device->createGraphicsPipeline(ppldesc);
+
+        initialize_();
+    }
+
     bool UIImageRender::initialize_() {
         _globalMtl = _pipeline->createMaterial({"global"}, {});
         _globalMat = _globalMtl->descriptors()[0];

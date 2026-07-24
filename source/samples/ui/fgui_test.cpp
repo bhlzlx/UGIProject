@@ -48,11 +48,6 @@ namespace ugi {
     // 生成2D的相机view * projection矩阵
     bool FGUIDemo::initialize( void* _wnd, comm::IArchive* arch) {
         _arch = arch;
-        auto pipelineFile = arch->openIStream("/shaders/fgui_image/pipeline.bin", {comm::ReadFlag::binary});
-        PipelineHelper ppl = PipelineHelper::FromIStream(pipelineFile);
-        pipelineFile->close();
-        auto ppldesc = ppl.desc();
-        ppldesc.topologyMode = topology_mode_t::TriangleList;
         printf("initialize\n");
         ugi::device_descriptor_t descriptor; {
             descriptor.apiType = ugi::GraphicsAPIType::VULKAN;
@@ -64,15 +59,13 @@ namespace ugi {
         }
         _renderContext = StandardRenderContext::Instance();
         _renderContext->initialize(_wnd, descriptor, arch);
-        ppldesc.renderState.cullMode = cull_mode_t::None;
-        ppldesc.renderState.blendState.enable = true;
-        auto pipeline = _renderContext->device()->createGraphicsPipeline(ppldesc);
+
         auto bufferAllocator = new MeshBufferAllocator();
         bufferAllocator->initialize(_renderContext->device(), 1024);
 
         auto device = _renderContext->device();
         _render = gui::UIImageRender::Instance();
-        _render->initialize(device, pipeline, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
+        _render->initialize(device, arch, bufferAllocator, _renderContext->uniformAllocator(), _renderContext->asyncLoadManager());
 
         // Text SDF pipeline
         {
@@ -83,6 +76,8 @@ namespace ugi {
             textDesc.topologyMode = topology_mode_t::TriangleList;
             textDesc.renderState.cullMode = cull_mode_t::None;
             textDesc.renderState.blendState.enable = true;
+            textDesc.renderState.blendState.srcAlphaFactor = blend_factor_t::SourceAlpha;
+            textDesc.renderState.blendState.dstAlphaFactor = blend_factor_t::DestinationAlpha;
             auto textPipeline = device->createGraphicsPipeline(textDesc);
             auto textBufferAllocator = new MeshBufferAllocator();
             textBufferAllocator->initialize(device, 1024);
@@ -150,7 +145,8 @@ namespace ugi {
             angle += 0.1f;
             auto root = gui::Stage::Instance()->defaultRoot();
             auto test = (gui::Component*)root->getChildAt(0);
-            auto child = test->getChildAt(1);
+            // auto child = test->getChild("rotation");
+            auto child = test->getChildAt(0);
             if (child) {
                 child->setRotation(angle);
             }

@@ -40,6 +40,7 @@ PRIVATE
     core/ui/ui_content_scaler.cpp
     core/ui/root.cpp
     core/ui/component.cpp
+    core/ui/g_loader.cpp
     core/ui/g_text_field.cpp
     core/ui/g_button.cpp
     core/ui/g_graph.cpp

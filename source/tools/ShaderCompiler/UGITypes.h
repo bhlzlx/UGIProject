@@ -303,6 +303,9 @@ namespace ugi {
         alignas(1) BlendFactor         srcFactor = BlendFactor::SourceAlpha;
         alignas(1) BlendFactor         dstFactor = BlendFactor::InvertSourceAlpha;
         alignas(1) BlendOperation      op = BlendOperation::Add;
+        // Separate alpha blend factors — default mirrors color for backward compat
+        alignas(1) BlendFactor         srcAlphaFactor = BlendFactor::SourceAlpha;
+        alignas(1) BlendFactor         dstAlphaFactor = BlendFactor::InvertSourceAlpha;
     };
 
     struct StencilState {

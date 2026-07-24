@@ -4,6 +4,7 @@
 #include <core/ui/component.h>
 #include "image.h"
 #include "root.h"
+#include "g_loader.h"
 #include "g_text_field.h"
 #include "g_button.h"
 #include "g_graph.h"
@@ -24,7 +25,10 @@ namespace gui {
             obj = new GGraph();
             break;
         }
-        case ObjectType::Loader:
+        case ObjectType::Loader: {
+            obj = new GLoader();
+            break;
+        }
         case ObjectType::Group:
         case ObjectType::Text: {
             obj = new GTextField();
@@ -75,6 +79,16 @@ namespace gui {
     Object* ObjectFactory::CreateObject(ObjectType type) {
         Object* obj = nullptr;
         switch(type) {
+            case ObjectType::Image: {
+                obj = new Image();
+                obj->createDisplayObject();
+                return obj;
+            }
+            case ObjectType::Loader: {
+                obj = new GLoader();
+                obj->createDisplayObject();
+                return obj;
+            }
             case ObjectType::Text: {
                 obj = new GTextField();
                 obj->createDisplayObject();

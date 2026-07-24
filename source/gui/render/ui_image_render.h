@@ -39,16 +39,7 @@ namespace gui {
             , _asyncLoadManager(nullptr)
         {}
 
-        void initialize(ugi::Device* device, ugi::GraphicsPipeline* pipeline, ugi::MeshBufferAllocator* msalloc, ugi::UniformAllocator* uniformAllocator, ugi::GPUAsyncLoadManager* asyncLoaderManager) {
-            _pipeline = pipeline;
-            _pipeline = pipeline;
-            _bufferAllocator = msalloc;
-            _uniformAllocator = uniformAllocator;
-            _device = device;
-            _asyncLoadManager = asyncLoaderManager;
-            //
-            initialize_();
-        }
+        void initialize(ugi::Device* device, comm::IArchive* archive, ugi::MeshBufferAllocator* msalloc, ugi::UniformAllocator* uniformAllocator, ugi::GPUAsyncLoadManager* asyncLoaderManager, const char* pipelinePath = "/shaders/fgui_image/pipeline.bin");
         ugi::Material* createMaterial(std::vector<std::string>const & params);
 
         ugi::Renderable* createRenderable(uint8_t const* vd, uint32_t vdsize, uint16_t const* id, uint32_t indexCount);
