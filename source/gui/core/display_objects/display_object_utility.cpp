@@ -113,9 +113,30 @@ namespace gui {
     }
 
     void updateItemTransforms() {
+        // 将args_need_sync传递到子控件里
+        reg.view<dispcomp::args_need_sync, dispcomp::children>(entt::exclude_t<dispcomp::batch_node>()).each([](entt::entity ett, dispcomp::args_need_sync& sync, dispcomp::children& children) {
+            if (!(sync.mask & dispcomp::Asm_Transform)) {
+                return;
+            }
+            std::vector<entt::entity> objects = children.val;
+            while(!objects.empty()) {
+                auto child = objects.back();
+                objects.pop_back();
+                auto & args_sync = reg.get_or_emplace<dispcomp::args_need_sync>(child);
+                if(args_sync.mask & dispcomp::Asm_Transform) {
+                    continue;
+                }
+                args_sync.mask |= sync.mask;
+                if (reg.any_of<dispcomp::children>(child) && !reg.any_of<dispcomp::batch_node>(child)) { // batch节点就不往下遍历了
+                    objects.insert(objects.end(), reg.get<dispcomp::children>(child).val.begin(), reg.get<dispcomp::children>(child).val.end());
+                }
+            }
+        });
         // 处理 Asm_Transform 标记：重算 local-to-batch 矩阵，写入 gfx.args.transfrom
         reg.view<dispcomp::args_need_sync, dispcomp::item_batch_info, dispcomp::item_render_data>().each([](entt::entity ett, dispcomp::args_need_sync& sync, dispcomp::item_batch_info& info, dispcomp::item_render_data& gfx) {
-            if (!(sync.mask & dispcomp::Asm_Transform)) return;
+            if (!(sync.mask & dispcomp::Asm_Transform)) {
+                return;
+            }
             gfx.args.transfrom = accumulateLocalToBatch(ett, info.batchEntity);
             sync.mask &= ~dispcomp::Asm_Transform;
         });
