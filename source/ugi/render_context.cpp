@@ -63,7 +63,7 @@ namespace ugi {
         _uniformAllocator->tick();
         GPURetireManager::Instance()->onFrameTick();
         //
-        auto cb = _graphicsQueue->createCommandBuffer(_device, CmdbufType::Transient);
+        auto cb = _graphicsQueue->createCommandBuffer(_device, CmdbufType::Resetable);
         cb->beginEncode(); {
             _asyncLoadManager->tick(cb);
             cb->endEncode();

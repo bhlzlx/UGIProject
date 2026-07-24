@@ -135,7 +135,7 @@ namespace ugi {
         //
         Device* device = _renderContext->device();
         IRenderPass* mainRenderPass = _renderContext->mainFramebuffer();
-        auto cmdbuf = _renderContext->primaryQueue()->createCommandBuffer(device, CmdbufType::Transient);
+        auto cmdbuf = _renderContext->primaryQueue()->createCommandBuffer(device, CmdbufType::Resetable);
         device->cycleInvoker().postCallable([this, device, cmdbuf](){
             _renderContext->primaryQueue()->destroyCommandBuffer(device, cmdbuf);
         });

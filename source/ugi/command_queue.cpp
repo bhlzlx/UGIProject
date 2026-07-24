@@ -114,10 +114,9 @@ namespace ugi {
 
     void CommandQueue::destroyCommandBuffer( Device* device, CommandBuffer* commandBuffer ) {
         VkCommandBuffer cmd = *commandBuffer;
-        if(commandBuffer->type() == CmdbufType::Resetable) {
-            vkFreeCommandBuffers(device->device(), _resetablePool, 1, &cmd);
-        } else {
-            // vkFreeCommandBuffers(device->device(), _transientPool, 1, &cmd);
+        VkCommandPool pool = (commandBuffer->type() == CmdbufType::Resetable) ? _resetablePool : _transientPool;
+        if (pool != VK_NULL_HANDLE) {
+            vkFreeCommandBuffers(device->device(), pool, 1, &cmd);
         }
         delete commandBuffer;
     }
